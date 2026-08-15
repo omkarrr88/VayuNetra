@@ -13,6 +13,7 @@ import os
 import hashlib
 import ast
 from dataclasses import dataclass, field
+from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
@@ -296,7 +297,20 @@ def retrieve(
     return _live_retrieve(query, top_k, source_filter)
 
 
-def retrieve_for_enforcement(source_category: str, city_id: str = "delhi", top_k: int = 3) -> list[CitedChunk]:
+@lru_cache(maxsize=64)
+def _retrieve_for_enforcement_cached(query: str, top_k: int) -> tuple[CitedChunk, ...]:
+    """One live retrieval per distinct (query, top_k) per process.
+
+    run_enforcement calls the wrapper once per emission source, but there are
+    only ~6 distinct category queries over a static regulatory corpus — without
+    this cache a spiking city paid a full embed + kb_chunks scan per source
+    (measured: 94 s of a 95 s pipeline run). Tuple return so callers can't
+    mutate the shared result.
+    """
+    return tuple(retrieve(query, top_k=top_k))
+
+
+def retrieve_for_enforcement(source_category: str, city_id: str = "delhi", top_k: int = 3) -> tuple[CitedChunk, ...]:
     """Convenience wrapper — builds a focused enforcement query from source category."""
     category_queries = {
         "construction_dust": "construction site dust suppression norms penalty enforcement CPCB GRAP",
@@ -307,7 +321,7 @@ def retrieve_for_enforcement(source_category: str, city_id: str = "delhi", top_k
         "other": "air quality enforcement NCAP CPCB penalty",
     }
     query = category_queries.get(source_category, f"{source_category} air quality enforcement regulation CPCB")
-    return retrieve(query, top_k=top_k)
+    return _retrieve_for_enforcement_cached(query, top_k)
 
 
 if __name__ == "__main__":

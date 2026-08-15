@@ -25,6 +25,10 @@ const TOKEN = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 // demo-snapshot fallback. 25s tolerates warm-but-slow; a true cold start
 // (30-60s) still falls back — which is exactly what the insurance is for.
 const TIMEOUT_MS = 25_000;
+// The live agent run regenerates a spiking city's whole enforcement worklist —
+// legitimately slower than any read. It gets its own generous budget instead
+// of the read timeout (which would abort a run the server happily finishes).
+const AGENT_RUN_TIMEOUT_MS = 240_000;
 
 export const API_BASE = BASE;
 export const API_TOKEN = TOKEN;
@@ -100,7 +104,8 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   }
   const method = (init?.method ?? "GET").toUpperCase();
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+  const isAgentRun = new URL(path, "http://x").pathname === "/agent/query";
+  const timer = setTimeout(() => ctrl.abort(), isAgentRun ? AGENT_RUN_TIMEOUT_MS : TIMEOUT_MS);
   try {
     const res = await fetch(`${BASE}${path}`, { ...init, headers, signal: ctrl.signal });
     const env = (await res.json()) as Envelope<T>;
