@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { H3HexagonLayer } from "@deck.gl/geo-layers";
-import { GeoJsonLayer, PolygonLayer, ScatterplotLayer } from "@deck.gl/layers";
+import { GeoJsonLayer, LineLayer, PolygonLayer, ScatterplotLayer } from "@deck.gl/layers";
 import { api } from "./api";
+import { cellToLatLng } from "h3-js";
 import { colorFor, dominantSource, pm25Color, satColor, type Shares } from "./sources";
 
 export type ShapDriver = { feature: string; source: string; contribution: number };
@@ -353,6 +354,7 @@ export default function BlameMap({
       | H3HexagonLayer<CoverageCell>
       | ScatterplotLayer<EmissionSource>
       | PolygonLayer<Plume>
+      | LineLayer<{ from: [number, number]; to: [number, number] }>
       | GeoJsonLayer;
     // (freight corridors reuse GeoJsonLayer)
     const layers: AnyLayer[] = [mode === "coverage" ? coverage : blame];
@@ -396,6 +398,49 @@ export default function BlameMap({
           lineWidthMinPixels: 1,
           stroked: true,
           pickable: true,
+        }),
+      );
+    }
+    // Wind arrows — a sparse grid over the city, all carrying the city-mean
+    // wind (direction + speed as length), so a viewer can see WHY the plumes
+    // point the way they do. Rendered as short LineLayers with an arrow tip.
+    if (showPlumes && plume?.wind && !plume.wind.calm && cells.length) {
+      const w = plume.wind;
+      const lats = cells.map((c) => cellToLatLng(c.h3_cell)[0]);
+      const lngs = cells.map((c) => cellToLatLng(c.h3_cell)[1]);
+      const minLat = Math.min(...lats), maxLat = Math.max(...lats), minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+      const rows = 6, cols = 8;
+      const toDeg = (b: number) => (b * Math.PI) / 180;
+      // bearing_deg is the direction the wind blows TOWARD (u/v convention)
+      const dirLat = Math.cos(toDeg(w.bearing_deg));
+      const dirLng = Math.sin(toDeg(w.bearing_deg));
+      const len = Math.min(0.02, 0.006 + w.speed_ms * 0.0025); // degrees, ~0.6–2 km
+      const segs: Array<{ from: [number, number]; to: [number, number] }> = [];
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+        const lat = minLat + ((r + 0.5) / rows) * (maxLat - minLat);
+        const lng = minLng + ((c + 0.5) / cols) * (maxLng - minLng);
+        const midLat = lat, midLng = lng;
+        segs.push({ from: [midLng - dirLng * len * 0.5, midLat - dirLat * len * 0.5], to: [midLng + dirLng * len * 0.5, midLat + dirLat * len * 0.5] });
+      }
+      // arrow tips: two short strokes off the head
+      const tips: Array<{ from: [number, number]; to: [number, number] }> = [];
+      for (const sgm of segs) {
+        const [hx, hy] = sgm.to; const back = len * 0.28;
+        for (const ang of [150, -150]) {
+          const a = toDeg(w.bearing_deg + ang);
+          tips.push({ from: [hx, hy], to: [hx + Math.sin(a) * back, hy + Math.cos(a) * back] });
+        }
+      }
+      layers.push(
+        new LineLayer<{ from: [number, number]; to: [number, number] }>({
+          id: "wind-arrows",
+          data: [...segs, ...tips],
+          getSourcePosition: (d) => d.from,
+          getTargetPosition: (d) => d.to,
+          getColor: [30, 41, 59, 150],
+          getWidth: 2,
+          widthUnits: "pixels",
+          pickable: false,
         }),
       );
     }
