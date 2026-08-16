@@ -772,11 +772,23 @@ def _build_notice_text(
         "authorising officer within the compliance window.\n"
         "\n"
         "AUTHORISATION:\n"
+        f"{_authority_line(rec)}"
         "Name: ______________________________  Designation: ______________________________\n"
         "Signature: ______________________________  Date: ______________________________\n"
         "\n"
         "This is a system-generated draft for officer review before issuance."
     )
+
+
+def _authority_line(rec: dict) -> str:
+    """'Issuing authority' line from the city's regulatory config, if declared."""
+    try:
+        from core.cities import load_city
+
+        authority = (load_city(rec.get("city_id", "")).get("regulatory") or {}).get("authority")
+    except Exception:
+        authority = None
+    return f"Issuing authority: {authority}\n" if authority else ""
 
 
 if __name__ == "__main__":

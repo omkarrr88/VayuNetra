@@ -91,10 +91,19 @@ def rows_from_records(city_id: str, records: list[dict], h3_res: int = 8) -> lis
 
 
 # data.gov.in city labels differ from our city_ids (and sometimes use old names).
+# Cities not listed here fall back to their config display name, which matches
+# for most; add an entry whenever the registry uses a different/older label.
 CITY_ALIASES = {
     "delhi": ["Delhi"],
     "bengaluru": ["Bengaluru", "Bangalore"],
     "mumbai": ["Mumbai"],
+    "hyderabad": ["Hyderabad"],
+    "chennai": ["Chennai", "Madras"],
+    "kolkata": ["Kolkata", "Calcutta"],
+    "pune": ["Pune"],
+    "ahmedabad": ["Ahmedabad"],
+    "jaipur": ["Jaipur"],
+    "lucknow": ["Lucknow"],
 }
 
 

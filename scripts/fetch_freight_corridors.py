@@ -78,8 +78,10 @@ def fetch(city_id: str) -> dict:
 
 
 def main() -> None:
+    from core.cities import list_city_ids
+
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    for city in ("delhi", "bengaluru", "mumbai"):
+    for city in list_city_ids():
         fc = fetch(city)
         p = OUT_DIR / f"{city}.geojson"
         p.write_text(json.dumps(fc, separators=(",", ":")))

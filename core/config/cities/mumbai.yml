@@ -9,4 +9,7 @@ h3_res: 8
 # optional pin-list — ingestion discovers stations by bbox (see delhi.yml)
 caaqms_station_ids: []
 ward_geojson_ref: "data/wards/mumbai.geojson"
+regulatory:
+  authority: "Maharashtra Pollution Control Board (MPCB)"
+  grap_applies: false
 active: true

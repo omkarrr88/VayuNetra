@@ -297,9 +297,39 @@ def retrieve(
     return _live_retrieve(query, top_k, source_filter)
 
 
+# GRAP and every CAQM directive are statutory only in Delhi-NCR (the CAQM Act
+# covers NCR and adjoining areas). Citing them as the regulatory basis in any
+# other state would be legally wrong on an enforcement notice.
+_NCR_ONLY_DOC_MARKERS = ("grap", "caqm")
+
+
+def _grap_applies(city_id: str) -> bool:
+    try:
+        from core.cities import load_city
+
+        reg = load_city(city_id).get("regulatory") or {}
+        return bool(reg.get("grap_applies", city_id == "delhi"))
+    except Exception:
+        return city_id == "delhi"
+
+
+# For non-NCR cities, which nationally-applicable document should anchor the
+# citation for each source category (matched as a doc_id substring).
+_CATEGORY_NATIONAL_DOC = {
+    "construction_dust": "cpcb-dust-norms",
+    "industrial": "ncap",
+    "biomass_burning": "ncap",
+    "traffic": "cpcb",
+    "transported": "ncap",
+    "other": "ncap",
+}
+
+
 @lru_cache(maxsize=64)
-def _retrieve_for_enforcement_cached(query: str, top_k: int) -> tuple[CitedChunk, ...]:
-    """One live retrieval per distinct (query, top_k) per process.
+def _retrieve_for_enforcement_cached(
+    query: str, top_k: int, include_ncr: bool, category: str
+) -> tuple[CitedChunk, ...]:
+    """One live retrieval per distinct (query, top_k, jurisdiction) per process.
 
     run_enforcement calls the wrapper once per emission source, but there are
     only ~6 distinct category queries over a static regulatory corpus — without
@@ -307,11 +337,30 @@ def _retrieve_for_enforcement_cached(query: str, top_k: int) -> tuple[CitedChunk
     (measured: 94 s of a 95 s pipeline run). Tuple return so callers can't
     mutate the shared result.
     """
-    return tuple(retrieve(query, top_k=top_k))
+    if include_ncr:
+        return tuple(retrieve(query, top_k=top_k))
+    # Non-NCR: rank the WHOLE corpus (it's small and already fetched in full by
+    # the live path), drop NCR-only instruments, then prefer the national doc
+    # that matches this category. A shallow over-fetch left non-NCR cities with
+    # zero citations: 132 same-embedding GRAP chunks tie on similarity and
+    # sweep every top rank.
+    chunks = retrieve(query, top_k=1000)
+    kept = [
+        c for c in chunks
+        if not any(m in c.doc_id.lower() for m in _NCR_ONLY_DOC_MARKERS)
+    ]
+    anchor = _CATEGORY_NATIONAL_DOC.get(category, "ncap")
+    kept.sort(key=lambda c: (0 if anchor in c.doc_id.lower() else 1, -c.similarity))
+    return tuple(kept[:top_k])
 
 
 def retrieve_for_enforcement(source_category: str, city_id: str = "delhi", top_k: int = 3) -> tuple[CitedChunk, ...]:
-    """Convenience wrapper — builds a focused enforcement query from source category."""
+    """Jurisdiction-aware enforcement citations for a source category.
+
+    Outside Delhi-NCR the query drops GRAP terms and NCR-only chunks are
+    filtered out, so notices cite national instruments (CPCB norms, NCAP,
+    Air Act) that actually bind that city's state board.
+    """
     category_queries = {
         "construction_dust": "construction site dust suppression norms penalty enforcement CPCB GRAP",
         "industrial": "industrial emission stack norms consent-to-operate SPCB enforcement penalty",
@@ -321,7 +370,10 @@ def retrieve_for_enforcement(source_category: str, city_id: str = "delhi", top_k
         "other": "air quality enforcement NCAP CPCB penalty",
     }
     query = category_queries.get(source_category, f"{source_category} air quality enforcement regulation CPCB")
-    return _retrieve_for_enforcement_cached(query, top_k)
+    include_ncr = _grap_applies(city_id)
+    if not include_ncr:
+        query = query.replace(" GRAP", "")
+    return _retrieve_for_enforcement_cached(query, top_k, include_ncr, source_category)
 
 
 if __name__ == "__main__":

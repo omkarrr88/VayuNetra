@@ -49,13 +49,20 @@ def render_twiml(advisory: dict, city_name: str | None = None) -> str:
     )
 
 
-# Inbound keypad menu: digit → (city_id, spoken name). Kept in the channel layer
-# so the API and any future channel share one source of truth.
-IVR_CITY_MENU = {
-    "1": ("delhi", "Delhi"),
-    "2": ("bengaluru", "Bengaluru"),
-    "3": ("mumbai", "Mumbai"),
-}
+# Inbound keypad menu: digit → (city_id, spoken name), built from the central
+# city registry. Launch cities keep digits 1–3 (existing callers' muscle
+# memory); later cities take 4–9 then 0 — ten digits caps the voice menu.
+def _build_city_menu() -> dict[str, tuple[str, str]]:
+    from core.cities import list_cities
+
+    digits = "1234567890"
+    menu: dict[str, tuple[str, str]] = {}
+    for i, city in enumerate(list_cities()[: len(digits)]):
+        menu[digits[i]] = (city["city_id"], city["name"])
+    return menu
+
+
+IVR_CITY_MENU = _build_city_menu()
 
 
 def render_welcome_twiml(action_url: str) -> str:

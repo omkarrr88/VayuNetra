@@ -32,18 +32,18 @@ jobs:
           # --days 1 --max-sensors 15: OpenAQ rate-limits shared Actions IPs; keep
           # each run small. ::warning:: makes failures visible in the run summary
           # instead of being swallowed (openaq sat silently stale for a week).
-          python -m connectors.openaq --city delhi --days 1 --max-sensors 15 --push || echo "::warning::openaq delhi failed"
-          sleep 30
-          python -m connectors.openaq --city bengaluru --days 1 --max-sensors 15 --push || echo "::warning::openaq bengaluru failed"
-          sleep 30
-          python -m connectors.openaq --city mumbai --days 1 --max-sensors 15 --push || echo "::warning::openaq mumbai failed"
+          CITIES=$(python -c "from core.cities import list_city_ids; print(' '.join(list_city_ids()))")
+          for c in $CITIES; do
+            python -m connectors.openaq --city $c --days 1 --max-sensors 15 --push || echo "::warning::openaq $c failed"
+            sleep 20
+          done
           # Direct CAAQMS path: data.gov.in is unreachable from some ISP routes but
           # may work from Actions IPs; auto-heals whenever the route is clear.
           # (Redundancy only — our OpenAQ stations are already provider=CPCB/CAAQMS.)
           python -m connectors.cpcb --city delhi --push || echo "::warning::cpcb direct path unreachable"
-          python -m connectors.openmeteo --city delhi --push || true
-          python -m connectors.openmeteo --city bengaluru --push || true
-          python -m connectors.openmeteo --city mumbai --push || true
+          for c in $CITIES; do
+            python -m connectors.openmeteo --city $c --push || true
+          done
       - name: Keep-alive ping (prevents Supabase project pause)
         env:
           DEMO_MODE: "false"
@@ -87,18 +87,19 @@ jobs:
         # by the dedicated step below. "|| true": Overpass flakiness must not
         # kill the daily run.
         run: |
-          python -m connectors.osm_sources --city delhi --push || true
-          sleep 30
-          python -m connectors.osm_sources --city bengaluru --push || true
-          sleep 30
-          python -m connectors.osm_sources --city mumbai --push || true
+          CITIES=$(python -c "from core.cities import list_city_ids; print(' '.join(list_city_ids()))")
+          for c in $CITIES; do
+            python -m connectors.osm_sources --city $c --push || true
+            sleep 20
+          done
       - name: Refresh forecasts + attribution (model outputs must track the data)
         env:
           DEMO_MODE: "false"
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          for c in delhi bengaluru mumbai; do
+          CITIES=$(python -c "from core.cities import list_city_ids; print(' '.join(list_city_ids()))")
+          for c in $CITIES; do
             python -m ml.forecast.train --city $c --write || true
             python -m ml.attribution.attribute --city $c --write || true
           done
@@ -113,7 +114,8 @@ jobs:
         run: |
           python -c "
           from agents.graph import run_query
-          for city in ['delhi', 'bengaluru', 'mumbai']:
+          from core.cities import list_city_ids
+          for city in list_city_ids():
               state = run_query(city_id=city, query='daily scheduled pipeline')
               print(f'{city}: {len(state.get(\"enforcement\") or [])} enforcement recs, latency={state.get(\"latency_ms\", 0)}ms')
           "
@@ -128,7 +130,8 @@ jobs:
         run: |
           python -c "
           from agents.enforcement import run_enforcement
-          for city in ['delhi', 'bengaluru', 'mumbai']:
+          from core.cities import list_city_ids
+          for city in list_city_ids():
               recs = run_enforcement(city, write_to_db=True)
               print(f'{city}: {len(recs)} enforcement recs regenerated')
           "
@@ -140,3 +143,10 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           LLM_PROVIDER: "gemini"
         run: python scripts/refresh_advisories.py || true
+      - name: Retention — dedup weather rows + prune beyond 90 days (free-tier headroom)
+        env:
+          DEMO_MODE: "false"
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: python scripts/prune_measurements.py --days 90 --dedup-weather || true
