@@ -38,5 +38,8 @@ test:           ## run tests with coverage
 lint:           ## ruff lint
 	ruff check .
 
+refresh-cities: ## bring every city's forecasts/attribution/worklist/advisories current (run the morning of a demo)
+	./scripts/refresh_all_cities.sh
+
 prewarm:        ## judging-morning pre-warm + GO/NO-GO smoke check (run ~15 min before demo)
 	./scripts/prewarm_demo.sh
