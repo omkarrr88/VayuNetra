@@ -78,15 +78,36 @@ export default function ComparativePanel({ onSelectCity }: { onSelectCity: (city
         </div>
       )}
 
+      {(data?.cities.length ?? 0) > 1 && (
+        <div className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          Clean-air ranking
+          <span className="ml-1 font-normal normal-case tracking-normal text-slate-400">
+            — Swachh Vayu style, by current PM2.5 (cleanest first)
+          </span>
+        </div>
+      )}
       <div className="mt-2 space-y-2">
-        {data?.cities.map((c) => (
+        {[...(data?.cities ?? [])]
+          .sort((a, b) => a.current_pm25 - b.current_pm25)
+          .map((c, rank) => (
           <button
             key={c.city_id}
             onClick={() => onSelectCity(c.city_id)}
             className="block w-full rounded-lg border border-slate-200 p-2.5 text-left transition-colors hover:border-blue-300 hover:bg-blue-50"
           >
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-slate-800">{c.name}</span>
+              <span className="font-semibold text-slate-800">
+                <span
+                  className={`mr-1.5 inline-block w-8 rounded px-1 text-center text-[11px] font-bold ${
+                    rank === 0
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  #{rank + 1}
+                </span>
+                {c.name}
+              </span>
               <span
                 className={`rounded px-1.5 py-0.5 text-[11px] font-medium ${
                   c.trend === "deteriorating" ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"

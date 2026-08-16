@@ -21,6 +21,70 @@ type Roi = {
   citations: Citation[];
 };
 
+type AttrCell = { shares?: Record<string, number> };
+
+const FUND_HEAD: Record<string, string> = {
+  traffic: "vehicular emission control",
+  construction_dust: "C&D dust control",
+  industrial: "industrial emission control",
+  biomass_burning: "solid-waste / open-burning control",
+  transported: "regional airshed coordination",
+};
+
+/** Attribution-weighted NCAP spending guidance — the answer to CREA's finding
+ *  that NCAP cities put 67% of funds into road dust because they lacked
+ *  attribution. Shares come straight from the live blame model. */
+function FundGuidance({ city }: { city: string }) {
+  const [mix, setMix] = useState<Array<[string, number]> | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    setMix(null);
+    api<AttrCell[]>(`/attribution?city=${city}`)
+      .then((cells) => {
+        if (!alive) return;
+        const sums: Record<string, number> = {};
+        let n = 0;
+        for (const c of cells) {
+          if (!c.shares) continue;
+          n += 1;
+          for (const [k, v] of Object.entries(c.shares)) sums[k] = (sums[k] ?? 0) + v;
+        }
+        const rows = Object.entries(sums)
+          .map(([k, v]) => [k, (100 * v) / Math.max(1, n)] as [string, number])
+          .filter(([k, pct]) => pct >= 5 && FUND_HEAD[k])
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3);
+        setMix(rows);
+      })
+      .catch(() => alive && setMix([]));
+    return () => {
+      alive = false;
+    };
+  }, [city]);
+
+  if (!mix || mix.length === 0) return null;
+  return (
+    <div className="mt-2 rounded-md border border-sky-100 bg-sky-50/60 p-2">
+      <div className="text-[11px] font-semibold uppercase tracking-wide text-sky-800">
+        Where the funds should go — attribution-weighted
+      </div>
+      <div className="mt-1 space-y-0.5 text-xs text-gray-700">
+        {mix.map(([k, pct]) => (
+          <div key={k}>
+            <b>{Math.round(pct)}%</b> of PM2.5 is {k.replace(/_/g, " ")} → prioritise{" "}
+            <b>{FUND_HEAD[k]}</b>
+          </div>
+        ))}
+      </div>
+      <div className="mt-1 text-[11px] leading-4 text-gray-500">
+        NCAP cities spent 67% of funds on road dust and &lt;1% on industry (CREA, 2026) — because
+        allocation wasn't attribution-led. This is the per-city fix.
+      </div>
+    </div>
+  );
+}
+
 function Big({ label, value, tone }: { label: string; value: string; tone: "bad" | "good" }) {
   const cls =
     tone === "bad"
@@ -97,6 +161,7 @@ export default function RoiPanel({ city }: { city: string }) {
         Annual mean {d.annual_pm25} µg/m³ vs WHO {d.who_guideline_pm25} µg/m³ · pop {intfmt(d.population)}
       </div>
       <div className="mt-2 rounded-md bg-slate-50 p-2 text-xs leading-snug text-gray-700">{d.narrative}</div>
+      <FundGuidance city={city} />
       <Citations items={d.citations ?? []} />
     </Panel>
   );

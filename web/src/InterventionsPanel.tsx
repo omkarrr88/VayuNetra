@@ -2,7 +2,7 @@
 // effectiveness", built as machinery that arms itself at the first real
 // dispatch. Until then it says so, honestly, in one line.
 import { useEffect, useState } from "react";
-import { api } from "./api";
+import { api, API_BASE, API_TOKEN } from "./api";
 import { Panel } from "./ui";
 
 type Tracked = {
@@ -34,6 +34,20 @@ export default function InterventionsPanel({ city }: { city: string }) {
   }, [city]);
 
   if (!d) return null;
+
+  const exportCsv = async () => {
+    // fetch with auth, then hand the CSV to the browser as a download
+    const res = await fetch(`${API_BASE}/interventions/export?city=${city}`, {
+      headers: API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : undefined,
+    });
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ncap_evidence_${city}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <Panel title="Intervention tracking">
@@ -77,6 +91,16 @@ export default function InterventionsPanel({ city }: { city: string }) {
           ))}
         </div>
       )}
+      <div className="mt-2 border-t border-gray-100 pt-2 text-[11px] leading-4 text-gray-500">
+        <button
+          onClick={exportCsv}
+          className="font-semibold text-teal-700 hover:text-teal-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/80"
+        >
+          Export as NCAP action-plan evidence (PRANA-ready CSV) ↓
+        </button>{" "}
+        — each dispatched intervention with its measured effect, mapped to the NCAP spending head
+        the city reports against. We feed the official portal, not compete with it.
+      </div>
     </Panel>
   );
 }

@@ -479,6 +479,74 @@ def interventions(city: str = Query("delhi", description="City ID")) -> dict:
         return _server_error("interventions_failed", e, "Could not load intervention tracking.")
 
 
+# NCAP action-plan spending heads, keyed by source category — the export maps
+# each measured intervention onto the head a city reports against on PRANA.
+_NCAP_HEAD = {
+    "construction": "C&D dust control",
+    "construction_dust": "C&D dust control",
+    "industry": "Industrial emission control",
+    "industrial": "Industrial emission control",
+    "waste_burn": "Solid waste / open-burning control",
+    "biomass_burning": "Solid waste / open-burning control",
+    "diesel_corridor": "Vehicular emission control",
+    "traffic": "Vehicular emission control",
+}
+
+
+@app.get("/interventions/export", tags=["enforcement"])
+def interventions_export(city: str = Query("delhi", description="City ID")) -> Response:
+    """PRANA-ready evidence export (CSV).
+
+    Every dispatched intervention with its measured before/after effect,
+    mapped to the NCAP action-plan head a city reports against — so the
+    platform's output drops straight into official NCAP/PRANA reporting
+    instead of competing with it.
+    """
+    tracked = []
+    if not DEMO_MODE:
+        payload = interventions(city)
+        body = payload.body if isinstance(payload, Response) else None
+        data = json.loads(body)["data"] if body else (payload.get("data") or {})
+        tracked = data.get("tracked") or []
+
+    sdb = None if DEMO_MODE else _db()
+    authority = ""
+    try:
+        from core.cities import load_city as _load_city_cfg
+
+        authority = (_load_city_cfg(city).get("regulatory") or {}).get("authority", "")
+    except Exception:
+        pass
+
+    lines = ["city,rec_id,h3_cell,source_name,source_category,ncap_head,dispatched_at,"
+             "baseline_pm25,after_pm25,effect_vs_city_drift,provisional,reporting_authority"]
+    for t in tracked:
+        source_name, category = "", ""
+        if sdb is not None:
+            try:
+                rec_rows = (sdb.table("enforcement_recs").select("source_id,evidence")
+                            .eq("id", t["rec_id"]).limit(1).execute().data or [])
+                if rec_rows and rec_rows[0].get("source_id"):
+                    src = (sdb.table("emission_sources").select("name,type")
+                           .eq("id", rec_rows[0]["source_id"]).limit(1).execute().data or [])
+                    if src:
+                        source_name = (src[0].get("name") or "").replace(",", " ")
+                        category = src[0].get("type") or ""
+            except Exception:  # noqa: BLE001 — one bad row must not kill the export
+                pass
+        lines.append(",".join(str(v) for v in [
+            city, t.get("rec_id"), t.get("h3_cell"), source_name, category,
+            _NCAP_HEAD.get(category, "Other"), t.get("dispatched_at"),
+            t.get("baseline_pm25"), t.get("after_pm25"), t.get("effect"),
+            t.get("provisional"), authority.replace(",", " "),
+        ]))
+    csv_body = "\n".join(lines) + "\n"
+    return Response(
+        content=csv_body, media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="ncap_evidence_{city}.csv"'},
+    )
+
+
 # ---------------------------------------------------------------------------
 # Advisory
 # ---------------------------------------------------------------------------
