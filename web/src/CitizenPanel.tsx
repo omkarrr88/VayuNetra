@@ -33,7 +33,13 @@ type CleanZone = {
 type CleanZones = { basis?: string; zones: CleanZone[] };
 
 export default function CitizenPanel({ city, languages, center }: { city: string; languages?: string[]; center?: [number, number] }) {
-  const choices = useMemo(() => Array.from(new Set([...(languages ?? []), ...ALL_LANGS])), [languages]);
+  // Offer only the languages this city is configured for (falling back to all
+  // four only when the config carries none). Merging in ALL_LANGS used to let a
+  // judge pick Kannada for Chennai and get a template advisory nobody reviewed.
+  const choices = useMemo(
+    () => (languages && languages.length ? languages.filter((l) => ALL_LANGS.includes(l)) : ALL_LANGS),
+    [languages],
+  );
   const [lang, setLang] = useState(choices[0] ?? "en");
   const [rows, setRows] = useState<Advisory[] | null>(null);
   const [channel, setChannel] = useState("pwa");

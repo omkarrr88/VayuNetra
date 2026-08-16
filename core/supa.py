@@ -193,6 +193,25 @@ class _RestClient:
     def table(self, name: str):
         return _TableQuery(name, self.api_key, token=self.postgrest._token)
 
+    def rpc(self, fn: str, params: dict[str, Any] | None = None):
+        """Call a Postgres function via PostgREST (parity with the real SDK)."""
+        body = json.dumps(params or {}).encode()
+        req = Request(f"{_rest_url()}/rpc/{fn}", data=body, method="POST", headers={
+            "apikey": self.api_key,
+            "Authorization": f"Bearer {self.postgrest._token or self.api_key}",
+            "Content-Type": "application/json",
+        })
+        with urlopen(req, timeout=60) as resp:
+            data = json.loads(resp.read().decode() or "null")
+
+        class _R:
+            pass
+        r = _R(); r.data = data
+        class _Q:
+            def execute(self_inner):
+                return r
+        return _Q()
+
 
 def service_client():
     """Supabase client with service-role privileges for trusted server jobs."""

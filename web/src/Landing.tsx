@@ -76,7 +76,7 @@ const VALIDATION: Array<[string, string, string]> = [
   ["Attribution behaves physically", "2.30× traffic signal in rush hours", "IST rush vs off-peak SHAP, weather controlled"],
   ["Forecast beats real baselines", "+4–8% Delhi · +9–30% Bengaluru, Mumbai", "walk-forward RMSE vs persistence and climatology"],
   ["Uncertainty intervals are honest", "48–63% raw → 75–80% after CQR", "conformal recalibration audit, nominal 80%"],
-  ["Enforcement is equitable", "no socio-economic inputs, by construction", "fairness audit on all 390 live recommendations"],
+  ["Enforcement is equitable", "no socio-economic inputs, by construction", "fairness audit on every live recommendation (n=390 at the July audit)"],
   ["Model choice was earned", "TFT trained on GPU — and rejected", "LightGBM won every launch city on held-out skill"],
   ["The loop is fast", "seconds from signal to cited action", "live per-node agent traces, target under 5 minutes"],
 ];

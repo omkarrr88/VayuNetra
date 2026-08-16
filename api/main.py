@@ -240,6 +240,122 @@ def pm25_history(
         return _server_error("history_failed", e, "Could not load PM2.5 history right now.")
 
 
+# CPCB PM2.5 breakpoints (µg/m³) — the colour bands a layman already knows
+_PM25_BANDS = [(30, "good"), (60, "satisfactory"), (90, "moderate"), (120, "poor"), (250, "very_poor")]
+
+
+def _band(v: float) -> str:
+    for hi, name in _PM25_BANDS:
+        if v <= hi:
+            return name
+    return "severe"
+
+
+@app.get("/history/trend", tags=["data"])
+def pm25_trend(
+    city: str = Query("delhi", description="City ID"),
+    days: int = Query(90, ge=7, le=365),
+    cell: Optional[str] = Query(None, description="H3 cell — omit for the city mean"),
+) -> dict:
+    """Daily PM2.5 history for a city or a single ~1 km² cell, plus a plain-
+    language verdict, so anyone can read whether a place is getting better or
+    worse. Real station rows only; days with no readings are simply absent.
+
+    Verdict compares the latest 7-day mean with the 7 days that ended 30 days
+    earlier (falls back to the first week of the window when history is short)."""
+    if DEMO_MODE:
+        data = fixture("history", default={})
+        series = data.get(city) if isinstance(data, dict) else None
+        return ok({"city_id": city, "cell": cell, "days": days, "series": [], "hourly": series or [],
+                   "verdict": None, "note": "trend history is a live-mode feature"})
+    key = f"trend:{city}:{cell or '*'}:{days}"
+    now = time.time()
+    hit = _history_cache.get(key)
+    if hit and now - hit[0] < _HISTORY_TTL_S:
+        return ok(hit[1])
+    try:
+        # aggregate in SQL — raw rows through PostgREST cap out long before a
+        # year of readings and returned only the newest 2 days
+        sdb = _db()
+        rows = (sdb.rpc("pm25_daily_trend", {"p_city": city, "p_days": days, "p_cell": cell})
+                .execute().data) or []
+        proxy_cell = None
+        if cell and len(rows) < 10:
+            # No station inside this ~1 km² cell — use the nearest cell that has
+            # one (H3 ring search, ≤3 rings ≈ 3 km) and SAY so, rather than
+            # showing an empty chart for a place the model still attributes.
+            try:
+                import h3 as _h3
+
+                # distinct measured cells for the city (the attribution table is
+                # the cheap, complete index of them)
+                measured = {r["h3_cell"] for r in (
+                    sdb.table("attribution").select("h3_cell").eq("city_id", city)
+                    .limit(5000).execute().data or []) if r.get("h3_cell")}
+                measured.discard(cell)
+                own_rows = rows
+                proxy_dist = None
+                # nearest first, up to ~12 km — Delhi's monitors are sparse at the fringe
+                for dist, cand in sorted((_h3.grid_distance(cell, m), m) for m in measured):
+                    if dist > 12:
+                        break
+                    cand_rows = (sdb.rpc("pm25_daily_trend", {"p_city": city, "p_days": days, "p_cell": cand})
+                                 .execute().data) or []
+                    if len(cand_rows) >= 10:
+                        rows, proxy_cell, proxy_dist = cand_rows, cand, dist
+                        break
+                if proxy_cell is None:
+                    rows = own_rows  # keep whatever little the cell has
+            except Exception:  # noqa: BLE001 — fallback is best-effort
+                proxy_cell = None
+                proxy_dist = None
+        else:
+            proxy_dist = None
+        series = []
+        for r in rows:
+            try:
+                v = float(r.get("pm25"))
+            except (TypeError, ValueError):
+                continue
+            if r.get("day") and math.isfinite(v):
+                series.append({"date": str(r["day"])[:10], "pm25": round(v, 1),
+                               "n": int(r.get("n") or 0), "band": _band(v)})
+        series.sort(key=lambda p: p["date"])
+        verdict = None
+        if len(series) >= 10:
+            recent = [p["pm25"] for p in series[-7:]]
+            older_pool = series[:-7]
+            # the week ending ~30 days before the latest point, else the first week
+            older = [p["pm25"] for p in older_pool[-37:-30]] if len(older_pool) >= 37 else [p["pm25"] for p in older_pool[:7]]
+            if recent and older:
+                r_mean = sum(recent) / len(recent)
+                o_mean = sum(older) / len(older)
+                pct = round((r_mean - o_mean) / o_mean * 100) if o_mean else 0
+                direction = "worse" if pct > 5 else ("better" if pct < -5 else "about the same")
+                bands = [p["band"] for p in series[-30:]]
+                mode_band = max(set(bands), key=bands.count) if bands else None
+                verdict = {
+                    "recent_mean": round(r_mean, 1),
+                    "earlier_mean": round(o_mean, 1),
+                    "change_pct": pct,
+                    "direction": direction,
+                    "dominant_band_30d": mode_band,
+                    "days_of_history": len(series),
+                    "text": (f"{'Worse' if direction=='worse' else 'Better' if direction=='better' else 'About the same'} "
+                             f"than a month ago ({'+' if pct>0 else ''}{pct}%) · mostly "
+                             f"{(mode_band or 'unknown').replace('_',' ')} over the last 30 days"),
+                }
+        data = {"city_id": city, "cell": cell, "days": days, "series": series, "verdict": verdict,
+                "days_of_history": len(series), "proxy_cell": proxy_cell,
+                "proxy_km": proxy_dist,
+                "note": (f"no long station record inside this cell — showing the nearest monitored "
+                         f"cell, ~{proxy_dist} km away") if proxy_cell else None}
+        _history_cache[key] = (now, data)
+        return ok(data)
+    except Exception as e:  # noqa: BLE001
+        return _server_error("trend_failed", e, "Could not load PM2.5 trend right now.")
+
+
 # ---------------------------------------------------------------------------
 # Attribution
 # ---------------------------------------------------------------------------
@@ -989,6 +1105,14 @@ def mobility(city: str = Query(..., description="City ID")) -> dict:
     return ok(rows)
 
 
+# The comparison scans thousands of rows across all cities and its inputs only
+# change on the hourly ingest / daily model cron, so cache the built result —
+# a cold build measured 6.1 s, which the Cities panel would otherwise pay on
+# every open. Same TTL pattern as /plume.
+_COMPARISON_TTL_S = 300
+_comparison_cache: dict[str, tuple[float, dict]] = {}
+
+
 @app.get("/comparison", tags=["data"])
 def comparison() -> dict:
     """Agent 5 multi-city comparison: trends, signatures, and playbook recommendations.
@@ -998,6 +1122,10 @@ def comparison() -> dict:
     (was previously always the demo fixture, even live)."""
     if DEMO_MODE:
         return ok(fixture("comparison", default={"summary": {}, "cities": []}))
+    now = time.time()
+    hit = _comparison_cache.get("all")
+    if hit and now - hit[0] < _COMPARISON_TTL_S:
+        return ok(hit[1])
     try:
         from agents.multicity import build_comparison
 
@@ -1041,7 +1169,9 @@ def comparison() -> dict:
         rec_statuses = (
             sdb.table("enforcement_recs").select("city_id,status").limit(5000).execute().data
         ) or []
-        return ok(build_comparison(cities, aqi_rows, forecast_rows, rec_statuses))
+        data = build_comparison(cities, aqi_rows, forecast_rows, rec_statuses)
+        _comparison_cache["all"] = (now, data)
+        return ok(data)
     except Exception as e:  # noqa: BLE001
         return _server_error("comparison_error", e, "Failed to build multi-city comparison")
 

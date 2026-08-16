@@ -4,6 +4,7 @@ import { aqiCategory, pm25ToAqi } from "./aqi";
 import { SOURCE_COLORS, dominantSource, type Shares } from "./sources";
 import { DRIVER_LABELS, type AttrCell } from "./BlameMap";
 import { placeForCell } from "./placeName";
+import TrendPanel from "./TrendPanel";
 
 type FC = { h3_cell: string; horizon_h: number; value: number; pi_low: number; pi_high: number };
 
@@ -133,6 +134,11 @@ export default function CellStoryPanel({
         {markerBits.length > 0 && (
           <div className="mt-1 text-[11px] text-gray-400">evidence: {markerBits.join(" · ")}</div>
         )}
+      </div>
+
+      {/* Past — where it has been (daily station history for this cell) */}
+      <div className="mt-3">
+        <TrendPanel city={city} cell={cell.h3_cell} compact />
       </div>
 
       {/* 2 — Forecast */}
