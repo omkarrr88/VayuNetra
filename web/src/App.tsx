@@ -18,6 +18,7 @@ import CityStatsPanel from "./CityStatsPanel";
 import InterventionsPanel from "./InterventionsPanel";
 import DispatchQueues from "./DispatchQueues";
 import LayersControl from "./LayersControl";
+import TimeScrub, { type ScrubFrame } from "./TimeScrub";
 import { Sidebar, BottomNav, type Section } from "./Sidebar";
 import TopBar from "./TopBar";
 import Tour, { tourSeen } from "./Tour";
@@ -85,6 +86,7 @@ export default function App() {
   const [fallback, setFallback] = useState(false);
   const [tour, setTour] = useState(() => !tourSeen());
   const [coverageKind, setCoverageKind] = useState<"stations" | "dense">("dense");
+  const [scrub, setScrub] = useState<ScrubFrame>(null);
   const [coverage, setCoverage] = useState<{
     cells: CoverageCell[];
     n_cells?: number;
@@ -227,6 +229,7 @@ export default function App() {
               showFires={showFires}
               coverageCells={coverage?.cells ?? []}
               coverageKind={coverageKind}
+              scrub={scrub}
             />
 
             {/* Live status — top-left so the section panel owns the right edge */}
@@ -248,6 +251,19 @@ export default function App() {
                 </div>
               </div>
             )}
+
+            {/* Time scrub — bottom-centre of the map (desktop); switches the
+                map to the PM2.5 field while replaying so the change is visible */}
+            <div className="pointer-events-none absolute bottom-2 left-1/2 z-10 hidden -translate-x-1/2 lg:block">
+              <TimeScrub
+                city={active}
+                denseCells={coverage?.cells ?? []}
+                onFrame={(f) => {
+                  setScrub(f);
+                  if (f && mode !== "coverage") setMode("coverage");
+                }}
+              />
+            </div>
 
             {/* Map layers — bottom-right corner of the map, clear of the
                 cell-story drawer (left) and the section panel (right edge) */}

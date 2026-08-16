@@ -363,6 +363,38 @@ def pm25_trend(
         return _server_error("trend_failed", e, "Could not load PM2.5 trend right now.")
 
 
+@app.get("/history/cells", tags=["data"])
+def pm25_hourly_by_cell(
+    city: str = Query("delhi", description="City ID"),
+    hours: int = Query(24, ge=6, le=72),
+) -> dict:
+    """Hourly PM2.5 per monitored cell over the trailing window — the map
+    time-scrub ("play the last 24 hours"). Real station readings, hourly means."""
+    if DEMO_MODE:
+        return ok({"city_id": city, "hours": hours, "frames": [], "note": "offline snapshot has no hourly cell history"})
+    key = f"cells:{city}:{hours}"
+    now = time.time()
+    hit = _history_cache.get(key)
+    if hit and now - hit[0] < _HISTORY_TTL_S:
+        return ok(hit[1])
+    try:
+        rows = _db().rpc("pm25_hourly_cells", {"p_city": city, "p_hours": hours}).execute().data or []
+        frames: dict[str, dict[str, float]] = {}
+        for r in rows:
+            try:
+                v = float(r.get("pm25"))
+            except (TypeError, ValueError):
+                continue
+            if r.get("hour") and r.get("h3_cell") and math.isfinite(v):
+                frames.setdefault(str(r["hour"])[:13], {})[r["h3_cell"]] = round(v, 1)
+        data = {"city_id": city, "hours": hours,
+                "frames": [{"hour": f"{h}:00:00+00:00", "cells": cells} for h, cells in sorted(frames.items())]}
+        _history_cache[key] = (now, data)
+        return ok(data)
+    except Exception as e:  # noqa: BLE001
+        return _server_error("history_cells_failed", e, "Could not load hourly cell history.")
+
+
 # ---------------------------------------------------------------------------
 # Attribution
 # ---------------------------------------------------------------------------

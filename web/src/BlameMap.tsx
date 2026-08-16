@@ -160,6 +160,7 @@ export default function BlameMap({
   showFires = false,
   coverageCells = [],
   coverageKind = "dense",
+  scrub = null,
 }: {
   city: string;
   center: [number, number];
@@ -174,6 +175,7 @@ export default function BlameMap({
   showFires?: boolean;
   coverageCells?: CoverageCell[];
   coverageKind?: "stations" | "dense";
+  scrub?: { hour: string; scale: Record<string, number> } | null;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -317,11 +319,16 @@ export default function BlameMap({
       id: "coverage",
       data: coverageCells,
       getHexagon: (d) => d.h3_cell,
-      getFillColor: (d) => pm25Color(coverageKind === "stations" ? d.pm25_stations : d.pm25),
+      getFillColor: (d) => {
+        const base = coverageKind === "stations" ? d.pm25_stations : d.pm25;
+        const k = scrub ? (scrub.scale[d.h3_cell] ?? 1) : 1;
+        return pm25Color(base * k);
+      },
       stroked: false,
       extruded: false,
       pickable: true,
-      updateTriggers: { getFillColor: coverageKind },
+      transitions: { getFillColor: 400 },
+      updateTriggers: { getFillColor: [coverageKind, scrub?.hour ?? "live"] },
     });
 
     type AnyLayer =
