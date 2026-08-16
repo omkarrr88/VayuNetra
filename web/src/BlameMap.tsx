@@ -5,6 +5,7 @@ import { H3HexagonLayer } from "@deck.gl/geo-layers";
 import { GeoJsonLayer, LineLayer, PolygonLayer, ScatterplotLayer } from "@deck.gl/layers";
 import { api } from "./api";
 import { cellToLatLng } from "h3-js";
+import { inGeometry, type Geometry } from "./placeName";
 import { colorFor, dominantSource, pm25Color, satColor, type Shares } from "./sources";
 
 export type ShapDriver = { feature: string; source: string; contribution: number };
@@ -202,6 +203,28 @@ export default function BlameMap({
   const [sources, setSources] = useState<EmissionSource[]>([]);
   const [plume, setPlume] = useState<PlumeData | null>(null);
   const [wards, setWards] = useState<WardCollection | null>(null);
+  const wardMeansRef = useRef<Map<string, number>>(new Map());
+  const [wardMeansVersion, setWardMeansVersion] = useState(0);
+  useEffect(() => {
+    if (!wards || !coverageCells.length) { wardMeansRef.current = new Map(); setWardMeansVersion((v) => v + 1); return; }
+    const sums = new Map<string, [number, number]>();
+    const feats = wards.features as Array<WardFeature & { geometry: Geometry }>;
+    for (const c of coverageCells) {
+      const [lat, lng] = cellToLatLng(c.h3_cell);
+      for (const f of feats) {
+        if (f.geometry && inGeometry(lng, lat, f.geometry)) {
+          const k = f.properties.ward_id;
+          const cur = sums.get(k) ?? [0, 0];
+          sums.set(k, [cur[0] + c.pm25, cur[1] + 1]);
+          break;
+        }
+      }
+    }
+    const out = new Map<string, number>();
+    for (const [k, [sum, n]] of sums) if (n) out.set(k, sum / n);
+    wardMeansRef.current = out;
+    setWardMeansVersion((v) => v + 1);
+  }, [wards, coverageCells]);
   const [freight, setFreight] = useState<FreightCollection | null>(null);
   const [fires, setFires] = useState<import("geojson").FeatureCollection | null>(null);
   const [phase, setPhase] = useState(0);
@@ -359,16 +382,26 @@ export default function BlameMap({
     // (freight corridors reuse GeoJsonLayer)
     const layers: AnyLayer[] = [mode === "coverage" ? coverage : blame];
     if (showWards && wards) {
+      // Ward heat: mean PM2.5 of the dense-field cells inside each ward — the
+      // unit NCAP officers think and report in. Computed once per (wards, field).
+      const wardMean = wardMeansRef.current;
       layers.push(
         new GeoJsonLayer({
           id: "wards",
           data: wards as unknown as import("geojson").FeatureCollection,
           stroked: true,
           filled: true,
-          getFillColor: [148, 163, 184, 8], // near-invisible tint keeps hover picking alive
-          getLineColor: [51, 65, 85, 160],
+          getFillColor: (f: unknown) => {
+            const wid = (f as WardFeature).properties?.ward_id;
+            const m = wid ? wardMean.get(wid) : undefined;
+            if (m === undefined) return [148, 163, 184, 8];
+            const [r, g, b] = pm25Color(m);
+            return [r, g, b, 95];
+          },
+          getLineColor: [51, 65, 85, 170],
           lineWidthMinPixels: 1,
           pickable: true,
+          updateTriggers: { getFillColor: wardMeansVersion },
         }),
       );
     }
@@ -504,8 +537,10 @@ export default function BlameMap({
         if ("properties" in o) {
           const p = o.properties as { ward_id?: string; name: string; highway?: string; policy?: string };
           if (p.ward_id) {
+            const m = wardMeansRef.current.get(p.ward_id);
             return {
-              html: `<b>${p.name}</b><br/><span style="color:#888">ward ${p.ward_id}</span>`,
+              html: `<b>${p.name}</b><br/><span style="color:#888">ward ${p.ward_id}</span>` +
+                (m !== undefined ? `<br/><b>${Math.round(m)} µg/m³</b> mean PM2.5 (dense field)` : ""),
               style: { fontSize: "12px" },
             };
           }
@@ -527,7 +562,7 @@ export default function BlameMap({
         };
       },
     });
-  }, [cells, mode, selected, onSelect, showSources, sources, coverageCells, coverageKind, showPlumes, plume, showWards, wards, showFreight, freight, phase, patchTick]);
+  }, [cells, mode, selected, onSelect, showSources, sources, coverageCells, coverageKind, showPlumes, plume, showWards, wards, wardMeansVersion, showFreight, freight, phase, patchTick]);
 
   return (
     <div className="relative h-full w-full">

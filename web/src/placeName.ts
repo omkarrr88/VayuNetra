@@ -4,7 +4,7 @@
 import { cellToLatLng } from "h3-js";
 
 type WardProps = { ward_id: string; name: string };
-type Geometry =
+export type Geometry =
   | { type: "Polygon"; coordinates: number[][][] }
   | { type: "MultiPolygon"; coordinates: number[][][][] };
 type Feature = { properties: WardProps; geometry: Geometry };
@@ -37,7 +37,7 @@ function inRing(lng: number, lat: number, ring: number[][]): boolean {
   return inside;
 }
 
-function inGeometry(lng: number, lat: number, g: Geometry): boolean {
+export function inGeometry(lng: number, lat: number, g: Geometry): boolean {
   const polys = g.type === "Polygon" ? [g.coordinates] : g.coordinates;
   for (const poly of polys) {
     if (!poly.length) continue;
