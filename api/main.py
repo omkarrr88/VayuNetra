@@ -587,6 +587,153 @@ _BROADCAST_WINDOW_S = 300
 _last_broadcast: dict[str, float] = {}
 
 
+# ---------------------------------------------------------------------------
+# Citizen reports — the complaint loop (photo -> candidate source -> SLA)
+# ---------------------------------------------------------------------------
+
+_REPORT_WINDOW_S = 60           # one report per client-IP per minute
+_last_report: dict[str, float] = {}
+_REPORT_CATEGORIES = {"waste_burning", "construction_dust", "industrial_smoke",
+                      "vehicle_smoke", "other"}
+# citizen category -> emission_sources type, used when an officer verifies
+_REPORT_SOURCE_TYPE = {
+    "waste_burning": "waste_burn",
+    "construction_dust": "construction",
+    "industrial_smoke": "industry",
+    "vehicle_smoke": "diesel_corridor",
+    "other": "industry",
+}
+_MAX_PHOTO_BYTES = 4_000_000
+
+
+@app.post("/report", tags=["citizen"])
+async def submit_report(request: Request) -> dict:
+    """Citizen pollution report: multipart form with lat/lng/category and an
+    optional photo. Public endpoint (rate-limited); the report enters the
+    enforcement funnel as a candidate source once an officer verifies it."""
+    ip = (request.client.host if request.client else "?")
+    now_s = time.time()
+    if now_s - _last_report.get(ip, 0) < _REPORT_WINDOW_S:
+        return err("rate_limited", "One report per minute — please retry shortly.")
+
+    form = await request.form()
+    city = str(form.get("city") or "").strip().lower()
+    category = str(form.get("category") or "").strip()
+    description = str(form.get("description") or "").strip()[:500]
+    try:
+        lat, lng = float(form.get("lat")), float(form.get("lng"))
+    except (TypeError, ValueError):
+        return err("bad_request", "lat and lng are required numbers")
+    if category not in _REPORT_CATEGORIES:
+        return err("bad_request", f"category must be one of {sorted(_REPORT_CATEGORIES)}")
+    if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+        return err("bad_request", "coordinates out of range")
+    try:
+        from core.cities import load_city as _lc
+        _lc(city)
+    except Exception:
+        return err("bad_request", f"unknown city '{city}'")
+
+    from core.spatial.h3_utils import latlng_to_cell
+    cell = latlng_to_cell(lat, lng, 8)
+
+    if DEMO_MODE:
+        _last_report[ip] = now_s
+        return ok({"report_id": 0, "h3_cell": cell, "status": "received",
+                   "note": "demo mode — report accepted but not persisted"})
+
+    photo_url = None
+    photo = form.get("photo")
+    if photo is not None and hasattr(photo, "read"):
+        blob = await photo.read()
+        if blob and len(blob) <= _MAX_PHOTO_BYTES:
+            try:
+                sdb = _db()
+                name = f"{city}/{int(now_s)}_{cell}.jpg"
+                sdb.storage.from_("citizen-reports").upload(
+                    name, blob, {"content-type": getattr(photo, "content_type", None) or "image/jpeg"})
+                photo_url = sdb.storage.from_("citizen-reports").get_public_url(name)
+            except Exception as e:  # noqa: BLE001 — a failed upload must not lose the report
+                logger.error("report photo upload failed: %s", e)
+
+    try:
+        row = (_db().table("citizen_reports").insert({
+            "city_id": city, "h3_cell": cell, "lat": lat, "lng": lng,
+            "category": category, "description": description, "photo_url": photo_url,
+        }).execute().data or [{}])[0]
+        _last_report[ip] = now_s
+        return ok({"report_id": row.get("id"), "h3_cell": cell,
+                   "status": row.get("status", "received"), "photo_url": photo_url,
+                   "sla_hours": row.get("sla_hours", 72)})
+    except Exception as e:  # noqa: BLE001
+        return _server_error("report_failed", e, "Could not record the report.")
+
+
+@app.get("/reports", tags=["citizen"])
+def list_reports(city: str = Query(..., description="City ID"),
+                 limit: int = Query(20, le=100)) -> dict:
+    """Public list of citizen reports with SLA state (transparency by design)."""
+    if DEMO_MODE:
+        return ok({"city_id": city, "reports": [],
+                   "note": "no citizen reports in demo fixtures"})
+    try:
+        rows = (_db().table("citizen_reports")
+                .select("id,h3_cell,lat,lng,category,description,photo_url,status,sla_hours,created_at,resolved_at")
+                .eq("city_id", city).order("created_at", desc=True)
+                .limit(limit).execute().data or [])
+        now_dt = datetime.now(timezone.utc)
+        for r in rows:
+            try:
+                created = datetime.fromisoformat(str(r["created_at"]).replace("Z", "+00:00"))
+                elapsed_h = (now_dt - created).total_seconds() / 3600
+                r["sla_remaining_h"] = round(r.get("sla_hours", 72) - elapsed_h, 1)
+                r["sla_breached"] = r["sla_remaining_h"] < 0 and r.get("status") not in ("resolved", "rejected")
+            except Exception:  # noqa: BLE001
+                r["sla_remaining_h"] = None
+                r["sla_breached"] = False
+        return ok({"city_id": city, "reports": rows})
+    except Exception as e:  # noqa: BLE001
+        return _server_error("reports_failed", e, "Could not load citizen reports.")
+
+
+@app.post("/report/{report_id}/status", tags=["citizen"])
+def update_report_status(report_id: int, payload: dict, db=Depends(get_db)) -> dict:
+    """Officer transition for a report. 'verified' also registers the location
+    as a candidate emission source so the next enforcement run scores it —
+    the complaint loop feeding the worklist."""
+    status = str(payload.get("status") or "").strip()
+    if status not in {"verified", "actioned", "resolved", "rejected"}:
+        return err("bad_request", "status must be verified|actioned|resolved|rejected")
+    if DEMO_MODE:
+        return ok({"report_id": report_id, "status": status, "note": "demo mode"})
+    try:
+        sdb = _db()
+        rows = sdb.table("citizen_reports").select("*").eq("id", report_id).limit(1).execute().data
+        if not rows:
+            return err("not_found", f"report {report_id} not found")
+        report = rows[0]
+        update: dict = {"status": status, "updated_at": datetime.now(timezone.utc).isoformat()}
+        if status in ("resolved", "rejected"):
+            update["resolved_at"] = datetime.now(timezone.utc).isoformat()
+
+        if status == "verified" and not report.get("source_id"):
+            src = (sdb.table("emission_sources").insert({
+                "city_id": report["city_id"],
+                "geom": f'POINT({report["lng"]} {report["lat"]})',
+                "type": _REPORT_SOURCE_TYPE.get(report["category"], "industry"),
+                "name": f"Citizen report #{report_id} ({report['category'].replace('_', ' ')})",
+                "source_origin": "citizen_report",
+                "detection_confidence": 0.5,
+                "attributes": {"citizen_report_id": report_id, "photo_url": report.get("photo_url")},
+            }).execute().data or [{}])[0]
+            if src.get("id"):
+                update["source_id"] = src["id"]
+        sdb.table("citizen_reports").update(update).eq("id", report_id).execute()
+        return ok({"report_id": report_id, **update})
+    except Exception as e:  # noqa: BLE001
+        return _server_error("report_status_failed", e, "Could not update the report.")
+
+
 def _latest_advisory(city: str) -> Optional[dict]:
     """Freshest English advisory for a city (fixture rows in DEMO_MODE)."""
     if DEMO_MODE:

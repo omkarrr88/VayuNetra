@@ -16,6 +16,7 @@ import RoiPanel from "./RoiPanel";
 import FairnessPanel from "./FairnessPanel";
 import CityStatsPanel from "./CityStatsPanel";
 import InterventionsPanel from "./InterventionsPanel";
+import DispatchQueues from "./DispatchQueues";
 import LayersControl from "./LayersControl";
 import { Sidebar, BottomNav, type Section } from "./Sidebar";
 import TopBar from "./TopBar";
@@ -255,6 +256,7 @@ export default function App() {
                   <EnforcementPanel city={active} focusCell={cell?.h3_cell ?? null} />
                   <CityIntelPanel city={active} />
                   <InterventionsPanel city={active} />
+                  <DispatchQueues city={active} />
                 </>
               )}
               {section === "forecast" && (
@@ -263,7 +265,7 @@ export default function App() {
                   <CityStatsPanel city={active} cells={attrCells} coverageCells={coverage?.cells ?? []} />
                 </>
               )}
-              {section === "citizen" && <CitizenPanel city={active} languages={city?.languages} />}
+              {section === "citizen" && <CitizenPanel city={active} languages={city?.languages} center={center} />}
               {section === "compare" && <ComparativePanel onSelectCity={setActive} />}
               {section === "whatif" && <WhatIfPanel city={active} />}
               {section === "impact" && (

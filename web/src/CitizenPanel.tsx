@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "./api";
+import CitizenReports from "./CitizenReports";
 import { aqiCategory } from "./aqi";
 import { Panel, SegBtn } from "./ui";
 
@@ -30,7 +31,7 @@ type CleanZone = {
 
 type CleanZones = { basis?: string; zones: CleanZone[] };
 
-export default function CitizenPanel({ city, languages }: { city: string; languages?: string[] }) {
+export default function CitizenPanel({ city, languages, center }: { city: string; languages?: string[]; center?: [number, number] }) {
   const choices = useMemo(() => Array.from(new Set([...(languages ?? []), ...ALL_LANGS])), [languages]);
   const [lang, setLang] = useState(choices[0] ?? "en");
   const [rows, setRows] = useState<Advisory[] | null>(null);
@@ -270,6 +271,7 @@ export default function CitizenPanel({ city, languages }: { city: string; langua
           </div>
         )}
       </div>
+      <CitizenReports city={city} center={center} />
     </Panel>
   );
 }
