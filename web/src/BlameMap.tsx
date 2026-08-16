@@ -19,6 +19,22 @@ export type EmissionSource = {
   coordinates: [number, number];
 };
 
+// Satellite patch for a hovered source — fetched lazily, cached, and the
+// tooltip re-renders once it lands. Only rec sources have patches; others
+// simply show no image (never a fake one).
+type Patch = { image_ref: string | null; title?: string | null; placeholder?: boolean };
+const patchCache = new Map<string, Patch | "loading">();
+function patchFor(id: string, onReady: () => void): Patch | null {
+  const hit = patchCache.get(id);
+  if (hit === "loading") return null;
+  if (hit) return hit;
+  patchCache.set(id, "loading");
+  api<Patch>(`/sources/${id}/patch`)
+    .then((p) => { patchCache.set(id, p ?? { image_ref: null }); onReady(); })
+    .catch(() => patchCache.set(id, { image_ref: null }));
+  return null;
+}
+
 // The live API returns PostGIS GeoJSON (`geom.coordinates`); fixtures use a flat
 // `coordinates`. Normalize both so the overlay renders on real data too.
 type RawSource = Omit<EmissionSource, "coordinates"> & {
@@ -181,6 +197,7 @@ export default function BlameMap({
   const mapRef = useRef<maplibregl.Map | null>(null);
   const overlayRef = useRef<MapboxOverlay | null>(null);
   const [cells, setCells] = useState<AttrCell[]>([]);
+  const [patchTick, setPatchTick] = useState(0); // bumps when a hovered source's patch arrives
   const [sources, setSources] = useState<EmissionSource[]>([]);
   const [plume, setPlume] = useState<PlumeData | null>(null);
   const [wards, setWards] = useState<WardCollection | null>(null);
@@ -454,13 +471,18 @@ export default function BlameMap({
             style: { fontSize: "12px" },
           };
         }
+        const patch = patchFor(String(o.id), () => setPatchTick((t) => t + 1));
+        const img = patch?.image_ref && !patch.placeholder
+          ? `<img src="${patch.image_ref}" alt="" style="display:block;width:220px;height:146px;object-fit:cover;border-radius:6px;margin-bottom:6px" />` +
+            `<div style="color:#0369a1;font-size:10px;font-weight:600;letter-spacing:.04em;margin-bottom:2px">SENTINEL-2 · REAL SITE IMAGERY</div>`
+          : "";
         return {
-          html: `<b>${o.name}</b><br/>${o.type.replace("_", " ")} · ${Math.round((o.detection_confidence ?? 0) * 100)}% · ${o.source_origin ?? "registry"}`,
-          style: { fontSize: "12px" },
+          html: `${img}<b>${o.name}</b><br/>${o.type.replace("_", " ")} · ${Math.round((o.detection_confidence ?? 0) * 100)}% · ${o.source_origin ?? "registry"}`,
+          style: { fontSize: "12px", maxWidth: "240px" },
         };
       },
     });
-  }, [cells, mode, selected, onSelect, showSources, sources, coverageCells, coverageKind, showPlumes, plume, showWards, wards, showFreight, freight, phase]);
+  }, [cells, mode, selected, onSelect, showSources, sources, coverageCells, coverageKind, showPlumes, plume, showWards, wards, showFreight, freight, phase, patchTick]);
 
   return (
     <div className="relative h-full w-full">

@@ -400,6 +400,38 @@ def pm25_trend(
         return _server_error("trend_failed", e, "Could not load PM2.5 trend right now.")
 
 
+_PATCH_TTL_S = 3600
+_patch_cache: dict[str, tuple[float, dict]] = {}
+
+
+@app.get("/sources/{source_id}/patch", tags=["data"])
+def source_patch(source_id: int) -> dict:
+    """The real Sentinel-2 patch for one emission source (for the map hover
+    card). One image per call, cached — the full patch set is ~30 MB and must
+    never ride along with /static-layers."""
+    if DEMO_MODE:
+        return ok({"source_id": source_id, "image_ref": None, "note": "no patch imagery in the offline snapshot"})
+    key = str(source_id)
+    now = time.time()
+    hit = _patch_cache.get(key)
+    if hit and now - hit[0] < _PATCH_TTL_S:
+        return ok(hit[1])
+    try:
+        rows = (_db().table("kb_chunks").select("title,image_ref,metadata")
+                .eq("modality", "image").eq("metadata->>source_id", key).limit(1).execute().data) or []
+        row = next((r for r in rows if r.get("image_ref")), None)
+        meta = (row or {}).get("metadata") or {}
+        data = {"source_id": source_id,
+                "image_ref": (row or {}).get("image_ref"),
+                "title": (row or {}).get("title"),
+                "placeholder": bool(meta.get("placeholder")),
+                "composite_window": meta.get("composite_window")}
+        _patch_cache[key] = (now, data)
+        return ok(data)
+    except Exception as e:  # noqa: BLE001
+        return _server_error("patch_failed", e, "Could not load the satellite patch.")
+
+
 @app.get("/history/cells", tags=["data"])
 def pm25_hourly_by_cell(
     city: str = Query("delhi", description="City ID"),
