@@ -28,7 +28,7 @@ Every beat below has a timestamp, the exact screen to show, and the exact words 
 |---|---|---|
 | 0:00–0:10 | **Landing page** (`vayunetra-aqi.vercel.app`), slow scroll over the hero and live AQI line | "India already measures its air — nine hundred monitoring stations. Yet only thirty-one percent of monitored cities have any response protocol. Data is not the problem. The missing loop is." |
 | 0:10–0:22 | Click **Open console** → map of Delhi loads with coloured hexagons. Sweep cursor across the map | "This is VayuNetra. Every hexagon is one square kilometre of Delhi, coloured by *who is to blame* for its PM2.5 right now — red is traffic, yellow is construction dust, purple is industry." |
-| 0:22–0:40 | **Click a hexagon** → Cell Story panel opens (place name, e.g. R. K. Puram). Point at the source bars, then the green SHAP box | "Click any cell — this is R. K. Puram. Traffic: sixty-one percent. And the model shows its evidence — SHAP drivers in micrograms, with its own out-of-sample R-squared on display. Where the model has no skill, it *abstains* and falls back to cited chemical signatures. It never over-claims." |
+| 0:22–0:40 | **Click a hexagon** → Cell Story panel opens (place name, e.g. R. K. Puram). Point at the source bars, then the green SHAP box, then scroll to **This place — past air** | "Click any cell — this is R. K. Puram. Traffic: sixty-one percent. The model shows its evidence — SHAP drivers in micrograms, with its own out-of-sample R-squared. And here is this place's own history: worse than a month ago, in plain words, over a year of readings. Where the model has no skill, it *abstains* and falls back to cited chemical signatures. It never over-claims." |
 | 0:40–0:55 | Point at **"Where it's heading"** (+24/48/72h numbers in the Cell Story), then click **Forecast** in the sidebar; hover the uncertainty band | "The same cell carries a seventy-two-hour forecast with calibrated eighty-percent uncertainty bands. Our attribution matches official inventories at cosine zero-nine-two, and the forecast beats persistence in every launch city — we validated everything, including our failures." |
 | 0:55–1:00 | Hold on the Forecast chart | "So we know who is to blame, and what's coming. Abhinav turns that into action." |
 
@@ -68,7 +68,7 @@ Every beat below has a timestamp, the exact screen to show, and the exact words 
 
 Landing ✓ (0:00) · Blame map + layers ✓ (0:10) · Cell Story: attribution, SHAP, abstention, forecast ✓ (0:22–0:55) · Forecast panel ✓ (0:40) · Pipeline, 6 agents, spike gate, latency ✓ (1:00) · Enforcement worklist ✓ (1:15) · Dossier: satellite + RAG citations ✓ (1:32) · Notice PDF + impact chart ✓ (1:32) · Intervention tracking ✓ (1:50) · Advisories: 4 languages ✓ (2:00) · 4 channels + live Telegram + IVR ✓ (2:18) · Simulator + cited impact ✓ (2:32) · Impact / City ROI ✓ (2:32) · Cities comparison ✓ (2:48) · Scalability + ₹0 close ✓ (2:48).
 
-Not shown (deliberate, no time): guided tour, map layer toggles (plumes/wards/freight are visible in the hero landing image), clean-air zones, optimizer, broadcast button. If a judge asks, all are live in the app.
+Not shown (deliberate, no time): guided tour, map layer toggles (plumes/wards/freight/fires are visible in the hero landing image), the 24-hour map replay, satellite hover cards, ward heat, share card, clean-air zones, optimizer, broadcast button. All are live — and every screen in this script is a deep link, so bookmark them for the recording. If a judge asks, all are live in the app.
 
 ## Editing notes
 

@@ -36,6 +36,8 @@ It runs **live in 10 Indian cities** — Delhi, Bengaluru, Mumbai, Hyderabad, Ch
 
 URLs: `/` is the landing page, `/console` is the operations console. (Old `#/console` links auto-upgrade to the clean path.)
 
+**Deep links.** Every console state is a URL: `/console?city=hyderabad&section=action&cell=8860a…&mode=satellite&layers=plumes,fires`. Switching city, section, cell, map mode or layers writes back to the address bar, so any view can be bookmarked or handed to someone. **Keyboard:** `1`–`7` jump sections, `[` / `]` cycle cities, `P` toggles presentation mode.
+
 ---
 
 ## 3. The Landing page (`/`)
@@ -62,6 +64,7 @@ The public front door — no login, loads fast (the heavy map code only loads at
 | Logo + "VayuNetra" | Back to the landing page |
 | **City selector** (dropdown) | Switch between any of the 10 cities (Delhi · Bengaluru · Mumbai · Hyderabad · Chennai · Kolkata · Pune · Ahmedabad · Jaipur · Lucknow). *Everything* — map, panels, forecasts, worklists — follows the selected city. Your choice is remembered (localStorage). |
 | Section title + hint | Shows where you are, e.g. "Enforcement — Ranked, evidence-backed actions for officers" |
+| **Present** (or the `P` key) | Presentation mode — type scales up ~18% for a projector; layers card collapses to its chip. Persists across reload. |
 | **? (Help)** | Replays the guided tour |
 | GitHub icon | Repo link |
 | **← Landing** | Back to `/` |
@@ -103,11 +106,13 @@ Desktop: navy left sidebar. Mobile: same 7 sections as a bottom tab bar; the map
 | **Sat NO2** | Sentinel-5P tropospheric NO₂ column (blue low → red high) — independent satellite evidence. |
 | **PM2.5** | The dense 1-km model field. Sub-toggle **"Stations only" ↔ "Dense 1km"** shows what the E2 downscaler adds beyond the sparse station grid; legend shows CPCB AQI bands and the skill note. |
 
+**Play the last 24 hours** — the ▶ control at the bottom of the map replays the trailing day: the dense PM2.5 field recolours hour by hour so the city visibly breathes through the evening peak and morning lull. Mechanics are labelled honestly ("station-scaled replay": each 1 km cell scaled by its nearest monitor's hourly ratio); it returns to live at the end.
+
 ### 5.2 Five overlay toggles (independent, all off by default)
-- **Detected sources** — dots for the 647 registered (OSM) + satellite-detected (E1 CV) emission sources.
+- **Detected sources** — dots for the 647 registered (OSM) + satellite-detected (E1 CV) emission sources. **Hover a dot to see its real Sentinel-2 image** (worklist sources carry one; others show no image, never a stand-in).
 - **Fire / burn events (30d)** — NASA FIRMS thermal detections over the city (the stubble/waste-burning layer), refreshed by `scripts/fetch_fire_events.py`.
-- **Wind plumes** — Gaussian plume footprints from the top sources, oriented by the live wind field.
-- **Ward boundaries** — administrative wards (Datameet community maps, ODbL). These same polygons power the place names.
+- **Wind plumes** — Gaussian plume footprints from the top sources, oriented by the live wind field, with a **wind-arrow grid** across the city (direction; length = speed) so the plume orientation has a visible cause.
+- **Ward boundaries** — administrative wards (Datameet / OSM, ODbL), **each filled by its mean PM2.5** (dense-field cells inside it, CPCB colours; the value shows on hover). These same polygons power the place names.
 - **Freight corridors** — violet truck-route lines (OSM motorway/trunk) with entry-window policy notes (e.g. Delhi 23:00–07:00).
 
 ### 5.3 Cell Story (click any hexagon)
@@ -117,8 +122,10 @@ The heart of the console. Opens as a left drawer (desktop) / inline card (mobile
 2. **"1 · Who's to blame"** — source-share bars + confidence. Below, one of two "why" boxes:
    - **Green (model attribution):** SHAP drivers in µg/m³ and the model's own out-of-sample R² — *"passed the ≥0.15 skill gate"*.
    - **Amber (chemical signature):** when the local model lacks skill, the system says so and falls back to cited marker-chemistry priors — *it never over-claims*.
-3. **"2 · Where it's heading"** — the cell's +24/48/72h PM2.5 with 80% intervals, colour-coded by AQI band.
-4. **"3 · Act — view enforcement actions →"** — jumps to Enforcement, sorted nearest-to-this-cell first.
+3. **"This place — past air"** — daily PM2.5 for this cell over 30 d / 90 d / 1 y drawn over the CPCB colour bands, a one-line verdict ("↑ Worse than a month ago (+20%) · mostly satisfactory over the last 30 days"), and red **spike-day markers** each with a data-backed reason (fire detections that day, weekday, or the excess over the two-week norm). Cells without a long station record honestly show the nearest monitored cell and say how far away it is.
+4. **"2 · Where it's heading"** — the cell's +24/48/72h PM2.5 with 80% intervals, colour-coded by AQI band.
+5. **"3 · Act — view enforcement actions →"** — jumps to Enforcement, sorted nearest-to-this-cell first.
+6. **Share (↗ icon in the header)** — renders a WhatsApp-ready PNG card of this place (blame, verdict, 90-day trend, forecast); uses the phone share sheet where available, else downloads.
 
 ---
 
@@ -140,7 +147,7 @@ The heart of the console. Opens as a left drawer (desktop) / inline card (mobile
 - Chart: city-average forecast line, shaded **80% uncertainty band**, and the gray dashed **persistence baseline** (what "tomorrow = today" would predict — the honest bar to beat).
 - **Backtested skill note:** e.g. "+X% vs persistence · +Y% vs climatology" (walk-forward, 3 folds, on live data).
 - **Spike alerts** when cells are forecast ≥90 µg/m³; scrollable per-cell list (worst first, interval + value).
-- **City Statistics card:** the last-48h hourly PM2.5 area chart (real station readings), the live **source-mix donut** (mean attribution across live cells), and the **"Who breathes what"** stacked AQI-band bar (share of ~1 km cells in each CPCB band).
+- **City Statistics card:** **City — past air** (daily PM2.5 for the whole city, 30 d / 90 d / 1 y with verdict and spike-day markers — Delhi's 1-year view shows the real winter smog season), the last-48h hourly PM2.5 area chart (real station readings), the live **source-mix donut** (mean attribution across live cells), and the **"Who breathes what"** stacked AQI-band bar (share of ~1 km cells in each CPCB band).
 
 ### 6.3 Advisories (the citizen loop)
 - **Language dropdown:** English · Hindi · Kannada · Marathi — full native-script text, generated by deterministic templates (**deliberately LLM-free**: templates cannot hallucinate medical advice; the health facts are locked).
@@ -196,11 +203,11 @@ Supporting models: **E1** satellite CV source detection · **E2** dense 1-km fie
 CPCB CAAQMS (via data.gov.in / OpenAQ) · Open-Meteo + ERA5 weather & boundary layer · Sentinel-5P NO₂, Sentinel-2, NASA FIRMS fire (Earth Engine) · OpenStreetMap sources/facilities/roads (Overpass) · GPW v4.11 population (CIESIN/SEDAC) · GTFS + road network mobility proxy. Ingest runs on GitHub Actions crons (hourly + daily).
 
 ### 7.3 API (FastAPI, Render)
-**34 HTTP routes + 1 WebSocket**, one envelope `{success, data, error, meta}`. The ones worth knowing:
+**37 HTTP routes + 1 WebSocket**, one envelope `{success, data, error, meta}`. The ones worth knowing:
 
 | Area | Endpoints |
 |---|---|
-| Feeds | `/cities` `/aqi/current` `/history` `/attribution` `/forecast` `/coverage` `/plume` `/static-layers` `/mobility` |
+| Feeds | `/cities` `/aqi/current` `/history` `/history/trend` (daily, per city or cell, with verdict + spike days) `/history/cells` (hourly per cell — the map replay) `/sources/{id}/patch` `/attribution` `/forecast` `/coverage` `/plume` `/static-layers` `/mobility` |
 | Officer | `/enforcement` `/enforcement/{id}/dossier` `/enforcement/{id}/notice.pdf` `POST /enforcement/{id}/status` `/interventions` `/interventions/export` (PRANA-ready NCAP evidence CSV) |
 | Citizen | `/advisory` `POST /advisory/broadcast` `/clean-zones` `/alerts/compound` `POST /telegram/webhook` `/ivr/inbound` `/ivr/advisory` `POST /report` `/reports` `POST /report/{id}/status` (complaint loop) |
 | Analysis | `/comparison` `/roi` `POST /simulate` `POST /optimize` `/latency` `/traces` |

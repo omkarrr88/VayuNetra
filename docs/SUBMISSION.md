@@ -43,7 +43,7 @@ The time from a pollution signal to a cited, actionable recommendation is betwee
 
 ## What is in the app
 
-- A blame map where each hexagon is coloured by its dominant pollution source. Clicking one opens the cell's place name, source breakdown, the model's SHAP evidence and its R², and the 72-hour outlook.
+- A blame map where each hexagon is coloured by its dominant pollution source. Clicking one opens the cell's place name, source breakdown, the model's SHAP evidence and its R², its own past air (daily PM2.5 up to a year, with a plain-language verdict and spike-day markers), and the 72-hour outlook — with a one-click share card. A ▶ control replays the last 24 hours across the city; source dots show their real Sentinel-2 image on hover; every view is a deep link.
 - Three map modes (source attribution, Sentinel-5P satellite NO₂, and a dense 1 km PM2.5 field) plus overlays for detected sources, wind plumes, ward boundaries, freight corridors and NASA FIRMS fire/burn events.
 - The enforcement worklist with filters and search, evidence dossiers, and draft notice PDFs that include a projected-impact chart showing the forecast with and without the source's contribution.
 - Intervention tracking, and a PRANA-ready export: every dispatched intervention with its measured before/after effect, mapped to the NCAP spending head the city reports against — VayuNetra feeds the official portal rather than competing with it.
@@ -57,7 +57,7 @@ The time from a pollution signal to a cited, actionable recommendation is betwee
 
 All data sources are free and open: CPCB CAAQMS via data.gov.in and OpenAQ (plus community sensors from non-government providers, ingested at reduced confidence), Sentinel-5P and Sentinel-2 through Earth Engine, NASA FIRMS for thermal anomalies, Open-Meteo and ERA5 for weather, OpenStreetMap for the source registry, road network and ward boundaries, and GPW v4.11 for population. Ingestion runs on scheduled GitHub Actions with a rolling 90-day retention window.
 
-The backend is FastAPI on Render with 34 routes and a WebSocket, all returning one `{success, data, error, meta}` envelope. The frontend is React with MapLibre and Deck.gl on Vercel. Data sits in Supabase Postgres with PostGIS and pgvector, protected by row-level security, with all writes going through the service role on the server. Models are LightGBM with SHAP, quantile regression with conformal calibration, a Gaussian plume model and a coverage downscaler. Retrieval is multimodal RAG over the regulatory corpus.
+The backend is FastAPI on Render with 37 routes and a WebSocket, all returning one `{success, data, error, meta}` envelope. The frontend is React with MapLibre and Deck.gl on Vercel. Data sits in Supabase Postgres with PostGIS and pgvector, protected by row-level security, with all writes going through the service role on the server. Models are LightGBM with SHAP, quantile regression with conformal calibration, a Gaussian plume model and a coverage downscaler. Retrieval is multimodal RAG over the regulatory corpus.
 
 Adding a city means adding one YAML file with a bounding box, languages and regulatory authority, then one backfill run. There is no per-city code anywhere in the system: seven metros were onboarded that way in a single week. Total infrastructure cost is zero: everything runs on free tiers.
 
