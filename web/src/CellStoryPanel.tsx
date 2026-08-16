@@ -5,6 +5,7 @@ import { SOURCE_COLORS, dominantSource, type Shares } from "./sources";
 import { DRIVER_LABELS, type AttrCell } from "./BlameMap";
 import { placeForCell } from "./placeName";
 import TrendPanel from "./TrendPanel";
+import { loadLogo, renderShareCard } from "./shareCard";
 
 type FC = { h3_cell: string; horizon_h: number; value: number; pi_low: number; pi_high: number };
 
@@ -29,6 +30,7 @@ export default function CellStoryPanel({
 }) {
   const [fc, setFc] = useState<FC[] | null>(null);
   const [place, setPlace] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
 
   // Ward name from the shipped boundary files — humans read "Karol Bagh",
   // not an H3 id. Falls back to the raw id when no ward matches.
@@ -75,9 +77,56 @@ export default function CellStoryPanel({
             <div className="font-mono text-xs text-gray-500">{cell.h3_cell}</div>
           )}
         </div>
-        <button aria-label="Close cell story" onClick={onClose} className="rounded px-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700">
-          ✕
-        </button>
+        <div className="flex items-center gap-0.5">
+          <button
+            aria-label="Share this place as an image"
+            title="Share this place — PNG card for WhatsApp"
+            onClick={async () => {
+              setSharing(true);
+              try {
+                const [trend, logo] = await Promise.all([
+                  api<{ series: Array<{ date: string; pm25: number; band: string }>; verdict?: { text: string; direction: string } | null }>(
+                    `/history/trend?city=${city}&days=90&cell=${cell.h3_cell}`,
+                  ).catch(() => null),
+                  loadLogo(),
+                ]);
+                const canvas = renderShareCard({
+                  cityName: city.charAt(0).toUpperCase() + city.slice(1),
+                  place: place ?? cell.h3_cell,
+                  cellId: cell.h3_cell,
+                  shares,
+                  confidence: cell.confidence,
+                  trend,
+                  forecast: (fc ?? []).map((f) => ({ horizon_h: f.horizon_h, value: f.value, pi_low: f.pi_low, pi_high: f.pi_high })),
+                  logo,
+                });
+                const blob: Blob | null = await new Promise((r) => canvas.toBlob(r, "image/png"));
+                if (!blob) return;
+                const file = new File([blob], `vayunetra-${city}-${(place ?? cell.h3_cell).replace(/\W+/g, "-").toLowerCase()}.png`, { type: "image/png" });
+                const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+                if (nav.share && nav.canShare?.({ files: [file] })) {
+                  await nav.share({ files: [file], title: `Air in ${place ?? city}`, text: "VayuNetra — who is to blame, and how the air has been." });
+                } else {
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url; a.download = file.name; a.click();
+                  URL.revokeObjectURL(url);
+                }
+              } finally {
+                setSharing(false);
+              }
+            }}
+            className="rounded px-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
+            disabled={sharing}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+              <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" />
+            </svg>
+          </button>
+          <button aria-label="Close cell story" onClick={onClose} className="rounded px-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700">
+            ✕
+          </button>
+        </div>
       </div>
 
       {/* 1 — Blame */}
