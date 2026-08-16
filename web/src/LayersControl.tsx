@@ -21,6 +21,8 @@ interface LayersControlProps {
   onShowWards: (v: boolean) => void;
   showFreight: boolean;
   onShowFreight: (v: boolean) => void;
+  showFires: boolean;
+  onShowFires: (v: boolean) => void;
   coverageKind: "stations" | "dense";
   onCoverageKind: (k: "stations" | "dense") => void;
   coverage: CoverageMeta;
@@ -66,7 +68,7 @@ export default function LayersControl(p: LayersControlProps) {
     // (the 1024–1279 window is too tight — there it starts as the compact chip).
     () => typeof window !== "undefined" && window.matchMedia("(min-width: 1280px)").matches,
   );
-  const overlaysOn = [p.showSources, p.showPlumes, p.showWards, p.showFreight].filter(Boolean).length;
+  const overlaysOn = [p.showSources, p.showPlumes, p.showWards, p.showFreight, p.showFires].filter(Boolean).length;
 
   if (!open) {
     return (
@@ -138,9 +140,16 @@ export default function LayersControl(p: LayersControlProps) {
           label="Freight corridors"
           activeClass="bg-violet-700 text-white"
         />
+        <OverlayToggle
+          on={p.showFires}
+          onClick={() => p.onShowFires(!p.showFires)}
+          swatch="inline-block h-2.5 w-2.5 rounded-full border border-white bg-orange-600"
+          label="Fire / burn events (30d)"
+          activeClass="bg-orange-700 text-white"
+        />
       </div>
       {p.showWards && (
-        <div className="mt-1 text-[10px] text-gray-400">ward boundaries © Datameet community maps (ODbL)</div>
+        <div className="mt-1 text-[10px] text-gray-400">ward boundaries © Datameet / OSM (ODbL)</div>
       )}
 
       {p.mode === "blame" && (

@@ -56,6 +56,7 @@ export default function App() {
   const [showPlumes, setShowPlumes] = useState(false);
   const [showWards, setShowWards] = useState(false);
   const [showFreight, setShowFreight] = useState(false);
+  const [showFires, setShowFires] = useState(false);
   const [section, setSection] = useState<Section>("action");
   const [cell, setCell] = useState<AttrCell | null>(null);
   const [attrCells, setAttrCells] = useState<AttrCell[]>([]);
@@ -174,6 +175,7 @@ export default function App() {
               showPlumes={showPlumes}
               showWards={showWards}
               showFreight={showFreight}
+              showFires={showFires}
               coverageCells={coverage?.cells ?? []}
               coverageKind={coverageKind}
             />
@@ -212,6 +214,8 @@ export default function App() {
                 onShowWards={setShowWards}
                 showFreight={showFreight}
                 onShowFreight={setShowFreight}
+            showFires={showFires}
+            onShowFires={setShowFires}
                 coverageKind={coverageKind}
                 onCoverageKind={setCoverageKind}
                 coverage={coverage}

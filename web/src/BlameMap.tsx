@@ -157,6 +157,7 @@ export default function BlameMap({
   showPlumes = false,
   showWards = false,
   showFreight = false,
+  showFires = false,
   coverageCells = [],
   coverageKind = "dense",
 }: {
@@ -170,6 +171,7 @@ export default function BlameMap({
   showPlumes?: boolean;
   showWards?: boolean;
   showFreight?: boolean;
+  showFires?: boolean;
   coverageCells?: CoverageCell[];
   coverageKind?: "stations" | "dense";
 }) {
@@ -181,6 +183,7 @@ export default function BlameMap({
   const [plume, setPlume] = useState<PlumeData | null>(null);
   const [wards, setWards] = useState<WardCollection | null>(null);
   const [freight, setFreight] = useState<FreightCollection | null>(null);
+  const [fires, setFires] = useState<import("geojson").FeatureCollection | null>(null);
   const [phase, setPhase] = useState(0);
 
   const [mapError, setMapError] = useState(false);
@@ -270,6 +273,19 @@ export default function BlameMap({
     };
   }, [city, showFreight]);
 
+  useEffect(() => {
+    if (!showFires) return;
+    let alive = true;
+    setFires(null);
+    fetch(`/fires/${city}.geojson`)
+      .then((r) => (r.ok ? (r.json() as Promise<import("geojson").FeatureCollection>) : null))
+      .then((d) => alive && setFires(d))
+      .catch(() => alive && setFires(null));
+    return () => {
+      alive = false;
+    };
+  }, [city, showFires]);
+
   // Slow opacity pulse gives the plumes a "drifting" feel without particle cost.
   useEffect(() => {
     if (!showPlumes) return;
@@ -339,6 +355,22 @@ export default function BlameMap({
           filled: false,
           getLineColor: [124, 58, 237, 190],
           lineWidthMinPixels: 2,
+          pickable: true,
+        }),
+      );
+    }
+    if (showFires && fires?.features?.length) {
+      layers.push(
+        new GeoJsonLayer({
+          id: "fires",
+          data: fires,
+          pointType: "circle",
+          getPointRadius: 380,
+          pointRadiusUnits: "meters",
+          getFillColor: [234, 88, 12, 200],
+          getLineColor: [255, 237, 213, 220],
+          lineWidthMinPixels: 1,
+          stroked: true,
           pickable: true,
         }),
       );

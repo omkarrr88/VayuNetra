@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "./api";
 import CitizenReports from "./CitizenReports";
+import ExposureCorridors from "./ExposureCorridors";
 import { aqiCategory } from "./aqi";
 import { Panel, SegBtn } from "./ui";
 
@@ -234,6 +235,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
           <div className="mt-1 text-[11px] leading-4 text-slate-400">
             Estimated from the dense 1 km model field anchored on live station data — a modeled guide, not a measurement.
           </div>
+          <ExposureCorridors city={city} center={center} zones={cleanZones.zones} />
         </div>
       )}
 
