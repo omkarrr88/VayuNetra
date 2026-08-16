@@ -40,7 +40,29 @@ function toLngLat(center: City["center"]): LngLat {
 
 const CITY_STORE_KEY = "vayunetra-city";
 
+// Deep links: /console?city=…&section=…&cell=…&mode=…&layers=sources,plumes,wards,freight,fires
+// Every console state is a shareable URL — a bookmarked demo path, or a link
+// you hand a judge to the exact Hyderabad cell during Q&A.
+const SECTION_IDS: Section[] = ["action", "forecast", "citizen", "compare", "whatif", "impact", "pipeline"];
+const LAYER_KEYS = ["sources", "plumes", "wards", "freight", "fires"] as const;
+
+function urlState() {
+  const q = new URLSearchParams(window.location.search);
+  const sec = q.get("section");
+  const mode = q.get("mode");
+  const layers = new Set((q.get("layers") ?? "").split(",").filter(Boolean));
+  return {
+    city: q.get("city"),
+    section: SECTION_IDS.includes(sec as Section) ? (sec as Section) : null,
+    cell: q.get("cell"),
+    mode: mode === "blame" || mode === "satellite" || mode === "coverage" ? (mode as MapMode) : null,
+    layers,
+  };
+}
+
 function storedCity(): string {
+  const fromUrl = urlState().city;
+  if (fromUrl) return fromUrl;
   try {
     return localStorage.getItem(CITY_STORE_KEY) ?? "delhi";
   } catch {
@@ -51,13 +73,13 @@ function storedCity(): string {
 export default function App() {
   const [cities, setCities] = useState<City[]>([]);
   const [active, setActive] = useState(storedCity);
-  const [mode, setMode] = useState<MapMode>("blame");
-  const [showSources, setShowSources] = useState(false);
-  const [showPlumes, setShowPlumes] = useState(false);
-  const [showWards, setShowWards] = useState(false);
-  const [showFreight, setShowFreight] = useState(false);
-  const [showFires, setShowFires] = useState(false);
-  const [section, setSection] = useState<Section>("action");
+  const [mode, setMode] = useState<MapMode>(() => urlState().mode ?? "blame");
+  const [showSources, setShowSources] = useState(() => urlState().layers.has("sources"));
+  const [showPlumes, setShowPlumes] = useState(() => urlState().layers.has("plumes"));
+  const [showWards, setShowWards] = useState(() => urlState().layers.has("wards"));
+  const [showFreight, setShowFreight] = useState(() => urlState().layers.has("freight"));
+  const [showFires, setShowFires] = useState(() => urlState().layers.has("fires"));
+  const [section, setSection] = useState<Section>(() => urlState().section ?? "action");
   const [cell, setCell] = useState<AttrCell | null>(null);
   const [attrCells, setAttrCells] = useState<AttrCell[]>([]);
   const [fallback, setFallback] = useState(false);
@@ -111,6 +133,8 @@ export default function App() {
   // whether a story is already open for this city — so an async auto-open can
   // never overwrite a selection the user made while attribution was loading.
   const openedRef = useRef(false);
+  // A cell named in the URL wins over the auto-open heuristic (once).
+  const urlCellRef = useRef<string | null>(urlState().cell);
 
   useEffect(() => {
     setCell(null); // clear story on city switch
@@ -129,6 +153,15 @@ export default function App() {
   // first thing seen is the full "why", else the highest-confidence cell.
   function autoOpenBest(cells: AttrCell[]) {
     if (openedRef.current || !cells.length) return;
+    if (urlCellRef.current) {
+      const wanted = cells.find((c) => c.h3_cell === urlCellRef.current);
+      urlCellRef.current = null;
+      if (wanted) {
+        openedRef.current = true;
+        setCell(wanted);
+        return;
+      }
+    }
     const explained = cells.filter((c) => (c.evidence?.shap_drivers ?? []).length > 0);
     const pool = explained.length ? explained : cells;
     const best = [...pool].sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0))[0];
@@ -147,6 +180,22 @@ export default function App() {
       alive = false;
     };
   }, [active]);
+
+  useEffect(() => {
+    if (!window.location.pathname.startsWith("/console")) return;
+    const q = new URLSearchParams();
+    q.set("city", active);
+    if (section !== "action") q.set("section", section);
+    if (cell) q.set("cell", cell.h3_cell);
+    if (mode !== "blame") q.set("mode", mode);
+    const on = LAYER_KEYS.filter((k) =>
+      ({ sources: showSources, plumes: showPlumes, wards: showWards, freight: showFreight, fires: showFires })[k]);
+    if (on.length) q.set("layers", on.join(","));
+    const next = `${window.location.pathname}?${q.toString()}`;
+    if (next !== `${window.location.pathname}${window.location.search}`) {
+      window.history.replaceState({}, "", next);
+    }
+  }, [active, section, cell, mode, showSources, showPlumes, showWards, showFreight, showFires]);
 
   const city = cities.find((c) => c.city_id === active);
   const center = toLngLat(city?.center);
