@@ -16,9 +16,9 @@ India measures its air (900+ CAAQMS stations) and forecasts it (SAFAR), but almo
 1. **Trace** — for every ~1 km² hexagon of the city, a machine-learning model says *who is to blame* (traffic, construction dust, industrial, biomass burning, transported, other), with SHAP evidence, and **abstains** to cited chemical-signature priors when it lacks out-of-sample skill.
 2. **Predict** — a 24/48/72-hour PM2.5 forecast per cell with calibrated 80% uncertainty bands.
 3. **Act** — a ranked enforcement worklist for officers: each item carries an evidence dossier (Sentinel-2 satellite patch + regulatory citations retrieved by RAG) and a one-click **draft Notice PDF** with a projected-impact chart. Officers approve/dispatch; the system then measures the before/after effect.
-4. **Protect** — citizen health advisories in **English, Hindi, Kannada, Marathi**, delivered over the web app, a live Telegram bot, real IVR phone calls, and public-display boards — targeted using 2,624 vulnerability-scored zones (hospitals, schools, elder-care, outdoor-work sites × real population).
+4. **Protect** — citizen health advisories in **English, Hindi, Kannada, Marathi**, delivered over the web app, a live Telegram bot, real IVR phone calls, and public-display boards — targeted using 5,495 vulnerability-scored zones (hospitals, schools, elder-care, outdoor-work sites × real population).
 
-It runs **live in Delhi, Bengaluru and Mumbai** on **₹0 infrastructure** (Vercel + Render + Supabase + GitHub Actions free tiers). Signal-to-cited-action is measured live at **0.8–9.7 seconds** through a six-agent LangGraph pipeline.
+It runs **live in 10 Indian cities** — Delhi, Bengaluru, Mumbai, Hyderabad, Chennai, Kolkata, Pune, Ahmedabad, Jaipur, Lucknow — on **₹0 infrastructure** (Vercel + Render + Supabase + GitHub Actions free tiers). Signal-to-cited-action is measured live at **0.8–9.7 seconds** through a six-agent LangGraph pipeline.
 
 **The two seams.** Everything decouples through (1) the Supabase schema — models *write* rows, the API *reads* rows — and (2) the FastAPI contract — one `{success, data, error, meta}` envelope. That's why three people could build in parallel for weeks without blocking each other.
 
@@ -47,7 +47,7 @@ The public front door — no login, loads fast (the heavy map code only loads at
 - **How it works:** the four steps (01 Trace · 02 Predict · 03 Act · 04 Protect).
 - **Architecture:** the full system diagram (same `architecture.svg` used in the pitch deck — one source of truth).
 - **Platform:** 12 feature cards.
-- **The data at a glance:** live production snapshot — Delhi source-mix donut, per-city PM2.5 now-vs-+24h, and the scale row: **6,394** cells · **547** sources · **2,624** vulnerability zones · **390** live enforcement recommendations.
+- **The data at a glance:** live production snapshot — Delhi source-mix donut, per-city PM2.5 now-vs-+24h, and the scale row: **16,529** cells · **647** sources · **5,495** vulnerability zones · **454** live enforcement recommendations.
 - **Validation table:** claim / result / how it was checked (cosine 0.92/0.88/0.79 vs official inventories; 2.30× rush-hour traffic SHAP; forecast skill vs persistence; CQR 75–80% coverage; the rejected TFT model; test counts).
 - **QR codes:** open the app on your phone · subscribe on Telegram.
 - **Footer:** product links, resources, team names.
@@ -60,7 +60,7 @@ The public front door — no login, loads fast (the heavy map code only loads at
 | Control | What it does |
 |---|---|
 | Logo + "VayuNetra" | Back to the landing page |
-| **City selector** (dropdown) | Switch between Delhi · Bengaluru · Mumbai. *Everything* — map, panels, forecasts, worklists — follows the selected city. Your choice is remembered (localStorage). |
+| **City selector** (dropdown) | Switch between any of the 10 cities (Delhi · Bengaluru · Mumbai · Hyderabad · Chennai · Kolkata · Pune · Ahmedabad · Jaipur · Lucknow). *Everything* — map, panels, forecasts, worklists — follows the selected city. Your choice is remembered (localStorage). |
 | Section title + hint | Shows where you are, e.g. "Enforcement — Ranked, evidence-backed actions for officers" |
 | **? (Help)** | Replays the guided tour |
 | GitHub icon | Repo link |
@@ -87,7 +87,7 @@ Desktop: navy left sidebar. Mobile: same 7 sections as a bottom tab bar; the map
 | **Enforcement** | Ranked, evidence-backed actions for officers |
 | **Forecast** | 72-hour PM2.5 outlook with uncertainty |
 | **Advisories** | Citizen alerts in 4 languages + clean-air zones |
-| **Cities** | Delhi · Bengaluru · Mumbai side by side |
+| **Cities** | 10 Indian cities side by side |
 | **Simulator** | What if we banned waste burning? Run it |
 | **Impact** | Health burden, ₹ saved, fairness audit |
 | **Pipeline** | Watch the 6 AI agents run live |
@@ -103,8 +103,9 @@ Desktop: navy left sidebar. Mobile: same 7 sections as a bottom tab bar; the map
 | **Sat NO2** | Sentinel-5P tropospheric NO₂ column (blue low → red high) — independent satellite evidence. |
 | **PM2.5** | The dense 1-km model field. Sub-toggle **"Stations only" ↔ "Dense 1km"** shows what the E2 downscaler adds beyond the sparse station grid; legend shows CPCB AQI bands and the skill note. |
 
-### 5.2 Four overlay toggles (independent, all off by default)
-- **Detected sources** — dots for the 547 registered (OSM) + satellite-detected (E1 CV) emission sources.
+### 5.2 Five overlay toggles (independent, all off by default)
+- **Detected sources** — dots for the 647 registered (OSM) + satellite-detected (E1 CV) emission sources.
+- **Fire / burn events (30d)** — NASA FIRMS thermal detections over the city (the stubble/waste-burning layer), refreshed by `scripts/fetch_fire_events.py`.
 - **Wind plumes** — Gaussian plume footprints from the top sources, oriented by the live wind field.
 - **Ward boundaries** — administrative wards (Datameet community maps, ODbL). These same polygons power the place names.
 - **Freight corridors** — violet truck-route lines (OSM motorway/trunk) with entry-window policy notes (e.g. Delhi 23:00–07:00).
@@ -131,6 +132,8 @@ The heart of the console. Opens as a left drawer (desktop) / inline card (mobile
 - **Status flow:** proposed → approved → dispatched (or dismissed) via the API. **Dispatching arms intervention tracking** — the cell's 7-day PM2.5 baseline is frozen and a before/after window opens.
 - **Intervention tracking card:** shows each dispatched rec's measured effect as *cell delta minus city-wide drift* (marked "provisional" for the first 7 days) — honest impact measurement, not a victory lap.
 - **City Intel card:** registry-source count, traffic index, sensitive-zone count, hospitals/schools line, top registered sources.
+- **Ward dispatch queues:** approved and dispatched recommendations auto-group into per-ward field queues (the grid-supervision pattern) — wards resolved offline from the shipped boundary polygons.
+- **Export as NCAP action-plan evidence (PRANA-ready CSV):** on the intervention-tracking card — every dispatched intervention with its measured effect, mapped to the NCAP spending head the city reports against and stamped with the city's regulatory authority. VayuNetra feeds the official portal rather than competing with it.
 
 ### 6.2 Forecast
 - Horizon tabs **+24h / +48h / +72h**.
@@ -148,9 +151,11 @@ The heart of the console. Opens as a left drawer (desktop) / inline card (mobile
   - **Big screen** — high-contrast public-display rendering.
 - **"Cleanest air right now":** the 4 lowest-PM2.5 ~1 km zones from the dense model field, each with a **Directions** link to Google Maps — explicitly labelled "a modeled guide, not a measurement".
 - **"Broadcast latest alert (Telegram + IVR)":** sends a *real* Telegram message and places a *real* phone call — with an are-you-sure confirmation step, and rate-limited server-side.
+- **Corridor exposure screening:** pick a clean-air zone as a destination and see the straight-corridor PM2.5 exposure from the city centre over the dense field vs the city mean — a planning guide, explicitly not turn-by-turn navigation.
+- **📸 Report a pollution source (citizen complaint loop):** photo + category + location (GPS, or city centre as fallback) → the report appears in a public list with a **72-hour SLA clock**. An officer marking it *verified* registers the location as a candidate emission source so the next enforcement run scores it — the loop closes from the citizen side. Statuses: received → verified → actioned → resolved / rejected; SLA breaches are flagged in red.
 
 ### 6.4 Cities
-- Grouped bar chart: each city's PM2.5 now vs +24h.
+- Grouped bar chart: each city's PM2.5 now vs +24h, and a **Swachh Vayu-style clean-air ranking** (cleanest first).
 - Per-city cards: trend badge (deteriorating/stable), average, +24h, dominant source, signature match, health-burden line (~deaths/yr, ₹/yr, "highest burden" flag), first playbook recommendation, and enforcement-compliance counts (approved/dispatched/dismissed).
 - Powered by the Multi-City agent — cross-city comparative intelligence, not three copies of the same page.
 
@@ -162,6 +167,7 @@ The heart of the console. Opens as a left drawer (desktop) / inline card (mobile
 
 ### 6.6 Impact (the funding case)
 - **City ROI:** attributable deaths/yr, annual health burden (₹), and what a 30% NCAP reduction would avert — with the burden-vs-avertable bar chart, the narrative paragraph, and full citations (Chen & Hoek 2020 CRF, UN WUP population, IQAir annual mean). The ₹ figure is labelled order-of-magnitude, VSL caveat shown.
+- **Where the funds should go — attribution-weighted:** live source shares mapped to NCAP spending heads (e.g. "42% of PM2.5 is traffic → prioritise vehicular emission control") — the per-city answer to CREA's finding that NCAP cities put 67% of funds into road dust because allocation wasn't attribution-led.
 - **Fairness audit:** measured on every live recommendation — enforcement priority correlates with *pollution contribution* (dominant driver, by design) and with *population exposed* (deliberate, disclosed). Key guarantee: **no socio-economic inputs exist anywhere in the pipeline or schema** — the scorer sees only contribution, exposure, actionability, confidence.
 
 ### 6.7 Pipeline (the agents, visibly)
@@ -180,7 +186,7 @@ The heart of the console. Opens as a left drawer (desktop) / inline card (mobile
 | A1 Attribution | GBM + SHAP hybrid source attribution per cell; abstains to signature priors below the R² gate |
 | A2 Forecast | 24/48/72h per-cell PM2.5 with CQR-calibrated intervals + persistence baseline |
 | Spike gate | Branches: enforcement only when cells spike (PM2.5 > 120 µg/m³ or focus cells exist) |
-| A3 Enforcement | Priority = contribution × exposure × actionability × confidence; RAG citations; writes the worklist |
+| A3 Enforcement | Priority = contribution × exposure × actionability × confidence; **jurisdiction-aware** RAG citations (GRAP/CAQM only in Delhi-NCR; CPCB/NCAP instruments elsewhere, issuing authority from city config); writes the worklist |
 | A4 Advisory | Deterministic multilingual advisories, vulnerability-adjusted per ward/audience |
 | A5 Multi-City | Cross-city trends, dominant sources, playbooks, health burden |
 
@@ -190,25 +196,25 @@ Supporting models: **E1** satellite CV source detection · **E2** dense 1-km fie
 CPCB CAAQMS (via data.gov.in / OpenAQ) · Open-Meteo + ERA5 weather & boundary layer · Sentinel-5P NO₂, Sentinel-2, NASA FIRMS fire (Earth Engine) · OpenStreetMap sources/facilities/roads (Overpass) · GPW v4.11 population (CIESIN/SEDAC) · GTFS + road network mobility proxy. Ingest runs on GitHub Actions crons (hourly + daily).
 
 ### 7.3 API (FastAPI, Render)
-**31 HTTP routes + 1 WebSocket**, one envelope `{success, data, error, meta}`. The ones worth knowing:
+**34 HTTP routes + 1 WebSocket**, one envelope `{success, data, error, meta}`. The ones worth knowing:
 
 | Area | Endpoints |
 |---|---|
 | Feeds | `/cities` `/aqi/current` `/history` `/attribution` `/forecast` `/coverage` `/plume` `/static-layers` `/mobility` |
-| Officer | `/enforcement` `/enforcement/{id}/dossier` `/enforcement/{id}/notice.pdf` `POST /enforcement/{id}/status` `/interventions` |
-| Citizen | `/advisory` `POST /advisory/broadcast` `/clean-zones` `/alerts/compound` `POST /telegram/webhook` `/ivr/inbound` `/ivr/advisory` |
+| Officer | `/enforcement` `/enforcement/{id}/dossier` `/enforcement/{id}/notice.pdf` `POST /enforcement/{id}/status` `/interventions` `/interventions/export` (PRANA-ready NCAP evidence CSV) |
+| Citizen | `/advisory` `POST /advisory/broadcast` `/clean-zones` `/alerts/compound` `POST /telegram/webhook` `/ivr/inbound` `/ivr/advisory` `POST /report` `/reports` `POST /report/{id}/status` (complaint loop) |
 | Analysis | `/comparison` `/roi` `POST /simulate` `POST /optimize` `/latency` `/traces` |
 | Agents/Admin | `POST /agent/query` (runs the full graph) · `POST /admin/cities` (new city, key-gated) · `WS /live` |
 
 Auth: public reads via anon JWT under Postgres **RLS**; every write path is service-role, server-side only; admin behind `X-Admin-Key`; Twilio TwiML endpoints are auth-less by necessity (Twilio can't send a bearer) and expose only public advisory text.
 
 ### 7.4 Database (Supabase Postgres + PostGIS + pgvector)
-Core tables: `cities, measurements, attribution, forecasts, emission_sources, enforcement_recs, advisories, kb_chunks, action_traces` + `coverage_field, vulnerability, advisory_subscribers, intervention_tracking, profiles`. 12 migrations in `supabase/migrations/`.
+Core tables: `cities, measurements, attribution, forecasts, emission_sources, enforcement_recs, advisories, kb_chunks, action_traces` + `coverage_field, vulnerability, advisory_subscribers, intervention_tracking, profiles`. 13 migrations in `supabase/migrations/` (incl. `citizen_reports`).
 
 ### 7.5 Honesty, by construction (our differentiator — memorise these)
 - Attribution **abstains** (R² gate + coverage mask) instead of guessing.
 - Forecast intervals were audited, found under-covered, and **fixed with CQR** — the failure is documented, not hidden.
-- A deep-learning model (TFT) was trained on GPU and **rejected** because LightGBM won held-out skill in all 3 cities.
+- A deep-learning model (TFT) was trained on GPU and **rejected** because LightGBM won held-out skill in every launch city.
 - Health text is **LLM-free by design**; impact figures return **null** rather than use invented constants; <2% contributors never enter the worklist; notices are drafts, never auto-sent; demo fixtures are labelled as fixtures; nothing fabricated is ever written to the production DB.
 
 ### 7.6 Ops

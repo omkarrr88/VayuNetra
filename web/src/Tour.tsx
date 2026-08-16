@@ -33,7 +33,7 @@ type Step = {
 const STEPS: Step[] = [
   {
     title: "One city at a time",
-    body: "Pick Delhi, Bengaluru or Mumbai up here. Everything below — map, forecasts, actions — follows the city you choose.",
+    body: "Pick any of the 10 cities up here. Everything below — map, forecasts, actions — follows the city you choose.",
     place: "lg:translate-x-0 lg:translate-y-0 lg:left-56 lg:top-16",
     arrow: "up-left",
     target: "[data-tour=city]",

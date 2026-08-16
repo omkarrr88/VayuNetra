@@ -1,0 +1,96 @@
+# VayuNetra
+
+**AI-powered urban air quality intelligence for smart city intervention**
+ET AI Hackathon 2026 · Problem Statement 5 · Running live in **10 Indian cities** — Delhi, Bengaluru, Mumbai, Hyderabad, Chennai, Kolkata, Pune, Ahmedabad, Jaipur, Lucknow
+
+![VayuNetra architecture](architecture-dark.png)
+
+*System architecture. Data sources on the left, the agent pipeline in the middle, the console and citizen channels on the right. The two green columns are the seams: everything talks through the database schema and the API contract, never directly to each other.*
+
+## Links
+
+| | |
+|---|---|
+| Live app | https://vayunetra-aqi.vercel.app |
+| API | https://vayunetra-c8i8.onrender.com |
+| Source code | https://github.com/omkarrr88/VayuNetra |
+| Demo video | https://drive.google.com/file/d/1y5FUBnXGn4iHEeUjkV7_OYeh3nOmNNTK/view?usp=drivesdk |
+| Pitch deck | https://drive.google.com/file/d/1huTSRp7aQjCSWy1ueHqZKMoVvgl2S7aB/view?usp=drivesdk |
+| Telegram bot | **@aqivayu_bot** (send `/start` and pick a city) |
+
+Quickest way to see it work: open the app, click **Open console**, then click any coloured hexagon on the map. That opens the cell's full story. From there, the Enforcement section has the worklist, the evidence dossier and the draft notice PDF.
+
+## What we built
+
+India already has the sensors. Over 900 CAAQMS stations report air quality nationally, and yet a 2024 CAG audit found only 31% of cities with monitoring data had any response protocol attached to those readings. Measuring the air is largely solved. Acting on it is not.
+
+VayuNetra fills that gap. It pulls together station readings, satellite imagery, weather and land use, and answers four questions for a city officer at the scale of a single square kilometre: who is polluting here right now, what the air will be like over the next three days, which site an inspector should visit first, and who needs to be warned today.
+
+Everything keys off the same spatial unit, an Uber H3 resolution-8 hexagon of roughly one square kilometre. Attribution, forecasts, enforcement recommendations and citizen advisories all reference the same cell, so any claim the system makes can be traced from a raw measurement through to the action it produced.
+
+## How it works
+
+Six agents run as a single LangGraph pipeline, once per city. The orchestrator finds the cells that are spiking, attribution and forecasting run on those cells, and then a spike gate decides whether the situation actually warrants enforcement. If the air is clean, the graph skips enforcement entirely and goes straight to advisories rather than manufacturing work for an inspector.
+
+| Stage | What happens |
+|---|---|
+| **Trace** | A gradient-boosting model attributes PM2.5 in each cell to traffic, construction dust, industry, biomass burning, transported pollution or other, with SHAP explanations and a confidence score. Where the model has no out-of-sample skill it abstains and falls back to cited chemical-signature priors instead of guessing. |
+| **Predict** | 24, 48 and 72-hour PM2.5 forecasts per cell, with 80% prediction intervals calibrated using conformalised quantile regression. Every chart also shows the persistence baseline, so the model's value is visible rather than asserted. |
+| **Act** | Emission sources are scored on contribution, population exposed, actionability and model confidence to produce a ranked worklist. Each item opens an evidence dossier with a real Sentinel-2 image of the site and regulatory citations retrieved from the national corpus — GRAP/CAQM only where they legally apply (Delhi-NCR), CPCB dust norms and NCAP elsewhere, with the issuing state board named on the notice — plus a one-click draft notice PDF for an officer to review. |
+| **Protect** | Ward-level health advisories in English, Hindi, Kannada and Marathi, sent through the web app, a Telegram bot, IVR phone calls and public display boards. Targeting uses 5,495 vulnerability-scored zones built from hospitals, schools, elder-care and outdoor work sites weighted by population. |
+
+The time from a pollution signal to a cited, actionable recommendation is between 0.8 and 9.7 seconds. That is measured in production, stamped per agent node, and shown in the console.
+
+## What is in the app
+
+- A blame map where each hexagon is coloured by its dominant pollution source. Clicking one opens the cell's place name, source breakdown, the model's SHAP evidence and its R², and the 72-hour outlook.
+- Three map modes (source attribution, Sentinel-5P satellite NO₂, and a dense 1 km PM2.5 field) plus overlays for detected sources, wind plumes, ward boundaries, freight corridors and NASA FIRMS fire/burn events.
+- The enforcement worklist with filters and search, evidence dossiers, and draft notice PDFs that include a projected-impact chart showing the forecast with and without the source's contribution.
+- Intervention tracking, and a PRANA-ready export: every dispatched intervention with its measured before/after effect, mapped to the NCAP spending head the city reports against — VayuNetra feeds the official portal rather than competing with it.
+- A citizen complaint loop: photograph a source, it enters a public list with a 72-hour SLA clock, and once an officer verifies it the location becomes a candidate source for the next enforcement run.
+- Citizen advisories with a live Telegram bot and working IVR, including an inbound line where a caller presses a digit to hear the current advisory for their city; clean-air zones with directions; and corridor exposure screening over the dense field.
+- A what-if simulator for interventions like an odd-even traffic restriction or a construction dust halt, returning ΔAQI, people protected, health cost avoided and CO₂e, each figure carrying its citation, plus an optimiser that ranks intervention packages against an inspector-hour budget.
+- A city ROI view with the annual health burden and what a 30% NCAP-target cut would avert, attribution-weighted guidance on where NCAP funds should go, and a fairness audit of what actually drives enforcement priority.
+- A ten-city comparison ranked Swachh-Vayu style, and a live trace of the agent pipeline including a button that runs the whole thing end to end in front of you.
+
+## Data and stack
+
+All data sources are free and open: CPCB CAAQMS via data.gov.in and OpenAQ (plus community sensors from non-government providers, ingested at reduced confidence), Sentinel-5P and Sentinel-2 through Earth Engine, NASA FIRMS for thermal anomalies, Open-Meteo and ERA5 for weather, OpenStreetMap for the source registry, road network and ward boundaries, and GPW v4.11 for population. Ingestion runs on scheduled GitHub Actions with a rolling 90-day retention window.
+
+The backend is FastAPI on Render with 34 routes and a WebSocket, all returning one `{success, data, error, meta}` envelope. The frontend is React with MapLibre and Deck.gl on Vercel. Data sits in Supabase Postgres with PostGIS and pgvector, protected by row-level security, with all writes going through the service role on the server. Models are LightGBM with SHAP, quantile regression with conformal calibration, a Gaussian plume model and a coverage downscaler. Retrieval is multimodal RAG over the regulatory corpus.
+
+Adding a city means adding one YAML file with a bounding box, languages and regulatory authority, then one backfill run. There is no per-city code anywhere in the system: seven metros were onboarded that way in a single week. Total infrastructure cost is zero: everything runs on free tiers.
+
+## Numbers we can defend
+
+| Claim | Result |
+|---|---|
+| Attribution vs published inventories | Cosine 0.92 against SAFAR-Delhi (2018), 0.88 against CSTEP-Bengaluru (2022), 0.79 against NEERI/Urban-Emissions Mumbai |
+| Attribution behaves physically | Traffic SHAP contribution 2.30× higher during IST rush hours, weather controlled |
+| Forecast skill vs persistence | +4 to +8% Delhi, +9 to +17% Bengaluru, +15 to +30% Mumbai (walk-forward, 3 folds); newly onboarded cities backtested on 35-day history |
+| Prediction interval coverage | Raw intervals under-covered at 48–63% against a nominal 80%; conformal calibration brought this to 75–80% |
+| Model selection | A Temporal Fusion Transformer was trained on GPU and rejected. LightGBM won on held-out skill in every launch city. |
+| Signal to cited action | 0.8–9.7 seconds, measured in production |
+| Test coverage | 169 backend tests and 6 end-to-end browser tests, run in CI on every push |
+
+Current live scale: 10 cities, 16,529 modelled cells, 647 emission sources, 5,495 vulnerability zones and 454 enforcement recommendations, every one of which carries a real Sentinel-2 image and retrieved citations. All of the validation above is reproducible from the notebook in the repository.
+
+## What it deliberately will not do
+
+Some of the more useful decisions were about what to leave out.
+
+- The attribution model abstains rather than guessing. Below its skill threshold it says so and falls back to cited priors.
+- Health advice is generated from deterministic templates, not a language model, so it cannot hallucinate medical guidance. New cities launch in English/Hindi until native-speaker-reviewed templates exist for their languages.
+- Notices are drafts. They carry a "pending officer authorisation" stamp and are never sent automatically — and they never cite an instrument that does not bind that city.
+- Impact figures return null rather than fall back on invented constants, and sources contributing under 2% never reach the worklist.
+- No socio-economic data exists anywhere in the pipeline or the schema, so enforcement priority cannot encode income or land value. The fairness audit publishes what does drive it.
+
+## Running it
+
+The repository is offline-first and needs no API keys to start. Copy `.env.example` to `.env`, leave `DEMO_MODE=true`, then `make install` and `make dev`. That brings up the API on port 8000 and the app on 5173, serving the full ten-city flow from bundled fixtures. `make test` runs the backend suite. Going live additionally requires linking a Supabase project and pushing the thirteen migrations.
+
+## What is next
+
+- Replacing the linear rollback in the what-if engine with InMAP/PAVITRA source-receptor matrices for policy-grade counterfactuals.
+- Finishing training of the satellite CV detector so source detection moves off Earth Engine heuristics onto the full CNN pipeline.
+- Native-script advisories for Telugu, Tamil, Bengali and Gujarati (native-speaker reviewed), in-language IVR voice, and municipal permit registry connectors for enforcement.

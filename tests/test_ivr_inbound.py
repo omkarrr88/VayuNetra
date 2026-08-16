@@ -62,9 +62,17 @@ def test_advisory_get_with_query_digits():
 
 
 def test_advisory_unknown_digits_defaults_to_delhi():
-    r = client.post("/ivr/advisory", data={"Digits": "9"})
+    # ten cities now fill digits 1-9 and 0, so only a non-digit key is unmapped
+    r = client.post("/ivr/advisory", data={"Digits": "#"})
     assert r.status_code == 200
     assert html.escape(_fixture_message("delhi")) in r.text
+
+
+def test_advisory_digit_9_is_a_real_city_now():
+    # regression guard for the 10-city menu: 9 must NOT silently fall back to Delhi
+    r = client.post("/ivr/advisory", data={"Digits": "9"})
+    assert r.status_code == 200
+    assert "Lucknow" in r.text
 
 
 def test_advisory_no_input_defaults_to_delhi():
@@ -93,5 +101,6 @@ def test_advisory_message_is_xml_escaped():
 
 def test_latest_advisory_never_returns_wrong_city():
     # fixture_rows falls back to ALL rows for unknown cities; _latest_advisory
-    # must return None rather than another city's advisory (spoken as the wrong city)
-    assert m._latest_advisory("kolkata") is None
+    # must return None rather than another city's advisory (spoken as the wrong city).
+    # (Kolkata used to be the example here — it is a live city since Aug 2026.)
+    assert m._latest_advisory("atlantis") is None

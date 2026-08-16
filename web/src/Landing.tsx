@@ -47,12 +47,12 @@ const STEPS = [
   {
     icon: IC.scale,
     title: "Act",
-    body: "A ranked enforcement worklist scores 547 registered and satellite-detected sources. One click opens an evidence dossier with a real Sentinel-2 patch, regulatory citations, and a draft notice PDF.",
+    body: "A ranked enforcement worklist scores 647 registered and satellite-detected sources across 10 cities. One click opens an evidence dossier with a real Sentinel-2 patch, regulatory citations, and a draft notice PDF.",
   },
   {
     icon: IC.megaphone,
     title: "Protect",
-    body: "Health advisories generated from the forecast and targeted at the most vulnerable zones — 6,000+ mapped hospitals, schools, elder-care homes and outdoor-work sites — in four languages over the web app, Telegram, IVR calls and public displays.",
+    body: "Health advisories generated from the forecast and targeted at the most vulnerable zones — 11,000+ mapped hospitals, 7,700+ schools, elder-care homes and outdoor-work sites — in four languages over the web app, Telegram, IVR calls and public displays.",
   },
 ];
 
@@ -63,9 +63,9 @@ const FEATURES = [
   { icon: IC.flame, title: "Multi-hazard alerts", body: "Heat×smog compound risk (IMD × CPCB criteria), dust×traffic co-occurrence corridors, and the statutory CAQM GRAP stage triggered a day early — by our own forecast." },
   { icon: IC.chip, title: "What-if simulator + optimiser", body: "Cited counterfactuals — odd-even, construction bans, full GRAP packages — and an optimiser that ranks intervention bundles by impact per inspector-hour." },
   { icon: IC.rupee, title: "Health & carbon ROI", body: "Every ΔPM2.5 priced in ₹, lives and CO₂e using WHO HRAPIE dose–response and GPW population — the NCAP funding case, fully cited." },
-  { icon: IC.shield, title: "Vulnerability-targeted advisories", body: "2,624 zones scored from real OSM hospitals, clinics, schools, elder-care and outdoor-work sites × population. Advisories escalate where forecast air is bad and sensitive people are." },
+  { icon: IC.shield, title: "Vulnerability-targeted advisories", body: "5,495 zones scored from real OSM hospitals, clinics, schools, elder-care and outdoor-work sites × population. Advisories escalate where forecast air is bad and sensitive people are." },
   { icon: IC.leaf, title: "Clean-air zones", body: "The flip side of the blame map: the cleanest ~1 km cells right now, computed from the dense coverage field, with one-tap directions." },
-  { icon: IC.globe, title: "Multi-city, config-driven", body: "Delhi, Bengaluru, Mumbai live today with cross-city playbooks. Onboarding a new city is one API call — rehearsed live on production." },
+  { icon: IC.globe, title: "Multi-city, config-driven", body: "10 cities live today — Delhi, Bengaluru, Mumbai, Hyderabad, Chennai, Kolkata, Pune, Ahmedabad, Jaipur, Lucknow — with cross-city playbooks. Seven were onboarded from config in one week; every layer is city-agnostic." },
   { icon: IC.megaphone, title: "Citizen channels", body: "English, Hindi, Kannada, Marathi over PWA, a Telegram bot judges can subscribe to live (/start), IVR voice calls and a public-display mode." },
   { icon: IC.chip, title: "Visible multi-agent pipeline", body: "Six agents on one LangGraph with per-node latency stamps. A 'Run agents live' button replays the whole detect → decide → issue chain on stage." },
   { icon: IC.doc, title: "Honest by construction", body: "Attribution abstains without out-of-sample skill; intervals are calibrated; fairness is audited on live data; demo fixtures are labeled as fixtures. Nothing fabricated." },
@@ -77,13 +77,13 @@ const VALIDATION: Array<[string, string, string]> = [
   ["Forecast beats real baselines", "+4–8% Delhi · +9–30% Bengaluru, Mumbai", "walk-forward RMSE vs persistence and climatology"],
   ["Uncertainty intervals are honest", "48–63% raw → 75–80% after CQR", "conformal recalibration audit, nominal 80%"],
   ["Enforcement is equitable", "no socio-economic inputs, by construction", "fairness audit on all 390 live recommendations"],
-  ["Model choice was earned", "TFT trained on GPU — and rejected", "LightGBM won all three cities on held-out skill"],
+  ["Model choice was earned", "TFT trained on GPU — and rejected", "LightGBM won every launch city on held-out skill"],
   ["The loop is fast", "seconds from signal to cited action", "live per-node agent traces, target under 5 minutes"],
 ];
 
 const DATA_SOURCES = ["CPCB / CAAQMS", "Sentinel-5P", "Sentinel-2", "Open-Meteo · ERA5", "NASA FIRMS", "OpenStreetMap", "GPW v4.11"];
 
-// Production snapshot, 19 July 2026 — real aggregates (live attribution mean
+// Production snapshot, 16 August 2026 — real aggregates (live attribution mean
 // across Delhi cells; /comparison city averages). Colors match the console.
 const SNAPSHOT_MIX: Array<[string, number, string]> = [
   ["traffic", 50.2, "#ef4444"],
@@ -93,15 +93,22 @@ const SNAPSHOT_MIX: Array<[string, number, string]> = [
   ["other", 10.6, "#6b7280"],
 ];
 const SNAPSHOT_CITIES: Array<[string, number, number, string]> = [
-  ["Delhi", 35.1, 58.4, "deteriorating"],
-  ["Bengaluru", 19.1, 13.4, "stable"],
-  ["Mumbai", 20.1, 14.2, "stable"],
+  ["Delhi", 38.3, 43.0, "stable"],
+  ["Jaipur", 40.5, 37.6, "stable"],
+  ["Ahmedabad", 32.2, 30.6, "stable"],
+  ["Kolkata", 26.1, 21.1, "stable"],
+  ["Hyderabad", 22.1, 21.8, "stable"],
+  ["Lucknow", 20.3, 19.4, "stable"],
+  ["Pune", 20.1, 16.4, "stable"],
+  ["Chennai", 16.7, 19.6, "stable"],
+  ["Bengaluru", 13.1, 10.2, "stable"],
+  ["Mumbai", 12.3, 19.7, "stable"],
 ];
 const SNAPSHOT_SCALE: Array<[string, string]> = [
-  ["6,394", "~1 km² cells modeled across 3 cities"],
-  ["547", "registered + satellite-detected sources"],
-  ["2,624", "vulnerability-scored zones (hospitals, schools, outdoor work)"],
-  ["390", "live enforcement recommendations"],
+  ["16,529", "~1 km² cells modeled across 10 cities"],
+  ["647", "registered + satellite-detected sources"],
+  ["5,495", "vulnerability-scored zones (hospitals, schools, outdoor work)"],
+  ["454", "live enforcement recommendations"],
 ];
 
 export default function Landing() {
@@ -168,7 +175,7 @@ export default function Landing() {
           monitored cities have any actionable response protocol. VayuNetra is that missing layer: it traces
           PM2.5 to its sources square-kilometre by square-kilometre, forecasts 72 hours ahead with calibrated
           uncertainty, and turns both into cited enforcement notices and citizen alerts in four languages.
-          Live today for Delhi, Bengaluru and Mumbai — built entirely on free public infrastructure.
+          Live today across 10 Indian cities — from Delhi to Lucknow — built entirely on free public infrastructure.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <a href="/console" onClick={(e) => linkClick(e, "/console")}
@@ -274,24 +281,18 @@ export default function Landing() {
             {/* City PM2.5 now vs +24h */}
             <div>
               <h3 className="text-[14px] font-bold text-slate-900">City PM2.5 — now vs forecast +24h</h3>
-              <div className="mt-3 space-y-3">
+              <div className="mt-1 text-[10px] text-slate-400"><span className="inline-block h-2 w-3 rounded-sm bg-slate-400/70 align-middle" /> now &nbsp;·&nbsp; <span className="inline-block h-2 w-0.5 bg-blue-600 align-middle" /> +24h forecast &nbsp;·&nbsp; µg/m³, sorted by current level</div>
+              <div className="mt-3 space-y-1.5">
                 {SNAPSHOT_CITIES.map(([name, now, next, trend]) => (
-                  <div key={name}>
-                    <div className="flex items-baseline justify-between text-[12px]">
-                      <span className="font-semibold text-slate-700">{name}</span>
-                      <span className={trend === "deteriorating" ? "text-red-600" : "text-emerald-600"}>{trend}</span>
+                  <div key={name} className="flex items-center gap-2 text-[11px]">
+                    <span className="w-[4.6rem] shrink-0 truncate font-semibold text-slate-700">{name}</span>
+                    <div className="relative h-2.5 flex-1 rounded-full bg-slate-100" title={`now ${now} · +24h ${next} µg/m³ · ${trend}`}>
+                      <div className="absolute inset-y-0 left-0 rounded-full bg-slate-400/70" style={{ width: `${Math.min(100, (Number(now) / 60) * 100)}%` }} />
+                      <div className="absolute inset-y-0 left-0 rounded-full border-r-2 border-blue-600" style={{ width: `${Math.min(100, (Number(next) / 60) * 100)}%` }} />
                     </div>
-                    <div className="mt-1 space-y-1">
-                      {[["now", now, "#94a3b8"], ["+24h", next, "#2563eb"] as const].map(([label, v, color]) => (
-                        <div key={String(label)} className="flex items-center gap-2">
-                          <span className="w-8 text-right font-mono text-[10px] text-slate-400">{label}</span>
-                          <div className="h-2.5 flex-1 rounded-full bg-slate-100">
-                            <div className="h-2.5 rounded-full" style={{ width: `${Math.min(100, (Number(v) / 60) * 100)}%`, background: String(color) }} />
-                          </div>
-                          <span className="w-8 font-mono text-[10px] text-slate-500">{v}</span>
-                        </div>
-                      ))}
-                    </div>
+                    <span className="w-14 shrink-0 text-right font-mono text-[10px] text-slate-500">
+                      {now}<span className="text-slate-300">→</span>{next}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -311,7 +312,7 @@ export default function Landing() {
             </div>
           </div>
           <p className="mt-6 text-[11px] text-slate-400">
-            Live snapshot from the production system, 19 July 2026 — aggregated from real station measurements and model
+            Live snapshot from the production system, 16 August 2026 — aggregated from real station measurements and model
             attribution. Open the console for the current numbers.
           </p>
         </div>
@@ -425,7 +426,7 @@ export default function Landing() {
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-8 px-6 py-14 lg:flex-row lg:items-center">
           <div>
             <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">See it running on live data.</h2>
-            <p className="mt-1 text-[14px] text-slate-600">Three cities, real measurements, no sign-up.</p>
+            <p className="mt-1 text-[14px] text-slate-600">Ten cities, real measurements, no sign-up.</p>
             <a href="/console" onClick={(e) => linkClick(e, "/console")}
               className="mt-5 inline-flex items-center gap-2 rounded-md bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-700">
               Open the console
@@ -456,7 +457,7 @@ export default function Landing() {
               VayuNetra
             </div>
             <p className="mt-2 max-w-xs text-[12px] leading-relaxed text-slate-500">
-              Air-quality intelligence for smart-city intervention. Delhi · Bengaluru · Mumbai.
+              Air-quality intelligence for smart-city intervention. Live in 10 Indian cities.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-10 text-[13px] sm:grid-cols-3">

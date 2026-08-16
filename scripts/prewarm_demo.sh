@@ -78,7 +78,7 @@ if [ -n "$recid" ]; then
   echo "   worklist rec: #$recid | citations: $cites | satellite patch: $patch | notice.pdf: HTTP $pdf"
   { [ "$cites" -gt 0 ] && [ "$patch" = "yes" ] && [ "$pdf" = "200" ]; } || fail=$((fail+1))
 else
-  echo "   FAIL: worklist EMPTY — run: python -c \"from agents.enforcement import run_enforcement; [run_enforcement(c, write_to_db=True) for c in ['delhi','bengaluru','mumbai']]\""
+  echo "   FAIL: worklist EMPTY — run: python -c \"from agents.enforcement import run_enforcement; [run_enforcement(c, write_to_db=True) for c in __import__('core.cities', fromlist=['list_city_ids']).list_city_ids()]\""
   fail=$((fail+1))
 fi
 

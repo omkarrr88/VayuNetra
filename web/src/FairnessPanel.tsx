@@ -24,7 +24,7 @@ export default function FairnessPanel() {
   return (
     <Panel title="Fairness audit" tag={`n=${f.n} live recs`}>
       <div className="text-xs text-gray-600">
-        What drives enforcement priority — measured on every live recommendation across all 3 cities ({f.asOf}):
+        What drives enforcement priority — measured on every live recommendation across all cities ({f.asOf}):
       </div>
       <div className="mt-2.5 space-y-2.5">
         <Bar

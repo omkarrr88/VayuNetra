@@ -38,7 +38,7 @@ export const SECTIONS: SectionDef[] = [
   {
     id: "compare",
     label: "Cities",
-    hint: "Delhi · Bengaluru · Mumbai side by side",
+    hint: "10 Indian cities side by side",
     icon: "M3 21h18M6 21V10m6 11V4m6 17v-8",
   },
   {
@@ -113,7 +113,7 @@ export function Sidebar({ active, onSelect }: SidebarProps) {
         })}
       </div>
       <div className="border-t border-white/10 px-4 py-3 text-[10px] leading-relaxed text-slate-400">
-        Delhi · Bengaluru · Mumbai
+        10 cities · Delhi to Lucknow
         <br />
         ₹0 infrastructure · open source
       </div>

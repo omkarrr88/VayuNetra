@@ -171,7 +171,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
             </p>
           </div>
           <div className="rounded-md bg-slate-50 p-2 text-[11px] leading-4 text-gray-600">
-            Citizens can also <b>call in</b>: the line answers with a city menu — press 1 Delhi · 2 Bengaluru · 3 Mumbai — and
+            Citizens can also <b>call in</b>: the line answers with a city menu — press 1 for Delhi, 2 for Bengaluru, 3 for Mumbai, 4–9 and 0 for the other seven — and
             reads that city's latest advisory in a clear Indian-English voice.
           </div>
           <div className="text-[10px] leading-4 text-gray-400">

@@ -1,7 +1,7 @@
 # VayuNetra — AI-Powered Urban Air Quality Intelligence
 
 > *We don't just measure the air. We trace it, predict it, and act on it.*
-> ET AI Hackathon 2026 · Problem Statement 5 · Delhi · Bengaluru · Mumbai · **₹0 infrastructure**
+> ET AI Hackathon 2026 · Problem Statement 5 · **10 Indian cities** · **₹0 infrastructure**
 
 India measures its air (900+ CAAQMS stations) and forecasts it, but almost no city can turn a bad
 reading into a specific, attributed, delivered intervention. **VayuNetra is that missing operate
@@ -38,13 +38,17 @@ switch the language to Hindi → *IVR call* tab.
    Telegram bot, real IVR phone calls and public displays — targeted by 2,624
    vulnerability-scored zones (hospitals, schools, outdoor workers × real population).
 
-Plus a multi-city comparison dashboard, a cited what-if **simulator** with an inspector-hour
-optimizer, a health-₹ **impact** view with a fairness audit, and a live **pipeline** trace of all
-six agents (typical signal→cited-action: **0.8–9.7 s**, measured).
+Plus a Swachh-Vayu-style **10-city ranking**, a cited what-if **simulator** with an inspector-hour
+optimizer, a health-₹ **impact** view with attribution-weighted NCAP fund guidance and a fairness
+audit, a **citizen complaint loop** (photo → verified → enforcement candidate, public SLA clock),
+PRANA-ready **NCAP evidence export**, a live **pipeline** trace of all six agents (typical
+signal→cited-action: **0.8–9.7 s**, measured), and map layers for wind plumes, wards, freight
+corridors and FIRMS fire events.
 
-**Production snapshot (20 July 2026):** 3 cities · 6,394 modeled ~1 km² cells · 547 registered +
-satellite-detected emission sources · 2,624 vulnerability zones · 390 RAG-cited enforcement
-recommendations · advisories in 4 languages.
+**Production snapshot (16 August 2026):** **10 cities** (Delhi · Bengaluru · Mumbai · Hyderabad · Chennai ·
+Kolkata · Pune · Ahmedabad · Jaipur · Lucknow) · 16,529 modeled ~1 km² cells · 647 registered +
+satellite-detected emission sources · 5,495 vulnerability zones · 454 RAG-cited enforcement
+recommendations · 717K deduplicated measurements · advisories in 4 languages.
 
 ## Validation — real numbers, both baselines
 
@@ -67,7 +71,7 @@ carries its citation.
 
 **Honest by construction:** the attribution abstains below its R² skill gate; forecast intervals
 were audited, found under-covered, and fixed with CQR; a deep-learning forecaster (TFT) was
-trained on GPU and *rejected* because LightGBM won held-out skill in all three cities; satellite
+trained on GPU and *rejected* because LightGBM won held-out skill in every launch city; satellite
 source detection currently runs a labelled Earth-Engine heuristic (NDVI drop → construction,
 FIRMS thermal → waste burning) while the U-Net CV model finishes training — nothing fabricated
 ever reaches production, and impact figures return `null` over invented constants.
@@ -84,8 +88,8 @@ comparator — each run traced per node. Full detail: [docs/ARCHITECTURE.md](doc
 
 **Stack:** FastAPI (Render) · React + MapLibre + Deck.gl (Vercel) · Supabase Postgres + PostGIS +
 pgvector (RLS) · LangGraph · GitHub Actions crons — all free tier. **Adding a city is one YAML
-file** in [core/config/cities/](core/config/cities/) (bbox, languages) or one authenticated
-`POST /admin/cities` — every layer is city-agnostic.
+file** in [core/config/cities/](core/config/cities/) (bbox, languages, regulatory authority) plus
+one backfill run — every layer is city-agnostic; seven metros were onboarded that way in one week.
 
 ## Quick start
 
@@ -97,7 +101,7 @@ make dev                               # FastAPI :8000 + Vite :5173 in one termi
 
 # Going live (optional): fill .env, then
 npx supabase login && npx supabase link --project-ref <your-project-ref>
-npx supabase db push                   # schema + RLS + city seed (12 migrations)
+npx supabase db push                   # schema + RLS + city seed (13 migrations)
 make live-bootstrap                    # kb_chunks + enforcement_recs + action_traces
 
 make test                              # 169 backend tests
@@ -111,7 +115,7 @@ connectors/   ingest: CPCB/OpenAQ, Open-Meteo, Earth Engine, OSM, population, tr
 core/         H3 utils, canonical schemas, impact & intervention math, city configs
 ml/           attribution, forecast, dispersion, coverage, simulator, vision
 agents/       the 6 LangGraph agents + the notice-PDF writer      rag/  retrieval corpus
-api/          FastAPI (31 routes + WebSocket)                     web/  React console + landing
+api/          FastAPI (34 routes + WebSocket)                     web/  React console + landing
 demo/         17 offline fixtures    supabase/migrations/  schema+RLS    eval/  validation notebook
 ```
 

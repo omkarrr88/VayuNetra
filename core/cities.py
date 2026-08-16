@@ -13,9 +13,10 @@ import yaml
 
 CITIES_DIR = Path(__file__).resolve().parent / "config" / "cities"
 
-# The three launch cities keep their positions in every channel (IVR digits,
-# Telegram keyboard) so existing subscribers' muscle memory survives; cities
-# added later append in alphabetical order.
+# The three launch cities (Delhi, Bengaluru, Mumbai) keep their positions in
+# every channel (IVR digits 1-3, Telegram keyboard) so existing subscribers'
+# muscle memory survives; the seven added in Aug 2026 (and any future city)
+# append in alphabetical order.
 LAUNCH_ORDER = ["delhi", "bengaluru", "mumbai"]
 
 
