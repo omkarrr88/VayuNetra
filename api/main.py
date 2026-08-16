@@ -264,10 +264,17 @@ def pm25_trend(
     Verdict compares the latest 7-day mean with the 7 days that ended 30 days
     earlier (falls back to the first week of the window when history is short)."""
     if DEMO_MODE:
-        data = fixture("history", default={})
-        series = data.get(city) if isinstance(data, dict) else None
-        return ok({"city_id": city, "cell": cell, "days": days, "series": [], "hourly": series or [],
-                   "verdict": None, "note": "trend history is a live-mode feature"})
+        # Real daily series captured from production (all 10 cities, 30/90/365d)
+        # so the offline fallback shows the genuine history — Delhi's winter
+        # smog season included — instead of an empty chart on stage.
+        fx = fixture("history_trend", default={})
+        per_city = fx.get(city) if isinstance(fx, dict) else None
+        best_key = str(min((365, 90, 30), key=lambda k: abs(k - days)))
+        entry = (per_city or {}).get(best_key) or {}
+        return ok({"city_id": city, "cell": cell, "days": days,
+                   "series": entry.get("series") or [], "verdict": entry.get("verdict"),
+                   "days_of_history": entry.get("days_of_history", 0),
+                   "note": "city-level history (offline snapshot)" if cell and entry else None})
     key = f"trend:{city}:{cell or '*'}:{days}"
     now = time.time()
     hit = _history_cache.get(key)

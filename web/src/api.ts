@@ -16,6 +16,7 @@ import fxSimulate from "./fixtures/simulate.json";
 import fxRoi from "./fixtures/roi.json";
 import fxStatic from "./fixtures/static_layers.json";
 import fxCoverage from "./fixtures/coverage.json";
+import fxTrend from "./fixtures/history_trend.json";
 
 const BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 // Supabase anon key — safe to expose in the browser (publishable by design).
@@ -68,6 +69,15 @@ function fixtureFor(path: string): unknown {
   }
   if (p === "/enforcement") return byCity(fxEnforcement as Row[], city);
   if (/^\/enforcement\/\d+\/dossier$/.test(p)) return fxDossier;
+  if (p === "/history/trend") {
+    // real captured daily series per city (30/90/365d); nearest range wins
+    const days = Number(url.searchParams.get("days") ?? 90);
+    const key = String([365, 90, 30].reduce((a, b) => (Math.abs(b - days) < Math.abs(a - days) ? b : a)));
+    const perCity = (fxTrend as Record<string, Record<string, unknown>>)[city ?? "delhi"];
+    const entry = (perCity?.[key] ?? {}) as { series?: unknown[]; verdict?: unknown; days_of_history?: number };
+    return { city_id: city ?? "delhi", days, series: entry.series ?? [], verdict: entry.verdict ?? null,
+             days_of_history: entry.days_of_history ?? 0, note: url.searchParams.get("cell") ? "city-level history (offline snapshot)" : null };
+  }
   if (p === "/comparison") return fxComparison;
   if (p === "/latency") return fxLatency;
   if (p === "/simulate") return fxSimulate;
