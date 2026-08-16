@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { MapMode } from "./BlameMap";
 import { SOURCE_COLORS, PM25_LEGEND } from "./sources";
 import { SegBtn } from "./ui";
@@ -65,10 +65,25 @@ export default function LayersControl(p: LayersControlProps) {
   // would bury the (much smaller) map.
   const [open, setOpen] = useState(
     // Auto-expand only where the drawer + right panel leave room for the card
-    // (the 1024–1279 window is too tight — there it starts as the compact chip).
-    () => typeof window !== "undefined" && window.matchMedia("(min-width: 1280px)").matches,
+    // (the 1024–1279 window is too tight — there it starts as the compact chip;
+    // presentation mode scales everything up, so it also starts compact).
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(min-width: 1280px)").matches &&
+      !document.documentElement.classList.contains("vn-present"),
   );
   const overlaysOn = [p.showSources, p.showPlumes, p.showWards, p.showFreight, p.showFires].filter(Boolean).length;
+
+  // Presentation mode toggled at runtime (the P key) — collapse to the chip so
+  // the scaled-up card never sits on top of the cell-story drawer.
+  useEffect(() => {
+    const root = document.documentElement;
+    const obs = new MutationObserver(() => {
+      if (root.classList.contains("vn-present")) setOpen(false);
+    });
+    obs.observe(root, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
 
   if (!open) {
     return (

@@ -87,6 +87,34 @@ export default function App() {
   const [tour, setTour] = useState(() => !tourSeen());
   const [coverageKind, setCoverageKind] = useState<"stations" | "dense">("dense");
   const [scrub, setScrub] = useState<ScrubFrame>(null);
+  const [present, setPresent] = useState(() => {
+    try { return localStorage.getItem("vayunetra-present") === "1"; } catch { return false; }
+  });
+  useEffect(() => {
+    document.documentElement.classList.toggle("vn-present", present);
+    try { localStorage.setItem("vayunetra-present", present ? "1" : "0"); } catch { /* ignore */ }
+    return () => document.documentElement.classList.remove("vn-present");
+  }, [present]);
+  // Keyboard: P toggles presentation mode; 1–7 jump sections; [ ] cycle cities.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA" || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === "p" || e.key === "P") { setPresent((v) => !v); return; }
+      const n = Number(e.key);
+      if (n >= 1 && n <= SECTION_IDS.length) { setSection(SECTION_IDS[n - 1]); return; }
+      if (e.key === "[" || e.key === "]") {
+        setActive((cur) => {
+          const ids = cities.map((c) => c.city_id);
+          if (!ids.length) return cur;
+          const i = Math.max(0, ids.indexOf(cur));
+          return ids[(i + (e.key === "]" ? 1 : ids.length - 1)) % ids.length];
+        });
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [cities]);
   const [coverage, setCoverage] = useState<{
     cells: CoverageCell[];
     n_cells?: number;
@@ -204,7 +232,7 @@ export default function App() {
 
   return (
     <div className="flex h-full w-full flex-col bg-slate-100">
-      <TopBar cities={cities} active={active} onCity={setActive} section={section} onReplayTour={() => setTour(true)} />
+      <TopBar cities={cities} active={active} onCity={setActive} section={section} onReplayTour={() => setTour(true)} present={present} onTogglePresent={() => setPresent((v) => !v)} />
 
       <div className="flex min-h-0 flex-1">
         <Sidebar active={section} onSelect={setSection} />
@@ -254,7 +282,7 @@ export default function App() {
 
             {/* Time scrub — bottom-centre of the map (desktop); switches the
                 map to the PM2.5 field while replaying so the change is visible */}
-            <div className="pointer-events-none absolute bottom-2 left-1/2 z-10 hidden -translate-x-1/2 lg:block">
+            <div className="pointer-events-none absolute bottom-2 left-1/2 z-10 hidden -translate-x-1/2 lg:block lg:left-[calc(50%+2rem)]">
               <TimeScrub
                 city={active}
                 denseCells={coverage?.cells ?? []}

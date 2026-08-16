@@ -9,10 +9,12 @@ interface TopBarProps {
   onCity: (id: string) => void;
   section: Section;
   onReplayTour: () => void;
+  present: boolean;
+  onTogglePresent: () => void;
 }
 
 /** Slim navy header: brand, city switcher, current section, help. */
-export default function TopBar({ cities, active, onCity, section, onReplayTour }: TopBarProps) {
+export default function TopBar({ cities, active, onCity, section, onReplayTour, present, onTogglePresent }: TopBarProps) {
   const current = SECTIONS.find((s) => s.id === section);
   return (
     <header className="z-20 flex h-12 shrink-0 items-center gap-3 bg-[#1b294a] pl-3 pr-2 shadow-md shadow-slate-900/20 sm:gap-4 sm:pl-4 sm:pr-3">
@@ -44,6 +46,20 @@ export default function TopBar({ cities, active, onCity, section, onReplayTour }
       )}
 
       <div className="ml-auto flex shrink-0 items-center gap-1.5">
+        <button
+          onClick={onTogglePresent}
+          title={present ? "Exit presentation mode (P)" : "Presentation mode — larger type for a projector (P)"}
+          aria-label="Toggle presentation mode"
+          aria-pressed={present}
+          className={`hidden h-8 items-center gap-1.5 rounded-md px-2 text-[11px] font-semibold transition-colors lg:flex ${
+            present ? "bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30" : "text-slate-400 hover:bg-white/10 hover:text-white"
+          }`}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8m-4-4v4" />
+          </svg>
+          {present ? "Presenting" : "Present"}
+        </button>
         <button
           onClick={onReplayTour}
           title="Replay the quick tour"

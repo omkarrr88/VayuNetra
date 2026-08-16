@@ -7,6 +7,14 @@ html, body, #root {
   margin: 0;
 }
 
+/* Presentation mode (press P) — tuned for a laptop mirrored to a projector:
+   the whole console's type steps up ~18% and the section panel widens, so
+   11–13 px UI text becomes readable from the jury table. Kept in CSS so the
+   layout math (Tailwind rem-based) scales together instead of piecemeal. */
+html.vn-present { font-size: 118%; }
+html.vn-present .vn-present-hide { display: none !important; }
+html.vn-present .vn-scroll { scrollbar-width: none; }
+
 /* Shell animations — subtle, 150-250ms, GPU-friendly transforms only. */
 @keyframes vn-fade-in {
   from { opacity: 0; }
