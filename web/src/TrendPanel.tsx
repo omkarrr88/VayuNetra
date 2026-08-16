@@ -3,7 +3,7 @@
 // verdict — better / worse / about the same than a month ago. Backed by real
 // station readings aggregated per day (GET /history/trend).
 import { useEffect, useState } from "react";
-import { Area, AreaChart, ReferenceArea, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, ReferenceArea, ReferenceDot, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { api } from "./api";
 
 type Point = { date: string; pm25: number; n: number; band: string };
@@ -14,7 +14,8 @@ type Verdict = {
   days_of_history: number;
   text: string;
 };
-type Trend = { series: Point[]; verdict: Verdict | null; days_of_history: number; note?: string | null };
+type Anomaly = { date: string; pm25: number; baseline: number; why: string };
+type Trend = { series: Point[]; verdict: Verdict | null; days_of_history: number; note?: string | null; anomalies?: Anomaly[] };
 
 const BAND_COLORS: Array<[number, number, string, string]> = [
   [0, 30, "#22c55e", "good"],
@@ -110,6 +111,9 @@ export default function TrendPanel({
                   contentStyle={{ fontSize: 11, borderRadius: 8, border: "1px solid #e2e8f0" }}
                 />
                 <Area type="monotone" dataKey="pm25" stroke="#1e3a8a" strokeWidth={1.6} fill="#1e3a8a" fillOpacity={0.12} dot={false} isAnimationActive={false} />
+                {(t.anomalies ?? []).map((a) => (
+                  <ReferenceDot key={a.date} x={a.date} y={a.pm25} r={3.5} fill="#dc2626" stroke="#fff" strokeWidth={1.2} ifOverflow="extendDomain" />
+                ))}
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -122,6 +126,18 @@ export default function TrendPanel({
             <span className="ml-auto">{t.days_of_history} days of readings</span>
           </div>
           {t.note && <div className="mt-0.5 text-[10px] italic text-amber-700">{t.note}</div>}
+          {(t.anomalies?.length ?? 0) > 0 && (
+            <div className="mt-1.5 space-y-0.5">
+              <div className="text-[10px] font-semibold uppercase tracking-wide text-red-700">
+                <span className="mr-1 inline-block h-2 w-2 rounded-full bg-red-600 align-middle" />spike days
+              </div>
+              {(t.anomalies ?? []).slice(-3).reverse().map((a) => (
+                <div key={a.date} className="text-[10px] leading-4 text-slate-600">
+                  <b className="text-slate-800">{a.date}</b> · {a.pm25} vs {a.baseline} norm — {a.why}
+                </div>
+              ))}
+            </div>
+          )}
         </>
       )}
     </div>

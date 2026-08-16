@@ -352,7 +352,44 @@ def pm25_trend(
                              f"than a month ago ({'+' if pct>0 else ''}{pct}%) · mostly "
                              f"{(mode_band or 'unknown').replace('_',' ')} over the last 30 days"),
                 }
+        # Anomaly days: > baseline + 1.5 σ (baseline = trailing 14-day median),
+        # each with a one-line, data-backed "why" from what we already know.
+        anomalies: list[dict] = []
+        if len(series) >= 14:
+            import statistics as _st
+
+            vals = [p["pm25"] for p in series]
+            fires_by_day: dict[str, int] = {}
+            try:
+                fjson = json.loads((Path(__file__).resolve().parent.parent / "web" / "public" / "fires" / f"{city}.geojson").read_text())
+                for f in fjson.get("features", []):
+                    d0 = (f.get("properties") or {}).get("date")
+                    if d0:
+                        fires_by_day[d0] = fires_by_day.get(d0, 0) + 1
+            except Exception:  # noqa: BLE001 — layer file is optional
+                pass
+            for i in range(14, len(series)):
+                window = vals[i - 14:i]
+                med = _st.median(window)
+                sd = _st.pstdev(window) or 1.0
+                v = vals[i]
+                if v > med + 1.5 * sd and v > 60:
+                    d0 = series[i]["date"]
+                    why = []
+                    nf = fires_by_day.get(d0, 0)
+                    if nf:
+                        why.append(f"{nf} fire detection{'s' if nf > 1 else ''} in the city that day")
+                    try:
+                        wd = datetime.fromisoformat(d0).strftime("%A")
+                        if wd in ("Sunday",):
+                            why.append("a Sunday — not a traffic peak, so likely burning or a regional plume")
+                    except ValueError:
+                        wd = ""
+                    if not why:
+                        why.append(f"{round((v / med - 1) * 100)}% above the trailing two-week norm — check wind and upwind sources")
+                    anomalies.append({"date": d0, "pm25": v, "baseline": round(med, 1), "why": " · ".join(why)})
         data = {"city_id": city, "cell": cell, "days": days, "series": series, "verdict": verdict,
+                "anomalies": anomalies[-8:],
                 "days_of_history": len(series), "proxy_cell": proxy_cell,
                 "proxy_km": proxy_dist,
                 "note": (f"no long station record inside this cell — showing the nearest monitored "
