@@ -89,6 +89,19 @@ def _warm_heavy_imports() -> None:
                 __import__(mod)
             except Exception:  # noqa: BLE001 — optional dependency
                 pass
+        # Then pre-compute the dense field for every city into the read cache (live mode only;
+        # WARM_ON_START=0 disables it, e.g. for tests). Failures are logged, never raised.
+        if DEMO_MODE or os.getenv("WARM_ON_START", "1") == "0":
+            return
+        try:
+            from core.cities import list_city_ids
+            for cid in list_city_ids():
+                try:
+                    _dense_field_cached(cid)
+                except Exception as e:  # noqa: BLE001
+                    logger.warning("warm coverage failed for %s: %s", cid, e)
+        except Exception as e:  # noqa: BLE001
+            logger.warning("warm-up skipped: %s", e)
 
     threading.Thread(target=_load, name="warm-imports", daemon=True).start()
 
@@ -1570,11 +1583,28 @@ def coverage(city: str = Query("delhi", description="City ID")) -> dict:
         picked = data.get(city) if isinstance(data, dict) else None
         return ok(picked or {"cells": [], "city_id": city})
     try:
-        return ok(_live_dense_field(city))
+        return ok(_dense_field_cached(city))
     except ValueError as e:
         return err("bad_request", str(e))
     except Exception as e:  # noqa: BLE001
         return _server_error("coverage_error", e, "Failed to compute coverage field")
+
+
+_DENSE_TTL_S = 600
+_dense_cache: dict[str, tuple[float, dict]] = {}
+
+
+def _dense_field_cached(city: str) -> dict:
+    """/coverage is the heaviest read (downscaler over the whole city grid) and its inputs
+    change hourly at most — serve a 10-minute in-process cache; the warm-up thread fills it
+    for every city right after start so the first click on stage is instant."""
+    now = time.time()
+    hit = _dense_cache.get(city)
+    if hit and now - hit[0] < _DENSE_TTL_S:
+        return hit[1]
+    data = _live_dense_field(city)
+    _dense_cache[city] = (now, data)
+    return data
 
 
 def _live_dense_field(city: str) -> dict:
@@ -1668,7 +1698,7 @@ def clean_zones(
         return ok({"city_id": city, "basis": "demo_fixture",
                    "zones": _zones_from_field(city, field, top)})
     try:
-        field = _live_dense_field(city)
+        field = _dense_field_cached(city)
         return ok({
             "city_id": city,
             "basis": f"E2 dense 1km field, anchors: {field.get('anchors_from')}",
