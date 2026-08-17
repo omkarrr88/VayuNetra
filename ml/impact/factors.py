@@ -1,4 +1,4 @@
-"""E7 — cited factor tables for health & carbon quantification.  Owner: Sejal.
+"""E7 — cited factor tables for health & carbon quantification.
 
 PRD §12.15 / ARCH §9.13 / Validation #12: *every* ₹ / health / CO₂e figure must
 trace to a published WHO / CPCB / emission-factor source — **never an invented

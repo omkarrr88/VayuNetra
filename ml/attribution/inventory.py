@@ -1,4 +1,4 @@
-"""Published emission-inventory anchors for attribution validation.  Owner: Omkar.
+"""Published emission-inventory anchors for attribution validation.
 
 PS5's evaluation focus asks for "source attribution accuracy versus ground-truth
 emission inventories". No live speciated ground truth exists in public feeds, so

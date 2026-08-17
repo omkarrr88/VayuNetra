@@ -1,6 +1,6 @@
 # web/ — Authority Console + Citizen PWA
 
-> Owner: **Sejal** (F4 app shell + integration). Stack: React + TypeScript + Vite + Tailwind +
+> Stack: React + TypeScript + Vite + Tailwind +
 > **MapLibre GL + Deck.gl** (`H3HexagonLayer`) on Vercel. Spec: ARCHITECTURE.md §12, PRD §14.
 
 ## Getting started
@@ -14,9 +14,9 @@ npm run dev
 `tailwind.config.js`, `vite.config.ts`) — kept out of the base so you own the app shell.
 
 ## Component seams (so teammates' panels plug into your shell)
-- **Blame Map** (Omkar) — `H3HexagonLayer` coloured by dominant source + SHAP tooltips.
-- **Forecast time-slider** (Omkar) — 24–72h scrub + spike alerts.
-- **Enforcement worklist + dossier** (Abhinav) — ranked list → cited dossier → Notice/PDF.
+- **Blame Map** — `H3HexagonLayer` coloured by dominant source + SHAP tooltips.
+- **Forecast time-slider** — 24–72h scrub + spike alerts.
+- **Enforcement worklist + dossier** — ranked list → cited dossier → Notice/PDF.
 - **Yours** — city switcher, comparative tab, latency widget, Citizen PWA, language toggle.
 
 Every panel **reads the API / Supabase** (see `docs/API_CONTRACT.md`) — never a direct call to a

@@ -17,6 +17,7 @@ import fxRoi from "./fixtures/roi.json";
 import fxStatic from "./fixtures/static_layers.json";
 import fxCoverage from "./fixtures/coverage.json";
 import fxTrend from "./fixtures/history_trend.json";
+import fxBench from "./fixtures/benchmarks.json";
 
 const BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 // Supabase anon key — safe to expose in the browser (publishable by design).
@@ -78,6 +79,11 @@ function fixtureFor(path: string): unknown {
     return { city_id: city ?? "delhi", days, series: entry.series ?? [], verdict: entry.verdict ?? null,
              days_of_history: entry.days_of_history ?? 0, note: url.searchParams.get("cell") ? "city-level history (offline snapshot)" : null };
   }
+  if (p === "/metrics/benchmark") {
+    const byId = fxBench as Record<string, unknown>;
+    return byId[city ?? "delhi"] ?? byId["delhi"];
+  }
+  if (p === "/exposure") return undefined; // no offline fixture: the card simply hides itself
   if (p === "/comparison") return fxComparison;
   if (p === "/latency") return fxLatency;
   if (p === "/simulate") return fxSimulate;

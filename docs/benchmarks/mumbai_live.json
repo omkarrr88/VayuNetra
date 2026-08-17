@@ -1,0 +1,645 @@
+{
+ "city_id": "mumbai",
+ "source": "live",
+ "generated_at": "2026-08-17T13:06:05.978471+00:00",
+ "window": {
+  "start": "2026-05-21T03:00:00+00:00",
+  "end": "2026-08-17T09:00:00+00:00",
+  "split": "2026-07-26T07:30:00+00:00"
+ },
+ "stations_cells": 19,
+ "rows_wide": 10421,
+ "model": "LightGBM quantile (median) \u2014 same class/params as production (ml.forecast.train)",
+ "baselines": [
+  "persistence",
+  "seasonal_naive (weekly)",
+  "climatology (hour-of-day, train)"
+ ],
+ "thresholds": {
+  "poor": 90.0,
+  "very_poor": 120.0,
+  "severe": 250.0
+ },
+ "protocol": "single",
+ "window_days": null,
+ "horizons": [
+  {
+   "horizon_h": 24,
+   "n_train": 4670,
+   "n_test": 1865,
+   "n_support": 860,
+   "protocol": "single",
+   "window_days": null,
+   "origins": 1,
+   "features": [
+    "co",
+    "no2",
+    "o3",
+    "pm10",
+    "pm25",
+    "so2",
+    "blh",
+    "precip",
+    "rh",
+    "temp",
+    "wind_u",
+    "wind_v",
+    "wind_speed",
+    "ventilation",
+    "hour",
+    "dow",
+    "is_stubble_season",
+    "is_winter_inversion",
+    "is_diwali_window",
+    "advected_pm25",
+    "pm25_lag1",
+    "pm25_lag24"
+   ],
+   "regimes": {
+    "full_test": {
+     "n": 860,
+     "rmse_model": 7.33,
+     "mae_model": 5.31,
+     "skill_model_vs_persistence": 0.068,
+     "rmse_persistence": 7.86,
+     "mae_persistence": 5.64,
+     "rmse_seasonal_naive": 14.15,
+     "mae_seasonal_naive": 7.71,
+     "skill_seasonal_naive_vs_persistence": -0.801,
+     "rmse_climatology": 10.75,
+     "mae_climatology": 8.25,
+     "skill_climatology_vs_persistence": -0.368
+    },
+    "winter_nov_feb": {
+     "n": 0
+    },
+    "non_winter": {
+     "n": 860,
+     "rmse_model": 7.33,
+     "mae_model": 5.31,
+     "skill_model_vs_persistence": 0.068,
+     "rmse_persistence": 7.86,
+     "mae_persistence": 5.64,
+     "rmse_seasonal_naive": 14.15,
+     "mae_seasonal_naive": 7.71,
+     "skill_seasonal_naive_vs_persistence": -0.801,
+     "rmse_climatology": 10.75,
+     "mae_climatology": 8.25,
+     "skill_climatology_vs_persistence": -0.368
+    }
+   },
+   "episodes": {
+    "observed_over_90": {
+     "n": 0
+    },
+    "observed_over_120": {
+     "n": 0
+    },
+    "observed_over_250": {
+     "n": 0
+    }
+   },
+   "early_warning": {
+    "poor": {
+     "threshold": 90.0,
+     "events": 0,
+     "model": {
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0
+     },
+     "persistence": {
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0
+     },
+     "onsets": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null
+    },
+    "very_poor": {
+     "threshold": 120.0,
+     "events": 0,
+     "model": {
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0
+     },
+     "persistence": {
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0
+     },
+     "onsets": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null
+    },
+    "severe": {
+     "threshold": 250.0,
+     "events": 0,
+     "model": {
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0
+     },
+     "persistence": {
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0
+     },
+     "onsets": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null
+    }
+   },
+   "calibration": {
+    "n_calibration": 1168,
+    "poor": {
+     "threshold": 90.0,
+     "brier_model": 0.0,
+     "brier_climatology": 0.0,
+     "brier_skill": null,
+     "reliability": [
+      {
+       "bin": "0.0-0.1",
+       "n": 860,
+       "mean_forecast_p": 0.0,
+       "observed_freq": 0.0
+      }
+     ]
+    },
+    "very_poor": {
+     "threshold": 120.0,
+     "brier_model": 0.0,
+     "brier_climatology": 0.0,
+     "brier_skill": null,
+     "reliability": [
+      {
+       "bin": "0.0-0.1",
+       "n": 860,
+       "mean_forecast_p": 0.0,
+       "observed_freq": 0.0
+      }
+     ]
+    },
+    "severe": {
+     "threshold": 250.0,
+     "brier_model": 0.0,
+     "brier_climatology": 0.0,
+     "brier_skill": null,
+     "reliability": [
+      {
+       "bin": "0.0-0.1",
+       "n": 860,
+       "mean_forecast_p": 0.0,
+       "observed_freq": 0.0
+      }
+     ]
+    },
+    "pi80_coverage": 0.74,
+    "pi80_mean_width": 17.9
+   }
+  },
+  {
+   "horizon_h": 48,
+   "n_train": 4539,
+   "n_test": 1664,
+   "n_support": 804,
+   "protocol": "single",
+   "window_days": null,
+   "origins": 1,
+   "features": [
+    "co",
+    "no2",
+    "o3",
+    "pm10",
+    "pm25",
+    "so2",
+    "blh",
+    "precip",
+    "rh",
+    "temp",
+    "wind_u",
+    "wind_v",
+    "wind_speed",
+    "ventilation",
+    "hour",
+    "dow",
+    "is_stubble_season",
+    "is_winter_inversion",
+    "is_diwali_window",
+    "advected_pm25",
+    "pm25_lag1",
+    "pm25_lag24"
+   ],
+   "regimes": {
+    "full_test": {
+     "n": 804,
+     "rmse_model": 7.55,
+     "mae_model": 5.38,
+     "skill_model_vs_persistence": 0.083,
+     "rmse_persistence": 8.23,
+     "mae_persistence": 6.01,
+     "rmse_seasonal_naive": 14.4,
+     "mae_seasonal_naive": 7.54,
+     "skill_seasonal_naive_vs_persistence": -0.749,
+     "rmse_climatology": 10.56,
+     "mae_climatology": 8.01,
+     "skill_climatology_vs_persistence": -0.282
+    },
+    "winter_nov_feb": {
+     "n": 0
+    },
+    "non_winter": {
+     "n": 804,
+     "rmse_model": 7.55,
+     "mae_model": 5.38,
+     "skill_model_vs_persistence": 0.083,
+     "rmse_persistence": 8.23,
+     "mae_persistence": 6.01,
+     "rmse_seasonal_naive": 14.4,
+     "mae_seasonal_naive": 7.54,
+     "skill_seasonal_naive_vs_persistence": -0.749,
+     "rmse_climatology": 10.56,
+     "mae_climatology": 8.01,
+     "skill_climatology_vs_persistence": -0.282
+    }
+   },
+   "episodes": {
+    "observed_over_90": {
+     "n": 0
+    },
+    "observed_over_120": {
+     "n": 0
+    },
+    "observed_over_250": {
+     "n": 0
+    }
+   },
+   "early_warning": {
+    "poor": {
+     "threshold": 90.0,
+     "events": 0,
+     "model": {
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0
+     },
+     "persistence": {
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0
+     },
+     "onsets": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null
+    },
+    "very_poor": {
+     "threshold": 120.0,
+     "events": 0,
+     "model": {
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0
+     },
+     "persistence": {
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0
+     },
+     "onsets": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null
+    },
+    "severe": {
+     "threshold": 250.0,
+     "events": 0,
+     "model": {
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0
+     },
+     "persistence": {
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0
+     },
+     "onsets": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null
+    }
+   },
+   "calibration": {
+    "n_calibration": 1135,
+    "poor": {
+     "threshold": 90.0,
+     "brier_model": 0.0,
+     "brier_climatology": 0.0,
+     "brier_skill": null,
+     "reliability": [
+      {
+       "bin": "0.0-0.1",
+       "n": 804,
+       "mean_forecast_p": 0.0,
+       "observed_freq": 0.0
+      }
+     ]
+    },
+    "very_poor": {
+     "threshold": 120.0,
+     "brier_model": 0.0,
+     "brier_climatology": 0.0,
+     "brier_skill": null,
+     "reliability": [
+      {
+       "bin": "0.0-0.1",
+       "n": 804,
+       "mean_forecast_p": 0.0,
+       "observed_freq": 0.0
+      }
+     ]
+    },
+    "severe": {
+     "threshold": 250.0,
+     "brier_model": 0.0,
+     "brier_climatology": 0.0,
+     "brier_skill": null,
+     "reliability": [
+      {
+       "bin": "0.0-0.1",
+       "n": 804,
+       "mean_forecast_p": 0.0,
+       "observed_freq": 0.0
+      }
+     ]
+    },
+    "pi80_coverage": 0.728,
+    "pi80_mean_width": 19.9
+   }
+  },
+  {
+   "horizon_h": 72,
+   "n_train": 4437,
+   "n_test": 1463,
+   "n_support": 766,
+   "protocol": "single",
+   "window_days": null,
+   "origins": 1,
+   "features": [
+    "co",
+    "no2",
+    "o3",
+    "pm10",
+    "pm25",
+    "so2",
+    "blh",
+    "precip",
+    "rh",
+    "temp",
+    "wind_u",
+    "wind_v",
+    "wind_speed",
+    "ventilation",
+    "hour",
+    "dow",
+    "is_stubble_season",
+    "is_winter_inversion",
+    "is_diwali_window",
+    "advected_pm25",
+    "pm25_lag1",
+    "pm25_lag24"
+   ],
+   "regimes": {
+    "full_test": {
+     "n": 766,
+     "rmse_model": 12.85,
+     "mae_model": 5.43,
+     "skill_model_vs_persistence": 0.05,
+     "rmse_persistence": 13.53,
+     "mae_persistence": 6.44,
+     "rmse_seasonal_naive": 18.27,
+     "mae_seasonal_naive": 7.99,
+     "skill_seasonal_naive_vs_persistence": -0.35,
+     "rmse_climatology": 14.7,
+     "mae_climatology": 8.16,
+     "skill_climatology_vs_persistence": -0.087
+    },
+    "winter_nov_feb": {
+     "n": 0
+    },
+    "non_winter": {
+     "n": 766,
+     "rmse_model": 12.85,
+     "mae_model": 5.43,
+     "skill_model_vs_persistence": 0.05,
+     "rmse_persistence": 13.53,
+     "mae_persistence": 6.44,
+     "rmse_seasonal_naive": 18.27,
+     "mae_seasonal_naive": 7.99,
+     "skill_seasonal_naive_vs_persistence": -0.35,
+     "rmse_climatology": 14.7,
+     "mae_climatology": 8.16,
+     "skill_climatology_vs_persistence": -0.087
+    }
+   },
+   "episodes": {
+    "observed_over_90": {
+     "n": 2,
+     "rmse_model": 217.29,
+     "mae_model": 213.63,
+     "skill_model_vs_persistence": -0.001,
+     "rmse_persistence": 217.15,
+     "mae_persistence": 213.47,
+     "rmse_seasonal_naive": 218.0,
+     "mae_seasonal_naive": 214.12,
+     "skill_seasonal_naive_vs_persistence": -0.004,
+     "rmse_climatology": 213.76,
+     "mae_climatology": 210.16,
+     "skill_climatology_vs_persistence": 0.016
+    },
+    "observed_over_120": {
+     "n": 2,
+     "rmse_model": 217.29,
+     "mae_model": 213.63,
+     "skill_model_vs_persistence": -0.001,
+     "rmse_persistence": 217.15,
+     "mae_persistence": 213.47,
+     "rmse_seasonal_naive": 218.0,
+     "mae_seasonal_naive": 214.12,
+     "skill_seasonal_naive_vs_persistence": -0.004,
+     "rmse_climatology": 213.76,
+     "mae_climatology": 210.16,
+     "skill_climatology_vs_persistence": 0.016
+    },
+    "observed_over_250": {
+     "n": 1,
+     "rmse_model": 253.33,
+     "mae_model": 253.33,
+     "skill_model_vs_persistence": -0.0,
+     "rmse_persistence": 253.3,
+     "mae_persistence": 253.3,
+     "rmse_seasonal_naive": 255.05,
+     "mae_seasonal_naive": 255.05,
+     "skill_seasonal_naive_vs_persistence": -0.007,
+     "rmse_climatology": 249.22,
+     "mae_climatology": 249.22,
+     "skill_climatology_vs_persistence": 0.016
+    }
+   },
+   "early_warning": {
+    "poor": {
+     "threshold": 90.0,
+     "events": 2,
+     "model": {
+      "precision": null,
+      "recall": 0.0,
+      "f1": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 2
+     },
+     "persistence": {
+      "precision": null,
+      "recall": 0.0,
+      "f1": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 2
+     },
+     "onsets": 2,
+     "onset_recall_model": 0.0,
+     "onset_recall_persistence": 0.0
+    },
+    "very_poor": {
+     "threshold": 120.0,
+     "events": 2,
+     "model": {
+      "precision": null,
+      "recall": 0.0,
+      "f1": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 2
+     },
+     "persistence": {
+      "precision": null,
+      "recall": 0.0,
+      "f1": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 2
+     },
+     "onsets": 2,
+     "onset_recall_model": 0.0,
+     "onset_recall_persistence": 0.0
+    },
+    "severe": {
+     "threshold": 250.0,
+     "events": 1,
+     "model": {
+      "precision": null,
+      "recall": 0.0,
+      "f1": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 1
+     },
+     "persistence": {
+      "precision": null,
+      "recall": 0.0,
+      "f1": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 1
+     },
+     "onsets": 1,
+     "onset_recall_model": 0.0,
+     "onset_recall_persistence": 0.0
+    }
+   },
+   "calibration": {
+    "n_calibration": 1110,
+    "poor": {
+     "threshold": 90.0,
+     "brier_model": 0.0026,
+     "brier_climatology": 0.0026,
+     "brier_skill": -0.003,
+     "reliability": [
+      {
+       "bin": "0.0-0.1",
+       "n": 766,
+       "mean_forecast_p": 0.0,
+       "observed_freq": 0.003
+      }
+     ]
+    },
+    "very_poor": {
+     "threshold": 120.0,
+     "brier_model": 0.0026,
+     "brier_climatology": 0.0026,
+     "brier_skill": -0.003,
+     "reliability": [
+      {
+       "bin": "0.0-0.1",
+       "n": 766,
+       "mean_forecast_p": 0.0,
+       "observed_freq": 0.003
+      }
+     ]
+    },
+    "severe": {
+     "threshold": 250.0,
+     "brier_model": 0.0013,
+     "brier_climatology": 0.0013,
+     "brier_skill": -0.001,
+     "reliability": [
+      {
+       "bin": "0.0-0.1",
+       "n": 766,
+       "mean_forecast_p": 0.0,
+       "observed_freq": 0.001
+      }
+     ]
+    },
+    "pi80_coverage": 0.766,
+    "pi80_mean_width": 21.1
+   }
+  }
+ ]
+}

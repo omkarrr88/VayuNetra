@@ -1,4 +1,4 @@
-"""Static OSM/WorldPop-style layers for Sejal's Stage-1 lane.
+"""Static OSM/WorldPop-style layers for the Stage-1 static-layers lane.
 
 This module is intentionally free/offline first. It creates deterministic seed layers
 with the same shape a live OSM + WorldPop connector would produce:

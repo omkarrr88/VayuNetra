@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import BlameMap, { type AttrCell, type CoverageCell, type MapMode } from "./BlameMap";
 import ForecastPanel from "./ForecastPanel";
+import ValidationPanel from "./ValidationPanel";
 import { api } from "./api";
 import AqiHeader from "./AqiHeader";
 import CellStoryPanel from "./CellStoryPanel";
@@ -359,6 +360,7 @@ export default function App() {
               {section === "forecast" && (
                 <>
                   <ForecastPanel city={active} />
+                  <ValidationPanel city={active} />
                   <CityStatsPanel city={active} cells={attrCells} coverageCells={coverage?.cells ?? []} />
                 </>
               )}

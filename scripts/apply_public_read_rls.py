@@ -1,4 +1,4 @@
-"""Apply the public-read RLS migration to Supabase.  Owner: Omkar (deploy).
+"""Apply the public-read RLS migration to Supabase.
 
 Grants anonymous SELECT on `attribution` + `enforcement_recs` so the
 deployed dashboard (which calls the API with the anon key) can show those

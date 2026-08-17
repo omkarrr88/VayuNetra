@@ -1,4 +1,4 @@
-"""Open-Meteo weather connector.  Owner: Omkar.  Spec: ARCHITECTURE.md §7.1, §9.2; PRD §11.
+"""Open-Meteo weather connector.  Spec: ARCHITECTURE.md §7.1, §9.2; PRD §11.
 
 Free, no API key. Pulls hourly met variables (the forecast model's drivers) for a city,
 converts to canonical `measurements`, and (optionally) pushes to Supabase.

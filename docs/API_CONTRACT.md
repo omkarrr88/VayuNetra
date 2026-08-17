@@ -1,7 +1,7 @@
 # VayuNetra — API Contract (F3)
 
 > **The app contract.** Frontends and agents code against *this*, not against each other.
-> Source: [ARCHITECTURE.md](ARCHITECTURE.md) §11. Owners: **Abhinav** (serve) + **Sejal** (consume).
+> Source: [ARCHITECTURE.md](ARCHITECTURE.md) §11.
 > Base URL (local): `http://localhost:8000` · Auth: Supabase JWT (Bearer) · All responses use the envelope below.
 
 ## Response envelope (every endpoint)
@@ -20,26 +20,28 @@
 
 ## Endpoints
 
-| Method | Path | Purpose | Role | Owner |
-|---|---|---|---|---|
-| GET | `/health` | liveness + `DEMO_MODE` flag | all | Abhinav |
-| GET | `/cities` | list onboarded cities | all | Abhinav |
-| GET | `/aqi/current?city&bbox` | live AQI per H3 cell | all | Abhinav |
+| Method | Path | Purpose | Role |
+|---|---|---|---|
+| GET | `/health` | liveness + `DEMO_MODE` flag | all |
+| GET | `/cities` | list onboarded cities | all |
+| GET | `/aqi/current?city&bbox` | live AQI per H3 cell | all |
 | GET | `/attribution?city&cell\|ward&ts` | source split + confidence (blame map) | officer+ | Abhinav |
-| GET | `/forecast?city&cell&horizon` | forecast + intervals + persistence | all | Abhinav |
-| GET | `/enforcement?city&date` | ranked enforcement recommendations | officer+ | Abhinav |
-| POST | `/enforcement/{id}/dossier` | cited evidence packet + satellite patch (E6) | officer+ | Abhinav |
-| GET | `/advisory?city&ward&lang` | localized citizen advisory | all | Abhinav |
-| GET | `/static-layers?city` | OSM/WorldPop-style sources, roads, vulnerability | all | Sejal |
-| GET | `/mobility?city` | traffic proxy measurements from OSM roads + time model | all | Sejal |
-| GET | `/comparison` | Agent 5 multi-city trends + playbook recommendations | all | Sejal |
-| GET | `/latency?city` | latest signal-to-action widget payload | all | Sejal |
-| POST | `/agent/query` | conversational orchestrator (NL → action) | officer+ | Abhinav |
-| POST | `/simulate` | what-if intervention → ΔAQI + people/₹/CO₂e (E3+E7, live) | officer+ | Omkar(E3)+Sejal(E7,UI) |
-| GET | `/roi?city` | City ROI: annual health burden + NCAP savings (E7) | all | Sejal |
-| POST | `/optimize` | best intervention bundle under budget → top-3 (E5, **deferred stub**) | officer+ | Abhinav(engine)+Sejal(UI) |
-| POST | `/admin/cities` | onboard a city via config (scalability demo) | admin | Abhinav |
-| WS | `/live` | push attribution/forecast/alert updates | all | Abhinav |
+| GET | `/forecast?city&cell&horizon` | forecast + intervals + persistence | all |
+| GET | `/enforcement?city&date` | ranked enforcement recommendations | officer+ |
+| POST | `/enforcement/{id}/dossier` | cited evidence packet + satellite patch (E6) | officer+ |
+| GET | `/advisory?city&ward&lang` | localized citizen advisory | all |
+| GET | `/static-layers?city` | OSM/WorldPop-style sources, roads, vulnerability | all |
+| GET | `/mobility?city` | traffic proxy measurements from OSM roads + time model | all |
+| GET | `/comparison` | Agent 5 multi-city trends + playbook recommendations | all |
+| GET | `/latency?city` | latest signal-to-action widget payload | all |
+| POST | `/agent/query` | conversational orchestrator (NL → action) | officer+ |
+| POST | `/simulate` | what-if intervention → ΔAQI + people/₹/CO₂e (E3+E7, live) | officer+ |
+| GET | `/roi?city` | City ROI: annual health burden + NCAP savings (E7) | all |
+| POST | `/optimize` | best intervention bundle under budget → top-3 (E5, **deferred stub**) | officer+ |
+| POST | `/admin/cities` | onboard a city via config (scalability demo) | admin |
+| GET | `/metrics/benchmark?city&full` | temporal-split forecast benchmark artifact (skill, onset recall, calibration) | all |
+| GET | `/exposure?city` | expected people in Very Poor / Severe air at +24/48/72 h (calibrated, population-weighted) | all |
+| WS | `/live` | push attribution/forecast/alert updates | all |
 
 ## Representative payloads (shape only — fill from real data / fixtures)
 

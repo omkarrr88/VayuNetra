@@ -115,7 +115,7 @@ connectors/   ingest: CPCB/OpenAQ, Open-Meteo, Earth Engine, OSM, population, tr
 core/         H3 utils, canonical schemas, impact & intervention math, city configs
 ml/           attribution, forecast, dispersion, coverage, simulator, vision
 agents/       the 6 LangGraph agents + the notice-PDF writer      rag/  retrieval corpus
-api/          FastAPI (37 routes + WebSocket)                     web/  React console + landing
+api/          FastAPI (39 routes + WebSocket)                     web/  React console + landing
 demo/         17 offline fixtures    supabase/migrations/  schema+RLS    eval/  validation notebook
 ```
 

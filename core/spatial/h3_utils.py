@@ -1,7 +1,7 @@
 """H3 spatial helpers — the universal spatial key (ARCHITECTURE.md §6).
 
 Primary resolution = res 8 (≈ 0.74 km², edge ≈ 0.46 km) → the brief's "~1 km grid".
-Owner: Omkar (F5). This is a working starting point; extend with ward<->H3 mapping.
+This is a working starting point; extend with ward<->H3 mapping.
 """
 from __future__ import annotations
 

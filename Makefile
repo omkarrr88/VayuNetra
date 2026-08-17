@@ -1,4 +1,4 @@
-.PHONY: install api web seed migrate live-bootstrap test lint
+.PHONY: install api web seed migrate live-bootstrap test lint benchmark benchmark-history
 
 install:        ## install lean python (CPU, no CUDA) + web deps
 	pip install -r requirements.txt
@@ -40,6 +40,15 @@ lint:           ## ruff lint
 
 refresh-cities: ## bring every city's forecasts/attribution/worklist/advisories current (run the morning of a demo)
 	./scripts/refresh_all_cities.sh
+
+benchmark:      ## recompute the live 90-day forecast benchmark for every city + mirror fixtures (docs/BENCHMARKS.md)
+	for c in $$(python -c "from core.cities import list_city_ids; print(' '.join(list_city_ids()))"); do python -m ml.eval.benchmark --city $$c --source live --no-ablation; done
+	python scripts/build_benchmark_fixture.py
+
+benchmark-history: ## multi-season Delhi/Kolkata benchmark (needs data/hist from scripts/fetch_history.py)
+	python -m ml.eval.benchmark --city delhi --source hist --split 2025-11-01 --protocol rolling --window-days 90
+	python -m ml.eval.benchmark --city kolkata --source hist --split 2025-11-01 --protocol rolling --window-days 90
+	python scripts/build_benchmark_fixture.py
 
 prewarm:        ## judging-morning pre-warm + GO/NO-GO smoke check (run ~15 min before demo)
 	./scripts/prewarm_demo.sh

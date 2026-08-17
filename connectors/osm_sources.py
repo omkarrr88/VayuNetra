@@ -1,4 +1,4 @@
-"""OSM emission-source registry connector.  Owner: Sejal lane.  Spec: PLAN §2C; PRD §11.
+"""OSM emission-source registry connector.  Spec: PLAN §2C; PRD §11.
 
 Replaces the hand-seeded registry with real, city-specific sites ingested from
 OpenStreetMap via the free Overpass API (no key): construction zones, industrial
@@ -207,7 +207,7 @@ def push_to_supabase(city_id: str, rows: list[dict]) -> None:
     ]
     if osm_ids:
         db.table("enforcement_recs").delete().eq("city_id", city_id).in_("source_id", osm_ids).execute()
-    # Replace ONLY OSM-origin rows: the daily refresh was wiping Abhinav's E1
+    # Replace ONLY OSM-origin rows: the daily refresh was wiping the E1
     # cv_detected rows (and any registry rows) along with its own.
     db.table("emission_sources").delete().eq("city_id", city_id).eq("source_origin", "osm").execute()
     try:

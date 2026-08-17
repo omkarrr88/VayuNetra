@@ -1,6 +1,6 @@
 # DEMO_MODE — frozen offline snapshot (F8)
 
-> Owner: **Sejal** (F8 + DEMO_MODE wiring). Purpose: the **entire scored demo runs offline**
+> Purpose: the **entire scored demo runs offline**
 > with zero live-API dependency (ARCHITECTURE.md §15, §22; the #1-risk mitigation).
 
 ## How it works

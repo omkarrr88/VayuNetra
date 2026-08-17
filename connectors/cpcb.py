@@ -1,4 +1,4 @@
-"""CPCB CAAQMS connector via data.gov.in.  Owner: Omkar.  Spec: ARCHITECTURE.md §7.1; PRD §11.
+"""CPCB CAAQMS connector via data.gov.in.  Spec: ARCHITECTURE.md §7.1; PRD §11.
 
 The authoritative Indian ground source — real-time AQI per CPCB station (a *current
 snapshot*, not history; complements OpenAQ's hourly series). Maps each station to its H3

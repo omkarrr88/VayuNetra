@@ -1,4 +1,4 @@
-"""E7 — health & carbon quantification engine.  Owner: Sejal.
+"""E7 — health & carbon quantification engine.
 
 Turns a PM2.5 change (from the E3 what-if / forecast / attribution) into the
 Business-Impact numbers: premature deaths averted, ₹ health cost avoided, and

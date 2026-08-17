@@ -32,7 +32,13 @@ export function cellLabel(h3: string): string {
 
 type ChartPoint = { h: string; avg: number; band: [number, number]; pers: number };
 
-// Forecast panel (Omkar's): horizon picker, interval-band chart, spike alerts.
+type BenchSummary = {
+  source: "hist" | "live";
+  generated_at: string;
+  headline: { horizon_h: number; n_test: number; skill_vs_persistence: number | null; skill_vs_seasonal_naive: number | null; pi80_coverage: number | null }[];
+};
+
+// Forecast panel: horizon picker, interval-band chart, spike alerts.
 export default function ForecastPanel({ city }: { city: string }) {
   const [horizon, setHorizon] = useState(24);
   const [byHorizon, setByHorizon] = useState<Record<number, FC[]> | null>(null);
@@ -46,7 +52,17 @@ export default function ForecastPanel({ city }: { city: string }) {
     ).then((all) => setByHorizon(Object.fromEntries(all)));
   }, [city]);
 
+  // Measured skill: the benchmark artifact (recomputed by ml.eval.benchmark) wins;
+  // the metrics.ts snapshot is only the fallback for cities without an artifact yet.
+  const [bench, setBench] = useState<BenchSummary | null>(null);
+  useEffect(() => {
+    setBench(null);
+    api<{ history: BenchSummary | null; live: BenchSummary | null }>(`/metrics/benchmark?city=${city}`)
+      .then((d) => setBench(d.live ?? d.history ?? null))
+      .catch(() => setBench(null));
+  }, [city]);
   const skill = FORECAST_SKILL[city];
+  const bh = bench?.headline.find((h) => h.horizon_h === horizon);
   const rows = byHorizon?.[horizon] ?? [];
 
   const mean = (xs: number[]) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : 0);
@@ -107,7 +123,16 @@ export default function ForecastPanel({ city }: { city: string }) {
         <span className="flex items-center gap-1"><span className="inline-block h-0.5 w-3 rounded bg-slate-400" /> persistence</span>
       </div>
 
-      {skill && (
+      {bh ? (
+        <div
+          className="mt-2 rounded-md bg-indigo-50 px-2 py-1 text-[11px] leading-4 text-indigo-800"
+          title={`Temporal-split benchmark (${bench?.source === "hist" ? "multi-season history" : "live 90-day window"}, n=${bh.n_test} test hours) recomputed ${bench?.generated_at.slice(0, 10)}. skill = 1 − RMSE_model/RMSE_baseline`}
+        >
+          measured skill @{horizon}h: <b>{pct(bh.skill_vs_persistence ?? undefined)}</b> vs persistence ·{" "}
+          <b>{pct(bh.skill_vs_seasonal_naive ?? undefined)}</b> vs seasonal-naive
+          {typeof bh.pi80_coverage === "number" && <> · 80% band covers <b>{Math.round(bh.pi80_coverage * 100)}%</b></>}
+        </div>
+      ) : skill ? (
         <div
           className="mt-2 rounded-md bg-indigo-50 px-2 py-1 text-[11px] leading-4 text-indigo-800"
           title={`Walk-forward backtest (3 folds, n=${skill.n}) on live data, ${SKILL_ASOF}. skill = 1 − RMSE_model/RMSE_baseline`}
@@ -115,7 +140,7 @@ export default function ForecastPanel({ city }: { city: string }) {
           backtested skill @{horizon}h: <b>{pct(skill.vsPersistence[horizon])}</b> vs persistence ·{" "}
           <b>{pct(skill.vsClimatology[horizon])}</b> vs climatology
         </div>
-      )}
+      ) : null}
 
       {byHorizon === null ? (
         <div className="mt-2 h-20 animate-pulse rounded-md bg-slate-100" />

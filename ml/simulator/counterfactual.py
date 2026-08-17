@@ -1,6 +1,6 @@
-"""E3 counterfactual interface — forecast × attribution what-if.  Owner: Omkar.
+"""E3 counterfactual interface — forecast × attribution what-if.
 
-PLAN §3A: "expose the counterfactual interface Abhinav's what-if consumes".
+PLAN §3A: "expose the counterfactual interface the what-if consumes".
 Given an intervention (source-share reductions), recompute each cell's
 forecast PM2.5:
 
@@ -9,7 +9,7 @@ forecast PM2.5:
 plus a one-hop dispersion term: a cell's *transported* component shrinks with
 the average local reduction elsewhere in the city (pollution that would have
 been advected in is no longer produced). Pure function core (`apply_reductions`)
-so Abhinav's /simulate and /optimize can call it with injected data; the
+so /simulate and /optimize can call it with injected data; the
 `simulate_intervention` wrapper loads live attribution + forecasts from Supabase.
 
 Honest limits: people_protected uses a fixed per-cell population heuristic
@@ -222,7 +222,7 @@ def simulate_intervention(
         },
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
-    # E7 (Sejal): add cited health ₹ + CO₂e on top of the physics deltas.
+    # E7: add cited health ₹ + CO₂e on top of the physics deltas.
     from ml.impact import quantify_intervention
 
     return quantify_intervention(base)

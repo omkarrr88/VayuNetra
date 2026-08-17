@@ -1,4 +1,4 @@
-"""Delhi seed generator (F6 helper).  Owner: Omkar.
+"""Delhi seed generator (F6 helper).
 
 Seeds the `cities` table (from core/config/cities/*.yml) and synthetic-but-plausible
 Delhi `measurements` so the WHOLE team has queryable data on day 1 — before the real

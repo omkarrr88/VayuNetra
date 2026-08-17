@@ -1,4 +1,4 @@
-"""Agent 4 - Citizen Health Risk Advisory (Sejal).
+"""Agent 4 - Citizen Health Risk Advisory.
 
 Numbers come from forecasts and vulnerability layers; text is templated and localized.
 The LLM can polish translations later, but Stage 1 has deterministic output that is safe
@@ -78,6 +78,60 @@ def audience_segment(vulnerability: dict) -> str:
     if vulnerability.get("hospitals", 0) >= 2:
         return "respiratory"
     return "general"
+
+
+# Unicode block per language — the script an advisory in that language must be written in.
+# Used to reject LLM output that leaks glyphs from another script (a stray CJK or Bengali
+# character inside a Hindi SMS is a real failure mode) or that never switched script at all.
+_SCRIPT_BLOCK = {
+    "hi": (0x0900, 0x097F),   # Devanagari
+    "mr": (0x0900, 0x097F),   # Devanagari
+    "kn": (0x0C80, 0x0CFF),   # Kannada
+    "ta": (0x0B80, 0x0BFF),   # Tamil
+    "te": (0x0C00, 0x0C7F),   # Telugu
+    "bn": (0x0980, 0x09FF),   # Bengali
+    "gu": (0x0A80, 0x0AFF),   # Gujarati
+    "pa": (0x0A00, 0x0A7F),   # Gurmukhi
+}
+_ALLOWED_ANY = {(0x0000, 0x024F), (0x2000, 0x206F), (0x20A0, 0x20CF), (0x2190, 0x21FF), (0x2600, 0x27BF),
+                (0x1F300, 0x1FAFF), (0xFE00, 0xFE0F), (0x0964, 0x0965)}  # Latin+punct, symbols, emoji, danda
+
+
+def _in(cp: int, block: tuple[int, int]) -> bool:
+    return block[0] <= cp <= block[1]
+
+
+def foreign_script_chars(text: str, lang: str) -> str:
+    """Characters that belong to neither the target script nor the always-allowed set."""
+    target = _SCRIPT_BLOCK.get(lang)
+    bad = []
+    for ch in text:
+        cp = ord(ch)
+        if ch.isspace() or ch.isdigit() or any(_in(cp, b) for b in _ALLOWED_ANY):
+            continue
+        if target and _in(cp, target):
+            continue
+        bad.append(ch)
+    return "".join(bad)
+
+
+def script_ok(text: str, lang: str) -> bool:
+    """Cheap, deterministic sanity check for a localized advisory.
+
+    English: no non-Latin script at all. Other languages: the target script must be
+    present and no character may come from a different script. Never edits the text —
+    a failing candidate is rejected and the template is kept (omitting beats shipping
+    garbage to a citizen's phone).
+    """
+    if not text or not text.strip():
+        return False
+    if lang == "en":
+        return not any(ord(ch) > 0x024F and not any(_in(ord(ch), b) for b in _ALLOWED_ANY) for ch in text)
+    target = _SCRIPT_BLOCK.get(lang)
+    if target is None:          # unknown language code -> only enforce "no foreign script" against Latin
+        return True
+    has_target = any(_in(ord(ch), target) for ch in text)
+    return has_target and not foreign_script_chars(text, lang)
 
 
 def render_message(city_name: str, ward_id: str, tier: str, horizon_h: int, lang: str) -> str:

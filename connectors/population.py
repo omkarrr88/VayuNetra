@@ -1,4 +1,4 @@
-"""GPW v4.11 population per H3 cell, via Earth Engine.  Owner: Omkar (for Sejal's layer).
+"""GPW v4.11 population per H3 cell, via Earth Engine.
 
 Replaces the flat POP_PER_CELL=40k heuristic with real gridded population:
 CIESIN GPW v4.11 Population Count (~1 km, 2020, SEDAC/NASA) summed over each

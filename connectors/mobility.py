@@ -1,4 +1,4 @@
-"""GTFS/OSM traffic proxy for Sejal's Stage-1 mobility feed.
+"""GTFS/OSM traffic proxy for the Stage-1 mobility feed.
 
 Real-time traffic APIs are paid or fragile. This connector creates a transparent,
 repeatable proxy from OSM-style road weights + hour/day multipliers and writes canonical

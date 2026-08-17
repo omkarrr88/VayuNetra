@@ -1,4 +1,4 @@
-"""VayuNetra API — FastAPI read-API + agent endpoints.  Owner: Abhinav.
+"""VayuNetra API — FastAPI read-API + agent endpoints.
 
 Every endpoint returns the standard {success, data, error, meta} envelope.
 In DEMO_MODE (default), all responses are served from demo/fixtures/* so the
@@ -528,7 +528,7 @@ def forecast(
 
     q = (
         db.table("forecasts")
-        .select("h3_cell,issued_at,horizon_h,target_var,value,pi_low,pi_high,persistence_value,model_version")
+        .select("h3_cell,issued_at,horizon_h,target_var,value,pi_low,pi_high,persistence_value,model_version,p_over_120,p_over_250,calibration_n")
         .eq("city_id", city)
     )
     if cell:
@@ -1299,6 +1299,97 @@ def latency_widget(city: Optional[str] = Query(None, description="City ID")) -> 
     return ok(rows[0] if city and rows else rows)
 
 
+BENCHMARKS = Path(__file__).resolve().parent.parent / "docs" / "benchmarks"
+
+
+def _benchmark_summary(res: dict) -> dict:
+    """Headline numbers the UI shows first; the full JSON stays available for the table."""
+    heads = []
+    for h in res.get("horizons", []):
+        full = (h.get("regimes") or {}).get("full_test") or {}
+        winter = (h.get("regimes") or {}).get("winter_nov_feb") or {}
+        ep = (h.get("episodes") or {}).get("observed_over_120") or {}
+        ew = (h.get("early_warning") or {}).get("very_poor") or {}
+        cal = h.get("calibration") or {}
+        heads.append({
+            "horizon_h": h.get("horizon_h"),
+            "n_test": h.get("n_test"),
+            "skill_vs_persistence": full.get("skill_model_vs_persistence"),
+            "skill_vs_seasonal_naive": _skill(full.get("rmse_model"), full.get("rmse_seasonal_naive")),
+            "winter_skill_vs_persistence": winter.get("skill_model_vs_persistence") if winter.get("n") else None,
+            "very_poor_hours_skill": ep.get("skill_model_vs_persistence") if ep.get("n") else None,
+            "very_poor_hours_n": ep.get("n", 0),
+            "onset_recall_model": ew.get("onset_recall_model"),
+            "onset_recall_persistence": ew.get("onset_recall_persistence"),
+            "onsets": ew.get("onsets", 0),
+            "pi80_coverage": cal.get("pi80_coverage"),
+            "brier_skill_very_poor": ((cal.get("very_poor") or {}).get("brier_skill")),
+        })
+    return {"city_id": res.get("city_id"), "source": res.get("source"), "window": res.get("window"),
+            "stations_cells": res.get("stations_cells"), "generated_at": res.get("generated_at"),
+            "headline": heads}
+
+
+def _skill(rm, rb):
+    try:
+        return round(1 - float(rm) / float(rb), 3) if rb else None
+    except (TypeError, ValueError):
+        return None
+
+
+@app.get("/metrics/benchmark", tags=["system"])
+def metrics_benchmark(
+    city: str = Query(..., description="City ID"),
+    full: bool = Query(False, description="include the complete per-regime tables"),
+) -> dict:
+    """Temporal-split forecast benchmark for a city — recomputed artifacts, not typed-in numbers.
+
+    Serves docs/benchmarks/<city>.json (multi-season history run) and <city>_live.json
+    (last-quarter split on the live 90-day window) when present. Every figure comes from
+    `python -m ml.eval.benchmark`; the API only reads the files.
+    """
+    out: dict[str, Any] = {"city_id": city, "history": None, "live": None}
+    for key, name in (("history", f"{city}.json"), ("live", f"{city}_live.json")):
+        p = BENCHMARKS / name
+        if p.exists():
+            try:
+                res = json.loads(p.read_text())
+            except json.JSONDecodeError:
+                continue
+            out[key] = res if full else _benchmark_summary(res)
+    if out["history"] is None and out["live"] is None:
+        raise HTTPException(status_code=404, detail=f"no benchmark artifact for {city}")
+    return ok(out)
+
+
+@app.get("/exposure", tags=["stage2"])
+def exposure(city: str = Query(..., description="City ID"), db=Depends(get_db)) -> dict:
+    """Who the forecast puts in bad air: expected people in Very Poor (>120) / Severe (>250)
+    at +24/48/72 h, population-weighted over calibrated exceedance probabilities, plus
+    person-hours across the outlook. Self-computed from this city's forecasts; the response
+    states the population basis (GPW cells vs uniform cited city population)."""
+    from ml.impact.exposure import compute_exposure
+    from ml.impact.factors import population_for
+
+    if DEMO_MODE:
+        rows = fixture_rows("forecast", city)
+        pop_rows = []
+    else:
+        rows = (
+            db.table("forecasts").select("h3_cell,horizon_h,value,p_over_120,p_over_250")
+            .eq("city_id", city).execute().data
+        ) or []
+        pop_rows = (
+            db.table("measurements").select("h3_cell,value")
+            .eq("city_id", city).eq("variable", "population").execute().data
+        ) or []
+    pop_by_cell = {r["h3_cell"]: float(r["value"]) for r in pop_rows if r.get("value")}
+    pop = population_for(city)
+    res = compute_exposure(rows, pop_by_cell, float(pop.value))
+    res.update({"city_id": city, "city_population": pop.value, "population_citation": pop.cite()})
+    return ok(res)
+
+
 # ---------------------------------------------------------------------------
 # Agent query (orchestrator entry point)
 # ---------------------------------------------------------------------------
@@ -1339,7 +1430,7 @@ def agent_query(body: AgentQueryBody, db=Depends(get_db)) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# What-if simulator (E3 engine, live) + E7 health/carbon quantification (Sejal)
+# What-if simulator (E3 engine, live) + E7 health/carbon quantification
 # ---------------------------------------------------------------------------
 
 class SimulateBody(BaseModel):

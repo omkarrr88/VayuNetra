@@ -21,7 +21,7 @@ from .baselines import rmse, skill_score
 from .features import build_feature_table, make_supervised
 
 QUANTILES = {"pi_low": 0.1, "value": 0.5, "pi_high": 0.9}
-MODEL_VERSION = "lgbm-q-v1"
+MODEL_VERSION = "lgbm-q-v2"   # v2: + calibrated exceedance probabilities
 
 
 def _fit_predict(X_train, y_train, X_pred, alpha: float):
@@ -97,6 +97,37 @@ def _cqr_models_and_q(Xtr: pd.DataFrame, ytr: pd.Series):
     return lo_model, hi_model, max(0.0, q)
 
 
+EXCEEDANCE_BANDS = {"p_over_120": 120.0, "p_over_250": 250.0}   # CPCB Very Poor / Severe
+
+
+def _calibration_residuals(Xtr: pd.DataFrame, ytr: pd.Series):
+    """Held-out residuals for the split-conformal predictive distribution.
+
+    Fit the median model on the first 75% of the (chronological) training window,
+    take residuals r = y - yhat on the last 25%. P(y > T | x) is then the share of
+    calibration residuals with yhat(x) + r > T — a calibrated exceedance probability,
+    not a threshold on a point forecast.
+    """
+    import numpy as np
+
+    fit_n = int(len(Xtr) * 0.75)
+    if fit_n < 30 or len(Xtr) - fit_n < 30:
+        return np.array([])
+    _, cal_pred = _fit_predict(Xtr.iloc[:fit_n], ytr.iloc[:fit_n], Xtr.iloc[fit_n:], QUANTILES["value"])
+    resid = ytr.iloc[fit_n:].to_numpy(dtype=float) - np.asarray(cal_pred, dtype=float)
+    return np.sort(resid[np.isfinite(resid)])
+
+
+def exceedance_probability(median_pred, resid_sorted, threshold: float):
+    """P(y > threshold) = 1 - F_r(threshold - yhat) over the sorted calibration residuals."""
+    import numpy as np
+
+    if resid_sorted is None or len(resid_sorted) == 0:
+        return None
+    k = np.searchsorted(resid_sorted, threshold - float(median_pred), side="right")
+    return float(1.0 - k / len(resid_sorted))
+
+
 def pi_coverage_backtest(wide: pd.DataFrame, horizon_h: int, n_folds: int = 3) -> dict:
     """Empirical coverage of the served (CQR-calibrated) [pi_low, pi_high] band.
 
@@ -156,9 +187,14 @@ def _finite(x) -> float | None:
 
 def write_forecasts(wide: pd.DataFrame, horizon_h: int) -> int:
     """Train on all samples, predict the latest row per cell, write to `forecasts`."""
-    X, y, _, feature_cols = make_supervised(wide, horizon_h)
+    X, y, meta, feature_cols = make_supervised(wide, horizon_h)
     if len(X) < 60:
         return 0
+    # chronological order: the CQR band and the exceedance probabilities calibrate on the
+    # most recent 25% of samples in TIME (make_supervised sorts by cell, which would make
+    # the "calibration tail" a set of cells across every season instead)
+    order = meta.sort_values("ts").index
+    X, y = X.loc[order].reset_index(drop=True), y.loc[order].reset_index(drop=True)
     clim = y.groupby(X["hour"]).mean()   # climatology by hour-of-day (for side-by-side storage)
     latest = wide.sort_values("ts").groupby("h3_cell").tail(1)
     X_pred = latest[feature_cols]
@@ -167,6 +203,7 @@ def write_forecasts(wide: pd.DataFrame, horizon_h: int) -> int:
     lo_model, hi_model, q = _cqr_models_and_q(X, y)
     preds["pi_low"] = lo_model.predict(X_pred) - q
     preds["pi_high"] = hi_model.predict(X_pred) + q
+    resid = _calibration_residuals(X, y)   # calibrated P(> band) per cell
     issued_at = datetime.now(timezone.utc).isoformat()
     y_mean = float(y.mean())
     rows = []
@@ -186,6 +223,8 @@ def write_forecasts(wide: pd.DataFrame, horizon_h: int) -> int:
             "persistence_value": _finite(r["pm25"]),
             "climatology_value": clim_val if clim_val is not None else y_mean,
             "model_version": MODEL_VERSION,
+            **{k: _finite(exceedance_probability(mid, resid, thr)) for k, thr in EXCEEDANCE_BANDS.items()},
+            "calibration_n": int(len(resid)),
         })
     if not rows:
         return 0
@@ -195,9 +234,10 @@ def write_forecasts(wide: pd.DataFrame, horizon_h: int) -> int:
     c.table("forecasts").delete().eq("city_id", city_id).eq("horizon_h", horizon_h).execute()
     try:
         c.table("forecasts").insert(rows).execute()
-    except Exception:  # noqa: BLE001 — climatology_value column not migrated yet -> store without it
+    except Exception:  # noqa: BLE001 — newer columns not migrated yet -> store without them
         for row in rows:
-            row.pop("climatology_value", None)
+            for k in ("climatology_value", "p_over_120", "p_over_250", "calibration_n"):
+                row.pop(k, None)
         c.table("forecasts").insert(rows).execute()
     return len(rows)
 

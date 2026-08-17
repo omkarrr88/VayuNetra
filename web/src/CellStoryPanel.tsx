@@ -7,7 +7,7 @@ import { placeForCell } from "./placeName";
 import TrendPanel from "./TrendPanel";
 import { loadLogo, renderShareCard } from "./shareCard";
 
-type FC = { h3_cell: string; horizon_h: number; value: number; pi_low: number; pi_high: number };
+type FC = { h3_cell: string; horizon_h: number; value: number; pi_low: number; pi_high: number; p_over_120?: number | null; p_over_250?: number | null; calibration_n?: number | null };
 
 const HORIZONS = [24, 48, 72];
 
@@ -210,12 +210,27 @@ export default function CellStoryPanel({
                   <div className="text-[11px] text-gray-400">
                     [{Math.round(r.pi_low)}–{Math.round(r.pi_high)}]
                   </div>
+                  {typeof r.p_over_120 === "number" && (
+                    <div
+                      className={`mt-0.5 rounded px-1 text-[10px] font-semibold ${
+                        (r.p_over_250 ?? 0) >= 0.5 ? "bg-rose-100 text-rose-800" : r.p_over_120 >= 0.5 ? "bg-orange-100 text-orange-800" : "bg-slate-100 text-slate-500"
+                      }`}
+                      title="Calibrated exceedance probability — split-conformal on held-out residuals, not a threshold on the point forecast"
+                    >
+                      {(r.p_over_250 ?? 0) >= 0.5 ? `${Math.round((r.p_over_250 ?? 0) * 100)}% Severe` : `${Math.round(r.p_over_120 * 100)}% Very Poor+`}
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
         ) : (
           <div className="mt-1 text-xs text-gray-400">no per-cell forecast (see city panel)</div>
+        )}
+        {fc && fc.some((x) => typeof x.p_over_120 === "number") && (
+          <div className="mt-1 text-[10px] text-gray-400">
+            80% band + calibrated P(&gt;120 / &gt;250 µg/m³) — probabilities calibrated on held-out residuals ({fc.find((x) => typeof x.p_over_120 === "number")?.calibration_n ?? "—"} hours), not thresholds on a point.
+          </div>
         )}
       </div>
 

@@ -1,6 +1,6 @@
 # rag/ — Retrieval-Augmented Generation
 
-Owner: **Abhinav** (text RAG) · **Sejal** (E6 multimodal image patches, Stage 2).
+Text RAG + E6 multimodal image patches (Stage 2).
 Spec: ARCHITECTURE.md §10, PRD §12.14.
 
 - **Corpus:** NCAP, GRAP action matrices, CPCB/SPCB regulations, CPCB/WHO AQI health breakpoints, SOPs.

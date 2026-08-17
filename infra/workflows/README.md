@@ -3,7 +3,7 @@
 > ⚠️ GitHub Actions **only** executes workflows from [`.github/workflows/`](../../.github/workflows/).
 > This folder is the documented home (ARCHITECTURE.md §20); the live YAML lives in `.github/workflows/`.
 
-Pipelines (cron) — Owner: **Abhinav** (ARCHITECTURE.md §7.4):
+Pipelines (cron) — (ARCHITECTURE.md §7.4):
 
 | Job | Schedule | Output |
 |---|---|---|

@@ -1,4 +1,4 @@
-"""E2 — dense-field assembler.  Owner: Sejal.
+"""E2 — dense-field assembler.
 
 Bridges the two E2 models into the product the UI shows: a full-city, per-H3-cell
 (~1 km) PM2.5 field with uncertainty, plus the sparse "stations-only" field it is

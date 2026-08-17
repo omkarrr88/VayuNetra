@@ -6,6 +6,7 @@ import { aqiCategory, pm25ToAqi } from "./aqi";
 import { SOURCE_COLORS } from "./sources";
 import { Panel } from "./ui";
 import TrendPanel from "./TrendPanel";
+import ExposureCard from "./ExposureCard";
 
 type HistoryPoint = { ts: string; pm25: number; n: number };
 type HistoryData = { series: HistoryPoint[] };
@@ -83,6 +84,9 @@ export default function CityStatsPanel({
     <Panel title="City Statistics" tag="LIVE">
       {/* Long-range history — daily means, CPCB bands, plain-language verdict */}
       <TrendPanel city={city} compact />
+      <div className="my-2 border-t border-slate-100" />
+      {/* Forecast exposure — expected people in Very Poor / Severe air, calibrated */}
+      <ExposureCard city={city} />
       <div className="my-2 border-t border-slate-100" />
       {/* 48h trend — real station-hour means */}
       <div className="text-[12px] font-semibold text-slate-700">PM2.5 — last 48 hours</div>

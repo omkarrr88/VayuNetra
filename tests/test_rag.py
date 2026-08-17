@@ -1,4 +1,4 @@
-"""Tests for rag.retrieve — RAG subsystem.  Owner: Abhinav."""
+"""Tests for rag.retrieve — RAG subsystem."""
 from __future__ import annotations
 
 import os

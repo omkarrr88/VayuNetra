@@ -1,4 +1,4 @@
-"""LangGraph orchestration — Agent 0 (Orchestrator).  Owner: Abhinav.
+"""LangGraph orchestration — Agent 0 (Orchestrator).
 
 Full multi-agent graph:
     START → orchestrator → attribution → forecast → spike_gate
@@ -53,11 +53,11 @@ class GraphState(TypedDict, total=False):
 
     # Agent outputs
     signals: dict                     # latest measurements snapshot
-    attribution: dict                 # Agent 1 (Omkar) output
-    forecast: dict                    # Agent 2 (Omkar) output
-    enforcement: list                 # Agent 3 (Abhinav) output — enforcement recs
-    advisories: list                  # Agent 4 (Sejal) output
-    comparison: dict                  # Agent 5 (Sejal) output
+    attribution: dict                 # Agent 1 output
+    forecast: dict                    # Agent 2 output
+    enforcement: list                 # Agent 3 output — enforcement recs
+    advisories: list                  # Agent 4 output
+    comparison: dict                  # Agent 5 output
 
     # Cross-cutting
     citations: list                   # RAG sources used (accumulated)
@@ -173,7 +173,7 @@ def attribution_node(state: GraphState) -> dict:
     """Attribute pollution sources for spiking cells.
 
     Omkar (A1) fills the real gradient-boosting model.
-    In DEMO_MODE or until Omkar's model is wired: reads from DB / fixture.
+    In DEMO_MODE or until the live model is wired: reads from DB / fixture.
     """
     city_id = state.get("city_id", "delhi")
 
@@ -284,7 +284,7 @@ def enforcement_node(state: GraphState) -> dict:
 def advisory_node(state: GraphState) -> dict:
     """Generate citizen advisories.
 
-    Sejal (A4) fills the real LLM-localised advisory generator.
+    A4 fills the real LLM-localised advisory generator.
     In DEMO_MODE: reads fixture.
     """
     city_id = state.get("city_id", "delhi")

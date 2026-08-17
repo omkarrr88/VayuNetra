@@ -1,4 +1,4 @@
-"""Earth Engine connector (satellite features).  Owner: Omkar.  ARCHITECTURE.md §7.1, §9.
+"""Earth Engine connector (satellite features).  ARCHITECTURE.md §7.1, §9.
 
 Samples Sentinel-5P tropospheric NO2 (a recent-window mean) at the city's H3 cells and
 writes canonical `measurements` (variable='no2_sat', unit mol/m^2, source='s5p') — the

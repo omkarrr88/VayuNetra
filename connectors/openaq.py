@@ -1,4 +1,4 @@
-"""OpenAQ ground-AQI connector (v3).  Owner: Omkar.  Spec: ARCHITECTURE.md §7.1; PRD §11.
+"""OpenAQ ground-AQI connector (v3).  Spec: ARCHITECTURE.md §7.1; PRD §11.
 
 Pulls real station PM2.5/PM10/NO2/SO2/CO/O3 (hourly history) near a city, maps each
 station to its H3 cell, and writes canonical `measurements`. This is what turns the

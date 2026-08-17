@@ -1,6 +1,6 @@
 name: ingest (data refresh)
 
-# Data-pipeline crons (ARCHITECTURE.md §7.4). Owner: Abhinav.
+# Data-pipeline crons (ARCHITECTURE.md §7.4).
 # GitHub Actions only runs workflows from .github/workflows/ (infra/workflows/ is the doc home).
 # Public repo -> unlimited free minutes.
 on:
