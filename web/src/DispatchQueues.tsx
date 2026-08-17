@@ -1,9 +1,9 @@
 // Grid-dispatch lite (the Beijing 网格化 pattern, honest MVP): every approved or
 // dispatched recommendation auto-routes to its ward's field queue. Wards are
 // resolved offline from the shipped boundary polygons — no backend changes.
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { api } from "./api";
-import { EmptyState, Panel } from "./ui";
+import { EmptyState, Panel, useEnforcementChanged } from "./ui";
 import { placeForCell } from "./placeName";
 
 type Rec = { id: number; h3_cell?: string; status?: string; priority_score?: number };
@@ -12,6 +12,8 @@ type Queue = { ward: string; count: number; top: number };
 
 export default function DispatchQueues({ city }: { city: string }) {
   const [queues, setQueues] = useState<Queue[] | null>(null);
+  const [tick, setTick] = useState(0);
+  useEnforcementChanged(useCallback(() => setTick((t) => t + 1), []));
 
   useEffect(() => {
     let alive = true;
@@ -42,7 +44,7 @@ export default function DispatchQueues({ city }: { city: string }) {
     return () => {
       alive = false;
     };
-  }, [city]);
+  }, [city, tick]);
 
   if (queues === null) {
     return (

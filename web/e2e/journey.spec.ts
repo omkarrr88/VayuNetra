@@ -42,9 +42,24 @@ test("1 · enforcement: worklist → dossier → notice PDF → dispatch → out
   expect(file.suggestedFilename()).toMatch(/notice_\d+\.pdf/);
   const path = await file.path();
   expect(path).toBeTruthy();
-  // ward queues + interventions cards carry their step numbers
+  // officer loop: approve → dispatch on the first still-proposed card; the ward queue and the
+  // tracker refetch on the change event (this is a REAL dispatch on the live DB — that is the point)
+  const cards = rail.locator("[data-step='2'] .rounded-lg.border");
+  const n = await cards.count();
+  let idx = -1;
+  for (let i = 0; i < n; i++) if (await cards.nth(i).getByRole("button", { name: "Approve" }).count()) { idx = i; break; }
+  if (idx >= 0) {
+    const card = cards.nth(idx); // stable index — the list keeps its order across status changes
+    await card.getByRole("button", { name: "Approve" }).click();
+    await expect(card.getByRole("button", { name: /dispatch team/i })).toBeVisible({ timeout: 20_000 });
+    await card.getByRole("button", { name: /dispatch team/i }).click();
+    await expect(card.getByText(/Dispatched · tracking armed/)).toBeVisible({ timeout: 30_000 });
+  }
+  // ward queues + interventions cards carry their step numbers and now have content
   await expect(rail.locator("[data-step='4']")).toBeVisible();
   await expect(rail.locator("[data-step='5']")).toBeVisible();
+  await expect(rail.locator("[data-step='4']").getByText(/in queue/).first()).toBeVisible({ timeout: 30_000 });
+  await expect(rail.locator("[data-step='5']").getByText(/provisional|Δ|baseline|dispatched/i).first()).toBeVisible({ timeout: 30_000 });
 });
 
 test("2 · map: a cell story opens with blame, forecast probabilities and a share card", async ({ page }) => {

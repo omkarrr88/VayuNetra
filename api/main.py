@@ -639,20 +639,41 @@ class StatusBody(BaseModel):
     status: str = Field(..., pattern=r"^(proposed|approved|dispatched|dismissed)$")
 
 
+_STATUS_EVENTS: list[float] = []
+
+
+def _status_rate_ok(limit: int = 60, window_s: int = 60) -> bool:
+    """Process-local rate limit for officer status changes (a demo console, not a firehose)."""
+    now = time.time()
+    while _STATUS_EVENTS and now - _STATUS_EVENTS[0] > window_s:
+        _STATUS_EVENTS.pop(0)
+    if len(_STATUS_EVENTS) >= limit:
+        return False
+    _STATUS_EVENTS.append(now)
+    return True
+
+
 @app.post("/enforcement/{rec_id}/status", tags=["enforcement"])
 def enforcement_update_status(rec_id: int, body: StatusBody, db=Depends(get_db)) -> dict:
     """Update enforcement rec status (approved / dispatched / dismissed)."""
     if DEMO_MODE:
         return ok({"rec_id": rec_id, "status": body.status, "demo": True})
 
-    db.table("enforcement_recs").update({"status": body.status}).eq("id", rec_id).execute()
+    # Officer action from the console. The caller still needs a valid token (get_db), but
+    # the write itself runs server-side with the service role — the anon role is read-only
+    # under RLS by design, and this endpoint is rate-limited below.
+    if not _status_rate_ok():
+        raise HTTPException(status_code=429, detail="too many status changes — slow down")
+    sdb = _db()
+    upd = sdb.table("enforcement_recs").update({"status": body.status}).eq("id", rec_id).execute()
+    if not (upd.data or []):
+        raise HTTPException(status_code=404, detail=f"recommendation {rec_id} not found")
 
     # First real dispatch arms the before/after effect measurement: freeze the
     # cell's trailing-7-day PM2.5 baseline now, so effectiveness is measurable
     # by design the moment an intervention actually happens in the world.
     if body.status == "dispatched":
         try:
-            sdb = _db()
             rec = (sdb.table("enforcement_recs").select("city_id,h3_cell")
                    .eq("id", rec_id).limit(1).execute().data or [None])[0]
             if rec:

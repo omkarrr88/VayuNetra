@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { cellToLatLng } from "h3-js";
 import { api, downloadFile } from "./api";
 import { cleanRationale, prettyRule } from "./format";
-import { Panel } from "./ui";
+import { Panel, notifyEnforcementChanged } from "./ui";
 import { placeForCell } from "./placeName";
 
 type Rec = {
@@ -184,6 +184,27 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
     }
   }
 
+  // Officer actions: proposed → approved → dispatched (or dismissed). Dispatch freezes the
+  // cell's 7-day baseline server-side and arms the before/after tracker; the ward queues and
+  // the tracker card refetch on the change event.
+  const [acting, setActing] = useState<number | null>(null);
+  async function setStatus(id: number, status: "approved" | "dispatched" | "dismissed") {
+    setActing(id);
+    try {
+      await api(`/enforcement/${id}/status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      setRows((prev) => (prev ? prev.map((r) => (r.id === id ? { ...r, status } : r)) : prev));
+      notifyEnforcementChanged();
+    } catch {
+      /* the button re-enables; the status chip stays as it was */
+    } finally {
+      setActing(null);
+    }
+  }
+
   return (
     <Panel
       title="Enforcement Worklist"
@@ -261,7 +282,7 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
                   </span>
                 )}
               </div>
-              <div className="mt-2 flex gap-2">
+              <div className="mt-2 flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => toggleDossier(r.id)}
                   className={`rounded px-2 py-1 text-xs ${
@@ -277,6 +298,44 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
                 >
                   {busy === r.id ? "Generating…" : "Notice PDF"}
                 </button>
+                <span className="mx-0.5 h-4 w-px bg-slate-200" aria-hidden="true" />
+                {r.status === "proposed" && (
+                  <>
+                    <button
+                      onClick={() => setStatus(r.id, "approved")}
+                      disabled={acting === r.id}
+                      className="cursor-pointer rounded bg-emerald-600 px-2 py-1 text-xs font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+                      title="Officer approval — moves this action to the ward queue"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => setStatus(r.id, "dismissed")}
+                      disabled={acting === r.id}
+                      className="cursor-pointer rounded px-2 py-1 text-xs text-slate-500 transition-colors hover:bg-slate-100 disabled:opacity-50"
+                    >
+                      Dismiss
+                    </button>
+                  </>
+                )}
+                {r.status === "approved" && (
+                  <button
+                    onClick={() => setStatus(r.id, "dispatched")}
+                    disabled={acting === r.id}
+                    className="cursor-pointer rounded bg-violet-700 px-2 py-1 text-xs font-semibold text-white transition-colors hover:bg-violet-800 disabled:opacity-50"
+                    title="Dispatch the field team — freezes the cell's 7-day PM2.5 baseline and starts before/after tracking"
+                  >
+                    {acting === r.id ? "Dispatching…" : "Dispatch team"}
+                  </button>
+                )}
+                {r.status === "dispatched" && (
+                  <span className="rounded bg-violet-100 px-1.5 py-0.5 text-[11px] font-semibold text-violet-800" title="Baseline frozen; before/after effect is being measured (see step 5)">
+                    ✓ Dispatched · tracking armed
+                  </span>
+                )}
+                {r.status === "dismissed" && (
+                  <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-500">Dismissed</span>
+                )}
               </div>
 
               {open === r.id && (

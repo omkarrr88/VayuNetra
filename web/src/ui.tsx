@@ -1,6 +1,20 @@
 // Shared UI primitives — one card/button language across every panel.
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 
+/** Cross-panel refresh signal: an officer action (approve/dispatch) changed enforcement state,
+ *  so ward queues and intervention tracking refetch without a page reload. */
+export const ENFORCEMENT_CHANGED = "vn:enforcement-changed";
+export function notifyEnforcementChanged(): void {
+  window.dispatchEvent(new CustomEvent(ENFORCEMENT_CHANGED));
+}
+/** Re-run `fn` whenever enforcement state changes (subscribe/unsubscribe on mount). */
+export function useEnforcementChanged(fn: () => void): void {
+  useEffect(() => {
+    window.addEventListener(ENFORCEMENT_CHANGED, fn);
+    return () => window.removeEventListener(ENFORCEMENT_CHANGED, fn);
+  }, [fn]);
+}
+
 /** Numbered step in a section's flow — provided by <Step> in App.tsx so a panel can
  *  show its badge without knowing where it sits in the story. */
 export type StepInfo = { n: number; label: string; info?: ReactNode };

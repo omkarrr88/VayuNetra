@@ -1,9 +1,9 @@
 // Before/after effect tracking for dispatched recs — the PS's "intervention
 // effectiveness", built as machinery that arms itself at the first real
 // dispatch. Until then it says so, honestly, in one line.
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { api, API_BASE, API_TOKEN } from "./api";
-import { Panel } from "./ui";
+import { Panel, useEnforcementChanged } from "./ui";
 
 type Tracked = {
   rec_id: number;
@@ -21,6 +21,8 @@ type Data = { tracked: Tracked[]; note?: string };
 
 export default function InterventionsPanel({ city }: { city: string }) {
   const [d, setD] = useState<Data | null>(null);
+  const [tick, setTick] = useState(0);
+  useEnforcementChanged(useCallback(() => setTick((t) => t + 1), []));
 
   useEffect(() => {
     let alive = true;
@@ -31,7 +33,7 @@ export default function InterventionsPanel({ city }: { city: string }) {
     return () => {
       alive = false;
     };
-  }, [city]);
+  }, [city, tick]);
 
   if (!d) return null;
 
