@@ -71,7 +71,7 @@ Adding a city means adding one YAML file with a bounding box, languages and regu
 | Prediction interval coverage | Raw intervals under-covered at 48–63% against a nominal 80%; conformal calibration brought this to 78% measured on 207k Delhi test hours; every forecast also carries a calibrated P(>120) / P(>250) |
 | Model selection | A Temporal Fusion Transformer was trained on GPU and rejected. LightGBM won on held-out skill in every launch city. |
 | Signal to cited action | 0.8–9.7 seconds, measured in production |
-| Test coverage | 180 backend tests and 16 end-to-end browser flows (7 smoke + 9 live officer-journey), run in CI on every push |
+| Test coverage | 196 backend tests (62% line coverage, CI gate 55%) and 16 end-to-end browser flows (7 smoke in CI + 9 live officer-journey), run on every push |
 
 Current live scale: 10 cities, 16,529 modelled cells, 647 emission sources, 5,495 vulnerability zones and 454 enforcement recommendations, every one of which carries a real Sentinel-2 image and retrieved citations. All of the validation above is reproducible from the notebook in the repository.
 

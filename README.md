@@ -111,7 +111,7 @@ npx supabase login && npx supabase link --project-ref <your-project-ref>
 npx supabase db push                   # schema + RLS + city seed (13 migrations)
 make live-bootstrap                    # kb_chunks + enforcement_recs + action_traces
 
-make test                              # 180 backend tests
+make test                              # 196 backend tests (coverage gate 55%)
 cd web && npx playwright test          # 7 e2e smoke + 9 live journey flows (VN_LIVE=1)
 ```
 

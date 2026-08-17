@@ -240,7 +240,7 @@ Core tables: `cities, measurements, attribution, forecasts, emission_sources, en
 - Health text is **LLM-free by design**; impact figures return **null** rather than use invented constants; <2% contributors never enter the worklist; notices are drafts, never auto-sent; demo fixtures are labelled as fixtures; nothing fabricated is ever written to the production DB.
 
 ### 7.6 Ops
-`make dev` (run all) · `make test` (180 backend tests) · `make benchmark` (recompute live forecast benchmarks + fixtures) · `web/scripts/qa/*.mjs` (Playwright QA: section screenshots at projector/FHD/mobile, 10-city health sweep, deck + landing captures) · `cd web && npx playwright test` (7 smoke e2e; `VN_LIVE=1` adds the 9-flow live officer journey) · `make prewarm` (GO/NO-GO) · `make migrate` / `db-status` · GitHub Actions: hourly ingest, daily model/registry/advisory refresh, keep-alive pings. New city = one YAML in `core/config/cities/` (bbox, languages, stations) or one `POST /admin/cities`.
+`make dev` (run all) · `make test` (196 backend tests) · `make benchmark` (recompute live forecast benchmarks + fixtures) · `web/scripts/qa/*.mjs` (Playwright QA: section screenshots at projector/FHD/mobile, 10-city health sweep, deck + landing captures) · `cd web && npx playwright test` (7 smoke e2e; `VN_LIVE=1` adds the 9-flow live officer journey) · `make prewarm` (GO/NO-GO) · `make migrate` / `db-status` · GitHub Actions: hourly ingest, daily model/registry/advisory refresh, keep-alive pings. New city = one YAML in `core/config/cities/` (bbox, languages, stations) or one `POST /admin/cities`.
 
 ---
 
