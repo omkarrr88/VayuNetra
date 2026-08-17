@@ -1,5 +1,10 @@
+// QA helper — run from web/ with the dev server on :5173 and the API on :8000 (DEMO_MODE=false).
+// Usage: node scripts/qa/screenshot-sections.mjs [sections,comma] [viewports: proj,fhd,mob,tab]
+// Output dir: OUT env var (default ./.qa-out).
 import { chromium } from "playwright";
-const S = "/tmp/claude-1000/-home-omkar-kadam-Desktop-VayuNetra/82517b60-1549-4f2d-9b8e-cf0e3c4d1f0e/scratchpad/shots";
+import { mkdirSync } from "node:fs";
+const S = process.env.OUT ?? "./.qa-out";
+mkdirSync(S, { recursive: true });
 const base = "http://localhost:5173";
 const sections = ["action","forecast","citizen","compare","whatif","impact","pipeline"];
 const only = process.argv[2] ? process.argv[2].split(",") : sections;

@@ -1,5 +1,10 @@
+// QA helper — run from web/ with the dev server on :5173 and the API on :8000 (DEMO_MODE=false).
+// Usage: node scripts/qa/deck-screenshots.mjs    → six 16:9 captures used by the finale deck (slides 4, A2–A4, A8, A9)
+// Output dir: OUT env var (default ./.qa-out).
 import { chromium } from "playwright";
-const OUT = "/tmp/claude-1000/-home-omkar-kadam-Desktop-VayuNetra/82517b60-1549-4f2d-9b8e-cf0e3c4d1f0e/scratchpad/finale";
+import { mkdirSync } from "node:fs";
+const OUT = process.env.OUT ?? "./.qa-out";
+mkdirSync(OUT, { recursive: true });
 const base = "http://localhost:5173";
 const b = await chromium.launch();
 const ctx = await b.newContext({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });

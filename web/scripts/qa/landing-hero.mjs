@@ -1,3 +1,6 @@
+// QA helper — run from web/ with the dev server on :5173 and the API on :8000 (DEMO_MODE=false).
+// Usage: node scripts/qa/landing-hero.mjs    → writes public/console.jpg (landing hero)
+// Output dir: OUT env var (default ./.qa-out).
 import { chromium } from "playwright";
 const b = await chromium.launch();
 const ctx = await b.newContext({ viewport: { width: 1600, height: 1000 }, deviceScaleFactor: 1.25 });
