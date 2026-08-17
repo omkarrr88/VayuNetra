@@ -58,7 +58,6 @@ def fetch_pm25(city_id: str, start: str, end: str, max_stations: int, variables:
             locs.append(loc)
     locs = locs[:max_stations]
     print(f"  {city_id}: {len(locs)} stations span {start}..{end}")
-    since, until = f"{start}T00:00:00Z", f"{end}T23:59:59Z"
     records: list[dict] = []
     for i, loc in enumerate(locs, 1):
         coords = loc.get("coordinates") or {}

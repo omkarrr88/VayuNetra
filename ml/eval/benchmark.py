@@ -154,8 +154,8 @@ def _rolling_predict(X, y, meta, split_ts: pd.Timestamp, window_days: int | None
         Xtr, ytr, Xte = X[tr], y[tr], X[te]
         _, p = _fit_predict(Xtr, ytr, Xte, QUANTILES["value"])
         lo_m, hi_m, q = _cqr_models_and_q(Xtr, ytr)
-        l = np.asarray(lo_m.predict(Xte)) - q
-        h = np.asarray(hi_m.predict(Xte)) + q
+        lo_v = np.asarray(lo_m.predict(Xte)) - q
+        hi_v = np.asarray(hi_m.predict(Xte)) + q
         fit_n = int(len(Xtr) * 0.75)
         _, cal_pred = _fit_predict(Xtr.iloc[:fit_n], ytr.iloc[:fit_n], Xtr.iloc[fit_n:], QUANTILES["value"])
         r = ytr.iloc[fit_n:].to_numpy(dtype=float) - np.asarray(cal_pred, dtype=float)
@@ -171,7 +171,10 @@ def _rolling_predict(X, y, meta, split_ts: pd.Timestamp, window_days: int | None
         if ablation_keep:
             _, pn = _fit_predict(Xtr[ablation_keep], ytr, Xte[ablation_keep], QUANTILES["value"])
             pred_nomet.append(np.asarray(pn, dtype=float))
-        idx_te.append(np.where(te)[0]); pred.append(np.asarray(p, dtype=float)); lo.append(l); hi.append(h)
+        idx_te.append(np.where(te)[0])
+        pred.append(np.asarray(p, dtype=float))
+        lo.append(lo_v)
+        hi.append(hi_v)
         print(f"    origin {yy}-{mm:02d}: train {int(tr.sum()):,} test {int(te.sum()):,}", flush=True)
     if not idx_te:
         return None
