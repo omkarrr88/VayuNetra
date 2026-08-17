@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
-from typing import Any, Callable
+from typing import Callable
 
 from core.wards import place_for_cell
 
