@@ -60,12 +60,12 @@ export default function ExposureCard({ city }: { city: string }) {
               <div className={`text-sm font-bold ${sev ? "text-rose-700" : vp ? "text-orange-700" : "text-slate-700"}`}>{fmt(h.people_very_poor_city_scaled ?? h.people_very_poor)}</div>
               <div className="text-[10px] text-slate-500">in Very Poor+ air</div>
               {(h.people_severe_city_scaled ?? h.people_severe ?? 0) > 0 && <div className="text-[10px] font-semibold text-rose-700">{fmt(h.people_severe_city_scaled ?? h.people_severe)} Severe</div>}
-              <div className="text-[9px] text-slate-400">{fmt(h.people_very_poor)} in monitored cells</div>
+              <div className="text-[9px] text-slate-500">{fmt(h.people_very_poor)} in monitored cells</div>
             </div>
           );
         })}
       </div>
-      <div className="mt-1 text-[10px] leading-4 text-gray-400">
+      <div className="mt-1 text-[10px] leading-4 text-gray-500">
         City-scale = share of monitored population × city population ({fmt(data.city_population)}), monitored cells taken as representative. Expected people = Σ cell population × calibrated P(PM2.5 &gt; 120 / &gt; 250 µg/m³)
         {calibrated ? "" : " (probabilities pending — point-forecast indicator used)"} · {basis} ({fmt(data.population_covered)} covered)
         {(data.person_hours_24_to_72h_city_scaled?.very_poor ?? data.person_hours_24_to_72h.very_poor) ? <> · ≈{fmt(data.person_hours_24_to_72h_city_scaled?.very_poor ?? data.person_hours_24_to_72h.very_poor)} person-hours of Very Poor+ air over the 24→72 h outlook</> : null}

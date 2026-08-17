@@ -107,6 +107,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
       title="Citizen Advisory"
       right={
         <select
+          aria-label="Advisory language"
           className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700"
           value={lang}
           onChange={(e) => setLang(e.target.value)}
@@ -126,7 +127,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
           </SegBtn>
         ))}
       </div>
-      <div className="mt-1 text-[10px] text-gray-400">how the same advisory reaches citizens on each channel</div>
+      <div className="mt-1 text-[10px] text-gray-500">how the same advisory reaches citizens on each channel</div>
 
       {rows === null ? (
         <div className="mt-3 space-y-2">
@@ -185,7 +186,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
             Citizens can also <b>call in</b>: the line answers with a city menu — press 1 for Delhi, 2 for Bengaluru, 3 for Mumbai, 4–9 and 0 for the other seven — and
             reads that city's latest advisory in a clear Indian-English voice.
           </div>
-          <div className="text-[10px] leading-4 text-gray-400">
+          <div className="text-[10px] leading-4 text-gray-500">
             Live calls are spoken in Hindi (Polly Kajal) for Hindi-first cities and in English elsewhere — Polly has no voice yet for the other Indian scripts.
           </div>
         </div>
@@ -204,7 +205,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
               <div className="mt-0.5 text-[13px] leading-5 text-slate-200">{a.message}</div>
             </div>
           ))}
-          <div className="text-[10px] text-gray-400">public display / big-screen board rendering</div>
+          <div className="text-[10px] text-gray-500">public display / big-screen board rendering</div>
         </div>
       )}
 
@@ -216,7 +217,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
           {bcast === "idle" && (
             <button
               onClick={() => setBcast("confirm")}
-              className="w-full cursor-pointer rounded-md bg-emerald-600 px-2 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-700"
+              className="w-full cursor-pointer rounded-md bg-emerald-700 px-2 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-800"
             >
               📣 Broadcast latest alert (Telegram + IVR)
             </button>
@@ -225,7 +226,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
             <div className="rounded border border-amber-300 bg-amber-50 p-2 text-xs">
               <div className="text-amber-800">Send a real Telegram message and place a real phone call?</div>
               <div className="mt-1.5 flex gap-2">
-                <button onClick={broadcast} className="cursor-pointer rounded bg-emerald-600 px-2 py-1 text-white">
+                <button onClick={broadcast} className="cursor-pointer rounded bg-emerald-700 px-2 py-1 text-white">
                   Yes, broadcast
                 </button>
                 <button onClick={() => setBcast("idle")} className="cursor-pointer rounded bg-gray-200 px-2 py-1 text-gray-700">
@@ -270,7 +271,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
                     >
                       {z.aqi}
                     </span>
-                    <span className="text-[11px] text-slate-400">{cat.label}</span>
+                    <span className="text-[11px] text-slate-500">{cat.label}</span>
                   </div>
                   <div className="mt-1 font-mono text-xs font-semibold text-slate-700">{z.zone_id}</div>
                   <div className="text-[11px] text-emerald-700">Directions ↗</div>
@@ -278,7 +279,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
               );
             })}
           </div>
-          <div className="mt-1 text-[11px] leading-4 text-slate-400">
+          <div className="mt-1 text-[11px] leading-4 text-slate-500">
             Estimated from the dense 1 km model field anchored on live station data — a modeled guide, not a measurement.
           </div>
           <ExposureCorridors city={city} center={center} zones={cleanZones.zones} />

@@ -1,6 +1,6 @@
 # Forecast benchmark — kolkata (live)
 
-Window 2026-07-12 → 2026-08-16, test from **2026-08-07** (single temporal split; train strictly before each test origin). 3 station cells, 2,413 hourly rows. Model: LightGBM quantile (median) — same class/params as production (ml.forecast.train). Generated 2026-08-17T17:28Z by `python -m ml.eval.benchmark`.
+Window 2026-07-12 → 2026-08-16, test from **2026-08-07** (single temporal split; train strictly before each test origin). 3 station cells, 2,413 hourly rows. Model: LightGBM quantile (median) — same class/params as production (ml.forecast.train). Generated 2026-08-17T17:50Z by `python -m ml.eval.benchmark`.
 
 ## RMSE (µg/m³) on the shared support mask
 

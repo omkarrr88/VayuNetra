@@ -41,7 +41,7 @@ export default function TopBar({ cities, active, onCity, section, onReplayTour, 
       {current && (
         <div className="hidden min-w-0 items-baseline gap-2 md:flex" title={current.hint}>
           <span className="text-[12px] font-semibold text-slate-300">{current.label}</span>
-          <span className="hidden truncate text-[11px] text-slate-500 xl:inline">· {current.hint}</span>
+          <span className="hidden truncate text-[11px] text-slate-400 xl:inline">· {current.hint}</span>
         </div>
       )}
 

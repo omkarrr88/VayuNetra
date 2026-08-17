@@ -76,7 +76,7 @@ export default function BriefCard({ city }: { city: string }) {
       <div className="rounded-md bg-slate-50 px-2.5 py-2 text-[12px] leading-5 text-slate-700">
         {a.now_pm25 !== null ? (
           <>
-            City mean <b>{a.now_pm25} µg/m³</b> ({a.now_band}){(a.stale_hours ?? 0) > 6 ? <span className="text-slate-400"> as of {Math.round(a.stale_hours!)} h ago</span> : null}
+            City mean <b>{a.now_pm25} µg/m³</b> ({a.now_band}){(a.stale_hours ?? 0) > 6 ? <span className="text-slate-500"> as of {Math.round(a.stale_hours!)} h ago</span> : null}
             {chg !== null && <span className={chg > 0 ? "text-rose-700" : "text-emerald-700"}> {chg > 0 ? "▲" : "▼"} {Math.abs(chg)} vs yesterday</span>}
             {a.worst_cell && <> · worst <b>{a.worst_cell.place}</b> {Math.round(a.worst_cell.pm25)}</>}
             {a.outlook_24h_pm25 !== null && <> · 24 h outlook <b>{a.outlook_24h_pm25}</b> ({a.outlook_24h_band})</>}
@@ -109,7 +109,7 @@ export default function BriefCard({ city }: { city: string }) {
         <ol className="mt-1 space-y-0.5 text-[12px] text-slate-700">
           {b.actions.map((x, i) => (
             <li key={x.rec_id} className="flex items-baseline gap-1.5">
-              <span className="font-bold text-slate-400">{i + 1}.</span>
+              <span className="font-bold text-slate-500">{i + 1}.</span>
               <span className="min-w-0 truncate"><b>{x.source}</b> · {x.place} — {x.contribution_pct}% of local PM2.5, ~{x.pop_exposed.toLocaleString()} exposed{x.status !== "proposed" ? ` (${x.status})` : ""}</span>
             </li>
           ))}
@@ -117,7 +117,7 @@ export default function BriefCard({ city }: { city: string }) {
       ) : (
         <div className="mt-1 text-[12px] text-slate-500">No open recommendations today.</div>
       )}
-      {b.open_actions > b.actions.length && <div className="mt-0.5 text-[11px] text-slate-400">+{b.open_actions - b.actions.length} more in the worklist below</div>}
+      {b.open_actions > b.actions.length && <div className="mt-0.5 text-[11px] text-slate-500">+{b.open_actions - b.actions.length} more in the worklist below</div>}
 
       {/* outcomes */}
       <div className="mt-2 text-[11px] font-bold uppercase tracking-wide text-slate-500">Yesterday's dispatches</div>
@@ -131,7 +131,7 @@ export default function BriefCard({ city }: { city: string }) {
         <div className="mt-1 text-[12px] text-slate-500">No dispatched intervention is being tracked yet.</div>
       )}
 
-      <div className="mt-2 text-[10px] leading-4 text-slate-400">
+      <div className="mt-2 text-[10px] leading-4 text-slate-500">
         Advisories: {b.advisories.worst_tier ? `worst tier ${b.advisories.worst_tier.replace("_", " ")} in ${b.advisories.wards_at_worst} zone(s), ${b.advisories.languages.length} language(s)` : "none yet"} ·
         templated from stored rows, no language model{sent ? ` · ${sent}` : ""}
       </div>

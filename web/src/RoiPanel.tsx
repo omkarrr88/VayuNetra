@@ -91,7 +91,7 @@ function Big({ label, value, tone }: { label: string; value: string; tone: "bad"
       : "border-emerald-100 bg-emerald-50 text-emerald-700";
   return (
     <div className={`rounded-md border p-2 ${cls}`}>
-      <div className="text-[11px] uppercase tracking-wide text-gray-500">{label}</div>
+      <div className="text-[11px] uppercase tracking-wide text-gray-700">{label}</div>
       <div className="text-lg font-semibold leading-tight">{value}</div>
     </div>
   );

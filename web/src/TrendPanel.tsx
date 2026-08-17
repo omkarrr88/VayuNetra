@@ -51,7 +51,7 @@ export default function TrendPanel({
   return (
     <div className={compact ? "" : "rounded-md border border-slate-200 bg-white p-2"}>
       <div className="flex items-center justify-between">
-        <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+        <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-600">
           {cell ? "This place — past air" : "City — past air"}
         </div>
         <div className="flex gap-0.5">
@@ -60,7 +60,7 @@ export default function TrendPanel({
               key={d}
               onClick={() => setDays(d)}
               className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${
-                days === d ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                days === d ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
               }`}
             >
               {l}
@@ -72,7 +72,7 @@ export default function TrendPanel({
       {t === null ? (
         <div className="mt-2 h-20 animate-pulse rounded bg-slate-100" />
       ) : series.length < 3 ? (
-        <div className="mt-2 text-[11px] text-slate-400">Not enough daily history for this place yet.</div>
+        <div className="mt-2 text-[11px] text-slate-500">Not enough daily history for this place yet.</div>
       ) : (
         <>
           {verdict && (
@@ -117,7 +117,7 @@ export default function TrendPanel({
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[10px] text-slate-400">
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[10px] text-slate-500">
             {BAND_COLORS.map(([, , color, name]) => (
               <span key={name} className="flex items-center gap-1">
                 <span className="inline-block h-2 w-2 rounded-sm" style={{ background: color }} /> {name}

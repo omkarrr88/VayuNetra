@@ -59,11 +59,11 @@ export default function CityIntelPanel({ city }: { city: string }) {
       )}
       {(layers?.emission_sources.length ?? 0) > 0 && (
         <div className="mt-2 space-y-1 text-xs text-gray-600">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">top registered sources</div>
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">top registered sources</div>
           {layers!.emission_sources.slice(0, 2).map((s) => (
             <div key={s.id} className="flex justify-between gap-2">
               <span className="truncate">{s.name}</span>
-              <span className="shrink-0 text-slate-400">{Math.round(s.detection_confidence * 100)}%</span>
+              <span className="shrink-0 text-slate-500">{Math.round(s.detection_confidence * 100)}%</span>
             </div>
           ))}
         </div>

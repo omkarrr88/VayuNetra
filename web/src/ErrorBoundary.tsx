@@ -29,7 +29,7 @@ export default class ErrorBoundary extends Component<Props, State> {
               V
             </div>
             <h1 className="mt-4 text-lg font-bold text-white">Something hiccuped</h1>
-            <p className="mt-2 text-sm text-slate-400">
+            <p className="mt-2 text-sm text-slate-500">
               A panel failed to render. The rest of the platform is fine — reload to recover.
             </p>
             <button

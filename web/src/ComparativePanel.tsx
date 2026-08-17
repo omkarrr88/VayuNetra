@@ -55,7 +55,7 @@ export default function ComparativePanel({ onSelectCity }: { onSelectCity: (city
         <>
       <div className="text-xs text-gray-600">
         {data?.summary.shared_pattern ?? "Loading city comparison…"}
-        <span className="ml-1 text-slate-400">· city-average PM2.5</span>
+        <span className="ml-1 text-slate-500">· city-average PM2.5</span>
       </div>
 
       {chart.length > 0 && (
@@ -81,7 +81,7 @@ export default function ComparativePanel({ onSelectCity }: { onSelectCity: (city
       {(data?.cities.length ?? 0) > 1 && (
         <div className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
           Clean-air ranking
-          <span className="ml-1 font-normal normal-case tracking-normal text-slate-400">
+          <span className="ml-1 font-normal normal-case tracking-normal text-slate-500">
             — Swachh Vayu style, by current PM2.5 (cleanest first)
           </span>
         </div>
@@ -110,7 +110,7 @@ export default function ComparativePanel({ onSelectCity }: { onSelectCity: (city
               </span>
               <span
                 className={`rounded px-1.5 py-0.5 text-[11px] font-medium ${
-                  c.trend === "deteriorating" ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"
+                  c.trend === "deteriorating" ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-700"
                 }`}
               >
                 {c.trend}

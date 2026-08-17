@@ -43,7 +43,7 @@ export function Citations({ items }: { items: Citation[] }) {
           {items.map((c, i) => (
             <li key={i} className="border-l-2 border-gray-200 pl-2">
               <span className="font-medium">{c.figure}:</span> {String(c.value)} {c.unit} — {c.source}
-              {c.caveat && <span className="italic text-gray-400"> ({c.caveat})</span>}
+              {c.caveat && <span className="italic text-gray-500"> ({c.caveat})</span>}
             </li>
           ))}
         </ul>

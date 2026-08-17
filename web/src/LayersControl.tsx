@@ -105,7 +105,7 @@ export default function LayersControl(p: LayersControlProps) {
         <button
           onClick={() => setOpen(false)}
           aria-label="Collapse layer panel"
-          className="rounded p-0.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+          className="rounded p-0.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-600"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true">
             <path d="m6 9 6 6 6-6" />
@@ -159,7 +159,7 @@ export default function LayersControl(p: LayersControlProps) {
         />
       </div>
       {p.showWards && (
-        <div className="mt-1 text-[10px] text-gray-400">ward boundaries © Datameet / OSM (ODbL)</div>
+        <div className="mt-1 text-[10px] text-gray-500">ward boundaries © Datameet / OSM (ODbL)</div>
       )}
 
       {p.mode === "blame" && (
@@ -194,7 +194,7 @@ export default function LayersControl(p: LayersControlProps) {
               </div>
             ))}
           </div>
-          <div className="mt-1 text-[11px] text-gray-400">
+          <div className="mt-1 text-[11px] text-gray-500">
             {p.coverage
               ? `${p.coverage.n_stations ?? "~"} stations → ${p.coverage.n_cells ?? p.coverage.cells.length} cells · ${
                   typeof p.coverage.validation?.skill_vs_bilinear === "number"

@@ -54,7 +54,7 @@ export function InfoTip({ children, label = "What is this?" }: { children: React
         aria-label={label}
         aria-expanded={open}
         title={label}
-        className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-full text-[11px] font-bold text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+        className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-full text-[11px] font-bold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
       >
         ?
       </button>
@@ -92,7 +92,7 @@ export function Panel({
             {step && <span className="vn-step" aria-label={`Step ${step.n}`}>{step.n}</span>}
             <span className="truncate text-[13.5px] font-bold tracking-tight text-slate-800">{title}</span>
             {tag && (
-              <span className="whitespace-nowrap rounded bg-slate-100 px-1 py-px text-[10.5px] font-semibold uppercase tracking-wider text-slate-500">
+              <span className="whitespace-nowrap rounded bg-slate-100 px-1 py-px text-[10.5px] font-semibold uppercase tracking-wider text-slate-600">
                 {tag}
               </span>
             )}
@@ -120,7 +120,7 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center gap-1.5 rounded-lg bg-slate-50 px-3 py-5 text-center">
-      <span className={`text-lg ${tone === "error" ? "text-amber-500" : "text-slate-300"}`} aria-hidden="true">
+      <span className={`text-lg ${tone === "error" ? "text-amber-500" : "text-slate-400"}`} aria-hidden="true">
         {tone === "error" ? "⚠" : "○"}
       </span>
       <span className="text-xs text-slate-500">{message}</span>

@@ -234,7 +234,7 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search recommendations…"
           aria-label="Search enforcement recommendations"
-          className="min-w-0 flex-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="min-w-0 flex-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-700 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
       </div>
 
@@ -263,10 +263,10 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
                     <span className="rounded bg-blue-600 px-1 py-0.5 text-[11px] font-semibold text-white">📍 this cell</span>
                   )}
                   {focusCell && r.h3_cell !== focusCell && typeof r.km === "number" && (
-                    <span className="text-[11px] text-gray-400">~{r.km < 1 ? "<1" : Math.round(r.km)} km</span>
+                    <span className="text-[11px] text-gray-500">~{r.km < 1 ? "<1" : Math.round(r.km)} km</span>
                   )}
                   <span title="Priority = contribution × exposure × actionability × confidence">priority {Math.round(r.priority_score * 100)}</span>
-                  <span className="text-slate-300">·</span>
+                  <span className="text-slate-400">·</span>
                   <span title="Evidence rubric out of 10">rubric {r.rubric_score?.total ?? "--"}/10</span>
                 </span>
               </div>
@@ -304,7 +304,7 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
                     <button
                       onClick={() => setStatus(r.id, "approved")}
                       disabled={acting === r.id}
-                      className="cursor-pointer rounded bg-emerald-600 px-2 py-1 text-xs font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+                      className="cursor-pointer rounded bg-emerald-700 px-2 py-1 text-xs font-semibold text-white transition-colors hover:bg-emerald-800 disabled:opacity-50"
                       title="Officer approval — moves this action to the ward queue"
                     >
                       Approve
@@ -387,7 +387,7 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
                           ))}
                         </div>
                       ) : (
-                        <div className="mt-1 text-xs text-slate-400">no citations returned</div>
+                        <div className="mt-1 text-xs text-slate-500">no citations returned</div>
                       )}
                     </>
                   )}

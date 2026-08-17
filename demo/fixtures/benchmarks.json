@@ -10,58 +10,58 @@
     "split": "2025-11-01T00:00:00+00:00"
    },
    "stations_cells": 39,
-   "generated_at": "2026-08-17T17:09:46.890602+00:00",
+   "generated_at": "2026-08-17T17:28:41.303590+00:00",
    "headline": [
     {
      "horizon_h": 24,
      "n_test": 234491,
-     "skill_vs_persistence": 0.017,
-     "skill_vs_seasonal_naive": 0.199,
-     "winter_skill_vs_persistence": -0.042,
-     "very_poor_hours_skill": -0.052,
+     "skill_vs_persistence": 0.091,
+     "skill_vs_seasonal_naive": 0.259,
+     "winter_skill_vs_persistence": 0.067,
+     "very_poor_hours_skill": 0.065,
      "very_poor_hours_n": 62866,
-     "onset_recall_model": 0.352,
+     "onset_recall_model": 0.244,
      "onset_recall_persistence": 0.0,
-     "onset_recall_p30": 0.56,
-     "precision_p30": 0.693,
-     "skill_raw_vs_persistence": null,
+     "onset_recall_p30": 0.54,
+     "precision_p30": 0.683,
+     "skill_raw_vs_persistence": 0.017,
      "onsets": 15701,
      "pi80_coverage": 0.783,
-     "brier_skill_very_poor": 0.492
+     "brier_skill_very_poor": 0.513
     },
     {
      "horizon_h": 48,
      "n_test": 233555,
-     "skill_vs_persistence": 0.097,
-     "skill_vs_seasonal_naive": 0.166,
-     "winter_skill_vs_persistence": 0.067,
-     "very_poor_hours_skill": 0.047,
+     "skill_vs_persistence": 0.129,
+     "skill_vs_seasonal_naive": 0.195,
+     "winter_skill_vs_persistence": 0.114,
+     "very_poor_hours_skill": 0.106,
      "very_poor_hours_n": 63297,
-     "onset_recall_model": 0.382,
+     "onset_recall_model": 0.312,
      "onset_recall_persistence": 0.0,
-     "onset_recall_p30": 0.548,
-     "precision_p30": 0.671,
-     "skill_raw_vs_persistence": null,
+     "onset_recall_p30": 0.544,
+     "precision_p30": 0.661,
+     "skill_raw_vs_persistence": 0.097,
      "onsets": 18226,
      "pi80_coverage": 0.781,
-     "brier_skill_very_poor": 0.432
+     "brier_skill_very_poor": 0.456
     },
     {
      "horizon_h": 72,
      "n_test": 232619,
-     "skill_vs_persistence": 0.094,
-     "skill_vs_seasonal_naive": 0.132,
-     "winter_skill_vs_persistence": 0.062,
-     "very_poor_hours_skill": 0.056,
+     "skill_vs_persistence": 0.121,
+     "skill_vs_seasonal_naive": 0.158,
+     "winter_skill_vs_persistence": 0.106,
+     "very_poor_hours_skill": 0.1,
      "very_poor_hours_n": 63784,
-     "onset_recall_model": 0.384,
+     "onset_recall_model": 0.265,
      "onset_recall_persistence": 0.0,
-     "onset_recall_p30": 0.517,
-     "precision_p30": 0.648,
-     "skill_raw_vs_persistence": null,
+     "onset_recall_p30": 0.512,
+     "precision_p30": 0.636,
+     "skill_raw_vs_persistence": 0.094,
      "onsets": 19117,
      "pi80_coverage": 0.774,
-     "brier_skill_very_poor": 0.316
+     "brier_skill_very_poor": 0.379
     }
    ]
   },
@@ -70,17 +70,17 @@
    "source": "live",
    "window": {
     "start": "2026-06-20T10:00:00+00:00",
-    "end": "2026-08-17T15:00:00+00:00",
-    "split": "2026-08-03T01:45:00+00:00"
+    "end": "2026-08-17T16:00:00+00:00",
+    "split": "2026-08-03T02:30:00+00:00"
    },
    "stations_cells": 22,
-   "generated_at": "2026-08-17T17:27:02.165828+00:00",
+   "generated_at": "2026-08-17T17:48:44.953369+00:00",
    "headline": [
     {
      "horizon_h": 24,
-     "n_test": 2234,
-     "skill_vs_persistence": 0.163,
-     "skill_vs_seasonal_naive": 0.273,
+     "n_test": 2235,
+     "skill_vs_persistence": 0.157,
+     "skill_vs_seasonal_naive": 0.268,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -88,16 +88,16 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.125,
+     "skill_raw_vs_persistence": 0.127,
      "onsets": 0,
-     "pi80_coverage": 0.721,
+     "pi80_coverage": 0.74,
      "brier_skill_very_poor": null
     },
     {
      "horizon_h": 48,
      "n_test": 1992,
-     "skill_vs_persistence": 0.171,
-     "skill_vs_seasonal_naive": 0.214,
+     "skill_vs_persistence": 0.186,
+     "skill_vs_seasonal_naive": 0.224,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -105,16 +105,16 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.142,
+     "skill_raw_vs_persistence": 0.158,
      "onsets": 0,
-     "pi80_coverage": 0.734,
+     "pi80_coverage": 0.74,
      "brier_skill_very_poor": null
     },
     {
      "horizon_h": 72,
      "n_test": 1776,
      "skill_vs_persistence": 0.121,
-     "skill_vs_seasonal_naive": 0.189,
+     "skill_vs_seasonal_naive": 0.187,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -122,9 +122,9 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.106,
+     "skill_raw_vs_persistence": 0.112,
      "onsets": 0,
-     "pi80_coverage": 0.707,
+     "pi80_coverage": 0.718,
      "brier_skill_very_poor": null
     }
    ]
@@ -138,17 +138,17 @@
    "source": "live",
    "window": {
     "start": "2026-05-21T03:00:00+00:00",
-    "end": "2026-08-17T15:00:00+00:00",
-    "split": "2026-07-26T12:00:00+00:00"
+    "end": "2026-08-17T16:00:00+00:00",
+    "split": "2026-07-26T12:45:00+00:00"
    },
    "stations_cells": 13,
-   "generated_at": "2026-08-17T17:27:28.259512+00:00",
+   "generated_at": "2026-08-17T17:49:17.660932+00:00",
    "headline": [
     {
      "horizon_h": 24,
-     "n_test": 1128,
-     "skill_vs_persistence": 0.143,
-     "skill_vs_seasonal_naive": 0.111,
+     "n_test": 1127,
+     "skill_vs_persistence": 0.142,
+     "skill_vs_seasonal_naive": 0.112,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -156,33 +156,16 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.16,
+     "skill_raw_vs_persistence": 0.159,
      "onsets": 0,
-     "pi80_coverage": 0.823,
+     "pi80_coverage": 0.827,
      "brier_skill_very_poor": null
     },
     {
      "horizon_h": 48,
-     "n_test": 1048,
-     "skill_vs_persistence": 0.391,
-     "skill_vs_seasonal_naive": -0.135,
-     "winter_skill_vs_persistence": null,
-     "very_poor_hours_skill": null,
-     "very_poor_hours_n": 0,
-     "onset_recall_model": null,
-     "onset_recall_persistence": null,
-     "onset_recall_p30": null,
-     "precision_p30": 0.0,
-     "skill_raw_vs_persistence": 0.489,
-     "onsets": 0,
-     "pi80_coverage": 0.832,
-     "brier_skill_very_poor": null
-    },
-    {
-     "horizon_h": 72,
-     "n_test": 976,
-     "skill_vs_persistence": 0.467,
-     "skill_vs_seasonal_naive": 0.029,
+     "n_test": 1046,
+     "skill_vs_persistence": 0.417,
+     "skill_vs_seasonal_naive": -0.085,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -190,9 +173,26 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.516,
+     "skill_raw_vs_persistence": 0.496,
      "onsets": 0,
-     "pi80_coverage": 0.862,
+     "pi80_coverage": 0.83,
+     "brier_skill_very_poor": null
+    },
+    {
+     "horizon_h": 72,
+     "n_test": 975,
+     "skill_vs_persistence": 0.466,
+     "skill_vs_seasonal_naive": 0.028,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.518,
+     "onsets": 0,
+     "pi80_coverage": 0.873,
      "brier_skill_very_poor": null
     }
    ]
@@ -209,58 +209,58 @@
     "split": "2025-11-01T00:00:00+00:00"
    },
    "stations_cells": 27,
-   "generated_at": "2026-08-17T17:12:23.801112+00:00",
+   "generated_at": "2026-08-17T17:31:57.784439+00:00",
    "headline": [
     {
      "horizon_h": 24,
      "n_test": 141667,
-     "skill_vs_persistence": 0.176,
-     "skill_vs_seasonal_naive": 0.381,
-     "winter_skill_vs_persistence": 0.183,
-     "very_poor_hours_skill": -0.087,
+     "skill_vs_persistence": 0.165,
+     "skill_vs_seasonal_naive": 0.373,
+     "winter_skill_vs_persistence": 0.152,
+     "very_poor_hours_skill": -0.05,
      "very_poor_hours_n": 1558,
-     "onset_recall_model": 0.003,
+     "onset_recall_model": 0.002,
      "onset_recall_persistence": 0.0,
      "onset_recall_p30": 0.003,
-     "precision_p30": 0.328,
-     "skill_raw_vs_persistence": null,
+     "precision_p30": 0.27,
+     "skill_raw_vs_persistence": 0.176,
      "onsets": 1197,
      "pi80_coverage": 0.816,
-     "brier_skill_very_poor": -0.053
+     "brier_skill_very_poor": -0.106
     },
     {
      "horizon_h": 48,
      "n_test": 141019,
-     "skill_vs_persistence": 0.19,
-     "skill_vs_seasonal_naive": 0.346,
-     "winter_skill_vs_persistence": 0.17,
-     "very_poor_hours_skill": -0.063,
+     "skill_vs_persistence": 0.191,
+     "skill_vs_seasonal_naive": 0.347,
+     "winter_skill_vs_persistence": 0.171,
+     "very_poor_hours_skill": -0.036,
      "very_poor_hours_n": 1608,
      "onset_recall_model": 0.001,
      "onset_recall_persistence": 0.0,
      "onset_recall_p30": 0.001,
-     "precision_p30": 0.143,
-     "skill_raw_vs_persistence": null,
+     "precision_p30": 0.152,
+     "skill_raw_vs_persistence": 0.19,
      "onsets": 1350,
      "pi80_coverage": 0.817,
-     "brier_skill_very_poor": -0.087
+     "brier_skill_very_poor": -0.118
     },
     {
      "horizon_h": 72,
      "n_test": 140371,
-     "skill_vs_persistence": 0.211,
-     "skill_vs_seasonal_naive": 0.315,
-     "winter_skill_vs_persistence": 0.197,
-     "very_poor_hours_skill": -0.036,
+     "skill_vs_persistence": 0.213,
+     "skill_vs_seasonal_naive": 0.318,
+     "winter_skill_vs_persistence": 0.201,
+     "very_poor_hours_skill": -0.028,
      "very_poor_hours_n": 1656,
      "onset_recall_model": 0.0,
      "onset_recall_persistence": 0.0,
-     "onset_recall_p30": 0.002,
-     "precision_p30": 0.154,
-     "skill_raw_vs_persistence": null,
+     "onset_recall_p30": 0.001,
+     "precision_p30": 0.142,
+     "skill_raw_vs_persistence": 0.211,
      "onsets": 1472,
      "pi80_coverage": 0.794,
-     "brier_skill_very_poor": -0.046
+     "brier_skill_very_poor": -0.094
     }
    ]
   },
@@ -269,17 +269,17 @@
    "source": "live",
    "window": {
     "start": "2026-05-21T03:00:00+00:00",
-    "end": "2026-08-17T13:00:00+00:00",
-    "split": "2026-07-26T10:30:00+00:00"
+    "end": "2026-08-17T15:00:00+00:00",
+    "split": "2026-07-26T12:00:00+00:00"
    },
    "stations_cells": 19,
-   "generated_at": "2026-08-17T17:27:59.871986+00:00",
+   "generated_at": "2026-08-17T17:49:49.974169+00:00",
    "headline": [
     {
      "horizon_h": 24,
-     "n_test": 1878,
-     "skill_vs_persistence": 0.102,
-     "skill_vs_seasonal_naive": 0.505,
+     "n_test": 1877,
+     "skill_vs_persistence": 0.104,
+     "skill_vs_seasonal_naive": 0.507,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -287,15 +287,15 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.079,
+     "skill_raw_vs_persistence": 0.07,
      "onsets": 0,
-     "pi80_coverage": 0.7,
+     "pi80_coverage": 0.723,
      "brier_skill_very_poor": null
     },
     {
      "horizon_h": 48,
-     "n_test": 1673,
-     "skill_vs_persistence": 0.145,
+     "n_test": 1671,
+     "skill_vs_persistence": 0.144,
      "skill_vs_seasonal_naive": 0.511,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
@@ -304,18 +304,18 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.097,
+     "skill_raw_vs_persistence": 0.118,
      "onsets": 0,
-     "pi80_coverage": 0.728,
+     "pi80_coverage": 0.697,
      "brier_skill_very_poor": null
     },
     {
      "horizon_h": 72,
-     "n_test": 1471,
+     "n_test": 1468,
      "skill_vs_persistence": 0.055,
      "skill_vs_seasonal_naive": 0.301,
      "winter_skill_vs_persistence": null,
-     "very_poor_hours_skill": 0.0,
+     "very_poor_hours_skill": -0.0,
      "very_poor_hours_n": 2,
      "onset_recall_model": 0.0,
      "onset_recall_persistence": 0.0,
@@ -323,7 +323,7 @@
      "precision_p30": null,
      "skill_raw_vs_persistence": 0.053,
      "onsets": 2,
-     "pi80_coverage": 0.752,
+     "pi80_coverage": 0.795,
      "brier_skill_very_poor": -0.003
     }
    ]
@@ -341,7 +341,7 @@
     "split": "2026-08-07T16:00:00+00:00"
    },
    "stations_cells": 6,
-   "generated_at": "2026-08-17T17:29:09.085460+00:00",
+   "generated_at": "2026-08-17T17:50:56.270241+00:00",
    "headline": [
     {
      "horizon_h": 24,
@@ -409,7 +409,7 @@
     "split": "2026-08-07T16:00:00+00:00"
    },
    "stations_cells": 6,
-   "generated_at": "2026-08-17T17:28:23.207262+00:00",
+   "generated_at": "2026-08-17T17:50:13.415818+00:00",
    "headline": [
     {
      "horizon_h": 24,
@@ -477,7 +477,7 @@
     "split": "2026-08-07T13:45:00+00:00"
    },
    "stations_cells": 6,
-   "generated_at": "2026-08-17T17:28:10.825449+00:00",
+   "generated_at": "2026-08-17T17:50:00.680823+00:00",
    "headline": [
     {
      "horizon_h": 24,
@@ -545,7 +545,7 @@
     "split": "2026-08-07T15:15:00+00:00"
    },
    "stations_cells": 6,
-   "generated_at": "2026-08-17T17:29:31.256490+00:00",
+   "generated_at": "2026-08-17T17:51:11.339389+00:00",
    "headline": [
     {
      "horizon_h": 24,
@@ -612,58 +612,58 @@
     "split": "2025-11-01T00:00:00+00:00"
    },
    "stations_cells": 10,
-   "generated_at": "2026-08-17T17:14:34.940679+00:00",
+   "generated_at": "2026-08-17T17:34:06.505055+00:00",
    "headline": [
     {
      "horizon_h": 24,
      "n_test": 59373,
-     "skill_vs_persistence": 0.125,
-     "skill_vs_seasonal_naive": 0.249,
-     "winter_skill_vs_persistence": 0.099,
-     "very_poor_hours_skill": -0.019,
+     "skill_vs_persistence": 0.141,
+     "skill_vs_seasonal_naive": 0.262,
+     "winter_skill_vs_persistence": 0.124,
+     "very_poor_hours_skill": 0.032,
      "very_poor_hours_n": 4180,
-     "onset_recall_model": 0.039,
+     "onset_recall_model": 0.023,
      "onset_recall_persistence": 0.0,
-     "onset_recall_p30": 0.21,
-     "precision_p30": 0.555,
-     "skill_raw_vs_persistence": null,
+     "onset_recall_p30": 0.192,
+     "precision_p30": 0.57,
+     "skill_raw_vs_persistence": 0.125,
      "onsets": 1607,
      "pi80_coverage": 0.748,
-     "brier_skill_very_poor": 0.356
+     "brier_skill_very_poor": 0.393
     },
     {
      "horizon_h": 48,
      "n_test": 59133,
-     "skill_vs_persistence": 0.065,
-     "skill_vs_seasonal_naive": 0.116,
-     "winter_skill_vs_persistence": 0.086,
-     "very_poor_hours_skill": -0.084,
+     "skill_vs_persistence": 0.096,
+     "skill_vs_seasonal_naive": 0.145,
+     "winter_skill_vs_persistence": 0.13,
+     "very_poor_hours_skill": -0.007,
      "very_poor_hours_n": 4235,
-     "onset_recall_model": 0.042,
+     "onset_recall_model": 0.034,
      "onset_recall_persistence": 0.0,
-     "onset_recall_p30": 0.176,
-     "precision_p30": 0.495,
-     "skill_raw_vs_persistence": null,
+     "onset_recall_p30": 0.178,
+     "precision_p30": 0.507,
+     "skill_raw_vs_persistence": 0.065,
      "onsets": 2020,
      "pi80_coverage": 0.725,
-     "brier_skill_very_poor": 0.257
+     "brier_skill_very_poor": 0.272
     },
     {
      "horizon_h": 72,
      "n_test": 58893,
-     "skill_vs_persistence": -0.007,
-     "skill_vs_seasonal_naive": 0.029,
-     "winter_skill_vs_persistence": -0.053,
-     "very_poor_hours_skill": -0.229,
+     "skill_vs_persistence": 0.092,
+     "skill_vs_seasonal_naive": 0.125,
+     "winter_skill_vs_persistence": 0.083,
+     "very_poor_hours_skill": -0.069,
      "very_poor_hours_n": 4256,
-     "onset_recall_model": 0.05,
+     "onset_recall_model": 0.035,
      "onset_recall_persistence": 0.0,
-     "onset_recall_p30": 0.059,
-     "precision_p30": 0.524,
-     "skill_raw_vs_persistence": null,
+     "onset_recall_p30": 0.062,
+     "precision_p30": 0.518,
+     "skill_raw_vs_persistence": -0.007,
      "onsets": 2134,
      "pi80_coverage": 0.698,
-     "brier_skill_very_poor": 0.194
+     "brier_skill_very_poor": 0.238
     }
    ]
   },
@@ -676,7 +676,7 @@
     "split": "2026-08-07T15:15:00+00:00"
    },
    "stations_cells": 3,
-   "generated_at": "2026-08-17T17:28:34.386583+00:00",
+   "generated_at": "2026-08-17T17:50:27.538972+00:00",
    "headline": [
     {
      "horizon_h": 24,
@@ -744,7 +744,7 @@
     "split": "2026-08-07T15:15:00+00:00"
    },
    "stations_cells": 5,
-   "generated_at": "2026-08-17T17:29:48.932674+00:00",
+   "generated_at": "2026-08-17T17:51:21.738963+00:00",
    "headline": [
     {
      "horizon_h": 24,
@@ -812,7 +812,7 @@
     "split": "2026-08-07T15:15:00+00:00"
    },
    "stations_cells": 9,
-   "generated_at": "2026-08-17T17:28:48.974163+00:00",
+   "generated_at": "2026-08-17T17:50:43.930823+00:00",
    "headline": [
     {
      "horizon_h": 24,

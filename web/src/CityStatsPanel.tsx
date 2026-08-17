@@ -110,7 +110,7 @@ export default function CityStatsPanel({
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          <div className="text-[10px] text-gray-400">city-mean of real station readings, hourly buckets</div>
+          <div className="text-[10px] text-gray-500">city-mean of real station readings, hourly buckets</div>
         </>
       )}
 
@@ -143,7 +143,7 @@ export default function CityStatsPanel({
               ))}
             </div>
           </div>
-          <div className="text-[10px] text-gray-400">mean attribution share across {cells.length} live cells</div>
+          <div className="text-[10px] text-gray-500">mean attribution share across {cells.length} live cells</div>
         </div>
       )}
 
@@ -164,7 +164,7 @@ export default function CityStatsPanel({
               </span>
             ))}
           </div>
-          <div className="mt-0.5 text-[10px] text-gray-400">
+          <div className="mt-0.5 text-[10px] text-gray-500">
             share of {coverageCells.length} ~1 km cells (dense model field, station-anchored)
           </div>
         </div>

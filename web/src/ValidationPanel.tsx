@@ -37,7 +37,7 @@ const pct = (x: number | null | undefined, signed = true) =>
 const day = (iso?: string) => (iso ? iso.slice(0, 10) : "");
 
 function Cell({ v, good }: { v: number | null | undefined; good?: (x: number) => boolean }) {
-  if (v === null || v === undefined) return <td className="px-1.5 py-1 text-right text-slate-300">–</td>;
+  if (v === null || v === undefined) return <td className="px-1.5 py-1 text-right text-slate-400">–</td>;
   const ok = good ? good(v) : v > 0;
   return (
     <td className={`px-1.5 py-1 text-right font-mono tabular-nums ${ok ? "text-emerald-700" : "text-rose-600"}`}>
@@ -149,7 +149,7 @@ export default function ValidationPanel({ city }: { city: string }) {
           reported only where they can be measured, not extrapolated.
         </div>
       )}
-      <div className="mt-1.5 text-[10px] text-slate-400">
+      <div className="mt-1.5 text-[10px] text-slate-500">
         Recomputed {day(s.generated_at)} · negative numbers are kept, not hidden · full tables in docs/benchmarks/{city}.md
       </div>
     </Panel>

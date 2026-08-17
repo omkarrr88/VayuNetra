@@ -57,7 +57,7 @@ export default function InterventionsPanel({ city }: { city: string }) {
         <div className="text-xs leading-5 text-gray-500">
           {d.note ??
             "No real-world intervention dispatched yet — tracking arms automatically at first dispatch."}{" "}
-          <span className="text-gray-400">
+          <span className="text-gray-500">
             Marking a recommendation "dispatched" freezes the cell's 7-day PM2.5 baseline and opens a
             before/after measurement window, corrected for city-wide drift.
           </span>
@@ -87,7 +87,7 @@ export default function InterventionsPanel({ city }: { city: string }) {
                 ) : (
                   <>measuring — {t.days_since_dispatch} days since dispatch</>
                 )}
-                {t.note && <span className="text-gray-400"> · {t.note}</span>}
+                {t.note && <span className="text-gray-500"> · {t.note}</span>}
               </div>
             </div>
           ))}

@@ -152,7 +152,7 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-4">
             <a href="https://github.com/omkarrr88/VayuNetra" target="_blank" rel="noreferrer"
-              className="text-slate-400 transition-colors hover:text-slate-900" title="Source on GitHub" aria-label="Source on GitHub">
+              className="text-slate-500 transition-colors hover:text-slate-900" title="Source on GitHub" aria-label="Source on GitHub">
               <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true"><path d={IC.github} /></svg>
             </a>
             <a href="/console" onClick={(e) => linkClick(e, "/console")}
@@ -180,7 +180,7 @@ export default function Landing() {
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <a href="/console" onClick={(e) => linkClick(e, "/console")}
-            className="flex items-center gap-2 rounded-md bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-700">
+            className="flex items-center gap-2 rounded-md bg-sky-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-700">
             Open the console
             <Icon d={IC.arrow} className="h-4 w-4" />
           </a>
@@ -198,13 +198,13 @@ export default function Landing() {
             live
             {cat && (
               <>
-                <span className="text-slate-300">·</span>
-                Delhi AQI <span style={{ color: cat.color }} className="font-bold">{aqi} {cat.label}</span>
+                <span className="text-slate-400">·</span>
+                Delhi AQI <span style={{ background: cat.color, color: cat.text }} className="rounded px-1.5 py-0.5 font-bold">{aqi} {cat.label}</span>
               </>
             )}
             {latencyS && (
               <>
-                <span className="text-slate-300">·</span>
+                <span className="text-slate-400">·</span>
                 last pipeline run {latencyS}s end-to-end
               </>
             )}
@@ -226,14 +226,14 @@ export default function Landing() {
           <img src="/console.jpg" alt="VayuNetra operations console: source blame map with SHAP explanation, forecast, enforcement worklist and a Sentinel-2 evidence dossier"
             className="block w-full" width={2400} height={1500} />
         </div>
-        <p className="mt-3 text-center font-mono text-[11px] text-slate-400">
+        <p className="mt-3 text-center font-mono text-[11px] text-slate-500">
           The live console — a Delhi cell opened: attribution shares with the SHAP "why", 72 h forecast, and the enforcement dossier with real satellite evidence.
         </p>
       </div>
 
       {/* Data sources strip */}
       <div className="mx-auto max-w-6xl px-6 py-14">
-        <p className="text-center font-mono text-[11px] uppercase tracking-[0.2em] text-slate-400">
+        <p className="text-center font-mono text-[11px] uppercase tracking-[0.2em] text-slate-500">
           Built on public data infrastructure
         </p>
         <div className="mt-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 font-mono text-[13px] text-slate-500">
@@ -282,7 +282,7 @@ export default function Landing() {
             {/* City PM2.5 now vs +24h */}
             <div>
               <h3 className="text-[14px] font-bold text-slate-900">City PM2.5 — now vs forecast +24h</h3>
-              <div className="mt-1 text-[10px] text-slate-400"><span className="inline-block h-2 w-3 rounded-sm bg-slate-400/70 align-middle" /> now &nbsp;·&nbsp; <span className="inline-block h-2 w-0.5 bg-blue-600 align-middle" /> +24h forecast &nbsp;·&nbsp; µg/m³, sorted by current level</div>
+              <div className="mt-1 text-[10px] text-slate-500"><span className="inline-block h-2 w-3 rounded-sm bg-slate-400/70 align-middle" /> now &nbsp;·&nbsp; <span className="inline-block h-2 w-0.5 bg-blue-600 align-middle" /> +24h forecast &nbsp;·&nbsp; µg/m³, sorted by current level</div>
               <div className="mt-3 space-y-1.5">
                 {SNAPSHOT_CITIES.map(([name, now, next, trend]) => (
                   <div key={name} className="flex items-center gap-2 text-[11px]">
@@ -292,7 +292,7 @@ export default function Landing() {
                       <div className="absolute inset-y-0 left-0 rounded-full border-r-2 border-blue-600" style={{ width: `${Math.min(100, (Number(next) / 60) * 100)}%` }} />
                     </div>
                     <span className="w-14 shrink-0 text-right font-mono text-[10px] text-slate-500">
-                      {now}<span className="text-slate-300">→</span>{next}
+                      {now}<span className="text-slate-400">→</span>{next}
                     </span>
                   </div>
                 ))}
@@ -312,7 +312,7 @@ export default function Landing() {
               </div>
             </div>
           </div>
-          <p className="mt-6 text-[11px] text-slate-400">
+          <p className="mt-6 text-[11px] text-slate-500">
             Live snapshot from the production system, 16 August 2026 — aggregated from real station measurements and model
             attribution. Open the console for the current numbers.
           </p>
@@ -335,7 +335,7 @@ export default function Landing() {
               <div key={s.title}>
                 <div className="flex items-center gap-3">
                   <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-100 text-sky-700"><Icon d={s.icon} /></span>
-                  <span className="font-mono text-[11px] text-slate-400">0{i + 1}</span>
+                  <span className="font-mono text-[11px] text-slate-500">0{i + 1}</span>
                 </div>
                 <h3 className="mt-3 text-[15px] font-semibold text-slate-900">{s.title}</h3>
                 <p className="mt-1.5 text-[13px] leading-relaxed text-slate-600">{s.body}</p>
@@ -403,7 +403,7 @@ export default function Landing() {
           <div className="mt-8 overflow-x-auto">
             <table className="w-full min-w-[640px] border-collapse text-left">
               <thead>
-                <tr className="border-b border-slate-300 font-mono text-[11px] uppercase tracking-wider text-slate-400">
+                <tr className="border-b border-slate-300 font-mono text-[11px] uppercase tracking-wider text-slate-500">
                   <th className="py-3 pr-4 font-medium">Claim</th>
                   <th className="py-3 pr-4 font-medium">Result</th>
                   <th className="py-3 font-medium">Method</th>
@@ -430,7 +430,7 @@ export default function Landing() {
             <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">See it running on live data.</h2>
             <p className="mt-1 text-[14px] text-slate-600">Ten cities, real measurements, no sign-up.</p>
             <a href="/console" onClick={(e) => linkClick(e, "/console")}
-              className="mt-5 inline-flex items-center gap-2 rounded-md bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-700">
+              className="mt-5 inline-flex items-center gap-2 rounded-md bg-sky-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-700">
               Open the console
               <Icon d={IC.arrow} className="h-4 w-4" />
             </a>
@@ -439,12 +439,12 @@ export default function Landing() {
             <div className="rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm">
               <img src="/qr-app.svg" alt="QR code — open the VayuNetra app" className="mx-auto h-28 w-28" width={112} height={112} />
               <p className="mt-2 text-xs font-semibold text-slate-700">Open on your phone</p>
-              <p className="font-mono text-[11px] text-slate-400">vayunetra-aqi.vercel.app</p>
+              <p className="font-mono text-[11px] text-slate-500">vayunetra-aqi.vercel.app</p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm">
               <img src="/qr-telegram.svg" alt="QR code — subscribe to air-quality alerts on Telegram" className="mx-auto h-28 w-28" width={112} height={112} />
               <p className="mt-2 text-xs font-semibold text-slate-700">Subscribe on Telegram</p>
-              <p className="font-mono text-[11px] text-slate-400">/start → pick your city</p>
+              <p className="font-mono text-[11px] text-slate-500">/start → pick your city</p>
             </div>
           </div>
         </div>
@@ -464,7 +464,7 @@ export default function Landing() {
           </div>
           <div className="grid grid-cols-2 gap-10 text-[13px] sm:grid-cols-3">
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-wider text-slate-400">Product</p>
+              <p className="font-mono text-[10px] uppercase tracking-wider text-slate-500">Product</p>
               <div className="mt-2 space-y-1.5 text-slate-600">
                 <a href="/console" onClick={(e) => linkClick(e, "/console")} className="block transition-colors hover:text-slate-900">Console</a>
                 <a href="#how" className="block transition-colors hover:text-slate-900">How it works</a>
@@ -473,7 +473,7 @@ export default function Landing() {
               </div>
             </div>
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-wider text-slate-400">Resources</p>
+              <p className="font-mono text-[10px] uppercase tracking-wider text-slate-500">Resources</p>
               <div className="mt-2 space-y-1.5 text-slate-600">
                 <a href="https://github.com/omkarrr88/VayuNetra" target="_blank" rel="noreferrer" className="block transition-colors hover:text-slate-900">GitHub</a>
                 <a href="https://vayunetra-c8i8.onrender.com/docs" target="_blank" rel="noreferrer" className="block transition-colors hover:text-slate-900">API reference</a>
@@ -481,7 +481,7 @@ export default function Landing() {
               </div>
             </div>
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-wider text-slate-400">Team</p>
+              <p className="font-mono text-[10px] uppercase tracking-wider text-slate-500">Team</p>
               <div className="mt-2 space-y-1.5 text-slate-600">
                 <span className="block">Omkar Kadam</span>
                 <span className="block">Abhinav Prasad</span>
@@ -490,7 +490,7 @@ export default function Landing() {
             </div>
           </div>
         </div>
-        <div className="border-t border-slate-200 py-4 text-center font-mono text-[11px] text-slate-400">
+        <div className="border-t border-slate-200 py-4 text-center font-mono text-[11px] text-slate-500">
           © 2026 VayuNetra · open source · built for ET AI Hackathon 2026 · ₹0 infrastructure
         </div>
       </footer>

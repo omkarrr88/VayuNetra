@@ -175,7 +175,7 @@ export default function Tour({ onDone }: { onDone: () => void }) {
             </div>
             <div className="flex items-center gap-2">
               {!last && (
-                <button onClick={finish} className="text-[12px] font-medium text-slate-400 transition-colors hover:text-slate-600">
+                <button onClick={finish} className="text-[12px] font-medium text-slate-500 transition-colors hover:text-slate-600">
                   Skip
                 </button>
               )}

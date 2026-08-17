@@ -110,7 +110,7 @@ export default function CitizenReports({ city, center }: { city: string; center?
       <div className="flex items-center justify-between">
         <div>
           <span className="text-xs font-semibold text-slate-700">📸 Report a pollution source</span>
-          <span className="ml-1 text-[11px] text-slate-400">photo → verified → enforcement worklist</span>
+          <span className="ml-1 text-[11px] text-slate-500">photo → verified → enforcement worklist</span>
         </div>
         <button
           onClick={() => setOpenForm((v) => !v)}
@@ -156,11 +156,11 @@ export default function CitizenReports({ city, center }: { city: string; center?
               {r.photo_url ? (
                 <img src={r.photo_url} alt="" className="h-8 w-8 rounded object-cover ring-1 ring-slate-200" />
               ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded bg-slate-100 text-slate-400">#{r.id}</div>
+                <div className="flex h-8 w-8 items-center justify-center rounded bg-slate-100 text-slate-500">#{r.id}</div>
               )}
               <div className="min-w-0 flex-1">
                 <span className="font-semibold text-slate-700">{r.category.replace(/_/g, " ")}</span>
-                <span className="ml-1 text-slate-400">· cell {r.h3_cell.slice(-6)}</span>
+                <span className="ml-1 text-slate-500">· cell {r.h3_cell.slice(-6)}</span>
               </div>
               <span className={`rounded px-1.5 py-0.5 font-semibold ${STATUS_STYLE[r.status]}`}>{r.status}</span>
               {typeof r.sla_remaining_h === "number" && r.status !== "resolved" && r.status !== "rejected" && (

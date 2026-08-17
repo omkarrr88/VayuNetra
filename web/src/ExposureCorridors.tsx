@@ -88,6 +88,7 @@ export default function ExposureCorridors({
       <div className="mt-1 flex items-center gap-1 text-xs text-slate-700">
         <span>city centre →</span>
         <select
+          aria-label="Destination clean-air zone"
           value={chosen.h3_cell}
           onChange={(e) => setDest(e.target.value)}
           className="flex-1 rounded border border-teal-200 bg-white px-1 py-0.5 text-xs"

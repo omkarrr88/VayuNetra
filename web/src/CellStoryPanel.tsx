@@ -71,7 +71,7 @@ export default function CellStoryPanel({
           {place ? (
             <>
               <div className="text-sm font-bold leading-tight text-slate-800">{place}</div>
-              <div className="font-mono text-[10px] text-gray-400">~1 km² cell · {cell.h3_cell}</div>
+              <div className="font-mono text-[10px] text-gray-500">~1 km² cell · {cell.h3_cell}</div>
             </>
           ) : (
             <div className="font-mono text-xs text-gray-500">{cell.h3_cell}</div>
@@ -133,7 +133,7 @@ export default function CellStoryPanel({
       <div className="mt-2">
         <div className="text-xs font-semibold text-gray-700">
           1 · Who's to blame — <span className="capitalize">{dom.replace("_", " ")}</span>
-          <span className="ml-1 font-normal text-gray-400">conf {Math.round(cell.confidence * 100)}%</span>
+          <span className="ml-1 font-normal text-gray-500">conf {Math.round(cell.confidence * 100)}%</span>
         </div>
         <div className="mt-1 space-y-1">
           {shares.map(([k, v]) => {
@@ -161,7 +161,7 @@ export default function CellStoryPanel({
               {ev.shap_drivers!.map((d) => `${DRIVER_LABELS[d.feature] ?? d.feature} +${d.contribution.toFixed(1)}`).join(" · ")}
             </div>
             {typeof ev.model_r2 === "number" && (
-              <div className="mt-0.5 text-[11px] text-emerald-600">
+              <div className="mt-0.5 text-[11px] text-emerald-700">
                 out-of-sample model R² {ev.model_r2} — passed the ≥0.15 skill gate
               </div>
             )}
@@ -181,7 +181,7 @@ export default function CellStoryPanel({
           </div>
         )}
         {markerBits.length > 0 && (
-          <div className="mt-1 text-[11px] text-gray-400">evidence: {markerBits.join(" · ")}</div>
+          <div className="mt-1 text-[11px] text-gray-500">evidence: {markerBits.join(" · ")}</div>
         )}
       </div>
 
@@ -203,11 +203,11 @@ export default function CellStoryPanel({
               const cat = aqiCategory(pm25ToAqi(r.value));
               return (
                 <div key={h} className="flex-1 rounded-md border border-gray-200 p-1.5 text-center">
-                  <div className="text-[11px] text-gray-400">+{h}h</div>
+                  <div className="text-[11px] text-gray-500">+{h}h</div>
                   <div className="text-sm font-bold" style={{ color: cat.color }}>
                     {Math.round(r.value)}
                   </div>
-                  <div className="text-[11px] text-gray-400">
+                  <div className="text-[11px] text-gray-500">
                     [{Math.round(r.pi_low)}–{Math.round(r.pi_high)}]
                   </div>
                   {typeof r.p_over_120 === "number" && (
@@ -225,10 +225,10 @@ export default function CellStoryPanel({
             })}
           </div>
         ) : (
-          <div className="mt-1 text-xs text-gray-400">no per-cell forecast (see city panel)</div>
+          <div className="mt-1 text-xs text-gray-500">no per-cell forecast (see city panel)</div>
         )}
         {fc && fc.some((x) => typeof x.p_over_120 === "number") && (
-          <div className="mt-1 text-[10px] text-gray-400">
+          <div className="mt-1 text-[10px] text-gray-500">
             80% band + calibrated P(&gt;120 / &gt;250 µg/m³) — probabilities calibrated on held-out residuals ({fc.find((x) => typeof x.p_over_120 === "number")?.calibration_n ?? "—"} hours), not thresholds on a point.
           </div>
         )}

@@ -107,7 +107,7 @@ export default function TimeScrub({ city, denseCells, onFrame }: Props) {
       <span className={`w-20 text-[11px] font-semibold ${idx === null ? "text-emerald-700" : "text-slate-700"}`}>
         {idx === null ? "● live" : label}
       </span>
-      <span className="hidden text-[10px] text-slate-400 xl:inline">last 24 h · station-scaled replay</span>
+      <span className="hidden text-[10px] text-slate-500 xl:inline">last 24 h · station-scaled replay</span>
     </div>
   );
 }

@@ -118,7 +118,7 @@ export default function ForecastPanel({ city }: { city: string }) {
           </ResponsiveContainer>
         </div>
       )}
-      <div className="mt-0.5 flex items-center gap-3 text-[11px] text-slate-400">
+      <div className="mt-0.5 flex items-center gap-3 text-[11px] text-slate-500">
         <span className="flex items-center gap-1"><span className="inline-block h-0.5 w-3 rounded bg-blue-600" /> city avg + 80% band</span>
         <span className="flex items-center gap-1"><span className="inline-block h-0.5 w-3 rounded bg-slate-400" /> persistence</span>
       </div>
@@ -151,7 +151,7 @@ export default function ForecastPanel({ city }: { city: string }) {
               ⚠ spike alert: {spikes.length} cell{spikes.length > 1 ? "s" : ""} forecast ≥ {SPIKE} µg/m³
             </div>
           )}
-          <div className="mt-1.5 max-h-36 space-y-0.5 overflow-auto pr-1">
+          <div className="mt-1.5 max-h-36 space-y-0.5 overflow-auto pr-1" tabIndex={0} role="region" aria-label="Per-cell forecasts, worst first">
             {sorted.map((r) => {
               const cat = aqiCategory(pm25ToAqi(r.value));
               return (
@@ -161,12 +161,12 @@ export default function ForecastPanel({ city }: { city: string }) {
                     cell {cellLabel(r.h3_cell)}
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span className="font-mono text-[11px] text-slate-400">
+                    <span className="font-mono text-[11px] text-slate-500">
                       [{Math.round(r.pi_low)}–{Math.round(r.pi_high)}]
                     </span>
                     <span
                       className="w-9 rounded px-1 text-center font-mono text-[11px] font-bold"
-                      style={{ background: `${cat.color}22`, color: cat.color }}
+                      style={{ background: cat.color, color: cat.text }}
                     >
                       {Math.round(r.value)}
                     </span>

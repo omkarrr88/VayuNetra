@@ -102,7 +102,7 @@ export function Sidebar({ active, onSelect }: SidebarProps) {
       <div className="flex-1 space-y-3 px-2 pt-3">
         {GROUPS.map((g) => (
           <div key={g.label}>
-            <div className="mb-1 hidden px-2.5 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500 xl:block">{g.label}</div>
+            <div className="mb-1 hidden px-2.5 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 xl:block">{g.label}</div>
             <div className="space-y-0.5">
               {g.ids.map((id) => {
                 const s = SECTIONS.find((x) => x.id === id)!;
@@ -122,7 +122,7 @@ export function Sidebar({ active, onSelect }: SidebarProps) {
                     <span className={`h-4 w-0.5 rounded-full transition-colors ${on ? "bg-emerald-400" : "bg-transparent"}`} />
                     <Icon d={s.icon} className="h-[18px] w-[18px] shrink-0" />
                     <span className="hidden flex-1 truncate xl:inline">{s.label}</span>
-                    <kbd className={`hidden h-4 min-w-4 items-center justify-center rounded border px-1 font-mono text-[9.5px] xl:flex ${on ? "border-white/30 text-slate-200" : "border-white/10 text-slate-500 group-hover:text-slate-300"}`}>{n}</kbd>
+                    <kbd className={`hidden h-4 min-w-4 items-center justify-center rounded border px-1 font-mono text-[9.5px] xl:flex ${on ? "border-white/30 text-slate-200" : "border-white/10 text-slate-400 group-hover:text-slate-300"}`}>{n}</kbd>
                   </button>
                 );
               })}
@@ -135,7 +135,7 @@ export function Sidebar({ active, onSelect }: SidebarProps) {
         <br />
         ₹0 infrastructure · open source
         <br />
-        <span className="text-slate-500">keys 1–7 sections · [ ] city · P present</span>
+        <span className="text-slate-400">keys 1–7 sections · [ ] city · P present</span>
       </div>
     </nav>
   );

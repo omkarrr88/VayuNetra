@@ -42,7 +42,7 @@ export default function SectionHeader({ section, cityName }: { section: Section;
       <div className="flex items-baseline gap-2">
         <span className="vn-kicker">{flow.verb}</span>
         <span className="text-[15px] font-extrabold tracking-tight text-slate-900">{flow.title}</span>
-        {cityName && <span className="ml-auto truncate text-[11px] font-semibold text-slate-400">{cityName}</span>}
+        {cityName && <span className="ml-auto truncate text-[11px] font-semibold text-slate-500">{cityName}</span>}
       </div>
       <p className="mt-0.5 text-[12px] leading-4 text-slate-600">{flow.blurb}</p>
       <ol className="mt-2 flex flex-wrap gap-1" aria-label="Path through this section">
