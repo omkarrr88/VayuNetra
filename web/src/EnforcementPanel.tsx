@@ -232,12 +232,12 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
                 focusCell && r.h3_cell === focusCell ? "border-blue-400 bg-blue-50/50" : "border-slate-200 hover:border-slate-300"
               }`}
             >
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
                 <span className="min-w-0 truncate font-semibold text-slate-800" title={r.h3_cell}>
                   {CATEGORY_LABEL[recCategory(r.rationale)] ?? "Source"}
                   {r.h3_cell && places[r.h3_cell] ? <span className="font-normal text-slate-500"> · {places[r.h3_cell]}</span> : null}
                 </span>
-                <span className="flex items-center gap-1.5 text-xs text-gray-500">
+                <span className="flex items-center gap-1.5 whitespace-nowrap text-xs text-gray-500">
                   {focusCell && r.h3_cell === focusCell && (
                     <span className="rounded bg-blue-600 px-1 py-0.5 text-[11px] font-semibold text-white">📍 this cell</span>
                   )}

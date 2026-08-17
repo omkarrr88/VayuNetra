@@ -67,11 +67,11 @@ Adding a city means adding one YAML file with a bounding box, languages and regu
 |---|---|
 | Attribution vs published inventories | Cosine 0.92 against SAFAR-Delhi (2018), 0.88 against CSTEP-Bengaluru (2022), 0.79 against NEERI/Urban-Emissions Mumbai |
 | Attribution behaves physically | Traffic SHAP contribution 2.30× higher during IST rush hours, weather controlled |
-| Forecast skill vs persistence | +4 to +8% Delhi, +9 to +17% Bengaluru, +15 to +30% Mumbai (walk-forward, 3 folds); newly onboarded cities backtested on 35-day history |
-| Prediction interval coverage | Raw intervals under-covered at 48–63% against a nominal 80%; conformal calibration brought this to 75–80% |
+| Forecast skill vs persistence | Multi-season temporal split, monthly refit on the trailing 90 days: Delhi +2 / +10 / +9%, Mumbai +18 / +19 / +21%, Kolkata +13 / +7 / −1% at 24/48/72 h; 35–38% of clean→Very-Poor onsets flagged 1–3 days ahead where persistence is 0 by construction; live 90-day benchmarks for all 10 cities |
+| Prediction interval coverage | Raw intervals under-covered at 48–63% against a nominal 80%; conformal calibration brought this to 78% measured on 207k Delhi test hours; every forecast also carries a calibrated P(>120) / P(>250) |
 | Model selection | A Temporal Fusion Transformer was trained on GPU and rejected. LightGBM won on held-out skill in every launch city. |
 | Signal to cited action | 0.8–9.7 seconds, measured in production |
-| Test coverage | 169 backend tests and 6 end-to-end browser tests, run in CI on every push |
+| Test coverage | 180 backend tests and 16 end-to-end browser flows (7 smoke + 9 live officer-journey), run in CI on every push |
 
 Current live scale: 10 cities, 16,529 modelled cells, 647 emission sources, 5,495 vulnerability zones and 454 enforcement recommendations, every one of which carries a real Sentinel-2 image and retrieved citations. All of the validation above is reproducible from the notebook in the repository.
 

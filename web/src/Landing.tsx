@@ -42,7 +42,7 @@ const STEPS = [
   {
     icon: IC.chart,
     title: "Predict",
-    body: "Quantile forecasts at 24, 48 and 72 hours for every cell, with conformal-calibrated intervals. Backtested walk-forward against persistence and climatology — both baselines shown in the product.",
+    body: "Quantile forecasts at 24, 48 and 72 hours for every cell, with conformal-calibrated intervals and a calibrated probability of crossing Very Poor / Severe. Benchmarked on a strict temporal split against persistence, seasonal-naive and climatology — the numbers, including the weak spots, are printed in the product.",
   },
   {
     icon: IC.scale,
@@ -74,8 +74,9 @@ const FEATURES = [
 const VALIDATION: Array<[string, string, string]> = [
   ["Attribution matches official inventories", "cosine 0.92 / 0.88 / 0.79", "vs SAFAR-Delhi 2018, CSTEP-Bengaluru 2022, Urban-Emissions Mumbai"],
   ["Attribution behaves physically", "2.30× traffic signal in rush hours", "IST rush vs off-peak SHAP, weather controlled"],
-  ["Forecast beats real baselines", "+4–8% Delhi · +9–30% Bengaluru, Mumbai", "walk-forward RMSE vs persistence and climatology"],
-  ["Uncertainty intervals are honest", "48–63% raw → 75–80% after CQR", "conformal recalibration audit, nominal 80%"],
+  ["Forecast beats real baselines", "+18–21% Mumbai · +2 / +10 / +9% Delhi at 24/48/72 h", "multi-season temporal split (2025-26 winter + summer 2026), monthly refit on the trailing 90 d; vs persistence and weekly seasonal-naive — the weak 24 h Delhi number ships too"],
+  ["It warns before the air turns", "35–38% of Very-Poor onsets flagged 1–3 days ahead", "persistence catches 0% by construction; the Severe tail is under-predicted — stated, not hidden"],
+  ["Uncertainty is calibrated", "80% band → 78% measured · P(>120) Brier skill +49%", "conformal calibration; exceedance probabilities on every cell forecast"],
   ["Enforcement is equitable", "no socio-economic inputs, by construction", "fairness audit on every live recommendation (n=390 at the July audit)"],
   ["Model choice was earned", "TFT trained on GPU — and rejected", "LightGBM won every launch city on held-out skill"],
   ["The loop is fast", "seconds from signal to cited action", "live per-node agent traces, target under 5 minutes"],
@@ -395,8 +396,9 @@ export default function Landing() {
             Every number is checked — including the failures.
           </h2>
           <p className="mt-3 max-w-2xl text-[15px] text-slate-600">
-            Each claim below is reproducible from the evaluation notebook in the repository. Where a method
-            underperformed, that result ships too.
+            Each claim below is reproducible from the repository — the evaluation notebook and{" "}
+            <code className="rounded bg-slate-100 px-1 text-[13px]">python -m ml.eval.benchmark</code>, whose
+            artifacts the API serves and the console prints. Where a method underperformed, that result ships too.
           </p>
           <div className="mt-8 overflow-x-auto">
             <table className="w-full min-w-[640px] border-collapse text-left">

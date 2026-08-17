@@ -8,6 +8,9 @@ import { expect, test, type Page } from "@playwright/test";
 const LIVE = !!process.env.VN_LIVE;
 test.describe.configure({ mode: "serial" });
 test.setTimeout(240_000);
+// The journey needs the live API (DEMO_MODE=false) on :8000 — real dossiers, PDFs, agents.
+// Without VN_LIVE the whole file is skipped so the default smoke run stays offline-safe.
+test.beforeEach(() => test.skip(!LIVE, "set VN_LIVE=1 with the live API on :8000"));
 
 async function openConsole(page: Page, section = "action", city = "delhi") {
   await page.addInitScript(() => localStorage.setItem("vayunetra-tour-v1", "done"));
@@ -124,7 +127,6 @@ test("7 · impact: funding case, fund guidance, fairness audit", async ({ page }
 });
 
 test("8 · pipeline: the agents really run", async ({ page }) => {
-  test.skip(!LIVE, "runs the LangGraph pipeline against the live DB — VN_LIVE=1 only");
   await openConsole(page, "pipeline");
   const rail = page.locator("[data-rail]");
   await rail.getByRole("button", { name: /run agents live/i }).click();

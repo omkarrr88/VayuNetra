@@ -292,7 +292,9 @@ export default function App() {
 
             {/* Time scrub — bottom-centre of the map (desktop); switches the
                 map to the PM2.5 field while replaying so the change is visible */}
-            <div className="pointer-events-none absolute bottom-2 z-10 hidden -translate-x-1/2 lg:block lg:left-[calc((100%-26rem)/2)] 2xl:left-[calc((100%-30rem)/2)]">
+            <div className={`pointer-events-none absolute bottom-2 z-10 hidden -translate-x-1/2 lg:block ${
+              cell ? "lg:left-[calc((100%-7rem)/2)] 2xl:left-[calc((100%-11rem)/2)]" : "lg:left-[calc((100%-26rem)/2)] 2xl:left-[calc((100%-30rem)/2)]"
+            }`}>
               <TimeScrub
                 city={active}
                 denseCells={coverage?.cells ?? []}

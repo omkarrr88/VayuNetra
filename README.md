@@ -52,15 +52,22 @@ recommendations · 717K deduplicated measurements · advisories in 4 languages.
 
 ## Validation — real numbers, both baselines
 
-Walk-forward backtests on live data, 3 folds — regenerate via [eval/evaluate.ipynb](eval/evaluate.ipynb):
+Strict temporal-split benchmark on real CPCB station data — multi-season (2025-26 winter + summer
+2026), monthly refit on the trailing 90 days exactly as production trains, one shared support
+mask, persistence / weekly seasonal-naive / climatology baselines. Regenerate with
+`python -m ml.eval.benchmark` ([docs/BENCHMARKS.md](docs/BENCHMARKS.md)); the API serves the
+artifacts (`GET /metrics/benchmark`) and the console prints them.
 
-| City | skill vs persistence (24/48/72 h) | skill vs climatology (24/48/72 h) |
-|---|---|---|
-| Delhi (n=27k) | +4% / +4% / +8% | **+31%** / +18% / +16% |
-| Bengaluru | **+15%** / +17% / +9% | +14% / +5% / −7% |
-| Mumbai | **+15%** / +18% / **+30%** | +3% / +3% / +4% |
+| City (test station-hours) | skill vs persistence (24/48/72 h) | winter only | Very-Poor onsets flagged (persistence = 0) |
+|---|---|---|---|
+| Delhi (207k) | **+2% / +10% / +9%** | −4% / +7% / +6% | **35% / 38% / 38%** |
+| Mumbai (142k) | **+18% / +19% / +21%** | +18% / +17% / +20% | few Very-Poor hours |
+| Kolkata (53k) | +13% / +7% / −1% | +10% / +9% / −5% | 4–5% |
 
-*skill = 1 − RMSE_model / RMSE_baseline. Both baselines shown, weak spots included.*
+80% interval → 78% measured coverage; calibrated P(>120) on every forecast (Brier skill +49% vs
+climatology at 24 h). Live 90-day benchmarks exist for all 10 cities.
+
+*skill = 1 − RMSE_model / RMSE_baseline. Negative numbers are kept — the Delhi 24 h and Severe-tail weak spots ship too.*
 
 **Attribution cross-checked against published emission inventories** (`evaluate.ipynb §10`):
 cosine similarity **0.92 vs SAFAR-Delhi (2018)** · 0.88 vs CSTEP-Bengaluru (2022) · 0.79 vs
@@ -104,8 +111,8 @@ npx supabase login && npx supabase link --project-ref <your-project-ref>
 npx supabase db push                   # schema + RLS + city seed (13 migrations)
 make live-bootstrap                    # kb_chunks + enforcement_recs + action_traces
 
-make test                              # 169 backend tests
-cd web && npx playwright test          # 6 e2e smoke tests
+make test                              # 180 backend tests
+cd web && npx playwright test          # 7 e2e smoke + 9 live journey flows (VN_LIVE=1)
 ```
 
 ## Repo layout
