@@ -3,6 +3,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import BlameMap, { type AttrCell, type CoverageCell, type MapMode } from "./BlameMap";
 import ForecastPanel from "./ForecastPanel";
 import ValidationPanel from "./ValidationPanel";
+import BriefCard from "./BriefCard";
 import { api } from "./api";
 import AqiHeader from "./AqiHeader";
 import CellStoryPanel from "./CellStoryPanel";
@@ -364,6 +365,7 @@ export default function App() {
             <div key={section} className="space-y-3 lg:vn-slide-in-right">
               {section === "action" && (
                 <>
+                  <Step {...S("action", 1)}><BriefCard city={active} /></Step>
                   <Step {...S("action", 2)}><EnforcementPanel city={active} focusCell={cell?.h3_cell ?? null} /></Step>
                   <Step {...S("action", 4)}><DispatchQueues city={active} /></Step>
                   <Step {...S("action", 5)}><InterventionsPanel city={active} /></Step>

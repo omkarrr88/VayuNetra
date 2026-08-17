@@ -126,6 +126,20 @@ def _reliability(p: np.ndarray, event: np.ndarray, bins: int = 10) -> list[dict]
     return rows
 
 
+def _blend_weight(model_pred: np.ndarray, persistence: np.ndarray, y: np.ndarray) -> float:
+    """Weight w in [0,1] for w·model + (1−w)·persistence minimising RMSE on the calibration
+    rows. A grid keeps it transparent (and it is exactly what production applies)."""
+    m = np.isfinite(model_pred) & np.isfinite(persistence) & np.isfinite(y)
+    if m.sum() < 30:
+        return 1.0
+    best_w, best = 1.0, float("inf")
+    for w in np.linspace(0.0, 1.0, 21):
+        e = rmse(y[m], w * model_pred[m] + (1 - w) * persistence[m])
+        if e < best:
+            best, best_w = e, float(w)
+    return best_w
+
+
 # --- core ------------------------------------------------------------------------
 def _rolling_predict(X, y, meta, split_ts: pd.Timestamp, window_days: int | None, ablation_keep: list[str] | None):
     """Rolling-origin monthly refit — how the deployed system actually behaves.
@@ -142,6 +156,7 @@ def _rolling_predict(X, y, meta, split_ts: pd.Timestamp, window_days: int | None
     idx_te, pred, lo, hi, pred_nomet = [], [], [], [], []
     resid_pool = []
     pex = {band: [] for band in THRESHOLDS}
+    pblend, weights = [], []
     for (yy, mm) in months:
         m0 = pd.Timestamp(year=yy, month=mm, day=1, tz="UTC")
         m1 = (m0 + pd.offsets.MonthBegin(1))
@@ -158,9 +173,15 @@ def _rolling_predict(X, y, meta, split_ts: pd.Timestamp, window_days: int | None
         hi_v = np.asarray(hi_m.predict(Xte)) + q
         fit_n = int(len(Xtr) * 0.75)
         _, cal_pred = _fit_predict(Xtr.iloc[:fit_n], ytr.iloc[:fit_n], Xtr.iloc[fit_n:], QUANTILES["value"])
-        r = ytr.iloc[fit_n:].to_numpy(dtype=float) - np.asarray(cal_pred, dtype=float)
+        cal_pred = np.asarray(cal_pred, dtype=float)
+        ycal = ytr.iloc[fit_n:].to_numpy(dtype=float)
+        r = ycal - cal_pred
         r = np.sort(r[np.isfinite(r)])
         resid_pool.append(r)
+        # convex blend with persistence, weight chosen on the SAME calibration tail (no test leakage)
+        w = _blend_weight(cal_pred, Xtr.iloc[fit_n:]["pm25"].to_numpy(dtype=float), ycal)
+        weights.append(w)
+        pblend.append(w * np.asarray(p, dtype=float) + (1 - w) * Xte["pm25"].to_numpy(dtype=float))
         # per-origin calibrated exceedance probabilities (exactly what production serves)
         pp = np.asarray(p, dtype=float)
         for band, thr in THRESHOLDS.items():
@@ -184,6 +205,8 @@ def _rolling_predict(X, y, meta, split_ts: pd.Timestamp, window_days: int | None
         "pred": np.concatenate(pred), "lo": np.concatenate(lo), "hi": np.concatenate(hi),
         "resid": np.sort(np.concatenate(resid_pool)) if resid_pool else np.array([]),
         "p_exceed": {band: np.concatenate(v) for band, v in pex.items()},
+        "pred_blend": np.concatenate(pblend),
+        "blend_weights": weights,
         "pred_nomet": np.concatenate(pred_nomet) if pred_nomet else None,
         "n_train_last": int(len(X[ts < pd.Timestamp(year=months[-1][0], month=months[-1][1], day=1, tz="UTC")])),
         "origins": len(idx_te),
@@ -222,7 +245,16 @@ def evaluate_horizon(wide: pd.DataFrame, horizon_h: int, split_ts: pd.Timestamp,
         clim_fill = float(ytr.mean())
     climatology = Xte["hour"].map(clim_map).fillna(clim_fill).to_numpy(dtype=float)
     yv = yte.to_numpy(dtype=float)
-    preds = {"model": pred, "persistence": persistence, "seasonal_naive": seasonal, "climatology": climatology}
+    if rolling is not None:
+        pred_blend = rolling["pred_blend"]
+        blend_w = rolling["blend_weights"]
+    else:
+        fit_n = int(len(Xtr) * 0.75)
+        _, cal_pred_b = _fit_predict(Xtr.iloc[:fit_n], ytr.iloc[:fit_n], Xtr.iloc[fit_n:], QUANTILES["value"])
+        w_single = _blend_weight(np.asarray(cal_pred_b, dtype=float), Xtr.iloc[fit_n:]["pm25"].to_numpy(dtype=float), ytr.iloc[fit_n:].to_numpy(dtype=float))
+        pred_blend = w_single * pred + (1 - w_single) * persistence
+        blend_w = [w_single]
+    preds = {"model": pred, "model_blend": pred_blend, "persistence": persistence, "seasonal_naive": seasonal, "climatology": climatology}
 
     # --- shared support mask: every forecaster has a value -----------------------
     support = np.isfinite(yv)
@@ -237,6 +269,7 @@ def evaluate_horizon(wide: pd.DataFrame, horizon_h: int, split_ts: pd.Timestamp,
         "protocol": protocol, "window_days": window_days,
         "origins": rolling["origins"] if rolling else 1,
         "features": feature_cols,
+        "blend_weights": [round(float(w), 2) for w in blend_w],
         "regimes": {
             "full_test": _slice_metrics(yv, preds, support),
             "winter_nov_feb": _slice_metrics(yv, preds, winter),
@@ -248,13 +281,25 @@ def evaluate_horizon(wide: pd.DataFrame, horizon_h: int, split_ts: pd.Timestamp,
     for band, thr in THRESHOLDS.items():
         out["episodes"][f"observed_over_{int(thr)}"] = _slice_metrics(yv, preds, support & (yv > thr))
 
+    # --- exceedance probabilities (needed by both the probability alarms and calibration) ---
+    if rolling is not None:
+        rs = rolling["resid"]
+        p_ex_all = {b: np.where(np.isfinite(rolling["p_exceed"][b]), rolling["p_exceed"][b], 0.0) for b in THRESHOLDS}
+    else:
+        fit_n = int(len(Xtr) * 0.75)
+        _, cal_pred = _fit_predict(Xtr.iloc[:fit_n], ytr.iloc[:fit_n], Xtr.iloc[fit_n:], QUANTILES["value"])
+        resid = ytr.iloc[fit_n:].to_numpy(dtype=float) - np.asarray(cal_pred, dtype=float)
+        rs = np.sort(resid[np.isfinite(resid)])
+        p_ex_all = {b: (1.0 - np.searchsorted(rs, thr - pred, side="right") / len(rs)) if len(rs) >= 50 else np.zeros_like(pred)
+                    for b, thr in THRESHOLDS.items()}
+
     # --- early warning: alarm = forecast > T; onsets = clean now, over T at t+h ---
     for band, thr in THRESHOLDS.items():
         ev = support & (yv > thr)
         alarm_m = support & (pred > thr)
         alarm_p = support & (persistence > thr)
         onset = ev & (persistence <= thr)          # not over T at issue time, over T at t+h
-        out["early_warning"][band] = {
+        entry = {
             "threshold": thr,
             "events": int(ev.sum()),
             "model": _prf(alarm_m[support], ev[support]),
@@ -262,29 +307,25 @@ def evaluate_horizon(wide: pd.DataFrame, horizon_h: int, split_ts: pd.Timestamp,
             "onsets": int(onset.sum()),
             "onset_recall_model": _r(float((alarm_m & onset).sum() / onset.sum())) if onset.sum() else None,
             "onset_recall_persistence": _r(float((alarm_p & onset).sum() / onset.sum())) if onset.sum() else None,
+            # operating points on the calibrated probability: alarm = P(> band) ≥ τ
+            "probability_alarms": [],
         }
+        for tau in (0.2, 0.3, 0.4, 0.5):
+            alarm_q = support & (p_ex_all[band] >= tau)
+            entry["probability_alarms"].append({
+                "tau": tau,
+                **_prf(alarm_q[support], ev[support]),
+                "onset_recall": _r(float((alarm_q & onset).sum() / onset.sum())) if onset.sum() else None,
+            })
+        out["early_warning"][band] = entry
 
     # --- calibrated exceedance probability (split-conformal predictive distribution)
     # residuals from the calibration tail of TRAIN only (last 25%, chronological), applied
     # to the test-window median forecast: P(y > T) = mean(pred + r > T) over calibration r.
-    if rolling is not None:
-        rs = rolling["resid"]
-    else:
-        fit_n = int(len(Xtr) * 0.75)
-        _, cal_pred = _fit_predict(Xtr.iloc[:fit_n], ytr.iloc[:fit_n], Xtr.iloc[fit_n:], QUANTILES["value"])
-        resid = ytr.iloc[fit_n:].to_numpy(dtype=float) - np.asarray(cal_pred, dtype=float)
-        rs = np.sort(resid[np.isfinite(resid)])
     calib = {"n_calibration": int(len(rs))}
     if len(rs) >= 50:
         for band, thr in THRESHOLDS.items():
-            # P(pred + r > T) = 1 - F_r(T - pred); per-origin residuals under the rolling protocol
-            if rolling is not None:
-                p_exceed = rolling["p_exceed"][band]
-                if not np.isfinite(p_exceed).any():
-                    continue
-                p_exceed = np.where(np.isfinite(p_exceed), p_exceed, 0.0)
-            else:
-                p_exceed = 1.0 - np.searchsorted(rs, thr - pred, side="right") / len(rs)
+            p_exceed = p_ex_all[band]
             ev = (yv > thr)
             m = support
             base_rate = float(ev[m].mean())
@@ -359,15 +400,18 @@ def to_markdown(res: dict) -> str:
     L += [f"Window {w['start'][:10]} → {w['end'][:10]}, test from **{w['split'][:10]}** ({proto}; train strictly before each test origin). {res['stations_cells']} station cells, {res['rows_wide']:,} hourly rows. "
           f"Model: {res['model']}. Generated {res['generated_at'][:16]}Z by `python -m ml.eval.benchmark`.", ""]
     L += ["## RMSE (µg/m³) on the shared support mask", "",
-          "| regime | h | n | persistence | seasonal-naive | climatology | **model** | skill vs persistence |",
-          "|---|---:|---:|---:|---:|---:|---:|---:|"]
+          "| regime | h | n | persistence | seasonal-naive | climatology | **model** | skill vs persistence | model+persistence blend | blend skill |",
+          "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for h in res["horizons"]:
         if "regimes" not in h:
             continue
         for reg, m in h["regimes"].items():
             if m.get("n"):
                 L.append(f"| {reg} | {h['horizon_h']} | {m['n']:,} | {m['rmse_persistence']} | {m['rmse_seasonal_naive']} | "
-                         f"{m['rmse_climatology']} | **{m['rmse_model']}** | {_pct(m['skill_model_vs_persistence'])} |")
+                         f"{m['rmse_climatology']} | **{m['rmse_model']}** | {_pct(m['skill_model_vs_persistence'])} | "
+                         f"{m.get('rmse_model_blend', '–')} | {_pct(m.get('skill_model_blend_vs_persistence'))} |")
+    L += ["", "Blend weights (w on model, chosen per training origin on its calibration tail): " +
+          "; ".join(f"+{h['horizon_h']}h {h.get('blend_weights')}" for h in res["horizons"] if h.get("blend_weights"))]
     L += ["", "## High-pollution hours only (observed PM2.5 above band)", "",
           "| band | h | n | persistence | seasonal-naive | **model** | skill vs persistence |", "|---|---:|---:|---:|---:|---:|---:|"]
     for h in res["horizons"]:
@@ -375,6 +419,12 @@ def to_markdown(res: dict) -> str:
             if m.get("n"):
                 L.append(f"| {band} | {h['horizon_h']} | {m['n']:,} | {m['rmse_persistence']} | {m['rmse_seasonal_naive']} | "
                          f"**{m['rmse_model']}** | {_pct(m['skill_model_vs_persistence'])} |")
+    L += ["", "## Probability alarms — alarm = P(> band) ≥ τ (operating points on the calibrated probability)", "",
+          "| band | h | τ | precision | recall | F1 | onset recall |", "|---|---:|---:|---:|---:|---:|---:|"]
+    for h in res["horizons"]:
+        for band, e in h.get("early_warning", {}).items():
+            for pa in e.get("probability_alarms", []):
+                L.append(f"| {band} | {h['horizon_h']} | {pa['tau']} | {pa['precision']} | {pa['recall']} | {pa['f1']} | {pa['onset_recall']} |")
     L += ["", "## Early warning — alarm = forecast above band", "",
           "| band | h | events | model P/R/F1 | persistence P/R/F1 | onsets | onset recall model | onset recall persistence |",
           "|---|---:|---:|---|---|---:|---:|---:|"]

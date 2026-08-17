@@ -707,6 +707,45 @@ def enforcement_update_status(rec_id: int, body: StatusBody, db=Depends(get_db))
     return ok({"rec_id": rec_id, "status": body.status})
 
 
+def _interventions_data(city: str) -> dict:
+    """Before/after effect tracking for dispatched recs (shared by /interventions and the brief)."""
+    from core.interventions import effect_summary, mean
+
+    sdb = _db()
+    tracked = (sdb.table("intervention_tracking").select("*")
+               .eq("city_id", city).order("dispatched_at", desc=True)
+               .limit(20).execute().data or [])
+    if not tracked:
+        return {"city_id": city, "tracked": [],
+                "note": "No real-world intervention dispatched yet — tracking arms automatically at first dispatch."}
+
+    def city_mean(since: str, until: str | None = None) -> float | None:
+        q = (sdb.table("measurements").select("value").eq("city_id", city)
+             .eq("variable", "pm25").gte("ts", since).limit(5000))
+        if until:
+            q = q.lte("ts", until)
+        return mean([r.get("value") for r in (q.execute().data or [])])
+
+    out = []
+    for t in tracked:
+        cell_rows = (sdb.table("measurements").select("value")
+                     .eq("city_id", city).eq("variable", "pm25")
+                     .eq("h3_cell", t["h3_cell"]).gte("ts", t["dispatched_at"])
+                     .limit(2000).execute().data or [])
+        before7 = (datetime.fromisoformat(str(t["dispatched_at"]).replace("Z", "+00:00"))
+                   - timedelta(days=7)).isoformat()
+        summary = effect_summary(
+            baseline_pm25=t.get("baseline_pm25"),
+            cell_after=mean([r.get("value") for r in cell_rows]),
+            city_before=city_mean(before7, t["dispatched_at"]),
+            city_after=city_mean(t["dispatched_at"]),
+            dispatched_at=t["dispatched_at"],
+        )
+        out.append({"rec_id": t["rec_id"], "h3_cell": t["h3_cell"],
+                    "dispatched_at": t["dispatched_at"], **summary})
+    return {"city_id": city, "tracked": out}
+
+
 @app.get("/interventions", tags=["enforcement"])
 def interventions(city: str = Query("delhi", description="City ID")) -> dict:
     """Before/after effect tracking for dispatched enforcement recs.
@@ -719,41 +758,7 @@ def interventions(city: str = Query("delhi", description="City ID")) -> dict:
         return ok({"city_id": city, "tracked": [],
                    "note": "No real-world intervention dispatched yet — tracking arms automatically at first dispatch."})
     try:
-        from core.interventions import effect_summary, mean
-
-        sdb = _db()
-        tracked = (sdb.table("intervention_tracking").select("*")
-                   .eq("city_id", city).order("dispatched_at", desc=True)
-                   .limit(20).execute().data or [])
-        if not tracked:
-            return ok({"city_id": city, "tracked": [],
-                       "note": "No real-world intervention dispatched yet — tracking arms automatically at first dispatch."})
-
-        def city_mean(since: str, until: str | None = None) -> float | None:
-            q = (sdb.table("measurements").select("value").eq("city_id", city)
-                 .eq("variable", "pm25").gte("ts", since).limit(5000))
-            if until:
-                q = q.lte("ts", until)
-            return mean([r.get("value") for r in (q.execute().data or [])])
-
-        out = []
-        for t in tracked:
-            cell_rows = (sdb.table("measurements").select("value")
-                         .eq("city_id", city).eq("variable", "pm25")
-                         .eq("h3_cell", t["h3_cell"]).gte("ts", t["dispatched_at"])
-                         .limit(2000).execute().data or [])
-            before7 = (datetime.fromisoformat(str(t["dispatched_at"]).replace("Z", "+00:00"))
-                       - timedelta(days=7)).isoformat()
-            summary = effect_summary(
-                baseline_pm25=t.get("baseline_pm25"),
-                cell_after=mean([r.get("value") for r in cell_rows]),
-                city_before=city_mean(before7, t["dispatched_at"]),
-                city_after=city_mean(t["dispatched_at"]),
-                dispatched_at=t["dispatched_at"],
-            )
-            out.append({"rec_id": t["rec_id"], "h3_cell": t["h3_cell"],
-                        "dispatched_at": t["dispatched_at"], **summary})
-        return ok({"city_id": city, "tracked": out})
+        return ok(_interventions_data(city))
     except Exception as e:  # noqa: BLE001
         return _server_error("interventions_failed", e, "Could not load intervention tracking.")
 
@@ -1462,6 +1467,107 @@ def exposure(city: str = Query(..., description="City ID"), db=Depends(get_db)) 
     res = compute_exposure(rows, pop_by_cell, float(pop.value))
     res.update({"city_id": city, "city_population": pop.value, "population_citation": pop.cite()})
     return ok(res)
+
+
+# ---------------------------------------------------------------------------
+# Officer morning brief — one page per city, from stored model output (LLM-free)
+# ---------------------------------------------------------------------------
+
+def _public_base() -> str:
+    return os.getenv("PUBLIC_API_BASE_URL", "").rstrip("/")
+
+
+def _brief_data(city: str) -> dict:
+    from agents.brief import build_brief
+    from core.cities import load_city
+
+    cfg = load_city(city)
+    if DEMO_MODE:
+        meas = fixture_rows("aqi_current", city) or []
+        fc = fixture_rows("forecast", city) or []
+        recs = fixture_rows("enforcement", city) or []
+        adv = fixture_rows("advisory", city) or []
+        inter: list[dict] = []
+        # aqi_current fixture rows carry pm25 as `value` under `ts`? normalise to measurements shape
+        meas = [{"h3_cell": r.get("h3_cell"), "ts": r.get("ts"), "value": r.get("pm25", r.get("value"))} for r in meas]
+    else:
+        sdb = _db()
+        since = (datetime.now(timezone.utc) - timedelta(hours=36)).isoformat()
+        # PostgREST caps a single response at 1,000 rows — page explicitly (36 h of a big
+        # station network is several thousand rows)
+        meas: list[dict] = []
+        start = 0
+        while True:
+            batch = (sdb.table("measurements").select("h3_cell,ts,value").eq("city_id", city)
+                     .eq("variable", "pm25").gte("ts", since).order("ts", desc=True)
+                     .range(start, start + 999).execute().data) or []
+            meas.extend(batch)
+            if len(batch) < 1000 or len(meas) >= 20000:
+                break
+            start += 1000
+        fc = (sdb.table("forecasts").select("h3_cell,horizon_h,value,p_over_120,p_over_250")
+              .eq("city_id", city).execute().data) or []
+        recs = (sdb.table("enforcement_recs").select("id,h3_cell,priority_score,contribution,pop_exposed,rationale,status")
+                .eq("city_id", city).order("priority_score", desc=True).limit(50).execute().data) or []
+        adv = (sdb.table("advisories").select("ward_id,risk_tier,language").eq("city_id", city).limit(500).execute().data) or []
+        try:
+            inter = _interventions_data(city).get("tracked", [])
+        except Exception:  # noqa: BLE001 — the brief must still render
+            inter = []
+    base = _public_base()
+    return build_brief(
+        city, cfg.get("name", city.title()),
+        measurements=meas, forecasts=fc, recs=recs, interventions=inter, advisories=adv,
+        notice_url=(lambda rid: f"{base}/enforcement/{rid}/notice.pdf") if base else None,
+    )
+
+
+@app.get("/brief", tags=["enforcement"])
+def brief(city: str = Query(..., description="City ID")) -> dict:
+    """Officer morning brief as JSON: air now vs yesterday, cells about to cross Very Poor
+    (calibrated P ≥ 0.3), top 3 actions with notice links, yesterday's measured outcomes,
+    advisory summary. Every line comes from stored rows; nothing from a language model."""
+    try:
+        return ok(_brief_data(city))
+    except Exception as e:  # noqa: BLE001
+        return _server_error("brief_failed", e, "Could not build the morning brief.")
+
+
+@app.get("/brief.pdf", tags=["enforcement"])
+def brief_pdf(city: str = Query(..., description="City ID")) -> Response:
+    """The same brief as a one-page PDF (same renderer as the enforcement notice)."""
+    from agents.brief import render_brief_text
+    from agents.notice_pdf import notice_pdf_bytes
+
+    b = _brief_data(city)
+    text = render_brief_text(b, console_url=os.getenv("PUBLIC_WEB_URL"))
+    pdf = notice_pdf_bytes(text, subtitle="Urban Air Quality Intelligence - Officer Morning Brief",
+                           tag=f"BRIEF · {b['generated_at'][:10]}", watermark=None)
+    return Response(content=pdf, media_type="application/pdf",
+                    headers={"Content-Disposition": f'attachment; filename="brief_{city}_{b["generated_at"][:10]}.pdf"'})
+
+
+class BriefSendBody(BaseModel):
+    city: str = _CITY
+
+
+@app.post("/brief/send", tags=["enforcement"])
+def brief_send(body: BriefSendBody, db=Depends(get_db)) -> dict:
+    """Push today's brief to the city's Telegram subscribers (real send; rate-limited)."""
+    from agents.brief import render_brief_text
+
+    if not _status_rate_ok(limit=10, window_s=600):
+        raise HTTPException(status_code=429, detail="brief already sent recently — slow down")
+    b = _brief_data(body.city)
+    text = render_brief_text(b, console_url=os.getenv("PUBLIC_WEB_URL"))
+    if DEMO_MODE or not os.getenv("TELEGRAM_BOT_TOKEN"):
+        return ok({"status": "skipped", "detail": "Telegram not configured (or DEMO_MODE)", "chars": len(text)})
+    try:
+        from channels.telegram import broadcast_telegram_text
+        r = asyncio.run(broadcast_telegram_text(body.city, text, _db()))
+        return ok(r)
+    except Exception as e:  # noqa: BLE001
+        return _server_error("brief_send_failed", e, "Telegram send failed")
 
 
 # ---------------------------------------------------------------------------

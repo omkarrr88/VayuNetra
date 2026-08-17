@@ -40,6 +40,9 @@
 | POST | `/optimize` | best intervention bundle under budget → top-3 (E5, **deferred stub**) | officer+ |
 | POST | `/admin/cities` | onboard a city via config (scalability demo) | admin |
 | GET | `/metrics/benchmark?city&full` | temporal-split forecast benchmark artifact (skill, onset recall, calibration) | all |
+| GET | `/brief?city` · `/brief.pdf?city` | officer morning brief (JSON / one-page PDF): air now vs yesterday, onset cells (P ≥ 0.3), top actions, yesterday's outcomes | all |
+| POST | `/brief/send` | push the brief to the city's Telegram subscribers (rate-limited) | all (demo) |
+| POST | `/enforcement/{id}/status` | approve / dispatch / dismiss (server-side write, rate-limited); dispatch arms before/after tracking | all (demo) |
 | GET | `/exposure?city` | expected people in Very Poor / Severe air at +24/48/72 h (calibrated, population-weighted) | all |
 | WS | `/live` | push attribution/forecast/alert updates | all |
 

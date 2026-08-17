@@ -143,6 +143,16 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           LLM_PROVIDER: "gemini"
         run: python scripts/refresh_advisories.py || true
+      - name: Officer morning brief → Telegram subscribers (skips cleanly without a bot token)
+        env:
+          DEMO_MODE: "false"
+          WARM_ON_START: "0"
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          PUBLIC_API_BASE_URL: ${{ secrets.PUBLIC_API_BASE_URL }}
+          PUBLIC_WEB_URL: ${{ secrets.PUBLIC_WEB_URL }}
+        run: python scripts/send_morning_brief.py || true
       - name: Retention — dedup weather rows + prune beyond 90 days (free-tier headroom)
         env:
           DEMO_MODE: "false"

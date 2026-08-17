@@ -24,6 +24,13 @@ test("1 · enforcement: worklist → dossier → notice PDF → dispatch → out
   await openConsole(page, "action");
   const rail = page.locator("[data-rail]");
   await expect(rail.getByText("Enforcement Worklist")).toBeVisible();
+  // step 1: the morning brief renders from stored rows and downloads as a PDF
+  const briefCard = rail.locator("[data-step='1']");
+  await expect(briefCard.getByText("Morning brief")).toBeVisible({ timeout: 30_000 });
+  await expect(briefCard.getByText(/Top actions today/i)).toBeVisible();
+  const briefDl = page.waitForEvent("download", { timeout: 60_000 });
+  await briefCard.getByRole("button", { name: "PDF" }).click();
+  expect((await briefDl).suggestedFilename()).toMatch(/brief_delhi\.pdf/);
   // step chips exist and jump
   await rail.getByRole("button", { name: /5\s*Track outcomes/ }).click();
   await expect(rail.getByText("Intervention tracking")).toBeVisible();
