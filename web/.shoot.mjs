@@ -10,7 +10,7 @@ for (const tag of vps) {
   const vp = VP[tag];
   const ctx = await browser.newContext({ viewport: {width: vp.w, height: vp.h}, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
-  await page.addInitScript(() => { localStorage.setItem("vn_tour_done","1"); localStorage.setItem("vayunetra.tour.v2","done"); localStorage.setItem("vayunetra-tour-seen","1"); });
+  await page.addInitScript(() => { localStorage.setItem("vn_tour_done","1"); localStorage.setItem("vayunetra.tour.v2","done"); localStorage.setItem("vayunetra-tour-v1","done"); });
   for (const s of only) {
     await page.goto(`${base}/console?city=delhi&section=${s}`, { waitUntil: "networkidle", timeout: 90000 }).catch(()=>{});
     await page.waitForTimeout(7000);

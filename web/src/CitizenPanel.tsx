@@ -52,9 +52,13 @@ export default function CitizenPanel({ city, languages, center }: { city: string
     api<CleanZones>(`/clean-zones?city=${city}&top=4`).then(setCleanZones).catch(() => setCleanZones({ zones: [] }));
   }, [city]);
 
+  // Default to the city's first showcase language (Hindi in Delhi, Marathi in Mumbai…) —
+  // the city config arrives after first paint, so re-derive when the choices change.
+  const choicesKey = choices.join(",");
   useEffect(() => {
-    if (!choices.includes(lang)) setLang(choices[0] ?? "en");
-  }, [choices, lang]);
+    setLang(choices[0] ?? "en");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [choicesKey, city]);
 
   useEffect(() => {
     setRows(null);

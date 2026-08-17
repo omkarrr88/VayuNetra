@@ -3,7 +3,7 @@
 // resolved offline from the shipped boundary polygons — no backend changes.
 import { useEffect, useState } from "react";
 import { api } from "./api";
-import { Panel } from "./ui";
+import { EmptyState, Panel } from "./ui";
 import { placeForCell } from "./placeName";
 
 type Rec = { id: number; h3_cell?: string; status?: string; priority_score?: number };
@@ -44,7 +44,20 @@ export default function DispatchQueues({ city }: { city: string }) {
     };
   }, [city]);
 
-  if (!queues || queues.length === 0) return null;
+  if (queues === null) {
+    return (
+      <Panel title="Ward dispatch queues">
+        <div className="h-10 animate-pulse rounded-md bg-slate-100" />
+      </Panel>
+    );
+  }
+  if (queues.length === 0) {
+    return (
+      <Panel title="Ward dispatch queues" tag="empty">
+        <EmptyState message="Nothing dispatched yet. Approve or dispatch a worklist item above and it lands in its ward's field queue here." />
+      </Panel>
+    );
+  }
 
   return (
     <Panel title="Ward dispatch queues" tag={`${queues.reduce((a, q) => a + q.count, 0)} queued`}>

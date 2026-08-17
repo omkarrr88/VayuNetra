@@ -1,0 +1,13 @@
+import { chromium } from "playwright";
+const b = await chromium.launch(); const p = await b.newPage({viewport:{width:1366,height:768}});
+await p.addInitScript(() => localStorage.setItem("vayunetra-tour-v1","done"));
+await p.goto("http://localhost:5173/console?city=delhi&section=citizen", {waitUntil:"networkidle"});
+await p.waitForTimeout(4000);
+const sel = p.locator("[data-rail] select").first();
+console.log("options:", await sel.locator("option").allTextContents(), "value:", await sel.inputValue());
+await sel.selectOption({index:1});
+await p.waitForTimeout(6000);
+console.log("value now:", await sel.inputValue());
+const txt = await p.locator("[data-rail]").innerText();
+console.log(txt.slice(0,900));
+await b.close();
