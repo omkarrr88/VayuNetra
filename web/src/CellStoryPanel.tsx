@@ -212,12 +212,12 @@ export default function CellStoryPanel({
                   </div>
                   {typeof r.p_over_120 === "number" && (
                     <div
-                      className={`mt-0.5 rounded px-1 text-[10px] font-semibold ${
+                      className={`mt-0.5 whitespace-nowrap rounded px-1 text-[9.5px] font-semibold ${
                         (r.p_over_250 ?? 0) >= 0.5 ? "bg-rose-100 text-rose-800" : r.p_over_120 >= 0.5 ? "bg-orange-100 text-orange-800" : "bg-slate-100 text-slate-500"
                       }`}
                       title="Calibrated exceedance probability — split-conformal on held-out residuals, not a threshold on the point forecast"
                     >
-                      {(r.p_over_250 ?? 0) >= 0.5 ? `${Math.round((r.p_over_250 ?? 0) * 100)}% Severe` : `${Math.round(r.p_over_120 * 100)}% Very Poor+`}
+                      {(r.p_over_250 ?? 0) >= 0.5 ? `${Math.round((r.p_over_250 ?? 0) * 100)}% Severe` : `${Math.round(r.p_over_120 * 100)}% Very Poor`}
                     </div>
                   )}
                 </div>

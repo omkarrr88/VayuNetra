@@ -46,7 +46,7 @@ export default function TrendPanel({
   if (t === "err") return null;
   const series = t ? t.series : [];
   const verdict = t ? t.verdict : null;
-  const maxY = Math.max(60, ...series.map((p) => p.pm25)) * 1.1;
+  const maxY = Math.ceil((Math.max(60, ...series.map((p) => p.pm25)) * 1.1) / 10) * 10; // round so ticks never print float noise
 
   return (
     <div className={compact ? "" : "rounded-md border border-slate-200 bg-white p-2"}>
@@ -104,7 +104,7 @@ export default function TrendPanel({
                   interval="preserveStartEnd"
                   minTickGap={28}
                 />
-                <YAxis domain={[0, maxY]} tick={{ fontSize: 9, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+                <YAxis domain={[0, maxY]} tick={{ fontSize: 9, fill: "#94a3b8" }} tickFormatter={(v: number) => String(Math.round(v))} width={30} axisLine={false} tickLine={false} />
                 <Tooltip
                   formatter={(v) => [`${v} µg/m³`, "PM2.5 daily mean"]}
                   labelFormatter={(d) => String(d)}

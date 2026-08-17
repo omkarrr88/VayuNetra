@@ -50,7 +50,7 @@ test("2 · map: a cell story opens with blame, forecast probabilities and a shar
   await expect(page.getByText(/Why —/).first()).toBeVisible();
   await expect(page.getByText(/Where it's heading/).first()).toBeVisible();
   // calibrated exceedance chip renders once forecasts carry probabilities
-  if (LIVE) await expect(page.getByText(/% (Very Poor\+|Severe)/).first()).toBeVisible({ timeout: 30_000 });
+  if (LIVE) await expect(page.getByText(/% (Very Poor|Severe)/).first()).toBeVisible({ timeout: 30_000 });
   // share card produces a PNG (download fallback in headless)
   const dl = page.waitForEvent("download", { timeout: 30_000 }).catch(() => null);
   await page.getByRole("button", { name: /share this place/i }).first().click();

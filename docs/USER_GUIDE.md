@@ -63,7 +63,7 @@ The public front door — no login, loads fast (the heavy map code only loads at
 |---|---|
 | Logo + "VayuNetra" | Back to the landing page |
 | **City selector** (dropdown) | Switch between any of the 10 cities (Delhi · Bengaluru · Mumbai · Hyderabad · Chennai · Kolkata · Pune · Ahmedabad · Jaipur · Lucknow). *Everything* — map, panels, forecasts, worklists — follows the selected city. Your choice is remembered (localStorage). |
-| Section title + hint | Shows where you are, e.g. "Enforcement — Ranked, evidence-backed actions for officers" |
+| Section name | Where you are (the full explanation lives in the section's spine — see 4.5) |
 | **Present** (or the `P` key) | Presentation mode — type scales up ~18% for a projector; layers card collapses to its chip. Persists across reload. |
 | **? (Help)** | Replays the guided tour |
 | GitHub icon | Repo link |
@@ -72,7 +72,7 @@ The public front door — no login, loads fast (the heavy map code only loads at
 If the backend is asleep (Render free tier cold start), an amber banner appears: *"backend waking up — showing bundled demo snapshot"* with **retry** and dismiss. It clears itself the moment any API call succeeds.
 
 ### 4.2 Guided tour
-First visit shows a 4-step spotlight tour: ① the city switcher ② the map ("every hexagon is ~1 km² — click one") ③ the Enforcement panel ④ the sidebar. **Esc**, backdrop click, or **Skip** ends it; it never auto-shows again (replay via the ? button).
+First visit shows a 5-step spotlight tour: ① the city switcher ② the map ("every hexagon is ~1 km² — click one") ③ the section spine (verb, one sentence, numbered path) ④ the Enforcement panel ⑤ the sidebar groups and keyboard shortcuts. **Esc**, backdrop click, or **Skip** ends it; it never auto-shows again (replay via the ? button).
 
 ### 4.3 Status strip (top-left of the map)
 - **AQI card:** worst-cell AQI + category + PM2.5 + data freshness; pulsing green dot = live WebSocket connected.
@@ -82,24 +82,29 @@ First visit shows a 4-step spotlight tour: ① the city switcher ② the map ("e
   - **Dust×Traffic · N cells** — cells where construction dust AND traffic are both ≥25% of blame (traffic resuspends dust; these corridors escalate fastest).
 - **Last pipeline run card:** wall-clock of the last full multi-agent run (e.g. **0.9s**), with the "signal→action < 5 min ✓" badge.
 
-### 4.4 Navigation — 7 sections
-Desktop: navy left sidebar. Mobile: same 7 sections as a bottom tab bar; the map is a 42vh block and panels stack below it.
+### 4.4 Navigation — 7 sections in 3 groups
+Desktop: navy left sidebar, grouped by the question each section answers; the number beside each is its keyboard shortcut. Below 1280 px the rail collapses to icons (hover for the name). Mobile: the same 7 sections as a bottom tab bar; the map is a 42vh block and panels stack below it.
 
-| Section | Hint shown in-app |
-|---|---|
-| **Enforcement** | Ranked, evidence-backed actions for officers |
-| **Forecast** | 72-hour PM2.5 outlook with uncertainty |
-| **Advisories** | Citizen alerts in 4 languages + clean-air zones |
-| **Cities** | 10 Indian cities side by side |
-| **Simulator** | What if we banned waste burning? Run it |
-| **Impact** | Health burden, ₹ saved, fairness audit |
-| **Pipeline** | Watch the 6 AI agents run live |
+| Group | Section | Verb | One-sentence purpose (shown in the spine) |
+|---|---|---|---|
+| **Operate** | **Enforcement** (1) | Act | Where to send an inspector today, with the evidence to back it — from the worst places on the map to a signed notice and a tracked outcome |
+| | **Forecast** (2) | Anticipate | What the air will do in the next 72 hours, how much to trust that, who it will affect — and what happened before |
+| | **Advisories** (3) | Inform | Tell residents what to do, in their language, on the channel they use — and let them report smoke back |
+| **Understand** | **Cities** (4) | Compare | Ten cities on one scoreboard: who is worse, what drives it, which playbook worked elsewhere |
+| | **Impact** (6) | Fund | The funding case: annual burden, what NCAP would avert, where the money should go, whether the system is fair |
+| **Explore** | **Simulator** (5) | Decide | Run an intervention on the model before spending money |
+| | **Pipeline** (7) | Trust | The six AI agents, run live, every step traced |
+
+Keys: **1–7** sections · **[ ]** previous/next city · **P** presentation mode.
+
+### 4.5 The section spine — how anyone knows what to do
+Every section's right-hand rail starts with a sticky card: the **verb** (Act, Anticipate, Inform…), the section name, **one honest sentence** on what it is for, and a row of **numbered steps** — the path an officer takes through it (Enforcement: 1 Worst places now → 2 Ranked worklist → 3 Evidence & notice → 4 Dispatch by ward → 5 Track outcomes). Click a number to jump; the cards below carry the **same numbers** in a blue badge, and the strip highlights the step in view as you scroll. Every numbered card has a **?** — a plain-language popover saying *what* the card shows, *where the numbers come from* and *what to do with it*. This is the same information the speaker notes carry, so a judge exploring alone reads the same story a presenter tells.
 
 ---
 
 ## 5. The map
 
-### 5.1 Three view modes (MAP LAYERS card, bottom-right)
+### 5.1 Three view modes (the **Layers** chip, top-right of the map — click to expand)
 | Mode | What the hexagons show |
 |---|---|
 | **Sources** (default) | Who is to blame — each cell filled by its dominant source's colour (traffic red · construction dust yellow · industrial purple · biomass burning orange · transported blue · other gray), opacity by dominance. Hover = top-3 shares + SHAP drivers. |
@@ -132,14 +137,14 @@ The heart of the console. Opens as a left drawer (desktop) / inline card (mobile
 ## 6. The seven sections, in depth
 
 ### 6.1 Enforcement (the officer loop)
-- **Worklist:** up to 10 ranked recommendations. Filters: **All / Construction / Industrial / Waste** chips + free-text search. If a cell is focused, sorting switches to *nearest first* (badge: "nearest to selected cell first"; cards gain a "~N km" or "📍 this cell" chip). Multiple identical detections in one cell collapse into one card with **"+N similar sites here"** — one inspection covers the cluster.
+- **Worklist (step 2):** up to 10 ranked recommendations, each titled by **source type · place** ("Construction dust · Punjabi Bagh") with its priority score and evidence rubric as meta. Filters: **All / Construction / Industrial / Waste** chips + free-text search. If a cell is focused, sorting switches to *nearest first* (badge: "nearest to selected cell first"; cards gain a "~N km" or "📍 this cell" chip). Multiple identical detections in one cell collapse into one card with **"+N similar sites here"** — one inspection covers the cluster.
 - **Each card:** priority score, officer-rubric score (…/10), rationale (what the source is, its % contribution, residents exposed, what to inspect, regulatory basis).
 - **"Evidence dossier"** expands in place: the **Sentinel-2 satellite patch** of the site (with detection confidence) and up to 3 deduplicated **regulatory citations** retrieved by RAG from the NCAP/GRAP/CPCB/Air-Act corpus, each with a match score.
-- **"Notice PDF"** downloads a draft enforcement notice: addressee block, cited provisions, 24-hour IST deadline, the satellite image, a **"Projected impact of compliance"** bar chart (forecast PM2.5 with vs without this source's share, at +24/48/72h — labelled a *screening estimate*), and an authorisation block. It is stamped **"DRAFT — pending officer authorisation"**; the system never auto-sends.
+- **"Notice PDF"** (step 3) downloads a draft enforcement notice: addressee block, cited provisions, 24-hour IST deadline, the satellite image, a **"Projected impact of compliance"** bar chart (forecast PM2.5 with vs without this source's share, at +24/48/72h — labelled a *screening estimate*), an authorisation block naming the issuing authority, and a **PROVENANCE** section (every figure read from structured model output by deterministic code; regulatory text retrieved verbatim; no number from a language model). It is stamped **"DRAFT — pending officer authorisation"**; the system never auto-sends.
 - **Status flow:** proposed → approved → dispatched (or dismissed) via the API. **Dispatching arms intervention tracking** — the cell's 7-day PM2.5 baseline is frozen and a before/after window opens.
-- **Intervention tracking card:** shows each dispatched rec's measured effect as *cell delta minus city-wide drift* (marked "provisional" for the first 7 days) — honest impact measurement, not a victory lap.
+- **Intervention tracking card (step 5):** shows each dispatched rec's measured effect as *cell delta minus city-wide drift* (marked "provisional" for the first 7 days) — honest impact measurement, not a victory lap.
 - **City Intel card:** registry-source count, traffic index, sensitive-zone count, hospitals/schools line, top registered sources.
-- **Ward dispatch queues:** approved and dispatched recommendations auto-group into per-ward field queues (the grid-supervision pattern) — wards resolved offline from the shipped boundary polygons.
+- **Ward dispatch queues (step 4):** approved and dispatched recommendations auto-group into per-ward field queues (the grid-supervision pattern) — wards resolved offline from the shipped boundary polygons. Before anything is dispatched the card says so plainly instead of disappearing.
 - **Export as NCAP action-plan evidence (PRANA-ready CSV):** on the intervention-tracking card — every dispatched intervention with its measured effect, mapped to the NCAP spending head the city reports against and stamped with the city's regulatory authority. VayuNetra feeds the official portal rather than competing with it.
 
 ### 6.2 Forecast
@@ -152,11 +157,12 @@ The heart of the console. Opens as a left drawer (desktop) / inline card (mobile
 - **City Statistics card:** **Who is in the forecast?** (expected people in Very Poor / Severe air at +24/48/72 h = Σ cell population × calibrated P(> band); GPW gridded population where sampled, cited city population otherwise; city-scaled with the assumption printed; person-hours over the outlook; exposure, not mortality — `docs/HEALTH_IMPACT.md`), then **City — past air** (daily PM2.5 for the whole city, 30 d / 90 d / 1 y with verdict and spike-day markers — Delhi's 1-year view shows the real winter smog season), the last-48h hourly PM2.5 area chart (real station readings), the live **source-mix donut** (mean attribution across live cells), and the **"Who breathes what"** stacked AQI-band bar (share of ~1 km cells in each CPCB band).
 
 ### 6.3 Advisories (the citizen loop)
-- **Language dropdown:** English · Hindi · Kannada · Marathi — full native-script text, generated by deterministic templates (**deliberately LLM-free**: templates cannot hallucinate medical advice; the health facts are locked).
+Four numbered cards: **1 Citizen Advisory** · **2 Send it** · **3 Cleanest air right now** (with corridor screening) · **4 Citizen reports**.
+- **Language dropdown:** the city's showcase language first (Hindi in Delhi, Marathi in Mumbai/Pune, Kannada in Bengaluru), then English — full native-script text, generated by deterministic templates (**deliberately LLM-free**: templates cannot hallucinate medical advice; the health facts are locked).
 - **Channel tabs** show how the *same* advisory renders on each channel:
   - **App** — advisory cards per ward with risk-tier badges.
   - **Telegram** — a mock chat + QR code; the real bot (@aqivayu_bot) is live and two-way: `/start` → pick a city → auto-receive advisories.
-  - **IVR call** — the spoken script, plus call-in: the line answers with "press 1 Delhi · 2 Bengaluru · 3 Mumbai" and reads that city's latest advisory. (Calls read the English advisory today; in-language voice is roadmap.)
+  - **IVR call** — the spoken script, plus call-in: the line answers with a keypad menu of all ten cities (1 Delhi · 2 Bengaluru · 3 Mumbai · 4–9, 0 for the rest) and reads that city's latest advisory. (Calls read the English advisory today; in-language voice is roadmap.)
   - **Big screen** — high-contrast public-display rendering.
 - **"Cleanest air right now":** the 4 lowest-PM2.5 ~1 km zones from the dense model field, each with a **Directions** link to Google Maps — explicitly labelled "a modeled guide, not a measurement".
 - **"Broadcast latest alert (Telegram + IVR)":** sends a *real* Telegram message and places a *real* phone call — with an are-you-sure confirmation step, and rate-limited server-side.
@@ -169,12 +175,14 @@ The heart of the console. Opens as a left drawer (desktop) / inline card (mobile
 - Powered by the Multi-City agent — cross-city comparative intelligence, not three copies of the same page.
 
 ### 6.5 Simulator (what-if + optimizer)
+Three numbered cards: **1 Choose an intervention** · **2 Result** (empty until you run — it says so) · **3 Best bundle for a budget**.
 - Pick an **intervention** (waste-burn ban · halt construction dust · odd-even traffic · industrial shutdown · GRAP Stage III package) and a horizon → **Run simulation**.
 - Returns ΔAQI (average and best cell), cells affected, confidence, and the cited impact cards: **people protected** (real GPW population), **health cost avoided (₹)**, **deaths averted**, **CO₂e co-benefit** — every figure carries its citation (WHO HRAPIE CRFs, India SRS, Andreae 2019 …); intervention magnitudes come from literature (Delhi odd-even ≈4–7%, CAQM GRAP schedules), not invented sliders.
 - **Honest-zero:** if the chosen source contributes ~0% today, the app says so ("Near-zero effect — honest result") instead of inventing an impact.
 - **Optimizer:** set an inspector-hour budget (5–60h slider) → **Rank packages** → ranked intervention bundles by impact per inspector-hour.
 
 ### 6.6 Impact (the funding case)
+Three numbered cards: **1 City ROI — the funding case** · **2 Where the funds should go** · **3 Fairness audit**.
 - **City ROI:** attributable deaths/yr, annual health burden (₹), and what a 30% NCAP reduction would avert — with the burden-vs-avertable bar chart, the narrative paragraph, and full citations (Chen & Hoek 2020 CRF, UN WUP population, IQAir annual mean). The ₹ figure is labelled order-of-magnitude, VSL caveat shown.
 - **Where the funds should go — attribution-weighted:** live source shares mapped to NCAP spending heads (e.g. "42% of PM2.5 is traffic → prioritise vehicular emission control") — the per-city answer to CREA's finding that NCAP cities put 67% of funds into road dust because allocation wasn't attribution-led.
 - **Fairness audit:** measured on every live recommendation — enforcement priority correlates with *pollution contribution* (dominant driver, by design) and with *population exposed* (deliberate, disclosed). Key guarantee: **no socio-economic inputs exist anywhere in the pipeline or schema** — the scorer sees only contribution, exposure, actionability, confidence.
