@@ -72,6 +72,27 @@ app.add_middleware(
 )
 
 
+@app.on_event("startup")
+def _warm_heavy_imports() -> None:
+    """Pre-import the heavy ML modules off the request path.
+
+    The first /coverage call pays ~20 s for `import torch` on a cold process — right at the
+    frontend's 25 s read timeout, which then shows the "backend waking up" banner even though
+    the backend is up. Importing in a daemon thread at startup makes the first real request
+    fast; if torch is not installed (lean deploy) this is a no-op.
+    """
+    import threading
+
+    def _load() -> None:
+        for mod in ("torch", "lightgbm"):
+            try:
+                __import__(mod)
+            except Exception:  # noqa: BLE001 — optional dependency
+                pass
+
+    threading.Thread(target=_load, name="warm-imports", daemon=True).start()
+
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -1240,34 +1261,53 @@ def comparison() -> dict:
         sdb = _db()
         cities = sdb.table("cities").select("city_id,name").execute().data or []
 
-        # latest pm25 per cell per city
-        meas = (
-            sdb.table("measurements").select("city_id,h3_cell,ts,value")
-            .eq("variable", "pm25").order("ts", desc=True).limit(8000).execute().data
-        ) or []
-        # dominant source per cell from attribution (highest-share category)
-        attr = sdb.table("attribution").select("city_id,h3_cell,source_category,share").execute().data or []
-        best: dict[tuple, float] = {}
-        dom_by_cell: dict[tuple, str] = {}
-        for r in attr:
-            k = (r["city_id"], r["h3_cell"])
-            s = float(r.get("share") or 0)
-            if s > best.get(k, -1.0):
-                best[k] = s
-                dom_by_cell[k] = r["source_category"]
-
-        seen: set[tuple] = set()
+        # Per city: latest PM2.5 per cell (a global newest-first slice would be swallowed by
+        # the big station networks and leave small cities with nothing) and the dominant
+        # source per cell from the most recent attribution window (PostgREST caps an
+        # unbounded select at 1,000 rows — never rely on it for "all rows").
         aqi_rows: list[dict] = []
-        for r in meas:
-            k = (r["city_id"], r["h3_cell"])
-            if k in seen:
-                continue
-            seen.add(k)
-            aqi_rows.append({
-                "city_id": r["city_id"],
-                "pm25": r["value"],
-                "dominant_source": dom_by_cell.get(k, "unknown"),
-            })
+
+        def _city_rows(cid: str) -> tuple[list[dict], list[dict]]:
+            m = (
+                sdb.table("measurements").select("h3_cell,ts,value")
+                .eq("city_id", cid).eq("variable", "pm25")
+                .order("ts", desc=True).limit(600).execute().data
+            ) or []
+            a = (
+                sdb.table("attribution").select("h3_cell,source_category,share,ts_window")
+                .eq("city_id", cid).order("ts_window", desc=True).limit(600).execute().data
+            ) or []
+            return m, a
+
+        # 10 cities × 2 reads: fetch concurrently so a cold cache answers in ~2 s, not 25 s
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=min(10, max(1, len(cities)))) as pool:
+            fetched = dict(zip([c["city_id"] for c in cities], pool.map(_city_rows, [c["city_id"] for c in cities])))
+
+        for c in cities:
+            cid = c["city_id"]
+            meas, attr = fetched.get(cid, ([], []))
+            best: dict[str, float] = {}
+            dom_by_cell: dict[str, str] = {}
+            for r in attr:
+                cell = r["h3_cell"]
+                if cell in best and best[cell] >= 0 and r.get("share") is None:
+                    continue
+                sh = float(r.get("share") or 0)
+                if sh > best.get(cell, -1.0):
+                    best[cell] = sh
+                    dom_by_cell[cell] = r["source_category"]
+            seen: set[str] = set()
+            for r in meas:
+                cell = r["h3_cell"]
+                if cell in seen or r.get("value") is None:
+                    continue
+                seen.add(cell)
+                aqi_rows.append({
+                    "city_id": cid,
+                    "pm25": r["value"],
+                    "dominant_source": dom_by_cell.get(cell, "unknown"),
+                })
 
         fc = sdb.table("forecasts").select("city_id,horizon_h,value").eq("horizon_h", 24).execute().data or []
         forecast_rows = [
