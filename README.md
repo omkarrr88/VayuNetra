@@ -48,7 +48,7 @@ corridors and FIRMS fire events.
 **Production snapshot (16 August 2026):** **10 cities** (Delhi · Bengaluru · Mumbai · Hyderabad · Chennai ·
 Kolkata · Pune · Ahmedabad · Jaipur · Lucknow) · 16,529 modeled ~1 km² cells · 647 registered +
 satellite-detected emission sources · 5,495 vulnerability zones · 454 RAG-cited enforcement
-recommendations · 717K deduplicated measurements · advisories in 4 languages.
+recommendations · 717K deduplicated measurements · advisories in 8 languages (city-specific scripts).
 
 ## Validation — real numbers, both baselines
 

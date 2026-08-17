@@ -52,7 +52,7 @@ const STEPS = [
   {
     icon: IC.megaphone,
     title: "Protect",
-    body: "Health advisories generated from the forecast and targeted at the most vulnerable zones — 11,000+ mapped hospitals, 7,700+ schools, elder-care homes and outdoor-work sites — in four languages over the web app, Telegram, IVR calls and public displays.",
+    body: "Health advisories generated from the forecast and targeted at the most vulnerable zones — 11,000+ mapped hospitals, 7,700+ schools, elder-care homes and outdoor-work sites — in eight Indian languages (Hindi, Kannada, Marathi, Tamil, Telugu, Bengali, Gujarati, English) over the web app, Telegram, IVR calls and public displays.",
   },
 ];
 
@@ -66,7 +66,7 @@ const FEATURES = [
   { icon: IC.shield, title: "Vulnerability-targeted advisories", body: "5,495 zones scored from real OSM hospitals, clinics, schools, elder-care and outdoor-work sites × population. Advisories escalate where forecast air is bad and sensitive people are." },
   { icon: IC.leaf, title: "Clean-air zones", body: "The flip side of the blame map: the cleanest ~1 km cells right now, computed from the dense coverage field, with one-tap directions." },
   { icon: IC.globe, title: "Multi-city, config-driven", body: "10 cities live today — Delhi, Bengaluru, Mumbai, Hyderabad, Chennai, Kolkata, Pune, Ahmedabad, Jaipur, Lucknow — with cross-city playbooks. Seven were onboarded from config in one week; every layer is city-agnostic." },
-  { icon: IC.megaphone, title: "Citizen channels", body: "English, Hindi, Kannada, Marathi over PWA, a Telegram bot judges can subscribe to live (/start), IVR voice calls and a public-display mode." },
+  { icon: IC.megaphone, title: "Citizen channels", body: "Eight languages in their own scripts — Hindi, Kannada, Marathi, Tamil, Telugu, Bengali, Gujarati, English — over PWA, a Telegram bot judges can subscribe to live (/start), IVR voice calls and a public-display mode." },
   { icon: IC.chip, title: "Visible multi-agent pipeline", body: "Six agents on one LangGraph with per-node latency stamps. A 'Run agents live' button replays the whole detect → decide → issue chain on stage." },
   { icon: IC.doc, title: "Honest by construction", body: "Attribution abstains without out-of-sample skill; intervals are calibrated; fairness is audited on live data; demo fixtures are labeled as fixtures. Nothing fabricated." },
 ];
@@ -175,7 +175,7 @@ export default function Landing() {
           India already measures its air — 900+ CAAQMS stations — yet a 2024 CAG audit found only 31% of
           monitored cities have any actionable response protocol. VayuNetra is that missing layer: it traces
           PM2.5 to its sources square-kilometre by square-kilometre, forecasts 72 hours ahead with calibrated
-          uncertainty, and turns both into cited enforcement notices and citizen alerts in four languages.
+          uncertainty, and turns both into cited enforcement notices and citizen alerts in eight languages.
           Live today across 10 Indian cities — from Delhi to Lucknow — built entirely on free public infrastructure.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-3">

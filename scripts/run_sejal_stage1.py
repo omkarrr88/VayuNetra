@@ -18,7 +18,7 @@ from connectors.mobility import build_mobility_rows
 from connectors.static_layers import build_static_layers, merge_all_cities
 from core.supa import client
 
-ALL_STAGE1_LANGS = ["en", "hi", "kn", "mr"]
+ALL_STAGE1_LANGS = ["en"]   # every city gets English; the rest come from its own config
 
 
 def _cities() -> list[dict]:

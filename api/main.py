@@ -834,7 +834,7 @@ def interventions_export(city: str = Query("delhi", description="City ID")) -> R
 def advisory(
     city: str = Query(..., description="City ID"),
     ward: Optional[str] = Query(None, description="Ward name/ID"),
-    lang: str = Query("en", description="Language code: en|hi|kn|mr"),
+    lang: str = Query("en", description="Language code: en|hi|kn|mr|ta|te|bn|gu"),
     db=Depends(get_db)
 ) -> dict:
     """Ward-level citizen health advisories in specified language."""

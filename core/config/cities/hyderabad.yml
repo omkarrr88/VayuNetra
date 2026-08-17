@@ -4,7 +4,7 @@ name: Hyderabad
 state: TG
 bbox: [78.20, 17.20, 78.70, 17.60]
 center: [78.47, 17.39]
-languages: [en, hi]
+languages: [te, en, hi]
 h3_res: 8
 # optional pin-list — ingestion discovers stations by bbox (see delhi.yml)
 caaqms_station_ids: []

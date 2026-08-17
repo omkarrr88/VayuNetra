@@ -32,7 +32,7 @@ export const SECTIONS: SectionDef[] = [
   {
     id: "citizen",
     label: "Advisories",
-    hint: "Citizen alerts in 4 languages + clean-air zones",
+    hint: "Citizen alerts in 8 languages + clean-air zones",
     icon: "M11 5 6 9H3v6h3l5 4V5Zm5.5 2.5a5 5 0 0 1 0 9M19 4a9 9 0 0 1 0 16",
   },
   {

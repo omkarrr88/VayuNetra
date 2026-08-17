@@ -14,8 +14,8 @@ type Advisory = {
   message: string;
 };
 
-const ALL_LANGS = ["en", "hi", "kn", "mr"];
-const LABELS: Record<string, string> = { en: "English", hi: "Hindi", kn: "Kannada", mr: "Marathi" };
+const ALL_LANGS = ["en", "hi", "kn", "mr", "ta", "te", "bn", "gu"];
+const LABELS: Record<string, string> = { en: "English", hi: "Hindi", kn: "Kannada", mr: "Marathi", ta: "Tamil", te: "Telugu", bn: "Bengali", gu: "Gujarati" };
 
 type BroadcastResult = {
   telegram?: { status: string; detail?: string; message_id?: number };

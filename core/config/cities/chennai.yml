@@ -4,7 +4,7 @@ name: Chennai
 state: TN
 bbox: [80.10, 12.85, 80.35, 13.25]
 center: [80.27, 13.08]
-languages: [en]
+languages: [ta, en]
 h3_res: 8
 # optional pin-list — ingestion discovers stations by bbox (see delhi.yml)
 caaqms_station_ids: []
