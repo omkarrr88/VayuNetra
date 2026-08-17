@@ -81,7 +81,7 @@ export default function ExposureCorridors({
     exposure != null && cityMean ? Math.round(((exposure - cityMean) / cityMean) * 100) : null;
 
   return (
-    <div className="mt-2 rounded-md border border-teal-100 bg-teal-50/50 p-2">
+    <div className="mt-2 rounded-md border border-teal-100 bg-teal-50/60 p-2">
       <div className="text-[11px] font-semibold uppercase tracking-wide text-teal-800">
         Corridor exposure screening
       </div>

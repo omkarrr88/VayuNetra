@@ -3,6 +3,7 @@ import { cellToLatLng } from "h3-js";
 import { api, downloadFile } from "./api";
 import { cleanRationale, prettyRule } from "./format";
 import { Panel } from "./ui";
+import { placeForCell } from "./placeName";
 
 type Rec = {
   id: number;
@@ -80,6 +81,13 @@ function recCategory(rationale: string): "construction" | "industrial" | "waste"
   return "other";
 }
 
+const CATEGORY_LABEL: Record<ReturnType<typeof recCategory>, string> = {
+  construction: "Construction dust",
+  industrial: "Industrial emissions",
+  waste: "Waste / biomass burning",
+  other: "Pollution source",
+};
+
 const CATEGORY_FILTERS = [
   { id: "all", label: "All" },
   { id: "construction", label: "Construction" },
@@ -142,6 +150,18 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
       : collapsed;
     return sorted.slice(0, 10); // keep the list scannable
   }, [rows, focusCell, filter, query]);
+
+  // Place names for the visible items — an officer thinks in wards, not H3 ids.
+  const [places, setPlaces] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let alive = true;
+    const cells = Array.from(new Set((ordered ?? []).map((r) => r.h3_cell).filter((c): c is string => !!c)));
+    Promise.all(cells.map((c) => placeForCell(city, c).then((p) => [c, p?.label ?? ""] as const).catch(() => [c, ""] as const)))
+      .then((pairs) => alive && setPlaces(Object.fromEntries(pairs.filter(([, l]) => l))));
+    return () => {
+      alive = false;
+    };
+  }, [ordered, city]);
 
   function toggleDossier(id: number) {
     if (open === id) {
@@ -213,7 +233,10 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
               }`}
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="font-medium">Priority {Math.round(r.priority_score * 100)}</span>
+                <span className="min-w-0 truncate font-semibold text-slate-800" title={r.h3_cell}>
+                  {CATEGORY_LABEL[recCategory(r.rationale)] ?? "Source"}
+                  {r.h3_cell && places[r.h3_cell] ? <span className="font-normal text-slate-500"> · {places[r.h3_cell]}</span> : null}
+                </span>
                 <span className="flex items-center gap-1.5 text-xs text-gray-500">
                   {focusCell && r.h3_cell === focusCell && (
                     <span className="rounded bg-blue-600 px-1 py-0.5 text-[11px] font-semibold text-white">📍 this cell</span>
@@ -221,7 +244,9 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
                   {focusCell && r.h3_cell !== focusCell && typeof r.km === "number" && (
                     <span className="text-[11px] text-gray-400">~{r.km < 1 ? "<1" : Math.round(r.km)} km</span>
                   )}
-                  rubric {r.rubric_score?.total ?? "--"}/10
+                  <span title="Priority = contribution × exposure × actionability × confidence">priority {Math.round(r.priority_score * 100)}</span>
+                  <span className="text-slate-300">·</span>
+                  <span title="Evidence rubric out of 10">rubric {r.rubric_score?.total ?? "--"}/10</span>
                 </span>
               </div>
               <div className="mt-1 text-xs leading-5 text-gray-700">{cleanRationale(r.rationale)}</div>

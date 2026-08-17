@@ -5,7 +5,7 @@ import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 
 import { api } from "./api";
 import { Citations, type Citation } from "./ImpactCards";
 import { inr, intfmt } from "./format";
-import { EmptyState, Panel } from "./ui";
+import { EmptyState, Panel, Step } from "./ui";
 
 type Roi = {
   city_id: string;
@@ -65,11 +65,9 @@ function FundGuidance({ city }: { city: string }) {
 
   if (!mix || mix.length === 0) return null;
   return (
-    <div className="mt-2 rounded-md border border-sky-100 bg-sky-50/60 p-2">
-      <div className="text-[11px] font-semibold uppercase tracking-wide text-sky-800">
-        Where the funds should go — attribution-weighted
-      </div>
-      <div className="mt-1 space-y-0.5 text-xs text-gray-700">
+    <Step n={2} label="Where funds should go" info={<p>Attribution-weighted guidance across NCAP spending heads: the city's live source mix maps each share to the fund head that addresses it. Context: NCAP cities spent 67 % of funds on road dust and under 1 % on industry (CREA, 2026) because allocation was not attribution-led.</p>}>
+    <Panel title="Where the funds should go" tag="attribution-weighted">
+      <div className="space-y-0.5 text-xs text-gray-700">
         {mix.map(([k, pct]) => (
           <div key={k}>
             <b>{Math.round(pct)}%</b> of PM2.5 is {k.replace(/_/g, " ")} → prioritise{" "}
@@ -81,7 +79,8 @@ function FundGuidance({ city }: { city: string }) {
         NCAP cities spent 67% of funds on road dust and &lt;1% on industry (CREA, 2026) — because
         allocation wasn't attribution-led. This is the per-city fix.
       </div>
-    </div>
+    </Panel>
+    </Step>
   );
 }
 
@@ -125,6 +124,7 @@ export default function RoiPanel({ city }: { city: string }) {
   ];
 
   return (
+    <>
     <Panel title="City ROI — the funding case">
       <div className="grid grid-cols-2 gap-2">
         <Big label="Attributable deaths / yr" value={intfmt(d.attributable_deaths_per_year)} tone="bad" />
@@ -161,8 +161,9 @@ export default function RoiPanel({ city }: { city: string }) {
         Annual mean {d.annual_pm25} µg/m³ vs WHO {d.who_guideline_pm25} µg/m³ · pop {intfmt(d.population)}
       </div>
       <div className="mt-2 rounded-md bg-slate-50 p-2 text-xs leading-snug text-gray-700">{d.narrative}</div>
-      <FundGuidance city={city} />
       <Citations items={d.citations ?? []} />
     </Panel>
+    <FundGuidance city={city} />
+    </>
   );
 }

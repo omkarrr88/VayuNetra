@@ -23,6 +23,9 @@ import TimeScrub, { type ScrubFrame } from "./TimeScrub";
 import { Sidebar, BottomNav, type Section } from "./Sidebar";
 import TopBar from "./TopBar";
 import Tour, { tourSeen } from "./Tour";
+import SectionHeader from "./console/SectionHeader";
+import { FLOWS } from "./console/flows";
+import { Step } from "./ui";
 
 type LngLat = [number, number];
 type GeoPoint = { coordinates: [number, number] };
@@ -41,6 +44,12 @@ function toLngLat(center: City["center"]): LngLat {
 }
 
 const CITY_STORE_KEY = "vayunetra-city";
+
+/** Step meta for <Step> from the section's flow definition (single source of truth). */
+function S(section: Section, n: number) {
+  const st = FLOWS[section].steps.find((x) => x.n === n)!;
+  return { n: st.n, label: st.label, info: st.info };
+}
 
 // Deep links: /console?city=…&section=…&cell=…&mode=…&layers=sources,plumes,wards,freight,fires
 // Every console state is a shareable URL — a bookmarked demo path, or a link
@@ -232,7 +241,7 @@ export default function App() {
   const center = toLngLat(city?.center);
 
   return (
-    <div className="flex h-full w-full flex-col bg-slate-100">
+    <div className="vn-console flex h-full w-full flex-col bg-[var(--vn-canvas)]">
       <TopBar cities={cities} active={active} onCity={setActive} section={section} onReplayTour={() => setTour(true)} present={present} onTogglePresent={() => setPresent((v) => !v)} />
 
       <div className="flex min-h-0 flex-1">
@@ -262,7 +271,7 @@ export default function App() {
             />
 
             {/* Live status — top-left so the section panel owns the right edge */}
-            <div className="absolute left-2 top-2 z-10 flex flex-wrap items-start gap-2 lg:left-4 lg:top-3 lg:max-w-[calc(100%-27.5rem)]">
+            <div className="absolute left-2 top-2 z-10 flex flex-wrap items-start gap-2 lg:left-4 lg:top-3 lg:max-w-[calc(100%-32rem)] 2xl:max-w-[calc(100%-36rem)]">
               <AqiHeader city={active} />
               <LatencyWidget city={active} />
             </div>
@@ -283,7 +292,7 @@ export default function App() {
 
             {/* Time scrub — bottom-centre of the map (desktop); switches the
                 map to the PM2.5 field while replaying so the change is visible */}
-            <div className="pointer-events-none absolute bottom-2 left-1/2 z-10 hidden -translate-x-1/2 lg:block lg:left-[calc(50%+2rem)]">
+            <div className="pointer-events-none absolute bottom-2 z-10 hidden -translate-x-1/2 lg:block lg:left-[calc((100%-26rem)/2)] 2xl:left-[calc((100%-30rem)/2)]">
               <TimeScrub
                 city={active}
                 denseCells={coverage?.cells ?? []}
@@ -296,7 +305,7 @@ export default function App() {
 
             {/* Map layers — bottom-right corner of the map, clear of the
                 cell-story drawer (left) and the section panel (right edge) */}
-            <div className="absolute bottom-2 left-2 z-10 lg:bottom-8 lg:left-auto lg:right-[26.5rem]">
+            <div className="absolute bottom-2 left-2 z-10 lg:bottom-auto lg:left-auto lg:right-[27.25rem] lg:top-3 2xl:right-[31.25rem]">
               <LayersControl
                 mode={mode}
                 onMode={setMode}
@@ -334,8 +343,10 @@ export default function App() {
           {/* Section content — right panel on desktop, stacked below map on mobile */}
           <div
             data-tour="panel"
-            className="vn-scroll relative z-10 space-y-3 p-3 lg:absolute lg:bottom-4 lg:right-3 lg:top-3 lg:w-[25rem] lg:overflow-y-auto lg:p-0 lg:pl-1"
+            data-rail
+            className="vn-scroll relative z-10 space-y-3 p-3 lg:absolute lg:bottom-3 lg:right-3 lg:top-3 lg:w-[26rem] lg:overflow-y-auto lg:p-0 lg:pl-1 2xl:w-[30rem]"
           >
+            <SectionHeader section={section} cityName={city?.name} />
             {/* Mobile keeps the cell story inline, above the section content */}
             {cell && (
               <div className="lg:hidden">
@@ -351,29 +362,29 @@ export default function App() {
             <div key={section} className="space-y-3 lg:vn-slide-in-right">
               {section === "action" && (
                 <>
-                  <EnforcementPanel city={active} focusCell={cell?.h3_cell ?? null} />
+                  <Step {...S("action", 2)}><EnforcementPanel city={active} focusCell={cell?.h3_cell ?? null} /></Step>
+                  <Step {...S("action", 4)}><DispatchQueues city={active} /></Step>
+                  <Step {...S("action", 5)}><InterventionsPanel city={active} /></Step>
                   <CityIntelPanel city={active} />
-                  <InterventionsPanel city={active} />
-                  <DispatchQueues city={active} />
                 </>
               )}
               {section === "forecast" && (
                 <>
-                  <ForecastPanel city={active} />
-                  <ValidationPanel city={active} />
-                  <CityStatsPanel city={active} cells={attrCells} coverageCells={coverage?.cells ?? []} />
+                  <Step {...S("forecast", 1)}><ForecastPanel city={active} /></Step>
+                  <Step {...S("forecast", 2)}><ValidationPanel city={active} /></Step>
+                  <Step {...S("forecast", 3)}><CityStatsPanel city={active} cells={attrCells} coverageCells={coverage?.cells ?? []} /></Step>
                 </>
               )}
-              {section === "citizen" && <CitizenPanel city={active} languages={city?.languages} center={center} />}
-              {section === "compare" && <ComparativePanel onSelectCity={setActive} />}
-              {section === "whatif" && <WhatIfPanel city={active} />}
+              {section === "citizen" && <Step {...S("citizen", 1)}><CitizenPanel city={active} languages={city?.languages} center={center} /></Step>}
+              {section === "compare" && <Step {...S("compare", 1)}><ComparativePanel onSelectCity={setActive} /></Step>}
+              {section === "whatif" && <Step {...S("whatif", 1)}><WhatIfPanel city={active} /></Step>}
               {section === "impact" && (
                 <>
-                  <RoiPanel city={active} />
-                  <FairnessPanel />
+                  <Step {...S("impact", 1)}><RoiPanel city={active} /></Step>
+                  <Step {...S("impact", 3)}><FairnessPanel /></Step>
                 </>
               )}
-              {section === "pipeline" && <TraceViewer city={active} />}
+              {section === "pipeline" && <Step {...S("pipeline", 1)}><TraceViewer city={active} /></Step>}
             </div>
           </div>
         </main>

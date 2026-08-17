@@ -94,7 +94,7 @@ def get_heuristic_detections(city_id: str, days: int = 90) -> list[dict]:
         if detected_type:
             rows.append({
                 "city_id": city_id,
-                "name": f"EE Heuristic #{idx} ({detected_type})",
+                "name": f"Satellite-detected {detected_type.replace('_', ' ')} site #{idx}",
                 "type": detected_type,
                 "registry_ref": f"e1_cv:{city_id}:{idx}",
                 "source_origin": "cv_detected",

@@ -17,7 +17,7 @@ interface TopBarProps {
 export default function TopBar({ cities, active, onCity, section, onReplayTour, present, onTogglePresent }: TopBarProps) {
   const current = SECTIONS.find((s) => s.id === section);
   return (
-    <header className="z-20 flex h-12 shrink-0 items-center gap-3 bg-[#1b294a] pl-3 pr-2 shadow-md shadow-slate-900/20 sm:gap-4 sm:pl-4 sm:pr-3">
+    <header className="z-20 flex h-12 shrink-0 items-center gap-3 bg-[var(--vn-nav)] pl-3 pr-2 shadow-md shadow-slate-900/20 sm:gap-4 sm:pl-4 sm:pr-3">
       <a href="/" onClick={(e) => linkClick(e, "/")} className="flex shrink-0 items-center gap-2 text-[15px] font-extrabold tracking-tight text-white" title="Back to landing page">
         <img src="/icon-192.png" alt="" className="h-7 w-7 rounded-lg" width={28} height={28} />
         <span className="hidden sm:inline">VayuNetra</span>
@@ -40,8 +40,8 @@ export default function TopBar({ cities, active, onCity, section, onReplayTour, 
 
       {current && (
         <div className="hidden min-w-0 items-baseline gap-2 md:flex" title={current.hint}>
-          <span className="text-[13px] font-bold text-white">{current.label}</span>
-          <span className="truncate text-[11px] text-slate-400">{current.hint}</span>
+          <span className="text-[12px] font-semibold text-slate-300">{current.label}</span>
+          <span className="hidden truncate text-[11px] text-slate-500 xl:inline">· {current.hint}</span>
         </div>
       )}
 

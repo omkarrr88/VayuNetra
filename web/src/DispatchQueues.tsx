@@ -3,6 +3,7 @@
 // resolved offline from the shipped boundary polygons — no backend changes.
 import { useEffect, useState } from "react";
 import { api } from "./api";
+import { Panel } from "./ui";
 import { placeForCell } from "./placeName";
 
 type Rec = { id: number; h3_cell?: string; status?: string; priority_score?: number };
@@ -46,13 +47,10 @@ export default function DispatchQueues({ city }: { city: string }) {
   if (!queues || queues.length === 0) return null;
 
   return (
-    <div className="mt-2 rounded-md border border-violet-100 bg-violet-50/50 p-2">
-      <div className="text-[11px] font-semibold uppercase tracking-wide text-violet-800">
-        Ward dispatch queues
-      </div>
-      <div className="mt-1 space-y-1">
+    <Panel title="Ward dispatch queues" tag={`${queues.reduce((a, q) => a + q.count, 0)} queued`}>
+      <div className="space-y-1">
         {queues.map((q) => (
-          <div key={q.ward} className="flex items-center justify-between text-xs">
+          <div key={q.ward} className="flex items-center justify-between rounded-md bg-slate-50 px-2 py-1 text-xs">
             <span className="truncate font-medium text-slate-700">{q.ward}</span>
             <span className="ml-2 shrink-0 rounded bg-violet-100 px-1.5 py-0.5 text-[11px] font-semibold text-violet-800">
               {q.count} in queue
@@ -60,10 +58,10 @@ export default function DispatchQueues({ city }: { city: string }) {
           </div>
         ))}
       </div>
-      <div className="mt-1 text-[11px] leading-4 text-slate-500">
+      <div className="mt-1.5 text-[11px] leading-4 text-slate-500">
         Approved and dispatched actions auto-route to their ward's field queue — the grid-supervision
-        pattern, per ~1 km² cell.
+        pattern, per ~1 km² cell. A zonal officer sees only their patch.
       </div>
-    </div>
+    </Panel>
   );
 }

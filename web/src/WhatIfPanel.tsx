@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { api } from "./api";
 import ImpactCards, { type ImpactData } from "./ImpactCards";
-import { Panel, SegBtn } from "./ui";
+import { Panel, SegBtn, Step } from "./ui";
 
 type SimResult = ImpactData & {
   delta_aqi_by_cell?: Record<string, number>;
@@ -101,7 +101,8 @@ export default function WhatIfPanel({ city }: { city: string }) {
   const bestDelta = deltas.length ? Math.min(...deltas) : 0;
 
   return (
-    <Panel title="What-if Simulator">
+    <>
+    <Panel title="Choose an intervention" tag="what-if">
       <div className="text-xs text-gray-600">
         Counterfactual over attribution × forecast, with cited health &amp; carbon impact.
       </div>
@@ -139,9 +140,19 @@ export default function WhatIfPanel({ city }: { city: string }) {
       </div>
 
       {err && <div className="mt-2 text-xs text-red-600">{err}</div>}
+    </Panel>
 
+      {/* 2 — the result: ΔAQI per cell + cited health/₹/CO₂e cards */}
+      <Step n={2} label="Run & read the result" info={<p>Counterfactual over attribution shares × forecasts (E3) with cited WHO AirQ+ health economics (E7). A near-zero effect is reported as such — the engine never inflates an intervention that does not match the dominant source. Missing inputs return null, never a made-up number.</p>}>
+      <Panel title="Result" tag={res ? `+${horizon}h · ${deltas.length} cells` : "run a simulation"}>
+      {!res && (
+        <div className="text-xs leading-5 text-slate-500">
+          Choose an intervention above and press <b>Run simulation</b>. You will get the change in AQI per cell,
+          the people protected, and the health cost avoided — each with its citation.
+        </div>
+      )}
       {res && (
-        <div className="mt-3 border-t border-gray-100 pt-2">
+        <div>
           {res.intervention?.description && (
             <div className="text-xs font-medium text-gray-800">{res.intervention.description}</div>
           )}
@@ -170,13 +181,15 @@ export default function WhatIfPanel({ city }: { city: string }) {
           <ImpactCards data={res} />
         </div>
       )}
+      </Panel>
+      </Step>
 
-      <div className="mt-3 border-t border-gray-100 pt-3">
+      {/* 3 — best bundle under a budget */}
+      <Step n={3} label="Best bundle for a budget" info={<p>The optimiser ranks intervention packages under an inspector-hour budget — which set of actions buys the most ΔAQI for the effort available today.</p>}>
+      <Panel title="Best bundle for a budget" tag="optimizer">
+      <div>
         <div className="flex items-center justify-between gap-2">
           <div>
-            <div className="font-semibold">
-              Optimizer packages
-            </div>
             <div className="text-xs text-gray-600">Ranked actions under the inspector-hour budget.</div>
           </div>
           <span className="shrink-0 rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
@@ -243,6 +256,8 @@ export default function WhatIfPanel({ city }: { city: string }) {
           opt && <div className="mt-2 text-xs text-slate-500">No feasible package returned for this budget.</div>
         )}
       </div>
-    </Panel>
+      </Panel>
+      </Step>
+    </>
   );
 }

@@ -3,7 +3,7 @@ import { api } from "./api";
 import CitizenReports from "./CitizenReports";
 import ExposureCorridors from "./ExposureCorridors";
 import { aqiCategory } from "./aqi";
-import { Panel, SegBtn } from "./ui";
+import { Panel, SegBtn, Step } from "./ui";
 
 type Advisory = {
   ward_id: string;
@@ -98,6 +98,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
   ];
 
   return (
+    <>
     <Panel
       title="Citizen Advisory"
       right={
@@ -203,15 +204,50 @@ export default function CitizenPanel({ city, languages, center }: { city: string
         </div>
       )}
 
-      {/* 🌿 Cleanest zones right now — the flip side of the blame map: where
+    </Panel>
+
+      {/* 2 — Send it: live multi-channel broadcast (real Telegram + real IVR call) */}
+      <Step n={2} label="Send it" info={<p>Broadcasts the latest advisory to the configured Telegram channel and places a real IVR phone call (Twilio, Indian-English neural voice). Confirmation is required — this touches the outside world.</p>}>
+        <Panel title="Send it" tag="Telegram · IVR · display">
+          {bcast === "idle" && (
+            <button
+              onClick={() => setBcast("confirm")}
+              className="w-full cursor-pointer rounded-md bg-emerald-600 px-2 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-700"
+            >
+              📣 Broadcast latest alert (Telegram + IVR)
+            </button>
+          )}
+          {bcast === "confirm" && (
+            <div className="rounded border border-amber-300 bg-amber-50 p-2 text-xs">
+              <div className="text-amber-800">Send a real Telegram message and place a real phone call?</div>
+              <div className="mt-1.5 flex gap-2">
+                <button onClick={broadcast} className="cursor-pointer rounded bg-emerald-600 px-2 py-1 text-white">
+                  Yes, broadcast
+                </button>
+                <button onClick={() => setBcast("idle")} className="cursor-pointer rounded bg-gray-200 px-2 py-1 text-gray-700">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+          {bcast === "sending" && <div className="text-center text-xs text-gray-500">broadcasting…</div>}
+          {(bcast === "done" || bcast === "error") && (
+            <div className={`rounded p-1.5 text-center text-xs ${bcast === "done" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
+              {bcastMsg}
+            </div>
+          )}
+          <div className="mt-1.5 text-[11px] leading-4 text-slate-500">
+            The same advisory, rendered per channel above; a WhatsApp-ready card for any place is one click away in its cell story.
+          </div>
+        </Panel>
+      </Step>
+
+      {/* 3 — Cleanest zones right now — the flip side of the blame map: where
           to go, computed from the E2 dense 1km field (not a hardcoded list). */}
       {cleanZones && cleanZones.zones.length > 0 && (
-        <div className="mt-3 border-t border-gray-100 pt-2">
-          <div className="flex items-baseline justify-between">
-            <div className="text-[13px] font-bold tracking-tight text-slate-800">🌿 Cleanest air right now</div>
-            <span className="text-[11px] text-slate-400">lowest ~1km cells</span>
-          </div>
-          <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+        <Step n={3} label="Clean-air routes" info={<p>Lowest ~1 km cells from the dense model field anchored on live stations, with a corridor exposure screen for commutes. A modelled guide, not a measurement.</p>}>
+        <Panel title="Cleanest air right now" tag="lowest ~1 km cells">
+          <div className="grid grid-cols-2 gap-1.5">
             {cleanZones.zones.map((z) => {
               const cat = aqiCategory(z.aqi);
               return (
@@ -242,44 +278,16 @@ export default function CitizenPanel({ city, languages, center }: { city: string
             Estimated from the dense 1 km model field anchored on live station data — a modeled guide, not a measurement.
           </div>
           <ExposureCorridors city={city} center={center} zones={cleanZones.zones} />
-        </div>
+        </Panel>
+        </Step>
       )}
 
-      {/* Live multi-channel broadcast — the demo "wow" button */}
-      <div className="mt-3 border-t border-gray-100 pt-2">
-        {bcast === "idle" && (
-          <button
-            onClick={() => setBcast("confirm")}
-            className="w-full rounded bg-emerald-600 px-2 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
-          >
-            📣 Broadcast latest alert (Telegram + IVR)
-          </button>
-        )}
-        {bcast === "confirm" && (
-          <div className="rounded border border-amber-300 bg-amber-50 p-2 text-xs">
-            <div className="text-amber-800">Send a real Telegram message and place a real phone call?</div>
-            <div className="mt-1.5 flex gap-2">
-              <button onClick={broadcast} className="rounded bg-emerald-600 px-2 py-1 text-white">
-                Yes, broadcast
-              </button>
-              <button onClick={() => setBcast("idle")} className="rounded bg-gray-200 px-2 py-1 text-gray-700">
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-        {bcast === "sending" && <div className="text-center text-xs text-gray-500">broadcasting…</div>}
-        {(bcast === "done" || bcast === "error") && (
-          <div
-            className={`rounded p-1.5 text-center text-xs ${
-              bcast === "done" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
-            }`}
-          >
-            {bcastMsg}
-          </div>
-        )}
-      </div>
-      <CitizenReports city={city} center={center} />
-    </Panel>
+      {/* 4 — Citizen reports: the loop closes (photo → verified → enforcement worklist) */}
+      <Step n={4} label="Citizen reports" info={<p>Residents report smoke, dust or burning with a photo and location. A verified report becomes an emission source in the enforcement worklist — citizens feed the officer loop.</p>}>
+        <Panel title="Citizen reports" tag="photo → verified → worklist">
+          <CitizenReports city={city} center={center} />
+        </Panel>
+      </Step>
+    </>
   );
 }

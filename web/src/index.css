@@ -42,3 +42,48 @@ html.vn-present .vn-scroll { scrollbar-width: none; }
 .vn-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
 .vn-scroll::-webkit-scrollbar-thumb { background: rgb(148 163 184 / 0.5); border-radius: 3px; }
 .vn-scroll::-webkit-scrollbar-track { background: transparent; }
+
+/* ---------------------------------------------------------------------------
+   Console design tokens (light theme, projector-legible). Semantic names so
+   panels never hard-code a hex: ink for text, line for borders, primary for
+   the officer's action colour, accent for "good / measured", danger for spikes.
+   --------------------------------------------------------------------------- */
+:root {
+  --vn-ink: #0f172a;
+  --vn-ink-2: #334155;
+  --vn-muted: #64748b;
+  --vn-faint: #94a3b8;
+  --vn-line: #e2e8f0;
+  --vn-surface: #ffffff;
+  --vn-surface-2: #f8fafc;
+  --vn-canvas: #eef2f7;
+  --vn-primary: #1e40af;
+  --vn-primary-2: #2563eb;
+  --vn-primary-soft: #dbeafe;
+  --vn-accent: #15803d;
+  --vn-accent-soft: #dcfce7;
+  --vn-warn: #b45309;
+  --vn-warn-soft: #fef3c7;
+  --vn-danger: #b91c1c;
+  --vn-danger-soft: #fee2e2;
+  --vn-nav: #0f1b33;
+  --vn-radius: 12px;
+  --vn-shadow: 0 1px 2px rgb(15 23 42 / 0.06), 0 8px 24px -12px rgb(15 23 42 / 0.18);
+}
+.vn-console { font-family: "Source Sans 3", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--vn-ink); }
+.vn-console .tabular { font-variant-numeric: tabular-nums; }
+
+/* One card language for every panel */
+.vn-card { background: var(--vn-surface); border: 1px solid var(--vn-line); border-radius: var(--vn-radius); box-shadow: var(--vn-shadow); }
+.vn-card-hd { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .5rem; }
+.vn-step { display: inline-flex; align-items: center; justify-content: center; width: 1.25rem; height: 1.25rem; border-radius: 9999px; background: var(--vn-primary); color: #fff; font-size: 11px; font-weight: 800; flex: none; }
+.vn-step-done { background: var(--vn-accent); }
+.vn-kicker { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--vn-muted); }
+
+/* Focus rings visible for keyboard users (never removed) */
+.vn-console :where(button, a, select, input, [tabindex]):focus-visible { outline: 2px solid var(--vn-primary-2); outline-offset: 2px; border-radius: 6px; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .vn-fade-in, .vn-slide-in-right, .vn-slide-in-left, .vn-pop { animation: none !important; }
+}

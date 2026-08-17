@@ -106,7 +106,7 @@ export default function CitizenReports({ city, center }: { city: string; center?
   };
 
   return (
-    <div className="mt-3 border-t border-gray-100 pt-2">
+    <div>
       <div className="flex items-center justify-between">
         <div>
           <span className="text-xs font-semibold text-slate-700">📸 Report a pollution source</span>

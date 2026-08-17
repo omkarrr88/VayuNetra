@@ -63,15 +63,10 @@ function OverlayToggle({
 export default function LayersControl(p: LayersControlProps) {
   // Open by default only where there's room — on phones the expanded card
   // would bury the (much smaller) map.
-  const [open, setOpen] = useState(
-    // Auto-expand only where the drawer + right panel leave room for the card
-    // (the 1024–1279 window is too tight — there it starts as the compact chip;
-    // presentation mode scales everything up, so it also starts compact).
-    () =>
-      typeof window !== "undefined" &&
-      window.matchMedia("(min-width: 1280px)").matches &&
-      !document.documentElement.classList.contains("vn-present"),
-  );
+  // Starts as the compact chip everywhere: the map is the hero and the layer card is a
+  // tool you reach for, not a panel that competes with the section rail. The chip shows
+  // how many overlays are on so nothing is hidden by surprise.
+  const [open, setOpen] = useState(false);
   const overlaysOn = [p.showSources, p.showPlumes, p.showWards, p.showFreight, p.showFires].filter(Boolean).length;
 
   // Presentation mode toggled at runtime (the P key) — collapse to the chip so
