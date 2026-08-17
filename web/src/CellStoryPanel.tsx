@@ -116,14 +116,14 @@ export default function CellStoryPanel({
                 setSharing(false);
               }
             }}
-            className="rounded px-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
+            className="flex h-7 min-w-7 items-center justify-center rounded px-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
             disabled={sharing}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
               <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" />
             </svg>
           </button>
-          <button aria-label="Close cell story" onClick={onClose} className="rounded px-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700">
+          <button aria-label="Close cell story" onClick={onClose} className="flex h-7 min-w-7 items-center justify-center rounded px-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700">
             ✕
           </button>
         </div>

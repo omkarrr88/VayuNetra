@@ -96,7 +96,7 @@ export default function InterventionsPanel({ city }: { city: string }) {
       <div className="mt-2 border-t border-gray-100 pt-2 text-[11px] leading-4 text-gray-500">
         <button
           onClick={exportCsv}
-          className="font-semibold text-teal-700 hover:text-teal-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/80"
+          className="inline-block py-1 font-semibold text-teal-700 hover:text-teal-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/80"
         >
           Export as NCAP action-plan evidence (PRANA-ready CSV) ↓
         </button>{" "}

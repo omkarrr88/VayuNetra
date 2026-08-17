@@ -54,7 +54,7 @@ export default function SectionHeader({ section, cityName }: { section: Section;
                 type="button"
                 onClick={() => jump(s.n)}
                 aria-current={on ? "step" : undefined}
-                className={`flex cursor-pointer items-center gap-1 rounded-full py-0.5 pl-0.5 pr-2 text-[11px] font-semibold transition-colors ${
+                className={`flex min-h-6 cursor-pointer items-center gap-1 rounded-full py-1 pl-0.5 pr-2 text-[11px] font-semibold transition-colors ${
                   on ? "bg-blue-700 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >

@@ -152,7 +152,7 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-4">
             <a href="https://github.com/omkarrr88/VayuNetra" target="_blank" rel="noreferrer"
-              className="text-slate-500 transition-colors hover:text-slate-900" title="Source on GitHub" aria-label="Source on GitHub">
+              className="flex h-6 w-6 items-center justify-center text-slate-500 transition-colors hover:text-slate-900" title="Source on GitHub" aria-label="Source on GitHub">
               <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true"><path d={IC.github} /></svg>
             </a>
             <a href="/console" onClick={(e) => linkClick(e, "/console")}
@@ -466,18 +466,18 @@ export default function Landing() {
             <div>
               <p className="font-mono text-[10px] uppercase tracking-wider text-slate-500">Product</p>
               <div className="mt-2 space-y-1.5 text-slate-600">
-                <a href="/console" onClick={(e) => linkClick(e, "/console")} className="block transition-colors hover:text-slate-900">Console</a>
-                <a href="#how" className="block transition-colors hover:text-slate-900">How it works</a>
-                <a href="#architecture" className="block transition-colors hover:text-slate-900">Architecture</a>
-                <a href="#validation" className="block transition-colors hover:text-slate-900">Validation</a>
+                <a href="/console" onClick={(e) => linkClick(e, "/console")} className="block py-0.5 transition-colors hover:text-slate-900">Console</a>
+                <a href="#how" className="block py-0.5 transition-colors hover:text-slate-900">How it works</a>
+                <a href="#architecture" className="block py-0.5 transition-colors hover:text-slate-900">Architecture</a>
+                <a href="#validation" className="block py-0.5 transition-colors hover:text-slate-900">Validation</a>
               </div>
             </div>
             <div>
               <p className="font-mono text-[10px] uppercase tracking-wider text-slate-500">Resources</p>
               <div className="mt-2 space-y-1.5 text-slate-600">
-                <a href="https://github.com/omkarrr88/VayuNetra" target="_blank" rel="noreferrer" className="block transition-colors hover:text-slate-900">GitHub</a>
-                <a href="https://vayunetra-c8i8.onrender.com/docs" target="_blank" rel="noreferrer" className="block transition-colors hover:text-slate-900">API reference</a>
-                <a href="https://vayunetra-c8i8.onrender.com/health" target="_blank" rel="noreferrer" className="block transition-colors hover:text-slate-900">API status</a>
+                <a href="https://github.com/omkarrr88/VayuNetra" target="_blank" rel="noreferrer" className="block py-0.5 transition-colors hover:text-slate-900">GitHub</a>
+                <a href="https://vayunetra-c8i8.onrender.com/docs" target="_blank" rel="noreferrer" className="block py-0.5 transition-colors hover:text-slate-900">API reference</a>
+                <a href="https://vayunetra-c8i8.onrender.com/health" target="_blank" rel="noreferrer" className="block py-0.5 transition-colors hover:text-slate-900">API status</a>
               </div>
             </div>
             <div>
