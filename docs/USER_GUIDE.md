@@ -163,7 +163,7 @@ Four numbered cards: **1 Citizen Advisory** · **2 Send it** · **3 Cleanest air
 - **Channel tabs** show how the *same* advisory renders on each channel:
   - **App** — advisory cards per ward with risk-tier badges.
   - **Telegram** — a mock chat + QR code; the real bot (@aqivayu_bot) is live and two-way: `/start` → pick a city → auto-receive advisories.
-  - **IVR call** — the spoken script, plus call-in: the line answers with a keypad menu of all ten cities (1 Delhi · 2 Bengaluru · 3 Mumbai · 4–9, 0 for the rest) and reads that city's latest advisory. (Calls read the English advisory today; in-language voice is roadmap.)
+  - **IVR call** — the spoken script, plus call-in: the line answers with a keypad menu of all ten cities (1 Delhi · 2 Bengaluru · 3 Mumbai · 4–9, 0 for the rest) and reads that city's latest advisory — **in Hindi (Polly Kajal, hi-IN) for Hindi-first cities**, English (Raveena) elsewhere; Polly has no Tamil/Telugu/Bengali/Gujarati/Kannada/Marathi voice yet, so those cities' calls read the English advisory (stated, not hidden).
   - **Big screen** — high-contrast public-display rendering.
 - **"Cleanest air right now":** the 4 lowest-PM2.5 ~1 km zones from the dense model field, each with a **Directions** link to Google Maps — explicitly labelled "a modeled guide, not a measurement".
 - **"Broadcast latest alert (Telegram + IVR)":** sends a *real* Telegram message and places a *real* phone call — with an are-you-sure confirmation step, and rate-limited server-side.

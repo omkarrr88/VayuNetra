@@ -186,7 +186,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
             reads that city's latest advisory in a clear Indian-English voice.
           </div>
           <div className="text-[10px] leading-4 text-gray-400">
-            Live calls read the English advisory today; in-language voice for calls is on the roadmap.
+            Live calls are spoken in Hindi (Polly Kajal) for Hindi-first cities and in English elsewhere — Polly has no voice yet for the other Indian scripts.
           </div>
         </div>
       ) : (

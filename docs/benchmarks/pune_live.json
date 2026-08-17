@@ -1,14 +1,14 @@
 {
  "city_id": "pune",
  "source": "live",
- "generated_at": "2026-08-17T13:11:19.861903+00:00",
+ "generated_at": "2026-08-17T17:28:48.974163+00:00",
  "window": {
   "start": "2026-07-12T10:00:00+00:00",
   "end": "2026-08-16T09:00:00+00:00",
   "split": "2026-08-07T15:15:00+00:00"
  },
  "stations_cells": 9,
- "rows_wide": 5874,
+ "rows_wide": 5873,
  "model": "LightGBM quantile (median) \u2014 same class/params as production (ml.forecast.train)",
  "baselines": [
   "persistence",
@@ -55,12 +55,18 @@
     "pm25_lag1",
     "pm25_lag24"
    ],
+   "blend_weights": [
+    0.75
+   ],
    "regimes": {
     "full_test": {
      "n": 1000,
-     "rmse_model": 6.5,
-     "mae_model": 4.98,
-     "skill_model_vs_persistence": 0.174,
+     "rmse_model": 6.32,
+     "mae_model": 4.76,
+     "skill_model_vs_persistence": 0.197,
+     "rmse_model_raw": 6.53,
+     "mae_model_raw": 4.98,
+     "skill_model_raw_vs_persistence": 0.17,
      "rmse_persistence": 7.87,
      "mae_persistence": 5.34,
      "rmse_seasonal_naive": 8.43,
@@ -75,9 +81,12 @@
     },
     "non_winter": {
      "n": 1000,
-     "rmse_model": 6.5,
-     "mae_model": 4.98,
-     "skill_model_vs_persistence": 0.174,
+     "rmse_model": 6.32,
+     "mae_model": 4.76,
+     "skill_model_vs_persistence": 0.197,
+     "rmse_model_raw": 6.53,
+     "mae_model_raw": 4.98,
+     "skill_model_raw_vs_persistence": 0.17,
      "rmse_persistence": 7.87,
      "mae_persistence": 5.34,
      "rmse_seasonal_naive": 8.43,
@@ -121,7 +130,49 @@
      },
      "onsets": 0,
      "onset_recall_model": null,
-     "onset_recall_persistence": null
+     "onset_recall_persistence": null,
+     "probability_alarms": [
+      {
+       "tau": 0.2,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.3,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.4,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.5,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      }
+     ]
     },
     "very_poor": {
      "threshold": 120.0,
@@ -144,7 +195,49 @@
      },
      "onsets": 0,
      "onset_recall_model": null,
-     "onset_recall_persistence": null
+     "onset_recall_persistence": null,
+     "probability_alarms": [
+      {
+       "tau": 0.2,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.3,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.4,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.5,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      }
+     ]
     },
     "severe": {
      "threshold": 250.0,
@@ -167,7 +260,49 @@
      },
      "onsets": 0,
      "onset_recall_model": null,
-     "onset_recall_persistence": null
+     "onset_recall_persistence": null,
+     "probability_alarms": [
+      {
+       "tau": 0.2,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.3,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.4,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.5,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      }
+     ]
     }
    },
    "calibration": {
@@ -214,8 +349,8 @@
       }
      ]
     },
-    "pi80_coverage": 0.741,
-    "pi80_mean_width": 13.7
+    "pi80_coverage": 0.728,
+    "pi80_mean_width": 13.9
    }
   },
   {
@@ -250,12 +385,18 @@
     "pm25_lag1",
     "pm25_lag24"
    ],
+   "blend_weights": [
+    0.7
+   ],
    "regimes": {
     "full_test": {
      "n": 853,
-     "rmse_model": 6.29,
-     "mae_model": 4.91,
-     "skill_model_vs_persistence": 0.186,
+     "rmse_model": 6.13,
+     "mae_model": 4.72,
+     "skill_model_vs_persistence": 0.207,
+     "rmse_model_raw": 6.27,
+     "mae_model_raw": 4.91,
+     "skill_model_raw_vs_persistence": 0.188,
      "rmse_persistence": 7.73,
      "mae_persistence": 5.57,
      "rmse_seasonal_naive": 8.02,
@@ -270,9 +411,12 @@
     },
     "non_winter": {
      "n": 853,
-     "rmse_model": 6.29,
-     "mae_model": 4.91,
-     "skill_model_vs_persistence": 0.186,
+     "rmse_model": 6.13,
+     "mae_model": 4.72,
+     "skill_model_vs_persistence": 0.207,
+     "rmse_model_raw": 6.27,
+     "mae_model_raw": 4.91,
+     "skill_model_raw_vs_persistence": 0.188,
      "rmse_persistence": 7.73,
      "mae_persistence": 5.57,
      "rmse_seasonal_naive": 8.02,
@@ -316,7 +460,49 @@
      },
      "onsets": 0,
      "onset_recall_model": null,
-     "onset_recall_persistence": null
+     "onset_recall_persistence": null,
+     "probability_alarms": [
+      {
+       "tau": 0.2,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.3,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.4,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.5,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      }
+     ]
     },
     "very_poor": {
      "threshold": 120.0,
@@ -339,7 +525,49 @@
      },
      "onsets": 0,
      "onset_recall_model": null,
-     "onset_recall_persistence": null
+     "onset_recall_persistence": null,
+     "probability_alarms": [
+      {
+       "tau": 0.2,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.3,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.4,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.5,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      }
+     ]
     },
     "severe": {
      "threshold": 250.0,
@@ -362,7 +590,49 @@
      },
      "onsets": 0,
      "onset_recall_model": null,
-     "onset_recall_persistence": null
+     "onset_recall_persistence": null,
+     "probability_alarms": [
+      {
+       "tau": 0.2,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.3,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.4,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.5,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      }
+     ]
     }
    },
    "calibration": {
@@ -409,7 +679,7 @@
       }
      ]
     },
-    "pi80_coverage": 0.782,
+    "pi80_coverage": 0.781,
     "pi80_mean_width": 14.4
    }
   },
@@ -445,12 +715,18 @@
     "pm25_lag1",
     "pm25_lag24"
    ],
+   "blend_weights": [
+    0.85
+   ],
    "regimes": {
     "full_test": {
      "n": 702,
-     "rmse_model": 5.93,
-     "mae_model": 4.67,
-     "skill_model_vs_persistence": 0.327,
+     "rmse_model": 5.97,
+     "mae_model": 4.75,
+     "skill_model_vs_persistence": 0.322,
+     "rmse_model_raw": 5.99,
+     "mae_model_raw": 4.75,
+     "skill_model_raw_vs_persistence": 0.321,
      "rmse_persistence": 8.81,
      "mae_persistence": 6.16,
      "rmse_seasonal_naive": 8.26,
@@ -465,9 +741,12 @@
     },
     "non_winter": {
      "n": 702,
-     "rmse_model": 5.93,
-     "mae_model": 4.67,
-     "skill_model_vs_persistence": 0.327,
+     "rmse_model": 5.97,
+     "mae_model": 4.75,
+     "skill_model_vs_persistence": 0.322,
+     "rmse_model_raw": 5.99,
+     "mae_model_raw": 4.75,
+     "skill_model_raw_vs_persistence": 0.321,
      "rmse_persistence": 8.81,
      "mae_persistence": 6.16,
      "rmse_seasonal_naive": 8.26,
@@ -511,7 +790,49 @@
      },
      "onsets": 0,
      "onset_recall_model": null,
-     "onset_recall_persistence": null
+     "onset_recall_persistence": null,
+     "probability_alarms": [
+      {
+       "tau": 0.2,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.3,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.4,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.5,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      }
+     ]
     },
     "very_poor": {
      "threshold": 120.0,
@@ -534,7 +855,49 @@
      },
      "onsets": 0,
      "onset_recall_model": null,
-     "onset_recall_persistence": null
+     "onset_recall_persistence": null,
+     "probability_alarms": [
+      {
+       "tau": 0.2,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.3,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.4,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.5,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      }
+     ]
     },
     "severe": {
      "threshold": 250.0,
@@ -557,7 +920,49 @@
      },
      "onsets": 0,
      "onset_recall_model": null,
-     "onset_recall_persistence": null
+     "onset_recall_persistence": null,
+     "probability_alarms": [
+      {
+       "tau": 0.2,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.3,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.4,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      },
+      {
+       "tau": 0.5,
+       "precision": null,
+       "recall": null,
+       "f1": null,
+       "tp": 0,
+       "fp": 0,
+       "fn": 0,
+       "onset_recall": null
+      }
+     ]
     }
    },
    "calibration": {
@@ -604,8 +1009,8 @@
       }
      ]
     },
-    "pi80_coverage": 0.848,
-    "pi80_mean_width": 16.4
+    "pi80_coverage": 0.835,
+    "pi80_mean_width": 16.0
    }
   }
  ]

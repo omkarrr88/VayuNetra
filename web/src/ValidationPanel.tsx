@@ -13,6 +13,9 @@ type Headline = {
   very_poor_hours_n: number;
   onset_recall_model: number | null;
   onset_recall_persistence: number | null;
+  onset_recall_p30?: number | null;
+  precision_p30?: number | null;
+  skill_raw_vs_persistence?: number | null;
   onsets: number;
   pi80_coverage: number | null;
   brier_skill_very_poor: number | null;
@@ -91,8 +94,9 @@ export default function ValidationPanel({ city }: { city: string }) {
     >
       <div className="text-[11px] leading-4 text-slate-500">
         Strict temporal split: trained on {day(s.window.start)} → {day(s.window.split)}, tested on {day(s.window.split)} → {day(s.window.end)}
-        {" "}({s.stations_cells} station cells, {h24 ? h24.n_test.toLocaleString() : "–"} test hours @24h). Same LightGBM as production;
-        baselines persistence, weekly seasonal-naive, hour-of-day climatology; one shared support mask.
+        {" "}({s.stations_cells} station cells, {h24 ? h24.n_test.toLocaleString() : "–"} test hours @24h). The served forecast (LightGBM
+        median blended with persistence, weight from the calibration tail) vs persistence, weekly seasonal-naive and hour-of-day
+        climatology on one shared support mask.
       </div>
 
       <div className="mt-2 overflow-x-auto">
@@ -128,12 +132,15 @@ export default function ValidationPanel({ city }: { city: string }) {
 
       {anyOnsets && (
         <div className="mt-2 rounded-md bg-indigo-50 px-2 py-1.5 text-[11px] leading-4 text-indigo-900">
-          <b>Early warning on Very Poor onsets</b> (clean at issue time, &gt;120 µg/m³ at t+h): the model flags{" "}
+          <b>Early warning on Very Poor onsets</b> (clean at issue time, &gt;120 µg/m³ at t+h): alarming on the calibrated
+          probability (P ≥ 30%) flags{" "}
           {s.headline
             .filter((h) => h.onsets > 0)
-            .map((h) => `${pct(h.onset_recall_model, false)} @${h.horizon_h}h`)
+            .map((h) => `${pct(h.onset_recall_p30 ?? h.onset_recall_model, false)} @${h.horizon_h}h`)
             .join(" · ")}{" "}
-          of onsets. Persistence catches <b>0%</b> by construction — a "tomorrow = today" system can never warn of a spike before it starts.
+          of onsets{s.headline.some((h) => h.precision_p30 != null) ? ` (precision ${s.headline.filter((h) => h.precision_p30 != null).map((h) => pct(h.precision_p30, false)).join(" · ")})` : ""}
+          {s.headline.some((h) => h.onset_recall_p30 != null && h.onset_recall_model != null) ? `; the plain median alarm ${s.headline.filter((h) => h.onsets > 0).map((h) => pct(h.onset_recall_model, false)).join(" · ")}` : ""}.
+          Persistence catches <b>0%</b> by construction — a "tomorrow = today" system can never warn of a spike before it starts.
         </div>
       )}
       {!anyEpisodes && (

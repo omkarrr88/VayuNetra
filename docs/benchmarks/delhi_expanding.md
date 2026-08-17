@@ -1,20 +1,22 @@
 # Forecast benchmark — delhi (hist)
 
-Window 2025-02-17 → 2026-08-15, test from **2025-11-01** (rolling-origin monthly refit, expanding window; train strictly before each test origin). 39 station cells, 449,526 hourly rows. Model: LightGBM quantile (median) — same class/params as production (ml.forecast.train). Generated 2026-08-17T15:05Z by `python -m ml.eval.benchmark`.
+Window 2025-02-17 → 2026-08-15, test from **2025-11-01** (rolling-origin monthly refit, expanding window; train strictly before each test origin). 39 station cells, 449,526 hourly rows. Model: LightGBM quantile (median) — same class/params as production (ml.forecast.train). Generated 2026-08-17T17:16Z by `python -m ml.eval.benchmark`.
 
 ## RMSE (µg/m³) on the shared support mask
 
-| regime | h | n | persistence | seasonal-naive | climatology | **model** | skill vs persistence |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| full_test | 24 | 207,225 | 67.05 | 82.26 | 104.17 | **68.22** | -1.7% |
-| winter_nov_feb | 24 | 81,109 | 90.6 | 115.91 | 158.51 | **99.0** | -9.3% |
-| non_winter | 24 | 126,116 | 45.91 | 49.78 | 40.89 | **36.66** | +20.1% |
-| full_test | 48 | 208,113 | 77.73 | 84.16 | 104.16 | **72.0** | +7.4% |
-| winter_nov_feb | 48 | 82,738 | 107.59 | 117.66 | 157.3 | **103.83** | +3.5% |
-| non_winter | 48 | 125,375 | 48.88 | 51.2 | 40.99 | **38.62** | +21.0% |
-| full_test | 72 | 208,247 | 82.15 | 85.68 | 104.52 | **74.84** | +8.9% |
-| winter_nov_feb | 72 | 83,778 | 113.58 | 119.07 | 156.8 | **108.02** | +4.9% |
-| non_winter | 72 | 124,469 | 51.07 | 52.34 | 41.56 | **38.97** | +23.7% |
+| regime | h | n | persistence | seasonal-naive | climatology | **model** | skill vs persistence | model+persistence blend | blend skill |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| full_test | 24 | 207,225 | 67.05 | 82.26 | 104.17 | **68.22** | -1.7% | 61.68 | +8.0% |
+| winter_nov_feb | 24 | 81,109 | 90.6 | 115.91 | 158.51 | **99.0** | -9.3% | 87.21 | +3.7% |
+| non_winter | 24 | 126,116 | 45.91 | 49.78 | 40.89 | **36.66** | +20.1% | 36.86 | +19.7% |
+| full_test | 48 | 208,113 | 77.73 | 84.16 | 104.16 | **72.0** | +7.4% | 67.5 | +13.2% |
+| winter_nov_feb | 48 | 82,738 | 107.59 | 117.66 | 157.3 | **103.83** | +3.5% | 95.87 | +10.9% |
+| non_winter | 48 | 125,375 | 48.88 | 51.2 | 40.99 | **38.62** | +21.0% | 38.69 | +20.8% |
+| full_test | 72 | 208,247 | 82.15 | 85.68 | 104.52 | **74.84** | +8.9% | 70.5 | +14.2% |
+| winter_nov_feb | 72 | 83,778 | 113.58 | 119.07 | 156.8 | **108.02** | +4.9% | 100.25 | +11.7% |
+| non_winter | 72 | 124,469 | 51.07 | 52.34 | 41.56 | **38.97** | +23.7% | 39.39 | +22.9% |
+
+Blend weights (w on model, chosen per training origin on its calibration tail): +24h [0.55, 0.3, 0.3, 0.35, 0.7, 1.0, 1.0, 1.0, 1.0, 1.0]; +48h [0.5, 0.4, 0.45, 0.4, 0.8, 1.0, 1.0, 0.95, 0.95, 0.95]; +72h [0.45, 0.35, 0.5, 0.45, 0.65, 1.0, 0.9, 0.95, 0.95, 0.95]
 
 ## High-pollution hours only (observed PM2.5 above band)
 
@@ -29,6 +31,47 @@ Window 2025-02-17 → 2026-08-15, test from **2025-11-01** (rolling-origin month
 | observed_over_90 | 72 | 85,523 | 113.85 | 117.56 | **110.92** | +2.6% |
 | observed_over_120 | 72 | 63,784 | 123.63 | 127.59 | **125.77** | -1.7% |
 | observed_over_250 | 72 | 17,788 | 174.9 | 177.78 | **211.32** | -20.8% |
+
+## Probability alarms — alarm = P(> band) ≥ τ (operating points on the calibrated probability)
+
+| band | h | τ | precision | recall | F1 | onset recall |
+|---|---:|---:|---:|---:|---:|---:|
+| poor | 24 | 0.2 | 0.608 | 0.957 | 0.744 | 0.804 |
+| poor | 24 | 0.3 | 0.69 | 0.921 | 0.789 | 0.65 |
+| poor | 24 | 0.4 | 0.745 | 0.876 | 0.805 | 0.484 |
+| poor | 24 | 0.5 | 0.783 | 0.838 | 0.81 | 0.391 |
+| very_poor | 24 | 0.2 | 0.566 | 0.94 | 0.707 | 0.775 |
+| very_poor | 24 | 0.3 | 0.626 | 0.893 | 0.736 | 0.631 |
+| very_poor | 24 | 0.4 | 0.668 | 0.86 | 0.752 | 0.552 |
+| very_poor | 24 | 0.5 | 0.712 | 0.827 | 0.765 | 0.474 |
+| severe | 24 | 0.2 | 0.227 | 0.436 | 0.298 | 0.387 |
+| severe | 24 | 0.3 | 0.29 | 0.306 | 0.298 | 0.14 |
+| severe | 24 | 0.4 | 0.361 | 0.229 | 0.28 | 0.068 |
+| severe | 24 | 0.5 | 0.431 | 0.183 | 0.257 | 0.038 |
+| poor | 48 | 0.2 | 0.578 | 0.961 | 0.722 | 0.842 |
+| poor | 48 | 0.3 | 0.66 | 0.925 | 0.77 | 0.719 |
+| poor | 48 | 0.4 | 0.73 | 0.869 | 0.793 | 0.537 |
+| poor | 48 | 0.5 | 0.77 | 0.824 | 0.796 | 0.423 |
+| very_poor | 48 | 0.2 | 0.53 | 0.946 | 0.679 | 0.832 |
+| very_poor | 48 | 0.3 | 0.61 | 0.891 | 0.724 | 0.676 |
+| very_poor | 48 | 0.4 | 0.642 | 0.86 | 0.735 | 0.597 |
+| very_poor | 48 | 0.5 | 0.678 | 0.826 | 0.744 | 0.515 |
+| severe | 48 | 0.2 | 0.18 | 0.412 | 0.251 | 0.375 |
+| severe | 48 | 0.3 | 0.206 | 0.234 | 0.219 | 0.154 |
+| severe | 48 | 0.4 | 0.237 | 0.116 | 0.155 | 0.062 |
+| severe | 48 | 0.5 | 0.264 | 0.053 | 0.089 | 0.027 |
+| poor | 72 | 0.2 | 0.573 | 0.959 | 0.717 | 0.839 |
+| poor | 72 | 0.3 | 0.646 | 0.923 | 0.76 | 0.722 |
+| poor | 72 | 0.4 | 0.707 | 0.887 | 0.787 | 0.621 |
+| poor | 72 | 0.5 | 0.757 | 0.847 | 0.8 | 0.502 |
+| very_poor | 72 | 0.2 | 0.519 | 0.949 | 0.671 | 0.847 |
+| very_poor | 72 | 0.3 | 0.578 | 0.917 | 0.709 | 0.761 |
+| very_poor | 72 | 0.4 | 0.635 | 0.879 | 0.737 | 0.662 |
+| very_poor | 72 | 0.5 | 0.668 | 0.834 | 0.742 | 0.542 |
+| severe | 72 | 0.2 | 0.215 | 0.554 | 0.309 | 0.411 |
+| severe | 72 | 0.3 | 0.204 | 0.224 | 0.214 | 0.128 |
+| severe | 72 | 0.4 | 0.2 | 0.084 | 0.118 | 0.053 |
+| severe | 72 | 0.5 | 0.193 | 0.025 | 0.044 | 0.016 |
 
 ## Early warning — alarm = forecast above band
 

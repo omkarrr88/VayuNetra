@@ -15,9 +15,13 @@ import os
 
 import core.env  # noqa: F401  (loads .env)
 
-# Amazon Polly neural voice via Twilio — clear Indian English, far better than 'alice'.
+# Amazon Polly voices via Twilio — clear Indian English (Raveena) and, for Hindi advisories,
+# Kajal (neural, hi-IN). Polly has no Tamil/Telugu/Bengali/Gujarati/Kannada/Marathi voice, so
+# those cities' calls read the English advisory — stated in the guide, not hidden.
 IVR_VOICE = "Polly.Raveena"
 IVR_LANG = "en-IN"
+VOICE_BY_LANG = {"en": ("Polly.Raveena", "en-IN"), "hi": ("Polly.Kajal-Neural", "hi-IN")}
+IVR_SPOKEN_LANGS = tuple(VOICE_BY_LANG.keys())
 BRAND = "Vayu Netra"
 
 
@@ -30,20 +34,33 @@ def render_ivr_script(advisory: dict) -> str:
 
 
 def render_twiml(advisory: dict, city_name: str | None = None) -> str:
-    """TwiML for a slowed, repeated, clearly-spoken advisory call."""
+    """TwiML for a slowed, repeated, clearly-spoken advisory call — in the advisory's language
+    when Polly can speak it (Hindi via Kajal), English otherwise."""
     msg = html.escape(str(advisory.get("message", "")).strip())
-    intro = f"Here is the latest advisory for {html.escape(city_name)}. " if city_name else ""
-    body = (
-        f"{intro}This is an air quality alert from {BRAND}. "
-        f'<break time="600ms"/> {msg} '
-        f'<break time="800ms"/> I will now repeat this alert. '
-        f'<break time="400ms"/> {msg} '
-        f'<break time="700ms"/> Stay safe, and limit outdoor exposure. Goodbye.'
-    )
+    lang = str(advisory.get("language") or "en")
+    voice, tts_lang = VOICE_BY_LANG.get(lang, VOICE_BY_LANG["en"])
+    if lang == "hi":
+        intro = f"{html.escape(city_name)} के लिए नवीनतम सलाह। " if city_name else ""
+        body = (
+            f"{intro}यह {BRAND} की ओर से वायु गुणवत्ता चेतावनी है। "
+            f'<break time="600ms"/> {msg} '
+            f'<break time="800ms"/> मैं यह चेतावनी दोहराती हूँ। '
+            f'<break time="400ms"/> {msg} '
+            f'<break time="700ms"/> सुरक्षित रहें, बाहर कम समय बिताएँ। धन्यवाद।'
+        )
+    else:
+        intro = f"Here is the latest advisory for {html.escape(city_name)}. " if city_name else ""
+        body = (
+            f"{intro}This is an air quality alert from {BRAND}. "
+            f'<break time="600ms"/> {msg} '
+            f'<break time="800ms"/> I will now repeat this alert. '
+            f'<break time="400ms"/> {msg} '
+            f'<break time="700ms"/> Stay safe, and limit outdoor exposure. Goodbye.'
+        )
     return (
         "<Response>"
         '<Pause length="1"/>'
-        f'<Say voice="{IVR_VOICE}" language="{IVR_LANG}">'
+        f'<Say voice="{voice}" language="{tts_lang}">'
         f'<prosody rate="90%">{body}</prosody></Say>'
         "</Response>"
     )

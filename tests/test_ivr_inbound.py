@@ -18,9 +18,28 @@ client = TestClient(m.app)
 
 
 def _fixture_message(city: str) -> str:
-    rows = [r for r in m.fixture_rows("advisory", city) if (r.get("language") or "en") == "en"]
-    assert rows, f"fixture must contain an English advisory for {city}"
+    """The advisory a caller hears: the city's showcase language when Polly can voice it
+    (Hindi for Delhi/Mumbai/…), else English — mirrors api.main._ivr_language."""
+    lang = m._ivr_language(city)
+    rows = [r for r in m.fixture_rows("advisory", city) if (r.get("language") or "en") == lang and r.get("city_id") == city]
+    if not rows:
+        rows = [r for r in m.fixture_rows("advisory", city) if (r.get("language") or "en") == "en"]
+    assert rows, f"fixture must contain an advisory for {city}"
     return str(rows[0]["message"]).strip()
+
+
+def test_hindi_city_calls_are_spoken_in_hindi_by_kajal():
+    r = client.post("/ivr/advisory", data={"Digits": "1"})   # Delhi: languages [hi, en]
+    assert r.status_code == 200
+    assert 'voice="Polly.Kajal-Neural" language="hi-IN"' in r.text
+    assert "वायु गुणवत्ता" in r.text
+
+
+def test_non_hindi_city_calls_fall_back_to_english_voice():
+    digit = next(d for d, (cid, _) in IVR_CITY_MENU.items() if cid == "chennai")
+    r = client.post("/ivr/advisory", data={"Digits": digit})
+    assert r.status_code == 200
+    assert 'voice="Polly.Raveena" language="en-IN"' in r.text
 
 
 # --- welcome menu -------------------------------------------------------------

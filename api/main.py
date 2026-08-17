@@ -1018,21 +1018,37 @@ def update_report_status(report_id: int, payload: dict, db=Depends(get_db)) -> d
         return _server_error("report_status_failed", e, "Could not update the report.")
 
 
-def _latest_advisory(city: str) -> Optional[dict]:
-    """Freshest English advisory for a city (fixture rows in DEMO_MODE)."""
-    if DEMO_MODE:
-        # strict city match — fixture_rows falls back to ALL rows for unknown
-        # cities, and speaking another city's advisory is worse than none
-        rows = [
-            r for r in fixture_rows("advisory", city)
-            if (r.get("language") or "en") == "en" and r.get("city_id") == city
-        ]
-    else:
-        rows = (
-            _db().table("advisories").select("*").eq("city_id", city)
-            .eq("language", "en").order("issued_at", desc=True).limit(1).execute().data
-        ) or []
-    return rows[0] if rows else None
+def _latest_advisory(city: str, language: str = "en") -> Optional[dict]:
+    """Freshest advisory for a city in `language` (fixture rows in DEMO_MODE), English fallback."""
+    def _pick(lang: str) -> Optional[dict]:
+        if DEMO_MODE:
+            # strict city match — fixture_rows falls back to ALL rows for unknown
+            # cities, and speaking another city's advisory is worse than none
+            rows = [
+                r for r in fixture_rows("advisory", city)
+                if (r.get("language") or "en") == lang and r.get("city_id") == city
+            ]
+        else:
+            rows = (
+                _db().table("advisories").select("*").eq("city_id", city)
+                .eq("language", lang).order("issued_at", desc=True).limit(1).execute().data
+            ) or []
+        return rows[0] if rows else None
+    return _pick(language) or (_pick("en") if language != "en" else None)
+
+
+def _ivr_language(city: str) -> str:
+    """The language a call should be spoken in: the city's first showcase language if Polly
+    can voice it (Hindi), else English."""
+    try:
+        from channels.ivr import IVR_SPOKEN_LANGS
+        from core.cities import load_city
+        for lang in load_city(city).get("languages") or []:
+            if lang in IVR_SPOKEN_LANGS:
+                return lang
+    except Exception:  # noqa: BLE001
+        pass
+    return "en"
 
 
 class BroadcastBody(BaseModel):
@@ -1125,7 +1141,7 @@ async def ivr_advisory(request: Request) -> Response:
             pass
     city_id, city_name = IVR_CITY_MENU.get(digits.strip(), IVR_CITY_MENU["1"])
     try:
-        adv = _latest_advisory(city_id)
+        adv = _latest_advisory(city_id, _ivr_language(city_id))
     except Exception as e:  # noqa: BLE001 — DB down must not kill the call
         logger.error("ivr advisory fetch failed for %s: %s", city_id, e, exc_info=True)
         adv = None
@@ -1400,6 +1416,10 @@ def _benchmark_summary(res: dict) -> dict:
             "very_poor_hours_n": ep.get("n", 0),
             "onset_recall_model": ew.get("onset_recall_model"),
             "onset_recall_persistence": ew.get("onset_recall_persistence"),
+            # operating point on the calibrated probability (alarm = P(>120) >= 0.3): recall/precision
+            "onset_recall_p30": next((pa.get("onset_recall") for pa in ew.get("probability_alarms", []) if pa.get("tau") == 0.3), None),
+            "precision_p30": next((pa.get("precision") for pa in ew.get("probability_alarms", []) if pa.get("tau") == 0.3), None),
+            "skill_raw_vs_persistence": full.get("skill_model_raw_vs_persistence"),
             "onsets": ew.get("onsets", 0),
             "pi80_coverage": cal.get("pi80_coverage"),
             "brier_skill_very_poor": ((cal.get("very_poor") or {}).get("brier_skill")),

@@ -127,17 +127,10 @@ def _reliability(p: np.ndarray, event: np.ndarray, bins: int = 10) -> list[dict]
 
 
 def _blend_weight(model_pred: np.ndarray, persistence: np.ndarray, y: np.ndarray) -> float:
-    """Weight w in [0,1] for w·model + (1−w)·persistence minimising RMSE on the calibration
-    rows. A grid keeps it transparent (and it is exactly what production applies)."""
-    m = np.isfinite(model_pred) & np.isfinite(persistence) & np.isfinite(y)
-    if m.sum() < 30:
-        return 1.0
-    best_w, best = 1.0, float("inf")
-    for w in np.linspace(0.0, 1.0, 21):
-        e = rmse(y[m], w * model_pred[m] + (1 - w) * persistence[m])
-        if e < best:
-            best, best_w = e, float(w)
-    return best_w
+    """Same rule production applies (ml.forecast.train.blend_weight) — one implementation."""
+    from ml.forecast.train import blend_weight
+
+    return blend_weight(model_pred, persistence, y)
 
 
 # --- core ------------------------------------------------------------------------
@@ -175,15 +168,19 @@ def _rolling_predict(X, y, meta, split_ts: pd.Timestamp, window_days: int | None
         _, cal_pred = _fit_predict(Xtr.iloc[:fit_n], ytr.iloc[:fit_n], Xtr.iloc[fit_n:], QUANTILES["value"])
         cal_pred = np.asarray(cal_pred, dtype=float)
         ycal = ytr.iloc[fit_n:].to_numpy(dtype=float)
-        r = ycal - cal_pred
+        # convex blend with persistence, weight chosen on the SAME calibration tail (no test leakage);
+        # residuals and exceedance probabilities are then computed for the served (blended) forecast
+        pers_cal = Xtr.iloc[fit_n:]["pm25"].to_numpy(dtype=float)
+        w = _blend_weight(cal_pred, pers_cal, ycal)
+        weights.append(w)
+        cal_blend = w * cal_pred + (1 - w) * np.where(np.isfinite(pers_cal), pers_cal, cal_pred)
+        r = ycal - cal_blend
         r = np.sort(r[np.isfinite(r)])
         resid_pool.append(r)
-        # convex blend with persistence, weight chosen on the SAME calibration tail (no test leakage)
-        w = _blend_weight(cal_pred, Xtr.iloc[fit_n:]["pm25"].to_numpy(dtype=float), ycal)
-        weights.append(w)
-        pblend.append(w * np.asarray(p, dtype=float) + (1 - w) * Xte["pm25"].to_numpy(dtype=float))
+        pers_te = Xte["pm25"].to_numpy(dtype=float)
+        pp = w * np.asarray(p, dtype=float) + (1 - w) * np.where(np.isfinite(pers_te), pers_te, np.asarray(p, dtype=float))
+        pblend.append(pp)
         # per-origin calibrated exceedance probabilities (exactly what production serves)
-        pp = np.asarray(p, dtype=float)
         for band, thr in THRESHOLDS.items():
             if len(r) >= 50:
                 pex[band].append(1.0 - np.searchsorted(r, thr - pp, side="right") / len(r))
@@ -254,7 +251,10 @@ def evaluate_horizon(wide: pd.DataFrame, horizon_h: int, split_ts: pd.Timestamp,
         w_single = _blend_weight(np.asarray(cal_pred_b, dtype=float), Xtr.iloc[fit_n:]["pm25"].to_numpy(dtype=float), ytr.iloc[fit_n:].to_numpy(dtype=float))
         pred_blend = w_single * pred + (1 - w_single) * persistence
         blend_w = [w_single]
-    preds = {"model": pred, "model_blend": pred_blend, "persistence": persistence, "seasonal_naive": seasonal, "climatology": climatology}
+    # "model" is what production serves (persistence-blended median); the raw LightGBM median is
+    # kept as "model_raw" so the blend's contribution stays visible
+    preds = {"model": pred_blend, "model_raw": pred, "persistence": persistence, "seasonal_naive": seasonal, "climatology": climatology}
+    served = pred_blend
 
     # --- shared support mask: every forecaster has a value -----------------------
     support = np.isfinite(yv)
@@ -288,15 +288,18 @@ def evaluate_horizon(wide: pd.DataFrame, horizon_h: int, split_ts: pd.Timestamp,
     else:
         fit_n = int(len(Xtr) * 0.75)
         _, cal_pred = _fit_predict(Xtr.iloc[:fit_n], ytr.iloc[:fit_n], Xtr.iloc[fit_n:], QUANTILES["value"])
-        resid = ytr.iloc[fit_n:].to_numpy(dtype=float) - np.asarray(cal_pred, dtype=float)
+        cal_pred = np.asarray(cal_pred, dtype=float)
+        pers_cal = Xtr.iloc[fit_n:]["pm25"].to_numpy(dtype=float)
+        cal_blend = blend_w[0] * cal_pred + (1 - blend_w[0]) * np.where(np.isfinite(pers_cal), pers_cal, cal_pred)
+        resid = ytr.iloc[fit_n:].to_numpy(dtype=float) - cal_blend
         rs = np.sort(resid[np.isfinite(resid)])
-        p_ex_all = {b: (1.0 - np.searchsorted(rs, thr - pred, side="right") / len(rs)) if len(rs) >= 50 else np.zeros_like(pred)
+        p_ex_all = {b: (1.0 - np.searchsorted(rs, thr - served, side="right") / len(rs)) if len(rs) >= 50 else np.zeros_like(served)
                     for b, thr in THRESHOLDS.items()}
 
     # --- early warning: alarm = forecast > T; onsets = clean now, over T at t+h ---
     for band, thr in THRESHOLDS.items():
         ev = support & (yv > thr)
-        alarm_m = support & (pred > thr)
+        alarm_m = support & (served > thr)
         alarm_p = support & (persistence > thr)
         onset = ev & (persistence <= thr)          # not over T at issue time, over T at t+h
         entry = {
@@ -400,7 +403,7 @@ def to_markdown(res: dict) -> str:
     L += [f"Window {w['start'][:10]} → {w['end'][:10]}, test from **{w['split'][:10]}** ({proto}; train strictly before each test origin). {res['stations_cells']} station cells, {res['rows_wide']:,} hourly rows. "
           f"Model: {res['model']}. Generated {res['generated_at'][:16]}Z by `python -m ml.eval.benchmark`.", ""]
     L += ["## RMSE (µg/m³) on the shared support mask", "",
-          "| regime | h | n | persistence | seasonal-naive | climatology | **model** | skill vs persistence | model+persistence blend | blend skill |",
+          "| regime | h | n | persistence | seasonal-naive | climatology | **model (served: blended)** | skill vs persistence | raw LightGBM | raw skill |",
           "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for h in res["horizons"]:
         if "regimes" not in h:
@@ -409,7 +412,7 @@ def to_markdown(res: dict) -> str:
             if m.get("n"):
                 L.append(f"| {reg} | {h['horizon_h']} | {m['n']:,} | {m['rmse_persistence']} | {m['rmse_seasonal_naive']} | "
                          f"{m['rmse_climatology']} | **{m['rmse_model']}** | {_pct(m['skill_model_vs_persistence'])} | "
-                         f"{m.get('rmse_model_blend', '–')} | {_pct(m.get('skill_model_blend_vs_persistence'))} |")
+                         f"{m.get('rmse_model_raw', '–')} | {_pct(m.get('skill_model_raw_vs_persistence'))} |")
     L += ["", "Blend weights (w on model, chosen per training origin on its calibration tail): " +
           "; ".join(f"+{h['horizon_h']}h {h.get('blend_weights')}" for h in res["horizons"] if h.get("blend_weights"))]
     L += ["", "## High-pollution hours only (observed PM2.5 above band)", "",
