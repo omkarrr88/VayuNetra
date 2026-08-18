@@ -1,0 +1,30 @@
+ok   landing loads
+ok   first-run tour
+ok   shell + status strip
+ok   presentation mode
+ok   keyboard sections 1–7
+ok   layers chip and modes
+ok   time scrub play
+     share card → vayunetra-delhi-ndmc-charge-3.png
+ok   cell story
+     brief PDF → brief_delhi.pdf
+ok   morning brief
+ok   worklist filters + search
+     notice PDF → notice_12901.pdf
+ok   dossier + notice
+ok   approve → dispatch → close → history
+     PRANA export → ncap_evidence_delhi.csv
+ok   dispatch queues + tracking + export
+ok   forecast section
+ok   advisories section
+ok   cities section
+ok   simulator section
+ok   impact section
+ok   pipeline section
+ok   mobile viewport
+     reset 1 walkthrough record(s)
+ok   reset walkthrough action
+
+ERRORS:
+
+PROBLEMS:

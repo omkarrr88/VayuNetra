@@ -268,7 +268,7 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search recommendations…"
           aria-label="Search enforcement recommendations"
-          className="min-w-0 flex-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-700 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="min-w-[9rem] flex-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-700 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
         <label className="flex items-center gap-1 text-[11px] text-slate-500" title="Stamped on every approve / dispatch / close in the audit trail">
           acting as

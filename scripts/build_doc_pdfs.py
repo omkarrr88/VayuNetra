@@ -39,7 +39,9 @@ tr:nth-child(even) td{background:#f8fafc} tr{page-break-inside:avoid}
 blockquote{border-left:3px solid var(--green);background:#ecfdf5;padding:2.5mm 3.5mm;margin:2.5mm 0 4mm;border-radius:0 6px 6px 0}
 blockquote p{margin-bottom:1.5mm}
 hr{border:0;border-top:1px solid var(--line);margin:5mm 0}
-img{max-width:100%;border-radius:6px}
+img{max-width:100%;border-radius:6px;border:1px solid var(--line);margin:1.5mm 0 1mm;page-break-inside:avoid}
+figure{margin:2mm 0 4mm;page-break-inside:avoid} figcaption,.cap{font-size:8.3pt;color:var(--muted);margin-top:1mm}
+img.half{max-width:49%}
 .title{margin-bottom:6mm} .title .sub{color:var(--muted);font-size:9.5pt}
 """
 
@@ -53,6 +55,18 @@ DOCS_TO_BUILD = [
 def md_to_html(md_text: str, footer_label: str) -> str:
     body = markdown.markdown(md_text, extensions=["tables", "fenced_code", "sane_lists"])
     body = body.replace('src="architecture-dark.png"', f'src="file://{DOCS}/architecture-dark.png"')
+    # relative image paths in the markdown (guide/*.jpg, *.svg, *.png) resolve against docs/
+    import re as _re
+    body = _re.sub(r'src="(?!https?://|file://|data:)([^"]+)"', lambda m: f'src="file://{DOCS}/{m.group(1)}"', body)
+    # portrait screenshots (rail clips, cell story, phone) print at reduced width so they don't eat a page
+    def _size(m):
+        tag = m.group(0)
+        if _re.search(r"guide/(1[2-9]|2[0-2]|2[4-7]|29|3[0-3]|37|38|40|41|43)-", tag):
+            return tag.replace("<img ", '<img style="max-width:58%;display:block;margin:1.5mm auto" ')
+        if "44-mobile" in tag:
+            return tag.replace("<img ", '<img style="max-width:34%;display:block;margin:1.5mm auto" ')
+        return tag
+    body = _re.sub(r"<img [^>]+>", _size, body)
     return f"<!doctype html><html><head><meta charset='utf-8'><style>{CSS}</style></head><body>{body}</body></html>"
 
 
