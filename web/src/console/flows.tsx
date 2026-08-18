@@ -50,6 +50,19 @@ export const FLOWS: Record<Section, Flow> = {
       { n: 4, label: "Citizen reports", info: <><P><b>What:</b> residents report smoke, dust or burning with a photo; verified reports become emission sources in the enforcement worklist — the loop closes.</P></> },
     ],
   },
+  cityair: {
+    verb: "Read",
+    title: "City air",
+    blurb: "What this city is breathing right now — the official index, every pollutant behind it, the record, and what it means for people.",
+    steps: [
+      { n: 1, label: "Right now", info: <><P><b>What:</b> the city's live index on the scale chosen in the header — the <b>maximum of its pollutant sub-indices</b>, with the pollutant that sets it, exactly as CPCB defines the National AQI.</P><P><b>Where from:</b> city means over this city's own CPCB stations (via OpenAQ), computed by <code>core/aqi.py</code>; the age of the newest reading is on the card.</P><P><b>Honest note:</b> the formula runs on the latest hourly readings, so the official 24-hour bulletin can differ — and a different national scale gives a different number for the same air.</P></> },
+      { n: 2, label: "Pollutants", info: <><P><b>What:</b> every pollutant this city publishes with its own sub-index; the one that sets the city index is badged <i>prominent</i>. Click a card for what it is, where it comes from and the standard it is judged against.</P></> },
+      { n: 3, label: "Graph", info: <><P><b>What:</b> the index or a single pollutant over 24 h (hourly) or 7 d / 30 d / 1 y (daily means), coloured by band.</P><P><b>Coverage:</b> where the record is shorter than the range the card says so rather than stretching the axis.</P></> },
+      { n: 4, label: "Calendar", info: <><P><b>What:</b> one tile per day coloured by that day's index. Blank tiles are days with no reading — coverage is shown, never filled in.</P></> },
+      { n: 5, label: "Trend", info: <><P><b>What:</b> monthly mean PM2.5 over the record with the most and least polluted month. Delhi's winter shows here as the real smog season.</P></> },
+      { n: 6, label: "Health", info: <><P><b>What:</b> the cigarette-equivalent of the last 24 h, what to do now, and per-condition guidance (asthma, heart, allergies, sinus, cold/flu, COPD).</P><P><b>Honesty:</b> templated from CPCB's advisory table and WHO guidance — no language model writes health text, and it is not medical advice.</P></> },
+    ],
+  },
   compare: {
     verb: "Compare",
     title: "Cities",

@@ -4,6 +4,7 @@ import BlameMap, { type AttrCell, type CoverageCell, type MapMode } from "./Blam
 import ForecastPanel from "./ForecastPanel";
 import ValidationPanel from "./ValidationPanel";
 import InterventionsHindsight from "./InterventionsHindsight";
+import CityAirPanel from "./city/CityAirPanel";
 import BriefCard from "./BriefCard";
 import { api } from "./api";
 import AqiHeader from "./AqiHeader";
@@ -56,7 +57,7 @@ function S(section: Section, n: number) {
 // Deep links: /console?city=…&section=…&cell=…&mode=…&layers=sources,plumes,wards,freight,fires
 // Every console state is a shareable URL — a bookmarked demo path, or a link
 // you hand a judge to the exact Hyderabad cell during Q&A.
-const SECTION_IDS: Section[] = ["action", "forecast", "citizen", "compare", "whatif", "impact", "pipeline"];
+const SECTION_IDS: Section[] = ["action", "forecast", "citizen", "compare", "whatif", "impact", "pipeline", "cityair"];
 const LAYER_KEYS = ["sources", "plumes", "wards", "freight", "fires"] as const;
 
 function urlState() {
@@ -386,6 +387,7 @@ export default function App() {
                   <CityStatsPanel city={active} cells={attrCells} coverageCells={coverage?.cells ?? []} />
                 </>
               )}
+              {section === "cityair" && <CityAirPanel city={active} />}
               {section === "citizen" && <CitizenPanel city={active} languages={city?.languages} center={center} />}
               {section === "compare" && <ComparativePanel onSelectCity={setActive} />}
               {section === "whatif" && <WhatIfPanel city={active} />}
