@@ -65,7 +65,7 @@ Adding a city means adding one YAML file with a bounding box, languages and regu
 
 | Claim | Result |
 |---|---|
-| Attribution vs published inventories | Cosine 0.92 against SAFAR-Delhi (2018), 0.88 against CSTEP-Bengaluru (2022), 0.79 against NEERI/Urban-Emissions Mumbai |
+| Attribution vs published apportionment | Cosine 0.88 against SAFAR-Delhi (2018), 0.90 against CSTEP-Bengaluru (2022, verified against the primary report), 0.93 against NEERI/Urban-Emissions Mumbai (run of 18 Aug 2026); bucket-by-bucket tables against TERI-ARAI 2018 and Guttikunda et al. 2019 with the disagreements stated |
 | Attribution behaves physically | Traffic SHAP contribution 2.30× higher during IST rush hours, weather controlled |
 | Forecast skill vs persistence | Multi-season temporal split, monthly refit on the trailing 90 days, served forecast = LightGBM median blended with persistence: Delhi +9 / +13 / +12%, Mumbai +17 / +19 / +21%, Kolkata +14 / +10 / +9% at 24/48/72 h; alarming on the calibrated probability flags 51–54% of clean→Very-Poor onsets 1–3 days ahead where persistence is 0 by construction; live 90-day benchmarks for all 10 cities |
 | Prediction interval coverage | Raw intervals under-covered at 48–63% against a nominal 80%; conformal calibration brought this to 78% measured on 207k Delhi test hours; every forecast also carries a calibrated P(>120) / P(>250) (Brier skill +51% / +31% vs climatology at 24 h) |

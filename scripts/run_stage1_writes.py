@@ -1,4 +1,4 @@
-"""Run Sejal Stage-1 live writes into Supabase.
+"""Run the Stage-1 live writes into Supabase.
 
 This closes the handoff gap between code/fixtures and the live database:
 - emission_sources from static OSM/WorldPop-style layers
@@ -6,7 +6,7 @@ This closes the handoff gap between code/fixtures and the live database:
 - advisories in city languages plus English/Hindi/Kannada/Marathi coverage
 
 Run:
-  python scripts/run_sejal_stage1.py --push
+  python scripts/run_stage1_writes.py --push
 """
 from __future__ import annotations
 
@@ -116,7 +116,7 @@ def count_live() -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--push", action="store_true", help="write Stage-1 Sejal outputs into Supabase")
+    ap.add_argument("--push", action="store_true", help="write the Stage-1 outputs into Supabase")
     ap.add_argument("--hours", type=int, default=24)
     args = ap.parse_args()
 

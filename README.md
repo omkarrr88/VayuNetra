@@ -71,10 +71,12 @@ climatology at 24 h). Live 90-day benchmarks exist for all 10 cities.
 
 *skill = 1 − RMSE_model / RMSE_baseline. Negative numbers are kept — the Delhi 24 h and Severe-tail weak spots ship too.*
 
-**Attribution cross-checked against published emission inventories** (`evaluate.ipynb §10`):
-cosine similarity **0.92 vs SAFAR-Delhi (2018)** · 0.88 vs CSTEP-Bengaluru (2022) · 0.79 vs
-NEERI/Urban-Emissions Mumbai — with discrepancies explained (biomass ≈ 0 in July is seasonally
-correct; inventories are annual averages). What-if intervention magnitudes are
+**Attribution cross-checked against published apportionment** (`docs/ATTRIBUTION_VALIDATION.md`,
+`evaluate.ipynb §10`): cosine similarity **0.88 vs SAFAR-Delhi (2018)** · **0.90 vs CSTEP-Bengaluru
+(2022, verified against the primary report)** · 0.93 vs NEERI/Urban-Emissions Mumbai (run of
+18 Aug 2026) — and, bucket by bucket, against TERI-ARAI 2018 (Delhi) and Guttikunda et al. 2019
+(Bengaluru), agreements and disagreements both stated (biomass ≈ 0 in monsoon is seasonally
+correct; kerbside traffic over-read; small waste fires invisible to FIRMS). What-if intervention magnitudes are
 literature-grounded (Delhi odd-even trials, CAQM GRAP schedules); every `/simulate` figure
 carries its citation.
 

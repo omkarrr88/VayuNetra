@@ -1,4 +1,4 @@
-"""Tests for agents.enforcement (Agent 3) — Abhinav.
+"""Tests for agents.enforcement (Agent 3).
 
 All tests run in DEMO_MODE=true.
 """

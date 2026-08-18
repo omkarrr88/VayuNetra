@@ -43,15 +43,21 @@ CITY_INVENTORY: dict[str, InventoryAnchor] = {
         caveat="approximate transcription; Delhi apportionment studies (SAFAR, TERI-ARAI 2018, IIT-K 2016) vary by season and method",
     ),
     "bengaluru": InventoryAnchor(
+        # CSTEP (Feb 2022) §4.3.4 — WRF-CAMx source-off simulations, share of the 2019 annual
+        # PM2.5 *concentration* inside BBMP: transport 51.36 %, road + re-suspended dust 30.92 %,
+        # DG sets 8.8 %, waste burning 5.67 % (remainder = domestic / eateries / industry).
+        # Verified against the primary PDF (docs/sources/EI_Report_Final_04Feb22.pdf).
         shares={
-            "traffic": 0.43,
-            "construction_dust": 0.21,    # road + construction dust
-            "industrial": 0.13,           # incl. DG sets
-            "biomass_burning": 0.09,      # domestic fuel + open waste burning
-            "other": 0.14,
+            "traffic": 0.5136,
+            "construction_dust": 0.3092,  # road dust + re-suspended road dust
+            "industrial": 0.088,          # DG sets — Bengaluru has little in-city heavy industry
+            "biomass_burning": 0.0567,    # municipal solid-waste burning
+            "other": 0.0325,
         },
-        source="CSTEP Bengaluru emission inventory / source apportionment (2022)",
-        caveat="approximate transcription of the PM2.5 summary shares",
+        source="CSTEP, Emission Inventory and Pollution Reduction Strategies for Bengaluru (Feb 2022), §4.3.4, base year 2019, BBMP area",
+        caveat=("share of modelled annual PM2.5 concentration, not of emissions; the independent Guttikunda et al. (2019, "
+                "Atmos. Pollut. Res., Table 5, base year 2015, Greater Bengaluru airshed) study gives transport 28.1 %, dust 22.9 %, "
+                "open waste burning 14.4 %, industries + kilns + DG 8.2 %, outside the airshed 17.2 %"),
     ),
     "mumbai": InventoryAnchor(
         shares={
@@ -78,8 +84,11 @@ SECTOR_EMISSIONS_TPY: dict[str, dict] = {
         "source": "SAFAR-Delhi Emission Inventory 2018 (~68 kt PM2.5/yr total × sector shares)",
     },
     "bengaluru": {
-        "tonnes": {"traffic": 9_200, "construction_dust": 4_500, "industrial": 2_800, "biomass_burning": 1_900},
-        "source": "CSTEP Bengaluru inventory (2022; ~21.5 kt PM2.5/yr total × sector shares)",
+        # CSTEP 2022 executive summary + §4: 14,700 t PM2.5/yr emitted in BBMP in 2019; DG sets 1,601 t,
+        # MSW burning 1,412 t, construction 450 t; transport (tail-pipe + re-suspended road dust, reported
+        # together for PM2.5) ≈ 70 % of the load. Verified against the primary PDF.
+        "tonnes": {"traffic": 10_300, "construction_dust": 450, "industrial": 1_600, "biomass_burning": 1_400},
+        "source": "CSTEP Bengaluru emission inventory (2022; 14,700 t PM2.5/yr in BBMP, 2019): transport incl. re-suspended road dust ~70 %, DG sets 1,601 t, MSW burning 1,412 t, construction 450 t",
     },
     "mumbai": {
         "tonnes": {"traffic": 9_000, "construction_dust": 10_300, "industrial": 16_200, "biomass_burning": 3_200},

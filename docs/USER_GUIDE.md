@@ -50,7 +50,7 @@ The public front door — no login, loads fast (the heavy map code only loads at
 - **Architecture:** the full system diagram (same `architecture.svg` used in the pitch deck — one source of truth).
 - **Platform:** 12 feature cards.
 - **The data at a glance:** live production snapshot — Delhi source-mix donut, per-city PM2.5 now-vs-+24h, and the scale row: **16,529** cells · **647** sources · **5,495** vulnerability zones · **454** live enforcement recommendations.
-- **Validation table:** claim / result / how it was checked (cosine 0.92/0.88/0.79 vs official inventories; 2.30× rush-hour traffic SHAP; forecast skill vs persistence; CQR 75–80% coverage; the rejected TFT model; test counts).
+- **Validation table:** claim / result / how it was checked (cosine 0.88/0.90/0.93 vs published apportionment anchors; 2.30× rush-hour traffic SHAP; forecast skill vs persistence; CQR 75–80% coverage; the rejected TFT model; test counts).
 - **QR codes:** open the app on your phone · subscribe on Telegram.
 - **Footer:** product links, resources, team names.
 
@@ -233,7 +233,7 @@ Core tables: `cities, measurements, attribution, forecasts, emission_sources, en
 - Attribution **abstains** (R² gate + coverage mask) instead of guessing.
 - Forecast intervals were audited, found under-covered, and **fixed with CQR** — the failure is documented, not hidden. Every forecast now also carries a **calibrated P(>120) / P(>250)**.
 - The forecast is **benchmarked the way a reviewer would**: strict temporal split, production-faithful rolling refit, persistence + seasonal-naive + climatology baselines, one shared support mask, regime slices, onset recall, Brier skill, meteorology ablation — and the numbers (including the Severe-tail under-prediction and the −3.7% winter 24 h) are served by the API and printed in the console (`docs/BENCHMARKS.md`).
-- Attribution is **compared with published apportionment** (TERI-ARAI 2018 for Delhi) and the disagreement (kerbside traffic over-weighted in monsoon) is stated (`docs/ATTRIBUTION_VALIDATION.md`).
+- Attribution is **compared with published apportionment** (TERI-ARAI 2018 for Delhi; Guttikunda 2019 and CSTEP 2022 for Bengaluru) and the disagreements (kerbside traffic over-weighted in monsoon Delhi; combustion point sources over-read and small waste fires under-read in Bengaluru) are stated (`docs/ATTRIBUTION_VALIDATION.md`).
 - Every notice ends with a **PROVENANCE** section: figures are read from structured model output by deterministic code; regulatory text is retrieved verbatim; no number is produced by a language model. LLM fluency polish (optional, off by default) is gated by a facts check **and a script check** — a Hindi SMS with a stray CJK glyph is rejected, never sent.
 - Positioning vs SAFAR / DSS / PRANA is written down with the CEEW audit numbers, including what we do **not** claim (`docs/POSITIONING.md`).
 - A deep-learning model (TFT) was trained on GPU and **rejected** because LightGBM won held-out skill in every launch city.

@@ -25,7 +25,7 @@
 | GET | `/health` | liveness + `DEMO_MODE` flag | all |
 | GET | `/cities` | list onboarded cities | all |
 | GET | `/aqi/current?city&bbox` | live AQI per H3 cell | all |
-| GET | `/attribution?city&cell\|ward&ts` | source split + confidence (blame map) | officer+ | Abhinav |
+| GET | `/attribution?city&cell\|ward&ts` | source split + confidence (blame map) | officer+ |
 | GET | `/forecast?city&cell&horizon` | forecast + intervals + persistence | all |
 | GET | `/enforcement?city&date` | ranked enforcement recommendations | officer+ |
 | POST | `/enforcement/{id}/dossier` | cited evidence packet + satellite patch (E6) | officer+ |

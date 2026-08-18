@@ -1,4 +1,4 @@
-"""Tests for agents.graph (Agent 0 Orchestrator) — Abhinav.
+"""Tests for agents.graph (Agent 0 Orchestrator).
 
 All tests run in DEMO_MODE=true so no external services are needed.
 """

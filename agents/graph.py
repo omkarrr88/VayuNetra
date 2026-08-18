@@ -166,13 +166,13 @@ def orchestrator(state: GraphState) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Node: Attribution (A1) — Omkar fills the real model; stub here
+# Node: Attribution (A1) — the real model lives in ml.attribution; stub here
 # ---------------------------------------------------------------------------
 
 def attribution_node(state: GraphState) -> dict:
     """Attribute pollution sources for spiking cells.
 
-    Omkar (A1) fills the real gradient-boosting model.
+    ml.attribution provides the real gradient-boosting model.
     In DEMO_MODE or until the live model is wired: reads from DB / fixture.
     """
     city_id = state.get("city_id", "delhi")
@@ -194,13 +194,13 @@ def attribution_node(state: GraphState) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Node: Forecast (A2) — Omkar fills the real model; reads DB/fixture
+# Node: Forecast (A2) — the real model lives in ml.forecast; reads DB/fixture
 # ---------------------------------------------------------------------------
 
 def forecast_node(state: GraphState) -> dict:
     """Load 24/48/72h forecasts for focus cells.
 
-    Omkar (A2) fills the real LightGBM/GNN model.
+    ml.forecast provides the real LightGBM model.
     Until then: reads DB rows / demo fixture.
     """
     city_id = state.get("city_id", "delhi")
@@ -233,7 +233,7 @@ def forecast_node(state: GraphState) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Node: Enforcement (A3) — Abhinav
+# Node: Enforcement (A3)
 # ---------------------------------------------------------------------------
 
 def enforcement_node(state: GraphState) -> dict:
@@ -278,7 +278,7 @@ def enforcement_node(state: GraphState) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Node: Advisory (A4) — Sejal fills the real agent; stub here
+# Node: Advisory (A4) — the real agent lives in agents.advisory; stub here
 # ---------------------------------------------------------------------------
 
 def advisory_node(state: GraphState) -> dict:

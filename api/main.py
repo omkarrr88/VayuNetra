@@ -613,7 +613,7 @@ def enforcement_dossier(rec_id: int, db=Depends(get_db)) -> dict:
     """Full evidence dossier for an enforcement recommendation, with RAG citations.
 
     Includes: rationale, regulatory citations, rubric score, suggested notice text,
-    and (Stage 2, Sejal E6) satellite patch.
+    and (Stage 2, E6) satellite patch.
     """
     if DEMO_MODE:
         return ok(fixture("dossier", default={"rec_id": rec_id, "citations": [], "satellite_patch": None}))
@@ -1247,7 +1247,7 @@ def compound_alerts(city: str = Query("delhi", description="City ID"), db=Depend
 
 
 # ---------------------------------------------------------------------------
-# Sejal Stage-1 static layers, mobility, comparison, and latency widgets
+# Stage-1 static layers, mobility, comparison, and latency widgets
 # ---------------------------------------------------------------------------
 
 @app.get("/static-layers", tags=["data"])
@@ -1934,7 +1934,7 @@ def plume_layer(
 
 
 # ---------------------------------------------------------------------------
-# Prescriptive optimiser (E5 — Abhinav Stage 2; stub with demo fixture)
+# Prescriptive optimiser (E5 — Stage 2; stub with demo fixture)
 # ---------------------------------------------------------------------------
 
 class OptimizeBody(BaseModel):

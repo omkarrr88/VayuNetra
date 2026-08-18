@@ -1,4 +1,4 @@
-"""E2 — dense-coverage models (Sejal, Stage 2).
+"""E2 — dense-coverage models (Stage 2).
 
 Two models turn ~40 stations into a full-city 1 km field:
   - ``aod_pm25``   — AOD + met → surface PM2.5 (LightGBM; established RS approach)

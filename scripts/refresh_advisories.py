@@ -1,6 +1,6 @@
 """Regenerate citizen advisories from the CURRENT forecasts.
 
-Surgical version of run_sejal_stage1 --push: touches ONLY the advisories
+Surgical version of run_stage1_writes --push: touches ONLY the advisories
 table (the full script would also re-insert its synthetic registry rows next
 to the OSM-ingested emission_sources). Cron-safe and idempotent.
 
@@ -48,7 +48,7 @@ def _live_vulnerability(city_id: str) -> list[dict]:
 
 def main() -> None:
     from connectors.static_layers import build_static_layers
-    from scripts.run_sejal_stage1 import _cities, _replace_advisories
+    from scripts.run_stage1_writes import _cities, _replace_advisories
 
     cities = _cities()
     layers = {c["city_id"]: build_static_layers(c["city_id"]) for c in cities}

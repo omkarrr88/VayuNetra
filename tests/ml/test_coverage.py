@@ -1,4 +1,4 @@
-"""E2 — dense-coverage model tests (Sejal, Stage 2). CPU-fast; GPU run is the notebook.
+"""E2 — dense-coverage model tests (Stage 2). CPU-fast; GPU run is the notebook.
 
 The CNN needs torch (requirements-ml). The lean stack (CI, Render) runs the
 covariate-modulated bilinear fallback, so those paths are tested torch-free.
