@@ -16,6 +16,7 @@ import json
 import logging
 import math
 import os
+import threading
 import time
 import asyncio
 from datetime import datetime, timedelta, timezone
@@ -657,17 +658,19 @@ class StatusBody(BaseModel):
 
 
 _STATUS_EVENTS: list[float] = []
+_STATUS_LOCK = threading.Lock()
 
 
 def _status_rate_ok(limit: int = 60, window_s: int = 60) -> bool:
     """Process-local rate limit for officer status changes (a demo console, not a firehose)."""
     now = time.time()
-    while _STATUS_EVENTS and now - _STATUS_EVENTS[0] > window_s:
-        _STATUS_EVENTS.pop(0)
-    if len(_STATUS_EVENTS) >= limit:
-        return False
-    _STATUS_EVENTS.append(now)
-    return True
+    with _STATUS_LOCK:
+        while _STATUS_EVENTS and now - _STATUS_EVENTS[0] > window_s:
+            _STATUS_EVENTS.pop(0)
+        if len(_STATUS_EVENTS) >= limit:
+            return False
+        _STATUS_EVENTS.append(now)
+        return True
 
 
 @app.post("/enforcement/{rec_id}/status", tags=["enforcement"])

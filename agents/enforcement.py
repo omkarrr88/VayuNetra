@@ -491,7 +491,8 @@ def write_worklist(db, city_id: str, rows: list[dict]) -> dict:
         if hit:
             patch = {f: row[f] for f in ("priority_score", "contribution", "pop_exposed", "rationale",
                                           "evidence", "rag_citations", "rubric_score", "ts") if f in row}
-            db.table("enforcement_recs").update(patch).eq("id", hit["id"]).execute()
+            if patch:
+                db.table("enforcement_recs").update(patch).eq("id", hit["id"]).execute()
             refreshed += 1
         else:
             to_insert.append(row)

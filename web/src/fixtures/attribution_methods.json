@@ -1,0 +1,166 @@
+{
+ "cities": [
+  {
+   "city_id": "ahmedabad",
+   "n_cells": 6,
+   "methods": [
+    {
+     "method": "signature-v1",
+     "label": "chemical-signature priors only (model failed the R\u00b2 gate or too little history)",
+     "n_cells": 6
+    }
+   ],
+   "share_per_cell_model": 0.0,
+   "median_model_r2": null,
+   "mean_confidence": 0.46,
+   "cells_with_gas_marker_24h": 0
+  },
+  {
+   "city_id": "bengaluru",
+   "n_cells": 13,
+   "methods": [
+    {
+     "method": "signature-v1",
+     "label": "chemical-signature priors only (model failed the R\u00b2 gate or too little history)",
+     "n_cells": 13
+    }
+   ],
+   "share_per_cell_model": 0.0,
+   "median_model_r2": null,
+   "mean_confidence": 0.54,
+   "cells_with_gas_marker_24h": 4
+  },
+  {
+   "city_id": "chennai",
+   "n_cells": 6,
+   "methods": [
+    {
+     "method": "signature-v1",
+     "label": "chemical-signature priors only (model failed the R\u00b2 gate or too little history)",
+     "n_cells": 6
+    }
+   ],
+   "share_per_cell_model": 0.0,
+   "median_model_r2": null,
+   "mean_confidence": 0.62,
+   "cells_with_gas_marker_24h": 0
+  },
+  {
+   "city_id": "delhi",
+   "n_cells": 24,
+   "methods": [
+    {
+     "method": "signature-citymean-v1",
+     "label": "shrunk toward the city model mean (no local gas markers)",
+     "n_cells": 21
+    },
+    {
+     "method": "hybrid-gbm-shap-v2",
+     "label": "per-cell model (GBM + SHAP, passed the R\u00b2 gate)",
+     "n_cells": 3
+    }
+   ],
+   "share_per_cell_model": 0.12,
+   "median_model_r2": 0.78,
+   "mean_confidence": 0.39,
+   "cells_with_gas_marker_24h": 2
+  },
+  {
+   "city_id": "hyderabad",
+   "n_cells": 6,
+   "methods": [
+    {
+     "method": "signature-v1",
+     "label": "chemical-signature priors only (model failed the R\u00b2 gate or too little history)",
+     "n_cells": 6
+    }
+   ],
+   "share_per_cell_model": 0.0,
+   "median_model_r2": null,
+   "mean_confidence": 0.45,
+   "cells_with_gas_marker_24h": 0
+  },
+  {
+   "city_id": "jaipur",
+   "n_cells": 6,
+   "methods": [
+    {
+     "method": "hybrid-gbm-shap-v2",
+     "label": "per-cell model (GBM + SHAP, passed the R\u00b2 gate)",
+     "n_cells": 6
+    }
+   ],
+   "share_per_cell_model": 1.0,
+   "median_model_r2": 0.16,
+   "mean_confidence": 0.55,
+   "cells_with_gas_marker_24h": 0
+  },
+  {
+   "city_id": "kolkata",
+   "n_cells": 3,
+   "methods": [
+    {
+     "method": "signature-citymean-v1",
+     "label": "shrunk toward the city model mean (no local gas markers)",
+     "n_cells": 2
+    },
+    {
+     "method": "hybrid-gbm-shap-v2",
+     "label": "per-cell model (GBM + SHAP, passed the R\u00b2 gate)",
+     "n_cells": 1
+    }
+   ],
+   "share_per_cell_model": 0.33,
+   "median_model_r2": 0.52,
+   "mean_confidence": 0.46,
+   "cells_with_gas_marker_24h": 0
+  },
+  {
+   "city_id": "lucknow",
+   "n_cells": 5,
+   "methods": [
+    {
+     "method": "signature-v1",
+     "label": "chemical-signature priors only (model failed the R\u00b2 gate or too little history)",
+     "n_cells": 5
+    }
+   ],
+   "share_per_cell_model": 0.0,
+   "median_model_r2": null,
+   "mean_confidence": 0.52,
+   "cells_with_gas_marker_24h": 0
+  },
+  {
+   "city_id": "mumbai",
+   "n_cells": 20,
+   "methods": [
+    {
+     "method": "signature-v1",
+     "label": "chemical-signature priors only (model failed the R\u00b2 gate or too little history)",
+     "n_cells": 20
+    }
+   ],
+   "share_per_cell_model": 0.0,
+   "median_model_r2": null,
+   "mean_confidence": 0.54,
+   "cells_with_gas_marker_24h": 8
+  },
+  {
+   "city_id": "pune",
+   "n_cells": 9,
+   "methods": [
+    {
+     "method": "hybrid-gbm-shap-v2",
+     "label": "per-cell model (GBM + SHAP, passed the R\u00b2 gate)",
+     "n_cells": 9
+    }
+   ],
+   "share_per_cell_model": 1.0,
+   "median_model_r2": 0.22,
+   "mean_confidence": 0.65,
+   "cells_with_gas_marker_24h": 0
+  }
+ ],
+ "gate": "per-cell model used only above out-of-sample R\u00b2 0.15; otherwise shrunk toward the city model mean where local gas markers are missing, else cited signature priors",
+ "note": "recomputed daily from the latest hour; the split moves with station marker coverage \u2014 stated, not smoothed"
+}

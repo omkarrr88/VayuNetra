@@ -277,6 +277,7 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
             value={officer}
             onChange={(e) => setOfficer(e.target.value)}
             placeholder="officer name"
+            maxLength={80}
             aria-label="Acting officer name"
             className="w-28 rounded-md border border-slate-200 bg-white px-1.5 py-1 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
           />

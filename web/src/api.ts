@@ -14,6 +14,8 @@ import fxLatency from "./fixtures/latency.json";
 import fxDossier from "./fixtures/dossier.json";
 import fxSimulate from "./fixtures/simulate.json";
 import fxRoi from "./fixtures/roi.json";
+import fxInterventionsDelhi from "./fixtures/interventions_delhi.json";
+import fxAttrMethods from "./fixtures/attribution_methods.json";
 import fxStatic from "./fixtures/static_layers.json";
 import fxCoverage from "./fixtures/coverage.json";
 import fxTrend from "./fixtures/history_trend.json";
@@ -84,6 +86,9 @@ function fixtureFor(path: string): unknown {
     return byId[city ?? "delhi"] ?? byId["delhi"];
   }
   if (p === "/exposure") return undefined; // no offline fixture: the card simply hides itself
+  if (p === "/metrics/interventions") return (city ?? "delhi") === "delhi" ? fxInterventionsDelhi : undefined; // Delhi's published artifact
+  if (p === "/metrics/attribution") return fxAttrMethods; // production breakdown, 18 Aug 2026
+  if (p === "/landing/snapshot") return undefined; // the landing keeps its bundled snapshot
   if (p === "/comparison") return fxComparison;
   if (p === "/latency") return fxLatency;
   if (p === "/simulate") return fxSimulate;
