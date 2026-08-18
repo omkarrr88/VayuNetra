@@ -21,11 +21,8 @@ function markSeen() {
 type Step = {
   title: string;
   body: string;
-  // Desktop placement overrides; the base classes center the card (mobile +
-  // step 2). Right-anchored steps must also cancel the base `left-1/2`.
-  place: string;
-  arrow?: "up-left" | "left" | "right";
-  // Element the dimmed overlay cuts a spotlight around (desktop only).
+  // Element the dimmed overlay cuts a spotlight around (desktop only). The card is then placed
+  // against that element's measured box, so the tour cannot drift when the layout changes.
   target?: string;
   shrink?: number; // spotlight only the central fraction (full-bleed targets)
 };
@@ -33,42 +30,49 @@ type Step = {
 const STEPS: Step[] = [
   {
     title: "One city at a time",
-    body: "Pick any of the 10 cities up here. Everything below — map, forecasts, actions — follows the city you choose.",
-    place: "lg:translate-x-0 lg:translate-y-0 lg:left-56 lg:top-16",
-    arrow: "up-left",
+    body: "Pick any of the 10 cities up here. Everything on the page — map, forecasts, worklist — follows the city you choose. [ and ] cycle through them.",
     target: "[data-tour=city]",
   },
   {
+    title: "Every section is a page",
+    body: "The links along the top are the console's sections. Keys 1–8 jump straight to them, ⌘K opens a search over every city and section, and P is presentation mode for the projector.",
+    target: "[data-tour=nav]",
+  },
+  {
     title: "Every hexagon is ~1 km² of the city",
-    body: "The map shows who is to blame for PM2.5, square kilometre by square kilometre. Click any hexagon to see its full story: sources, evidence and a 72-hour outlook.",
-    place: "lg:translate-x-0 lg:translate-y-0 lg:left-[24rem] lg:top-[60%]",
+    body: "The map shows who is to blame for PM2.5, square kilometre by square kilometre. Click any hexagon for its full story: sources, evidence and a 72-hour outlook.",
     target: "[data-tour=map]",
-    shrink: 0.42,
+    shrink: 0.5,
   },
   {
     title: "Every section has a path",
-    body: "The strip at the top of the panel says what this section is for and the numbered steps through it. Click a number to jump; the cards below carry the same numbers. Every card's ? explains where its numbers come from.",
-    place: "lg:translate-x-0 lg:translate-y-0 lg:left-auto lg:right-[27rem] lg:top-20 2xl:right-[31rem]",
-    arrow: "right",
+    body: "Under the section title are its numbered steps. Click a number to jump to that card; every card carries the same number, and its ? explains where the numbers come from.",
     target: "[data-tour=spine]",
   },
   {
     title: "From blame to action",
-    body: "Enforcement turns the science into a ranked officer worklist — each item carries cited evidence, a real satellite dossier and a draft notice PDF; then dispatch by ward and track the outcome.",
-    place: "lg:translate-x-0 lg:translate-y-0 lg:left-auto lg:right-[27rem] lg:top-40 2xl:right-[31rem]",
-    arrow: "right",
+    body: "Enforcement turns the science into a ranked officer worklist — each item carries cited evidence, a real satellite dossier and a draft notice PDF; then you dispatch by ward and track the measured outcome.",
     target: "[data-tour=panel]",
-  },
-  {
-    title: "Seven sections, three questions",
-    body: "Operate (Enforcement, Forecast, Advisories) · Understand (Cities, Impact) · Explore (Simulator, Pipeline). Keys 1–7 switch sections, [ ] switch cities, P is presentation mode.",
-    place: "lg:translate-x-0 lg:translate-y-0 lg:left-56 lg:top-1/3",
-    arrow: "left",
-    target: "[data-tour=sidebar]",
+    shrink: 0.35,
   },
 ];
 
 type Spot = { left: number; top: number; width: number; height: number };
+
+const CARD_W = 304;
+
+/** Put the card just outside the spotlight — below it when there is room, above it otherwise —
+ *  and keep it fully on screen. Without a spotlight (mobile) it centres. */
+function cardStyle(spot: Spot | null): React.CSSProperties {
+  if (!spot) return { left: "50%", top: "50%", transform: "translate(-50%, -50%)" };
+  const gap = 14;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const below = spot.top + spot.height + gap;
+  const roomBelow = vh - below > 210;
+  const top = roomBelow ? below : Math.max(gap, spot.top - 210 - gap);
+  const left = Math.min(Math.max(gap, spot.left + spot.width / 2 - CARD_W / 2), vw - CARD_W - gap);
+  return { left, top, transform: "none" };
+}
 
 function spotlightRect(s: Step): Spot | null {
   if (!s.target || !window.matchMedia("(min-width: 1024px)").matches) return null;
@@ -144,20 +148,8 @@ export default function Tour({ onDone }: { onDone: () => void }) {
       {/* Positioning and animation live on separate elements — the vn-pop
           keyframe's `transform` would otherwise override the centering
           translate (animation fill-mode wins over utility classes). */}
-      <div
-        className={`absolute left-1/2 top-1/2 w-[19rem] max-w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 ${s.place}`}
-      >
+      <div className="absolute w-[19rem] max-w-[calc(100vw-2rem)]" style={cardStyle(spot)}>
         <div key={step} className="vn-pop relative rounded-xl bg-white p-4 shadow-2xl">
-          {s.arrow === "up-left" && (
-            <div className="absolute -top-1.5 left-6 hidden h-3 w-3 rotate-45 bg-white lg:block" aria-hidden="true" />
-          )}
-          {s.arrow === "left" && (
-            <div className="absolute -left-1.5 top-8 hidden h-3 w-3 rotate-45 bg-white lg:block" aria-hidden="true" />
-          )}
-          {s.arrow === "right" && (
-            <div className="absolute -right-1.5 top-8 hidden h-3 w-3 rotate-45 bg-white lg:block" aria-hidden="true" />
-          )}
-
           <div className="mb-1 flex items-center gap-2">
             <img src="/icon-192.png" alt="" className="h-5 w-5 rounded" width={20} height={20} />
             <span className="text-[13px] font-bold text-slate-900">{s.title}</span>

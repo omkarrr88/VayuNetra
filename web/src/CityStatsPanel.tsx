@@ -3,7 +3,8 @@ import { Area, AreaChart, Cell, Pie, PieChart, Tooltip, XAxis, YAxis } from "rec
 import SizedChart from "./SizedChart";
 import type { AttrCell, CoverageCell } from "./BlameMap";
 import { api } from "./api";
-import { aqiCategory, pm25ToAqi } from "./aqi";
+import { categoryForPm25, type AqiScale } from "./aqi";
+import { useAqiScale } from "./aqiScale";
 import { SOURCE_COLORS } from "./sources";
 import { Step, Panel } from "./ui";
 import TrendPanel from "./TrendPanel";
@@ -36,16 +37,16 @@ function sourceMix(cells: AttrCell[]): Array<{ name: string; value: number; colo
 }
 
 /** Share of the dense-field cells in each AQI band → stacked bar segments. */
-function aqiBands(cells: CoverageCell[]): Array<{ label: string; color: string; text: string; count: number; pct: number }> {
+function aqiBands(cells: CoverageCell[], scale: AqiScale): Array<{ label: string; color: string; text: string; count: number; pct: number }> {
   if (!cells.length) return [];
   const counts = new Map<string, { label: string; color: string; text: string; count: number }>();
   for (const c of cells) {
-    const cat = aqiCategory(pm25ToAqi(c.pm25));
+    const cat = categoryForPm25(c.pm25, scale);
     const cur = counts.get(cat.label) ?? { label: cat.label, color: cat.color, text: cat.text, count: 0 };
     cur.count += 1;
     counts.set(cat.label, cur);
   }
-  const ORDER = ["Good", "Satisfactory", "Moderate", "Poor", "Very Poor", "Severe"];
+  const ORDER = ["Good", "Satisfactory", "Moderate", "Poor", "Very Poor", "Severe", "Unhealthy for Sensitive Groups", "Unhealthy", "Very Unhealthy", "Hazardous", "Within guideline", "Above guideline (≤ IT-4)", "Above IT-4 (≤ IT-3)", "Above IT-3 (≤ IT-2)", "Above IT-2 (≤ IT-1)", "Above IT-1"];
   return Array.from(counts.values())
     .map((b) => ({ ...b, pct: (b.count / cells.length) * 100 }))
     .sort((a, b) => ORDER.indexOf(a.label) - ORDER.indexOf(b.label));
@@ -65,6 +66,7 @@ export default function CityStatsPanel({
   cells: AttrCell[];
   coverageCells: CoverageCell[];
 }) {
+  const { scale } = useAqiScale();
   const [history, setHistory] = useState<HistoryPoint[] | null>(null);
 
   useEffect(() => {
@@ -79,24 +81,25 @@ export default function CityStatsPanel({
   }, [city]);
 
   const mix = sourceMix(cells);
-  const bands = aqiBands(coverageCells);
+  const bands = aqiBands(coverageCells, scale);
 
   return (
+    <>
+    <Step n={4} label="Who is in the forecast" info={<p>Expected people in Very Poor / Severe air = Σ cell population × calibrated P(&gt; band); GPW population where sampled, cited city population otherwise. Exposure, not mortality.</p>}>
+      <Panel title="Who is in the forecast" tag="LIVE">
+        <ExposureCard city={city} />
+      </Panel>
+    </Step>
+    <Step n={5} label="The past" info={<p>Daily station means for 30 d / 90 d / 1 y with a plain-language verdict and spike-day markers (raw readings ∪ the archived daily rollup), then the last 48 h, the live source mix and the band split.</p>}>
     <Panel title="City Statistics" tag="LIVE">
-      {/* Forecast exposure — expected people in Very Poor / Severe air, calibrated (this is step 4) */}
-      <ExposureCard city={city} />
-      <div className="my-2 border-t border-slate-100" />
-      {/* Long-range history — daily means, CPCB bands, plain-language verdict (step 5, "The past") */}
-      <Step n={5} label="The past" info={<p>Daily station means for 30 d / 90 d / 1 y with a plain-language verdict and spike-day markers (raw readings ∪ the archived daily rollup), then the last 48 h and the live source mix.</p>}>
-        <TrendPanel city={city} compact />
-      </Step>
+      <TrendPanel city={city} compact />
       <div className="my-2 border-t border-slate-100" />
       {/* 48h trend — real station-hour means */}
       <div className="text-[12px] font-semibold text-slate-700">PM2.5 — last 48 hours</div>
       {history === null ? (
-        <div className="mt-1 h-24 animate-pulse rounded-md bg-gray-100" />
+        <div className="mt-1 h-24 animate-pulse rounded-md bg-slate-100" />
       ) : history.length < 3 ? (
-        <div className="mt-1 text-xs text-gray-500">Not enough recent station data for a trend.</div>
+        <div className="mt-1 text-xs text-slate-500">Not enough recent station data for a trend.</div>
       ) : (
         <>
           <div className="mt-1 h-24">
@@ -113,13 +116,13 @@ export default function CityStatsPanel({
               </AreaChart>
             </SizedChart>
           </div>
-          <div className="text-[10px] text-gray-500">city-mean of real station readings, hourly buckets</div>
+          <div className="text-[10px] text-slate-500">city-mean of real station readings, hourly buckets</div>
         </>
       )}
 
       {/* Source-mix donut — who is to blame, city-wide */}
       {mix.length > 0 && (
-        <div className="mt-3 border-t border-gray-100 pt-2">
+        <div className="mt-3 border-t border-slate-100 pt-2">
           <div className="text-[12px] font-semibold text-slate-700">Source mix — city average</div>
           <div className="flex items-center gap-2">
             <div className="h-32 w-32 shrink-0">
@@ -146,13 +149,13 @@ export default function CityStatsPanel({
               ))}
             </div>
           </div>
-          <div className="text-[10px] text-gray-500">mean attribution share across {cells.length} live cells</div>
+          <div className="text-[10px] text-slate-500">mean attribution share across {cells.length} live cells</div>
         </div>
       )}
 
       {/* AQI-band distribution — who breathes what */}
       {bands.length > 0 && (
-        <div className="mt-3 border-t border-gray-100 pt-2">
+        <div className="mt-3 border-t border-slate-100 pt-2">
           <div className="text-[12px] font-semibold text-slate-700">Who breathes what — AQI bands</div>
           <div className="mt-1.5 flex h-4 w-full overflow-hidden rounded-full">
             {bands.map((b) => (
@@ -167,11 +170,13 @@ export default function CityStatsPanel({
               </span>
             ))}
           </div>
-          <div className="mt-0.5 text-[10px] text-gray-500">
+          <div className="mt-0.5 text-[10px] text-slate-500">
             share of {coverageCells.length} ~1 km cells (dense model field, station-anchored)
           </div>
         </div>
       )}
     </Panel>
+    </Step>
+    </>
   );
 }

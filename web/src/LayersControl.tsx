@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import type { MapMode } from "./BlameMap";
-import { SOURCE_COLORS, PM25_LEGEND } from "./sources";
+import { SOURCE_COLORS } from "./sources";
+import { pm25Legend, SCALES } from "./aqi";
+import { useAqiScale } from "./aqiScale";
 import { SegBtn } from "./ui";
 
 export type CoverageMeta = {
@@ -61,6 +63,7 @@ function OverlayToggle({
  *  the full layer card. Lives on the map, so layer options are found where the
  *  layers actually are — not buried in a side rail. */
 export default function LayersControl(p: LayersControlProps) {
+  const { scale } = useAqiScale();
   // Open by default only where there's room — on phones the expanded card
   // would bury the (much smaller) map.
   // Starts as the compact chip everywhere: the map is the hero and the layer card is a
@@ -159,7 +162,7 @@ export default function LayersControl(p: LayersControlProps) {
         />
       </div>
       {p.showWards && (
-        <div className="mt-1 text-[10px] text-gray-500">ward boundaries © Datameet / OSM (ODbL)</div>
+        <div className="mt-1 text-[10px] text-slate-500">ward boundaries © Datameet / OSM (ODbL)</div>
       )}
 
       {p.mode === "blame" && (
@@ -173,7 +176,7 @@ export default function LayersControl(p: LayersControlProps) {
         </div>
       )}
       {p.mode === "satellite" && (
-        <div className="mt-2.5 border-t border-slate-100 pt-2 text-xs text-gray-600">
+        <div className="mt-2.5 border-t border-slate-100 pt-2 text-xs text-slate-600">
           Sentinel-5P NO2 column. Blue is lower, red is higher.
         </div>
       )}
@@ -187,14 +190,15 @@ export default function LayersControl(p: LayersControlProps) {
             ))}
           </div>
           <div className="mt-2 space-y-1">
-            {PM25_LEGEND.map(([label, color]) => (
+            <div className="mb-0.5 w-full text-[10px] font-semibold text-slate-500" title={SCALES[scale].note}>{SCALES[scale].short} bands · PM2.5 µg/m³</div>
+            {pm25Legend(scale).map(([label, color]) => (
               <div key={label} className="flex items-center gap-2">
                 <span className="inline-block h-3 w-3 rounded" style={{ background: color }} />
                 <span>{label}</span>
               </div>
             ))}
           </div>
-          <div className="mt-1 text-[11px] text-gray-500">
+          <div className="mt-1 text-[11px] text-slate-500">
             {p.coverage
               ? `${p.coverage.n_stations ?? "~"} stations → ${p.coverage.n_cells ?? p.coverage.cells.length} cells · ${
                   typeof p.coverage.validation?.skill_vs_bilinear === "number"

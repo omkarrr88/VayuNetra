@@ -205,28 +205,52 @@ def aqi_current(
     city: str = Query(..., description="City ID, e.g. 'delhi'"),
     db=Depends(get_db)
 ) -> dict:
-    """Latest per-cell AQI measurements for a city."""
+    """Latest per-cell readings for a city with both air-quality indices.
+
+    Per cell: the newest PM2.5 (``pm25``, ``ts`` — what the map and models use) plus the newest
+    value of every other index pollutant the cell reports within the last 24 h
+    (``pollutants``: pm10 / no2 / so2 / co / o3 with unit and time), and the composite indices
+    computed by ``core.aqi`` — ``aqi_in`` (CPCB National AQI, max of sub-indices, with
+    ``prominent_in``) and ``aqi_us`` (US EPA AQI, ``prominent_us``). Indices are the formula on
+    the latest hourly readings, so the official 24-h bulletin can differ; the console says so."""
     if DEMO_MODE:
         return ok(fixture_rows("aqi_current", city))
+    from core.aqi import composite
+
+    since = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
     rows = (
         db.table("measurements")
-        .select("h3_cell,ts,value,variable,confidence")
+        .select("h3_cell,ts,value,variable,unit,confidence")
         .eq("city_id", city)
-        .eq("variable", "pm25")
+        .in_("variable", ["pm25", "pm10", "no2", "so2", "co", "o3", "nh3"])
+        .gte("ts", since)
         .order("ts", desc=True)
-        .limit(5000)
+        .limit(20000)
         .execute()
         .data
-    )
+    ) or []
     latest: dict[str, dict] = {}
     for r in rows:
-        latest.setdefault(r["h3_cell"], {
-            "h3_cell": r["h3_cell"],
-            "pm25": r["value"],
-            "ts": r["ts"],
-            "confidence": r.get("confidence", 1.0),
-        })
-    return ok(list(latest.values()))
+        cell = r.get("h3_cell")
+        if not cell or r.get("value") is None:
+            continue
+        entry = latest.setdefault(cell, {"h3_cell": cell, "pm25": None, "ts": None, "confidence": r.get("confidence", 1.0), "pollutants": {}})
+        var = r["variable"]
+        if var == "pm25":
+            if entry["pm25"] is None:
+                entry["pm25"], entry["ts"] = r["value"], r["ts"]
+        elif var not in entry["pollutants"]:
+            entry["pollutants"][var] = {"value": r["value"], "unit": r.get("unit"), "ts": r["ts"]}
+    out = []
+    for e in latest.values():
+        if e["pm25"] is None:
+            continue   # PM2.5 is the anchor of every map cell; gas-only cells are not shown
+        readings = [{"pollutant": "pm25", "value": e["pm25"], "unit": "µg/m³"}] + [
+            {"pollutant": k, "value": v["value"], "unit": v.get("unit")} for k, v in e["pollutants"].items()
+        ]
+        e.update(composite(readings))
+        out.append(e)
+    return ok(out)
 
 
 # Trailing PM2.5 history cache — hourly buckets change once an hour at most.
@@ -1414,6 +1438,25 @@ def comparison() -> dict:
             sdb.table("enforcement_recs").select("city_id,status").limit(5000).execute().data
         ) or []
         data = build_comparison(cities, aqi_rows, forecast_rows, rec_statuses)
+
+        # Every city number in the product comes from one computation: the index of that city's
+        # mean (see _city_now_from_hourly). Without this the scoreboard would derive an index from
+        # PM2.5 alone and disagree with the city's own page whenever PM10 or a gas is prominent.
+        def _idx(cid: str) -> dict:
+            try:
+                rows = sdb.rpc("city_pollutants_hourly", {"p_city": cid, "p_hours": 24}).execute().data or []
+                n = _city_now_from_hourly(rows)
+                return {k: n.get(k) for k in ("aqi_in", "prominent_in", "aqi_us", "prominent_us", "pm25_24h")}
+            except Exception as e:  # noqa: BLE001 — the scoreboard must render without an index
+                logger.warning("comparison index unavailable for %s: %s", cid, e)
+                return {}
+
+        ids = [c["city_id"] for c in cities]
+        with ThreadPoolExecutor(max_workers=min(10, max(1, len(ids)))) as pool:
+            indices = dict(zip(ids, pool.map(_idx, ids)))
+        for c in data.get("cities", []):
+            c.update(indices.get(c.get("city_id"), {}))
+
         _comparison_cache["all"] = (now, data)
         return ok(data)
     except Exception as e:  # noqa: BLE001
@@ -1636,6 +1679,150 @@ def metrics_interventions(city: str = Query(..., description="City ID")) -> dict
         return ok(json.loads(p.read_text()))
     except json.JSONDecodeError as e:
         return _server_error("interventions_artifact", e, "Intervention artifact is unreadable")
+
+
+def _city_or_404(city: str) -> dict:
+    """City config or 404 — every city-scoped page uses this so an unknown id never 500s."""
+    from core.cities import load_city
+
+    try:
+        return load_city(city) or {}
+    except Exception:
+        raise HTTPException(status_code=404, detail=f"unknown city: {city}")
+
+
+def _city_now_from_hourly(hourly_rows: list[dict]) -> dict:
+    """The city's air *right now*, from city-mean hourly rows: the newest value per pollutant, the
+    composite indices over those means (CPCB + US EPA, each with its prominent pollutant) and the
+    24-hour PM2.5 mean.
+
+    This is the single definition of "this city's index" in the product: **the index of the city
+    mean**, not the mean of station indices and not the worst station. Every surface that shows a
+    city number — the map status tile, the City air section, the public city page — reads it from
+    here, so two panels can never disagree. The worst *cell* is shown separately and labelled as
+    such, because an officer needs the worst place, not only the average."""
+    from core.aqi import composite
+
+    now_by: dict[str, dict] = {}
+    for r in sorted(hourly_rows, key=lambda x: str(x["hour"])):
+        now_by[r["pollutant"]] = {"value": round(float(r["value"]), 1), "unit": r.get("unit"), "hour": r["hour"], "n": r.get("n")}
+    idx = composite([{"pollutant": p, "value": v["value"], "unit": v.get("unit")} for p, v in now_by.items()])
+    pm25_hours = [float(r["value"]) for r in hourly_rows if r["pollutant"] == "pm25"]
+    pm25_24h = round(sum(pm25_hours) / len(pm25_hours), 1) if pm25_hours else None
+    return {"pollutants": now_by, "pm25_24h": pm25_24h, **idx}
+
+
+@app.get("/city/now", tags=["data"])
+def city_now(city: str = Query(..., description="City ID")) -> dict:
+    """This city's air right now — the same ``now`` block ``/city/overview`` returns, without the
+    history. One RPC, so the map's status tile can show the city index without pulling a year of
+    daily rows. Index of the city mean over the stations reporting each pollutant; the formula runs
+    on the latest hourly means, so the official 24-hour bulletin can differ."""
+    _city_or_404(city)
+    if DEMO_MODE:
+        data = fixture("city_overview", default={})
+        picked = (data.get(city) or {}).get("now") if isinstance(data, dict) else None
+        if picked:
+            return ok(picked)
+        raise HTTPException(status_code=404, detail=f"no city overview fixture for {city}")
+    rows = _db().rpc("city_pollutants_hourly", {"p_city": city, "p_hours": 24}).execute().data or []
+    return ok(_city_now_from_hourly(rows))
+
+
+@app.get("/city/overview", tags=["data"])
+def city_overview(city: str = Query(..., description="City ID")) -> dict:
+    """Everything the public city page shows, in one call — city-agnostic, same shape for all ten.
+
+    * ``now``: latest city-mean concentration per index pollutant (with unit and age), both
+      composite indices (CPCB / US EPA) with their prominent pollutant, and the 24 h PM2.5 mean.
+    * ``hourly``: the trailing 24 h per pollutant (city means) for the AQI graph, with min/max.
+    * ``daily``: up to a year of daily means per pollutant for the calendar and the monthly trend.
+    * ``months``: monthly PM2.5 means with the most / least polluted month of the covered period.
+    * ``rank``: this city's place among the cities VayuNetra runs (never a global claim).
+    * ``health``: CPCB/WHO-sourced protection actions, per-condition guidance and the
+      cigarette-equivalent — templated, cited, not medical advice.
+    Coverage is stated, never implied: ``coverage.since`` is the first day with readings."""
+    from collections import defaultdict
+
+    from core.aqi import composite
+    from core.health_advice import advice
+
+    cfg = _city_or_404(city)
+    if DEMO_MODE:
+        data = fixture("city_overview", default={})
+        picked = data.get(city) if isinstance(data, dict) else None
+        if picked:
+            return ok(picked)
+        raise HTTPException(status_code=404, detail=f"no city overview fixture for {city}")
+    sdb = _db()
+
+    hourly_rows = sdb.rpc("city_pollutants_hourly", {"p_city": city, "p_hours": 24}).execute().data or []
+    daily_rows = sdb.rpc("city_pollutants_daily", {"p_city": city, "p_days": 730}).execute().data or []
+
+    now_block = _city_now_from_hourly(hourly_rows)
+    now_by, idx, pm25_24h = now_block["pollutants"], {k: v for k, v in now_block.items() if k not in ("pollutants", "pm25_24h")}, now_block["pm25_24h"]
+
+    # ---- hourly series per pollutant (+ index series for the graph)
+    hourly: dict[str, list] = defaultdict(list)
+    by_hour: dict[str, dict[str, dict]] = defaultdict(dict)
+    for r in hourly_rows:
+        hourly[r["pollutant"]].append({"hour": r["hour"], "value": round(float(r["value"]), 1)})
+        by_hour[str(r["hour"])][r["pollutant"]] = {"value": float(r["value"]), "unit": r.get("unit")}
+    index_series = []
+    for hour in sorted(by_hour):
+        c = composite([{"pollutant": p, "value": v["value"], "unit": v["unit"]} for p, v in by_hour[hour].items()])
+        if c["aqi_in"] is not None:
+            index_series.append({"hour": hour, "aqi_in": c["aqi_in"], "aqi_us": c["aqi_us"], "prominent_in": c["prominent_in"]})
+
+    # ---- daily series per pollutant (+ daily index from PM2.5/PM10 where both exist)
+    daily: dict[str, list] = defaultdict(list)
+    by_day: dict[str, dict[str, float]] = defaultdict(dict)
+    for r in daily_rows:
+        day = str(r["day"])[:10]
+        daily[r["pollutant"]].append({"day": day, "value": round(float(r["value"]), 1)})
+        by_day[day][r["pollutant"]] = float(r["value"])
+    calendar = []
+    for day in sorted(by_day):
+        c = composite([{"pollutant": p, "value": v, "unit": "µg/m³" if p in ("pm25", "pm10", "o3", "nh3") else None} for p, v in by_day[day].items()])
+        calendar.append({"day": day, "aqi_in": c["aqi_in"], "aqi_us": c["aqi_us"], "prominent_in": c["prominent_in"],
+                         "pm25": round(by_day[day].get("pm25"), 1) if by_day[day].get("pm25") is not None else None})
+
+    # ---- monthly PM2.5 means + extremes over the covered period
+    m_acc: dict[str, list[float]] = defaultdict(list)
+    for d in daily.get("pm25", []):
+        m_acc[d["day"][:7]].append(d["value"])
+    months = [{"month": m, "pm25": round(sum(v) / len(v), 1), "days": len(v)} for m, v in sorted(m_acc.items())]
+    worst = max(months, key=lambda m: m["pm25"]) if months else None
+    best = min(months, key=lambda m: m["pm25"]) if months else None
+
+    # ---- rank among the cities we run (honest scope)
+    rank = None
+    try:
+        comp = comparison().get("data") or {}
+        cities = [c for c in comp.get("cities", []) if c.get("current_pm25")]
+        order = sorted(cities, key=lambda c: -(c["current_pm25"] or 0))
+        for i, c in enumerate(order, 1):
+            if c["city_id"] == city:
+                rank = {"position": i, "of": len(order), "scope": "cities VayuNetra runs", "basis": "current city-mean PM2.5"}
+                break
+    except Exception as e:  # noqa: BLE001 — the page must render without the comparison
+        logger.warning("city overview rank unavailable for %s: %s", city, e)
+
+    first_day = min(by_day) if by_day else None
+    return ok({
+        "city_id": city, "name": cfg.get("name", city.title()), "languages": cfg.get("languages", []),
+        "generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "now": now_block,
+        "hourly": {"pollutants": dict(hourly), "index": index_series,
+                   "min": min(index_series, key=lambda x: x["aqi_in"]) if index_series else None,
+                   "max": max(index_series, key=lambda x: x["aqi_in"]) if index_series else None},
+        "daily": {"pollutants": dict(daily), "calendar": calendar},
+        "months": {"series": months, "most_polluted": worst, "least_polluted": best},
+        "rank": rank,
+        "health": advice(idx.get("aqi_in"), pm25_24h),
+        "coverage": {"since": first_day, "days": len(by_day), "hours_24h": len(index_series),
+                     "note": "City means over the stations reporting each pollutant; only pollutants a city's stations publish appear. Indices are the CPCB / US EPA formula on these means — the official 24-h bulletin can differ."},
+    })
 
 
 @app.get("/exposure", tags=["stage2"])

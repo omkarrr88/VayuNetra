@@ -83,8 +83,9 @@ interface SidebarProps {
   onSelect: (s: Section) => void;
 }
 
-// The seven sections stay top-level; the group labels only tell a new user what kind of
-// question each answers. Number = keyboard shortcut (1–7).
+// The sections stay top-level; the group labels only tell a new user what kind of question
+// each answers. Number = keyboard shortcut (1–8), fixed by order in SECTIONS so existing
+// shortcuts never move when a section is added.
 const GROUPS: { label: string; ids: Section[] }[] = [
   { label: "Operate", ids: ["action", "forecast", "citizen"] },
   { label: "Understand", ids: ["compare", "impact"] },

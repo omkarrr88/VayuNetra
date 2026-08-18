@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { api } from "./api";
 import CitizenReports from "./CitizenReports";
 import ExposureCorridors from "./ExposureCorridors";
-import { aqiCategory } from "./aqi";
+import { categoryForPm25, formatIndex, pm25Index } from "./aqi";
+import { useAqiScale } from "./aqiScale";
 import { Panel, SegBtn, Step } from "./ui";
+import { Cols } from "./console/Cols";
 
 type Advisory = {
   ward_id: string;
@@ -33,6 +35,7 @@ type CleanZone = {
 type CleanZones = { basis?: string; zones: CleanZone[] };
 
 export default function CitizenPanel({ city, languages, center }: { city: string; languages?: string[]; center?: [number, number] }) {
+  const { scale } = useAqiScale();
   // Offer only the languages this city is configured for (falling back to all
   // four only when the config carries none). Merging in ALL_LANGS used to let a
   // judge pick Kannada for Chennai and get a template advisory nobody reviewed.
@@ -103,6 +106,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
 
   return (
     <>
+    <Step n={1} label="Advisories by ward" info={<p>Ward-level health advisories tiered by forecast risk and vulnerability, in the city's languages. Templated by design (no language model), script-validated in code.</p>}>
     <Panel
       title="Citizen Advisory"
       right={
@@ -127,25 +131,25 @@ export default function CitizenPanel({ city, languages, center }: { city: string
           </SegBtn>
         ))}
       </div>
-      <div className="mt-1 text-[10px] text-gray-500">how the same advisory reaches citizens on each channel</div>
+      <div className="mt-1 text-[10px] text-slate-500">how the same advisory reaches citizens on each channel</div>
 
       {rows === null ? (
         <div className="mt-3 space-y-2">
           {[0, 1].map((i) => (
-            <div key={i} className="h-14 animate-pulse rounded-md bg-gray-100" />
+            <div key={i} className="h-14 animate-pulse rounded-md bg-slate-100" />
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="mt-3 text-xs text-gray-500">No advisory in this language yet</div>
+        <div className="mt-3 text-xs text-slate-500">No advisory in this language yet</div>
       ) : channel === "pwa" ? (
         <div className="mt-3 space-y-2">
           {items.map((a) => (
-            <div key={a.ward_id} className="rounded-md border border-gray-200 p-2">
+            <div key={a.ward_id} className="rounded-md border border-slate-200 p-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-medium">{a.ward_id}</span>
                 <span className="rounded bg-amber-100 px-1.5 py-0.5 text-amber-800">{a.risk_tier.replace("_", " ")}</span>
               </div>
-              <div className="mt-1 text-xs leading-5 text-gray-700">{a.message}</div>
+              <div className="mt-1 text-xs leading-5 text-slate-700">{a.message}</div>
             </div>
           ))}
         </div>
@@ -165,9 +169,9 @@ export default function CitizenPanel({ city, languages, center }: { city: string
               </div>
             ))}
           </div>
-          <div className="mt-2 flex items-center gap-2 rounded-md border border-gray-200 p-2">
+          <div className="mt-2 flex items-center gap-2 rounded-md border border-slate-200 p-2">
             <img src="/qr-telegram.svg" alt="QR — open the VayuNetra Telegram bot" className="h-14 w-14" width={56} height={56} />
-            <div className="text-[11px] leading-4 text-gray-600">
+            <div className="text-[11px] leading-4 text-slate-600">
               Live two-way bot: <b>/start</b> → pick a city → auto-receive advisories. Scan to subscribe on your own phone.
             </div>
           </div>
@@ -175,18 +179,18 @@ export default function CitizenPanel({ city, languages, center }: { city: string
       ) : channel === "ivr" ? (
         <div className="mt-3 space-y-2">
           {/* What a caller actually hears (mirrors channels/ivr.py wording) */}
-          <div className="rounded-md border border-gray-200 p-2.5">
+          <div className="rounded-md border border-slate-200 p-2.5">
             <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-700">📞 What callers hear</div>
-            <p className="mt-1 text-xs italic leading-5 text-gray-600">
+            <p className="mt-1 text-xs italic leading-5 text-slate-600">
               "This is an air quality alert from Vayu Netra. {items[0].message} I will now repeat this alert… Stay safe, and
               limit outdoor exposure. Goodbye."
             </p>
           </div>
-          <div className="rounded-md bg-slate-50 p-2 text-[11px] leading-4 text-gray-600">
+          <div className="rounded-md bg-slate-50 p-2 text-[11px] leading-4 text-slate-600">
             Citizens can also <b>call in</b>: the line answers with a city menu — press 1 for Delhi, 2 for Bengaluru, 3 for Mumbai, 4–9 and 0 for the other seven — and
             reads that city's latest advisory in a clear Indian-English voice.
           </div>
-          <div className="text-[10px] leading-4 text-gray-500">
+          <div className="text-[10px] leading-4 text-slate-500">
             Live calls are spoken in Hindi (Polly Kajal) for Hindi-first cities and in English elsewhere — Polly has no voice yet for the other Indian scripts.
           </div>
         </div>
@@ -205,11 +209,12 @@ export default function CitizenPanel({ city, languages, center }: { city: string
               <div className="mt-0.5 text-[13px] leading-5 text-slate-200">{a.message}</div>
             </div>
           ))}
-          <div className="text-[10px] text-gray-500">public display / big-screen board rendering</div>
+          <div className="text-[10px] text-slate-500">public display / big-screen board rendering</div>
         </div>
       )}
 
     </Panel>
+</Step>
 
       {/* 2 — Send it: live multi-channel broadcast (real Telegram + real IVR call) */}
       <Step n={2} label="Send it" info={<p>Broadcasts the latest advisory to the configured Telegram channel and places a real IVR phone call (Twilio, Indian-English neural voice). Confirmation is required — this touches the outside world.</p>}>
@@ -229,13 +234,13 @@ export default function CitizenPanel({ city, languages, center }: { city: string
                 <button onClick={broadcast} className="cursor-pointer rounded bg-emerald-700 px-2 py-1 text-white">
                   Yes, broadcast
                 </button>
-                <button onClick={() => setBcast("idle")} className="cursor-pointer rounded bg-gray-200 px-2 py-1 text-gray-700">
+                <button onClick={() => setBcast("idle")} className="cursor-pointer rounded bg-slate-200 px-2 py-1 text-slate-700">
                   Cancel
                 </button>
               </div>
             </div>
           )}
-          {bcast === "sending" && <div className="text-center text-xs text-gray-500">broadcasting…</div>}
+          {bcast === "sending" && <div className="text-center text-xs text-slate-500">broadcasting…</div>}
           {(bcast === "done" || bcast === "error") && (
             <div className={`rounded p-1.5 text-center text-xs ${bcast === "done" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
               {bcastMsg}
@@ -249,12 +254,14 @@ export default function CitizenPanel({ city, languages, center }: { city: string
 
       {/* 3 — Cleanest zones right now — the flip side of the blame map: where
           to go, computed from the E2 dense 1km field (not a hardcoded list). */}
+      <Cols>
       {cleanZones && cleanZones.zones.length > 0 && (
         <Step n={3} label="Clean-air routes" info={<p>Lowest ~1 km cells from the dense model field anchored on live stations, with a corridor exposure screen for commutes. A modelled guide, not a measurement.</p>}>
         <Panel title="Cleanest air right now" tag="lowest ~1 km cells">
           <div className="grid grid-cols-2 gap-1.5">
             {cleanZones.zones.map((z) => {
-              const cat = aqiCategory(z.aqi);
+              const cat = categoryForPm25(z.pm25, scale);
+              const zIndex = pm25Index(z.pm25, scale);
               return (
                 <a
                   key={z.h3_cell}
@@ -262,14 +269,14 @@ export default function CitizenPanel({ city, languages, center }: { city: string
                   target="_blank"
                   rel="noreferrer"
                   className="rounded-lg border border-slate-200 p-2 transition-colors hover:border-emerald-300 hover:bg-emerald-50/50"
-                  aria-label={`Open ${z.zone_id} in Google Maps — AQI ${z.aqi}, ${cat.label}`}
+                  aria-label={`Open ${z.zone_id} in Google Maps — ${formatIndex(zIndex, scale)}, ${cat.label}`}
                 >
                   <div className="flex items-center justify-between gap-1">
                     <span
                       className="rounded px-1.5 py-0.5 text-[11px] font-bold"
                       style={{ background: cat.color, color: cat.text }}
                     >
-                      {z.aqi}
+                      {formatIndex(zIndex, scale)}
                     </span>
                     <span className="text-[11px] text-slate-500">{cat.label}</span>
                   </div>
@@ -293,6 +300,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
           <CitizenReports city={city} center={center} />
         </Panel>
       </Step>
+      </Cols>
     </>
   );
 }

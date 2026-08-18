@@ -1,0 +1,87 @@
+/* ---------------------------------------------------------------------------
+   The front page, restyled into the app's design language.
+
+   The landing's markup is left alone on purpose — it is dense, cited, and every
+   number on it is wired to a live endpoint. What changes here is only the
+   surface: the type stack and rhythm, the accent, the card elevation, and the
+   motion, all pulled from design/tokens.css so the front page and the app read
+   as one product. Scoped to .vn-landing so nothing else can be touched.
+
+   The front page stays light-only by design: it is printed, screenshotted and
+   projected, and a judge should never meet it half-dark.
+   --------------------------------------------------------------------------- */
+
+.vn-landing {
+  font-family: "Source Sans 3", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  background: var(--surface);
+}
+
+/* Display type: the app's tighter tracking and shorter leading. */
+.vn-landing h1 { letter-spacing: -0.03em; line-height: 1.06; }
+.vn-landing h2 { letter-spacing: -0.02em; line-height: var(--lh-tight); }
+.vn-landing h3 { letter-spacing: -0.01em; }
+
+/* The eyebrow labels: the app's kicker, not a monospace stamp. */
+.vn-landing .font-mono {
+  font-family: inherit;
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+}
+
+/* One accent for the whole product. */
+.vn-landing .text-sky-700 { color: var(--primary); }
+.vn-landing .bg-sky-700 { background-color: var(--primary); }
+.vn-landing .hover\:bg-sky-800:hover { background-color: color-mix(in srgb, var(--primary) 86%, #000); }
+.vn-landing .hover\:text-sky-700:hover { color: var(--primary); }
+.vn-landing .border-sky-700 { border-color: var(--primary); }
+
+/* Ink and rules from the token set, so the front page and the app agree. */
+.vn-landing .text-slate-900 { color: var(--ink); }
+.vn-landing .text-slate-700 { color: var(--ink-2); }
+.vn-landing .text-slate-600 { color: var(--ink-2); }
+.vn-landing .text-slate-500 { color: var(--muted); }
+.vn-landing .text-slate-400 { color: var(--faint); }
+.vn-landing .border-slate-200 { border-color: var(--line); }
+.vn-landing .border-slate-300 { border-color: var(--line-strong); }
+.vn-landing .bg-slate-50 { background-color: var(--surface-2); }
+.vn-landing .hover\:text-slate-900:hover { color: var(--ink); }
+
+/* Cards: the app's radius and elevation instead of a hairline box. */
+.vn-landing .rounded-xl { border-radius: var(--r-lg); }
+.vn-landing .rounded-md { border-radius: var(--r-sm); }
+.vn-landing .rounded-lg { border-radius: var(--r-md); }
+.vn-landing .rounded-xl.border { box-shadow: var(--e-1); background: var(--surface); }
+.vn-landing .rounded-xl.border:hover { box-shadow: var(--e-2); }
+.vn-landing .rounded-xl.border,
+.vn-landing .rounded-md,
+.vn-landing a[href] { transition: box-shadow var(--base) var(--ease), border-color var(--fast) var(--ease), color var(--fast) var(--ease), background-color var(--fast) var(--ease); }
+
+/* Buttons get the app's weight and hit area. */
+.vn-landing a.rounded-md { font-weight: 700; }
+.vn-landing .bg-sky-700.rounded-md,
+.vn-landing .bg-slate-900.rounded-md { box-shadow: var(--e-1); }
+.vn-landing .bg-sky-700.rounded-md:hover,
+.vn-landing .bg-slate-900.rounded-md:hover { box-shadow: var(--e-2); }
+
+/* The sticky bar matches the app's: glass, 60px, one hairline. */
+.vn-landing nav.sticky { background: var(--glass); backdrop-filter: saturate(1.5) blur(16px); }
+.vn-landing nav.sticky > div { height: 60px; }
+
+/* Focus, always visible — same ring as the app. */
+.vn-landing :where(a, button, select, input, [tabindex]):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+/* The live band wash behind the hero, driven by Delhi's current category. */
+.vn-landing .vn-hero { position: relative; }
+.vn-landing .vn-hero::before {
+  content: ""; position: absolute; inset: -160px -20% auto -20%; height: 460px; z-index: 0; pointer-events: none;
+  background: radial-gradient(52% 100% at 22% 0%, var(--wash, var(--primary)) 0%, transparent 70%);
+  opacity: .16;
+  animation: vn-fade var(--slow) var(--ease) both;
+}
+.vn-landing .vn-hero > * { position: relative; z-index: 1; }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
-import { aqiCategory, pm25ToAqi } from "./aqi";
+import { categoryForPm25 } from "./aqi";
+import { useAqiScale } from "./aqiScale";
 import { SOURCE_COLORS, dominantSource, type Shares } from "./sources";
 import { DRIVER_LABELS, type AttrCell } from "./BlameMap";
 import { placeForCell } from "./placeName";
@@ -28,6 +29,7 @@ export default function CellStoryPanel({
   onClose: () => void;
   onAct: () => void;
 }) {
+  const { scale } = useAqiScale();
   const [fc, setFc] = useState<FC[] | null>(null);
   const [place, setPlace] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
@@ -71,10 +73,10 @@ export default function CellStoryPanel({
           {place ? (
             <>
               <div className="text-sm font-bold leading-tight text-slate-800">{place}</div>
-              <div className="font-mono text-[10px] text-gray-500">~1 km² cell · {cell.h3_cell}</div>
+              <div className="font-mono text-[10px] text-slate-500">~1 km² cell · {cell.h3_cell}</div>
             </>
           ) : (
-            <div className="font-mono text-xs text-gray-500">{cell.h3_cell}</div>
+            <div className="font-mono text-xs text-slate-500">{cell.h3_cell}</div>
           )}
         </div>
         <div className="flex items-center gap-0.5">
@@ -116,14 +118,14 @@ export default function CellStoryPanel({
                 setSharing(false);
               }
             }}
-            className="flex h-7 min-w-7 items-center justify-center rounded px-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
+            className="flex h-7 min-w-7 items-center justify-center rounded px-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50"
             disabled={sharing}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
               <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" />
             </svg>
           </button>
-          <button aria-label="Close cell story" onClick={onClose} className="flex h-7 min-w-7 items-center justify-center rounded px-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700">
+          <button aria-label="Close cell story" onClick={onClose} className="flex h-7 min-w-7 items-center justify-center rounded px-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700">
             ✕
           </button>
         </div>
@@ -131,23 +133,23 @@ export default function CellStoryPanel({
 
       {/* 1 — Blame */}
       <div className="mt-2">
-        <div className="text-xs font-semibold text-gray-700">
+        <div className="text-xs font-semibold text-slate-700">
           1 · Who's to blame — <span className="capitalize">{dom.replace("_", " ")}</span>
-          <span className="ml-1 font-normal text-gray-500">conf {Math.round(cell.confidence * 100)}%</span>
+          <span className="ml-1 font-normal text-slate-500">conf {Math.round(cell.confidence * 100)}%</span>
         </div>
         <div className="mt-1 space-y-1">
           {shares.map(([k, v]) => {
             const [r, g, b] = SOURCE_COLORS[k as keyof typeof SOURCE_COLORS] ?? [120, 120, 120];
             return (
               <div key={k} className="flex items-center gap-2 text-xs">
-                <span className="w-24 shrink-0 capitalize text-gray-600">{k.replace("_", " ")}</span>
-                <div className="h-2 flex-1 rounded bg-gray-100">
+                <span className="w-24 shrink-0 capitalize text-slate-600">{k.replace("_", " ")}</span>
+                <div className="h-2 flex-1 rounded bg-slate-100">
                   <div
                     className="h-2 rounded"
                     style={{ width: `${Math.round(v * 100)}%`, background: `rgb(${r},${g},${b})` }}
                   />
                 </div>
-                <span className="w-8 text-right font-mono text-gray-500">{Math.round(v * 100)}%</span>
+                <span className="w-8 text-right font-mono text-slate-500">{Math.round(v * 100)}%</span>
               </div>
             );
           })}
@@ -181,7 +183,7 @@ export default function CellStoryPanel({
           </div>
         )}
         {markerBits.length > 0 && (
-          <div className="mt-1 text-[11px] text-gray-500">evidence: {markerBits.join(" · ")}</div>
+          <div className="mt-1 text-[11px] text-slate-500">evidence: {markerBits.join(" · ")}</div>
         )}
       </div>
 
@@ -192,22 +194,22 @@ export default function CellStoryPanel({
 
       {/* 2 — Forecast */}
       <div className="mt-3">
-        <div className="text-xs font-semibold text-gray-700">2 · Where it's heading</div>
+        <div className="text-xs font-semibold text-slate-700">2 · Where it's heading</div>
         {fc === null ? (
-          <div className="mt-1 h-8 animate-pulse rounded bg-gray-100" />
+          <div className="mt-1 h-8 animate-pulse rounded bg-slate-100" />
         ) : fc.length ? (
           <div className="mt-1 flex gap-2">
             {HORIZONS.map((h) => {
               const r = fc.find((x) => x.horizon_h === h);
               if (!r) return null;
-              const cat = aqiCategory(pm25ToAqi(r.value));
+              const cat = categoryForPm25(r.value, scale);
               return (
-                <div key={h} className="flex-1 rounded-md border border-gray-200 p-1.5 text-center">
-                  <div className="text-[11px] text-gray-500">+{h}h</div>
+                <div key={h} className="flex-1 rounded-md border border-slate-200 p-1.5 text-center">
+                  <div className="text-[11px] text-slate-500">+{h}h</div>
                   <div className="text-sm font-bold" style={{ color: cat.color }}>
                     {Math.round(r.value)}
                   </div>
-                  <div className="text-[11px] text-gray-500">
+                  <div className="text-[11px] text-slate-500">
                     [{Math.round(r.pi_low)}–{Math.round(r.pi_high)}]
                   </div>
                   {typeof r.p_over_120 === "number" && (
@@ -225,10 +227,10 @@ export default function CellStoryPanel({
             })}
           </div>
         ) : (
-          <div className="mt-1 text-xs text-gray-500">no per-cell forecast (see city panel)</div>
+          <div className="mt-1 text-xs text-slate-500">no per-cell forecast (see city panel)</div>
         )}
         {fc && fc.some((x) => typeof x.p_over_120 === "number") && (
-          <div className="mt-1 text-[10px] text-gray-500">
+          <div className="mt-1 text-[10px] text-slate-500">
             80% band + calibrated P(&gt;120 / &gt;250 µg/m³) — probabilities calibrated on held-out residuals ({fc.find((x) => typeof x.p_over_120 === "number")?.calibration_n ?? "—"} hours), not thresholds on a point.
           </div>
         )}

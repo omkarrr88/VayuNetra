@@ -9,7 +9,8 @@ import {
 } from "recharts";
 import SizedChart from "./SizedChart";
 import { api } from "./api";
-import { aqiCategory, pm25ToAqi } from "./aqi";
+import { categoryForPm25 } from "./aqi";
+import { useAqiScale } from "./aqiScale";
 import { FORECAST_SKILL, SKILL_ASOF, pct } from "./metrics";
 import { EmptyState, Panel, SegBtn } from "./ui";
 
@@ -40,6 +41,7 @@ type BenchSummary = {
 
 // Forecast panel: horizon picker, interval-band chart, spike alerts.
 export default function ForecastPanel({ city }: { city: string }) {
+  const { scale } = useAqiScale();
   const [horizon, setHorizon] = useState(24);
   const [byHorizon, setByHorizon] = useState<Record<number, FC[]> | null>(null);
 
@@ -145,7 +147,7 @@ export default function ForecastPanel({ city }: { city: string }) {
       {byHorizon === null ? (
         <div className="mt-2 h-20 animate-pulse rounded-md bg-slate-100" />
       ) : rows.length ? (
-        <div className="mt-2 text-xs text-gray-700">
+        <div className="mt-2 text-xs text-slate-700">
           {spikes.length > 0 && (
             <div className="rounded-md bg-red-50 px-2 py-1 font-medium text-red-700">
               ⚠ spike alert: {spikes.length} cell{spikes.length > 1 ? "s" : ""} forecast ≥ {SPIKE} µg/m³
@@ -153,7 +155,7 @@ export default function ForecastPanel({ city }: { city: string }) {
           )}
           <div className="mt-1.5 max-h-36 space-y-0.5 overflow-auto pr-1" tabIndex={0} role="region" aria-label="Per-cell forecasts, worst first">
             {sorted.map((r) => {
-              const cat = aqiCategory(pm25ToAqi(r.value));
+              const cat = categoryForPm25(r.value, scale);
               return (
                 <div key={r.h3_cell} className="flex items-center justify-between gap-2">
                   <span className="font-mono text-[11px] text-slate-500" title={r.h3_cell}>

@@ -6,7 +6,9 @@ import { GeoJsonLayer, LineLayer, PolygonLayer, ScatterplotLayer } from "@deck.g
 import { api } from "./api";
 import { cellToLatLng } from "h3-js";
 import { inGeometry, type Geometry } from "./placeName";
-import { colorFor, dominantSource, pm25Color, satColor, type Shares } from "./sources";
+import { colorFor, dominantSource, satColor, type Shares } from "./sources";
+import { pm25Rgba } from "./aqi";
+import { useAqiScale } from "./aqiScale";
 
 export type ShapDriver = { feature: string; source: string; contribution: number };
 
@@ -140,6 +142,40 @@ const BASEMAP = {
 } as unknown as maplibregl.StyleSpecification;
 
 const ZOOM = 10.5;
+// Room for the floating controls that sit over the map's corners.
+// Enough room for the floating controls in the corners, and no more — a large pad reads as
+// "zoomed out too far", which is worse than a slightly tight frame.
+const FIT_PAD = { top: 48, bottom: 40, left: 16, right: 16 };
+// A city bbox is the metro region, wider than the built-up area. Without a floor the smaller
+// cities land at a zoom where nothing is legible.
+const FIT_MAX_ZOOM = 12.5;
+
+type BBox = [number, number, number, number];
+
+/** Normalise whatever /cities gave us into [west, south, east, north], or null. */
+function toBBox(raw: unknown): BBox | null {
+  if (!raw) return null;
+  if (Array.isArray(raw) && raw.length === 4 && raw.every((n) => Number.isFinite(n))) {
+    return raw as BBox;
+  }
+  // GeoJSON Polygon / MultiPolygon (live PostGIS): walk every coordinate pair.
+  const coords = (raw as { coordinates?: unknown }).coordinates;
+  if (!coords) return null;
+  let w = Infinity, s = Infinity, e = -Infinity, n = -Infinity;
+  const walk = (node: unknown): void => {
+    if (!Array.isArray(node)) return;
+    if (node.length === 2 && typeof node[0] === "number" && typeof node[1] === "number") {
+      const [lng, lat] = node as [number, number];
+      if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
+      w = Math.min(w, lng); e = Math.max(e, lng);
+      s = Math.min(s, lat); n = Math.max(n, lat);
+      return;
+    }
+    for (const child of node) walk(child);
+  };
+  walk(coords);
+  return Number.isFinite(w) && Number.isFinite(e) && e > w && n > s ? [w, s, e, n] : null;
+}
 
 function tooltip(c: AttrCell, mode: MapMode) {
   if (mode === "satellite") {
@@ -179,6 +215,7 @@ export default function BlameMap({
   coverageCells = [],
   coverageKind = "dense",
   scrub = null,
+  bbox,
 }: {
   city: string;
   center: [number, number];
@@ -194,7 +231,13 @@ export default function BlameMap({
   coverageCells?: CoverageCell[];
   coverageKind?: "stations" | "dense";
   scrub?: { hour: string; scale: Record<string, number> } | null;
+  /** The city's extent. /cities returns this as a plain [w, s, e, n] (demo fixtures) OR as a
+   *  GeoJSON Polygon (live PostGIS), so anything goes in and is normalised here. When it resolves,
+   *  the map frames the whole city instead of guessing a zoom — every city fills its box on
+   *  arrival, at whatever size that box is. Panning and zooming stay entirely with the user. */
+  bbox?: unknown;
 }) {
+  const { scale } = useAqiScale();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const overlayRef = useRef<MapboxOverlay | null>(null);
@@ -235,6 +278,8 @@ export default function BlameMap({
     if (!containerRef.current || mapRef.current) return;
     try {
       const map = new maplibregl.Map({ container: containerRef.current, style: BASEMAP, center, zoom: ZOOM });
+      const b = toBBox(bbox);
+      if (b) map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: FIT_PAD, maxZoom: FIT_MAX_ZOOM, animate: false });
       const overlay = new MapboxOverlay({ interleaved: false, layers: [] });
       map.addControl(overlay);
       map.on("error", () => {}); // tile fetch failures shouldn't spam the console
@@ -246,12 +291,34 @@ export default function BlameMap({
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // City change: frame the new city's whole extent. Falls back to a centred fly-to for a city
+  // whose config has no bbox yet.
+  // The camera is the user's, not ours. We move it only when the place actually changes — never
+  // on a re-render caused by a layer toggle, a scrub frame or a panel refresh, which is what a
+  // `center` array dependency used to do (a new array identity every render).
+  const viewKey = `${city}|${JSON.stringify(toBBox(bbox))}|${center.join(",")}`;
   useEffect(() => {
-    const [lng, lat] = center;
-    if (Number.isFinite(lng) && Number.isFinite(lat)) {
-      mapRef.current?.flyTo({ center, zoom: ZOOM });
+    const map = mapRef.current;
+    if (!map) return;
+    const b = toBBox(bbox);
+    if (b) {
+      map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: FIT_PAD, maxZoom: FIT_MAX_ZOOM, duration: 700 });
+      return;
     }
-  }, [center]);
+    const [lng, lat] = center;
+    if (Number.isFinite(lng) && Number.isFinite(lat)) map.flyTo({ center, zoom: ZOOM });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewKey]);
+
+  // The box can be resized by its page (a panel that grows, a window resize). MapLibre only
+  // notices if it is told, and an unresized canvas is what makes a map look cropped.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => mapRef.current?.resize());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     let alive = true; // rapid city switches: a slow older fetch must not win
@@ -363,7 +430,7 @@ export default function BlameMap({
       getFillColor: (d) => {
         const base = coverageKind === "stations" ? d.pm25_stations : d.pm25;
         const k = scrub ? (scrub.scale[d.h3_cell] ?? 1) : 1;
-        return pm25Color(base * k);
+        return pm25Rgba(base * k, scale);
       },
       stroked: false,
       extruded: false,
@@ -395,7 +462,7 @@ export default function BlameMap({
             const wid = (f as WardFeature).properties?.ward_id;
             const m = wid ? wardMean.get(wid) : undefined;
             if (m === undefined) return [148, 163, 184, 8];
-            const [r, g, b] = pm25Color(m);
+            const [r, g, b] = pm25Rgba(m, scale);
             return [r, g, b, 95];
           },
           getLineColor: [51, 65, 85, 170],

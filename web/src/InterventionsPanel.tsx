@@ -54,10 +54,10 @@ export default function InterventionsPanel({ city }: { city: string }) {
   return (
     <Panel title="Intervention tracking">
       {d.tracked.length === 0 ? (
-        <div className="text-xs leading-5 text-gray-500">
+        <div className="text-xs leading-5 text-slate-500">
           {d.note ??
             "No real-world intervention dispatched yet — tracking arms automatically at first dispatch."}{" "}
-          <span className="text-gray-500">
+          <span className="text-slate-500">
             Marking a recommendation "dispatched" freezes the cell's 7-day PM2.5 baseline and opens a
             before/after measurement window, corrected for city-wide drift.
           </span>
@@ -65,7 +65,7 @@ export default function InterventionsPanel({ city }: { city: string }) {
       ) : (
         <div className="space-y-2">
           {d.tracked.map((t) => (
-            <div key={t.rec_id} className="rounded-md border border-gray-200 p-2 text-xs">
+            <div key={t.rec_id} className="rounded-md border border-slate-200 p-2 text-xs">
               <div className="flex items-center justify-between">
                 <span className="font-medium">rec #{t.rec_id} · cell {t.h3_cell.slice(-6)}</span>
                 <span
@@ -78,7 +78,7 @@ export default function InterventionsPanel({ city }: { city: string }) {
                   {t.status}
                 </span>
               </div>
-              <div className="mt-1 text-gray-600">
+              <div className="mt-1 text-slate-600">
                 {typeof t.effect_pm25 === "number" ? (
                   <>
                     effect <b>{t.effect_pm25 > 0 ? "+" : ""}{t.effect_pm25} µg/m³</b> vs city drift ·{" "}
@@ -87,13 +87,13 @@ export default function InterventionsPanel({ city }: { city: string }) {
                 ) : (
                   <>measuring — {t.days_since_dispatch} days since dispatch</>
                 )}
-                {t.note && <span className="text-gray-500"> · {t.note}</span>}
+                {t.note && <span className="text-slate-500"> · {t.note}</span>}
               </div>
             </div>
           ))}
         </div>
       )}
-      <div className="mt-2 border-t border-gray-100 pt-2 text-[11px] leading-4 text-gray-500">
+      <div className="mt-2 border-t border-slate-100 pt-2 text-[11px] leading-4 text-slate-500">
         <button
           onClick={exportCsv}
           className="inline-block py-1 font-semibold text-teal-700 hover:text-teal-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/80"

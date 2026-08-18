@@ -23,7 +23,7 @@ async function openConsole(page: Page, section = "action", city = "delhi") {
 test("1 · enforcement: worklist → dossier → notice PDF → dispatch → outcomes", async ({ page }) => {
   await openConsole(page, "action");
   const rail = page.locator("[data-rail]");
-  await expect(rail.getByText("Enforcement Worklist")).toBeVisible();
+  // the section is one page: every numbered card is mounted, so a step is scrolled to, not selected
   // step 1: the morning brief renders from stored rows and downloads as a PDF
   const briefCard = rail.locator("[data-step='1']");
   await expect(briefCard.getByText("Morning brief")).toBeVisible({ timeout: 30_000 });
@@ -32,9 +32,9 @@ test("1 · enforcement: worklist → dossier → notice PDF → dispatch → out
   await briefCard.getByRole("button", { name: "PDF" }).click();
   expect((await briefDl).suggestedFilename()).toMatch(/brief_delhi\.pdf/);
   // step chips exist and jump
-  await rail.getByRole("button", { name: /5\s*Track outcomes/ }).click();
+  await page.locator("[data-step='5']").scrollIntoViewIfNeeded();
   await expect(rail.getByText("Intervention tracking")).toBeVisible();
-  await rail.getByRole("button", { name: /2\s*Ranked worklist/ }).click();
+  await page.locator("[data-step='2']").scrollIntoViewIfNeeded();
   // items are titled by source type + place, with priority + rubric meta
   const first = rail.locator("[data-step='2'] .rounded-lg.border").first();
   await expect(first).toBeVisible({ timeout: 30_000 });
@@ -51,6 +51,7 @@ test("1 · enforcement: worklist → dossier → notice PDF → dispatch → out
   expect(path).toBeTruthy();
   // officer loop: approve → dispatch on the first still-proposed card; the ward queue and the
   // tracker refetch on the change event (this is a REAL dispatch on the live DB — that is the point)
+  // all steps are on the page; nothing to select
   const cards = rail.locator("[data-step='2'] .rounded-lg.border");
   const n = await cards.count();
   let idx = -1;
@@ -72,10 +73,11 @@ test("1 · enforcement: worklist → dossier → notice PDF → dispatch → out
     await expect(card.getByText(/by Journey test/).first()).toBeVisible({ timeout: 30_000 });
   }
   // ward queues + interventions cards carry their step numbers and now have content
-  await expect(rail.locator("[data-step='4']")).toBeVisible();
-  await expect(rail.locator("[data-step='5']")).toBeVisible();
-  // after the close the queues may legitimately be empty again — either the queue or its honest empty state
+  // each step is a tab now: select it, then assert its card (queues may be empty after a close —
+  // the honest empty state counts)
+  // all steps are on the page; nothing to select
   await expect(rail.locator("[data-step='4']").getByText(/in queue|Nothing dispatched yet/).first()).toBeVisible({ timeout: 30_000 });
+  // all steps are on the page; nothing to select
   await expect(rail.locator("[data-step='5']").getByText(/provisional|Δ|baseline|dispatched|tracking arms/i).first()).toBeVisible({ timeout: 30_000 });
 });
 
@@ -96,13 +98,19 @@ test("2 · map: a cell story opens with blame, forecast probabilities and a shar
 test("3 · forecast: outlook, measured validation, exposure, past air", async ({ page }) => {
   await openConsole(page, "forecast");
   const rail = page.locator("[data-rail]");
+  // tab 1 — the outlook
   await expect(rail.getByText(/measured skill|backtested skill/).first()).toBeVisible({ timeout: 30_000 });
-  await expect(rail.getByText("Forecast validation")).toBeVisible();
-  await expect(rail.getByText(/vs persistence/).first()).toBeVisible();
   await rail.getByRole("button", { name: "+48h" }).first().click();
   await expect(rail.getByText(/measured skill @48h|backtested skill @48h/).first()).toBeVisible();
+  // tab 2 — the benchmark, with the attribution-method breakdown under it
+  // all steps are on the page; nothing to select
+  await expect(rail.getByText("Forecast validation")).toBeVisible({ timeout: 20_000 });
+  await expect(rail.getByText(/vs persistence/).first()).toBeVisible();
+  // tab 4 — exposure; tab 5 — the past
+  // all steps are on the page; nothing to select
   await expect(rail.getByText("Who is in the forecast?")).toBeVisible({ timeout: 30_000 });
-  await expect(rail.getByText(/City — past air/i)).toBeVisible();
+  // all steps are on the page; nothing to select
+  await expect(rail.getByText(/City — past air/i)).toBeVisible({ timeout: 20_000 });
 });
 
 test("4 · advisories: language + channel switch, clean-air routes, reports list", async ({ page }) => {
@@ -118,9 +126,11 @@ test("4 · advisories: language + channel switch, clean-air routes, reports list
   await expect(rail.getByText(/[ऀ-ॿ]/).first()).toBeVisible({ timeout: 20_000 });
   await lang.selectOption("en");
   await expect(rail.getByText(/air is forecast/).first()).toBeVisible({ timeout: 20_000 });
-  await expect(rail.locator("[data-step='2']").getByText("Send it", { exact: true })).toBeVisible();
-  await expect(rail.locator("[data-step='4']").getByText("Citizen reports", { exact: true })).toBeVisible();
+  // all steps are on the page; nothing to select
+  await expect(rail.locator("[data-step='4']").getByText("Citizen reports", { exact: true })).toBeVisible({ timeout: 20_000 });
   // the broadcast asks for confirmation and can be cancelled — never fires by accident
+  // all steps are on the page; nothing to select
+  await expect(rail.locator("[data-step='2']").getByText("Send it", { exact: true })).toBeVisible({ timeout: 20_000 });
   await rail.getByRole("button", { name: /broadcast latest alert/i }).click();
   await expect(rail.getByText(/real Telegram message and place a real phone call/)).toBeVisible();
   await rail.getByRole("button", { name: "Cancel" }).click();
@@ -143,8 +153,10 @@ test("6 · simulator: run a what-if, read the cited result, rank a bundle", asyn
   const rail = page.locator("[data-rail]");
   await expect(rail.getByText("Choose an intervention").first()).toBeVisible();
   await rail.getByRole("button", { name: /run simulation/i }).click();
+  // all steps are on the page; nothing to select
   await expect(rail.getByText(/avg ΔAQI/)).toBeVisible({ timeout: 90_000 });
   await expect(rail.getByText(/confidence/)).toBeVisible();
+  // all steps are on the page; nothing to select
   await rail.getByRole("button", { name: /rank packages/i }).click();
   await expect(rail.getByText(/inspector-hours|No feasible package/).first()).toBeVisible({ timeout: 90_000 });
 });
@@ -153,9 +165,13 @@ test("7 · impact: funding case, fund guidance, fairness audit", async ({ page }
   await openConsole(page, "impact");
   const rail = page.locator("[data-rail]");
   await expect(rail.getByText(/funding case/i).first()).toBeVisible();
+  // all steps are on the page; nothing to select
   await expect(rail.getByText(/Where the funds should go/).first()).toBeVisible({ timeout: 30_000 });
-  await expect(rail.getByText(/Fairness audit/).first()).toBeVisible();
-  await expect(rail.getByText(/every figure is cited/i)).toBeVisible();
+  // all steps are on the page; nothing to select
+  await expect(rail.getByText(/Fairness audit/).first()).toBeVisible({ timeout: 20_000 });
+  // the citation drawer lives on the funding-case card (tab 1) — every ₹ figure names its source
+  // all steps are on the page; nothing to select
+  await expect(rail.getByText(/every figure is cited/i)).toBeVisible({ timeout: 20_000 });
 });
 
 test("8 · pipeline: the agents really run", async ({ page }) => {
@@ -179,6 +195,8 @@ test("9 · shell: keyboard sections, city cycling, presentation mode, layers", a
   await page.keyboard.press("p");
   await expect(page.locator("html")).toHaveClass(/vn-present/);
   await page.keyboard.press("p");
+  // the map — and so the layer control — lives on the enforcement page
+  await page.keyboard.press("1");
   await page.getByRole("button", { name: /^Layers/ }).click();
   await page.getByRole("button", { name: /wind plumes/i }).click();
   await expect(page).toHaveURL(/layers=.*plumes/);

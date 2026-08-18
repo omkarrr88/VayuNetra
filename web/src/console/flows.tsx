@@ -37,6 +37,8 @@ export const FLOWS: Record<Section, Flow> = {
       { n: 3, label: "Real orders, in hindsight", info: <><P><b>What:</b> the CAQM GRAP escalations of winter 2025-26 (and Diwali night), dated from government releases, replayed against the served forecast — what P(&gt;120) it carried 24/48/72 h before each order — and a weather-normalised check of whether the air changed during the window.</P><P><b>Where from:</b> <code>python -m ml.eval.interventions</code>; negative results and low-coverage rows are kept. Association, not causation.</P></> },
       { n: 4, label: "Who is in the forecast", info: <><P><b>What:</b> expected people in Very Poor / Severe air = Σ cell population × calibrated P(&gt; band); GPW population where sampled, cited city population otherwise. Exposure, not mortality.</P></> },
       { n: 5, label: "The past", info: <><P><b>What:</b> daily station means for 30 d / 90 d / 1 y with a plain-language verdict and spike-day markers, plus the last 48 h and the live source mix.</P></> },
+      { n: 6, label: "Pollutants now", info: <><P><b>What:</b> every pollutant this city's stations publish, each with its own sub-index on the chosen scale, and the one that sets the city index right now.</P><P><b>Why here:</b> the forecast is for PM2.5, but the index an officer is judged on can be set by PM10, NO₂ or ozone — this card says which, today.</P></> },
+      { n: 7, label: "The record", info: <><P><b>What:</b> the index or a single pollutant over 24 h / 7 d / 30 d / 1 y, a day-by-day calendar, and the monthly rhythm across the whole record.</P><P><b>Honesty:</b> where our record is shorter than the range asked for, the card says so rather than stretching the axis.</P></> },
     ],
   },
   citizen: {
@@ -48,6 +50,7 @@ export const FLOWS: Record<Section, Flow> = {
       { n: 2, label: "Send it", info: <><P><b>What:</b> broadcast to Telegram, a real IVR voice call, and public display boards; share a WhatsApp-ready card for any place.</P></> },
       { n: 3, label: "Clean-air routes", info: <><P><b>What:</b> clean-air zones and exposure corridors — where a commute or a school run breathes least.</P></> },
       { n: 4, label: "Citizen reports", info: <><P><b>What:</b> residents report smoke, dust or burning with a photo; verified reports become emission sources in the enforcement worklist — the loop closes.</P></> },
+      { n: 5, label: "What the air does", info: <><P><b>What:</b> the cigarette-equivalent of the last 24 hours, what to do today, and guidance per condition — asthma, heart, allergies, COPD.</P><P><b>Where from:</b> templated from CPCB's advisory table and WHO guidance over this city's own readings. No language model writes health text, and none of it is medical advice.</P></> },
     ],
   },
   compare: {

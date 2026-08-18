@@ -30,7 +30,7 @@ const STATUS_STYLE: Record<Report["status"], string> = {
   verified: "bg-sky-100 text-sky-800",
   actioned: "bg-amber-100 text-amber-800",
   resolved: "bg-emerald-100 text-emerald-800",
-  rejected: "bg-gray-100 text-gray-500",
+  rejected: "bg-slate-100 text-slate-500",
 };
 
 export default function CitizenReports({ city, center }: { city: string; center?: [number, number] }) {

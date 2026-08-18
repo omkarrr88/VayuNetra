@@ -3,7 +3,7 @@
 // plus a button that runs the whole pipeline live on stage.
 import { useCallback, useEffect, useState } from "react";
 import { api } from "./api";
-import { Panel } from "./ui";
+import { Panel, Step } from "./ui";
 
 type TraceStep = { node: string; ts: string; meta?: Record<string, unknown> };
 type TraceRow = { city_id: string; total_latency_ms?: number; trace?: TraceStep[]; signal_ts?: string };
@@ -75,7 +75,7 @@ function NodeIcon({ d, color }: { d: string; color: string }) {
 function Timeline({ steps }: { steps: TraceStep[] }) {
   if (!steps.length) {
     return (
-      <div className="mt-2 rounded-md border border-dashed border-slate-200 p-3 text-center text-xs text-gray-500">
+      <div className="mt-2 rounded-md border border-dashed border-slate-200 p-3 text-center text-xs text-slate-500">
         No trace yet — press "Run agents live" to watch the pipeline think.
       </div>
     );
@@ -157,7 +157,7 @@ function Timeline({ steps }: { steps: TraceStep[] }) {
                     }}
                     aria-hidden="true"
                   />
-                  <span className="font-mono text-[10px] text-gray-500">{(stepMs[i] / 1000).toFixed(1)}s</span>
+                  <span className="font-mono text-[10px] text-slate-500">{(stepMs[i] / 1000).toFixed(1)}s</span>
                 </span>
               )}
             </div>
@@ -215,6 +215,7 @@ export default function TraceViewer({ city }: { city: string }) {
   }
 
   return (
+    <Step n={1} label="Run the agents" info={<p>The LangGraph orchestrator: ingest → attribution → forecast → spike gate → enforcement → advisory. Each node's inputs, outputs and wall-clock are traced; the button really runs the graph against the live database.</p>}>
     <Panel
       title="Agent Pipeline"
       right={
@@ -225,7 +226,7 @@ export default function TraceViewer({ city }: { city: string }) {
         ) : undefined
       }
     >
-      <div className="text-[11px] text-gray-500">last multi-agent run · detect → decide → issue</div>
+      <div className="text-[11px] text-slate-500">last multi-agent run · detect → decide → issue</div>
       <Timeline steps={steps} />
       <button
         onClick={runLive}
@@ -250,5 +251,6 @@ export default function TraceViewer({ city }: { city: string }) {
       </button>
       {err && <div className="mt-1 text-[11px] text-red-600">{err}</div>}
     </Panel>
+    </Step>
   );
 }

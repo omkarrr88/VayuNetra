@@ -22,10 +22,10 @@ export type ImpactData = {
 
 function Tile({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-md border border-gray-200 bg-white p-2">
-      <div className="text-[11px] uppercase tracking-wide text-gray-500">{label}</div>
-      <div className="text-lg font-semibold leading-tight text-gray-900">{value}</div>
-      {sub && <div className="text-[11px] leading-tight text-gray-500">{sub}</div>}
+    <div className="rounded-md border border-slate-200 bg-white p-2">
+      <div className="text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="text-lg font-semibold leading-tight text-slate-900">{value}</div>
+      {sub && <div className="text-[11px] leading-tight text-slate-500">{sub}</div>}
     </div>
   );
 }
@@ -39,11 +39,11 @@ export function Citations({ items }: { items: Citation[] }) {
         {open ? "hide sources" : `sources (${items.length}) — every figure is cited`}
       </button>
       {open && (
-        <ul className="mt-1 space-y-1 text-[11px] text-gray-600">
+        <ul className="mt-1 space-y-1 text-[11px] text-slate-600">
           {items.map((c, i) => (
-            <li key={i} className="border-l-2 border-gray-200 pl-2">
+            <li key={i} className="border-l-2 border-slate-200 pl-2">
               <span className="font-medium">{c.figure}:</span> {String(c.value)} {c.unit} — {c.source}
-              {c.caveat && <span className="italic text-gray-500"> ({c.caveat})</span>}
+              {c.caveat && <span className="italic text-slate-500"> ({c.caveat})</span>}
             </li>
           ))}
         </ul>

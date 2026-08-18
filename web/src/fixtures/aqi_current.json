@@ -1,1 +1,1062 @@
-[{"h3_cell":"883da11469fffff","pm25":32.9,"ts":"2026-08-16T10:30:00+00:00","confidence":0.6,"city_id":"delhi"},{"h3_cell":"883da10247fffff","pm25":28.2,"ts":"2026-08-16T10:30:00+00:00","confidence":1,"city_id":"delhi"},{"h3_cell":"883da11403fffff","pm25":37.3,"ts":"2026-08-16T10:30:00+00:00","confidence":1,"city_id":"delhi"},{"h3_cell":"883da1336dfffff","pm25":44.5,"ts":"2026-08-16T10:30:00+00:00","confidence":1,"city_id":"delhi"},{"h3_cell":"883da11533fffff","pm25":32.2,"ts":"2026-08-16T10:30:00+00:00","confidence":1,"city_id":"delhi"},{"h3_cell":"883da11505fffff","pm25":59,"ts":"2026-08-16T10:30:00+00:00","confidence":1,"city_id":"delhi"},{"h3_cell":"883da11455fffff","pm25":29,"ts":"2026-08-16T09:30:00+00:00","confidence":0.6,"city_id":"delhi"},{"h3_cell":"883da11527fffff","pm25":43.6,"ts":"2026-08-16T09:30:00+00:00","confidence":0.6,"city_id":"delhi"},{"h3_cell":"886189258dfffff","pm25":13.2,"ts":"2026-08-16T10:30:00+00:00","confidence":1,"city_id":"bengaluru"},{"h3_cell":"88601459c3fffff","pm25":5.97,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"bengaluru"},{"h3_cell":"88618925c9fffff","pm25":20,"ts":"2026-08-16T07:30:00+00:00","confidence":1,"city_id":"bengaluru"},{"h3_cell":"88608b0a53fffff","pm25":14,"ts":"2026-08-16T10:30:00+00:00","confidence":1,"city_id":"mumbai"},{"h3_cell":"88608b0a19fffff","pm25":8.33,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"mumbai"},{"h3_cell":"88608b42ebfffff","pm25":17.7,"ts":"2026-08-16T07:30:00+00:00","confidence":1,"city_id":"mumbai"},{"h3_cell":"88608b55c5fffff","pm25":9.34,"ts":"2026-08-16T05:30:00+00:00","confidence":1,"city_id":"mumbai"},{"h3_cell":"88608b5747fffff","pm25":10,"ts":"2026-08-15T17:30:00+00:00","confidence":1,"city_id":"mumbai"},{"h3_cell":"8860a25a3dfffff","pm25":16,"ts":"2026-08-16T07:30:00+00:00","confidence":1,"city_id":"hyderabad"},{"h3_cell":"8860a25b41fffff","pm25":17.2,"ts":"2026-08-16T06:30:00+00:00","confidence":1,"city_id":"hyderabad"},{"h3_cell":"8860a2416dfffff","pm25":28.9,"ts":"2026-08-16T06:30:00+00:00","confidence":1,"city_id":"hyderabad"},{"h3_cell":"8860a25951fffff","pm25":27.6,"ts":"2026-08-16T06:30:00+00:00","confidence":1,"city_id":"hyderabad"},{"h3_cell":"8860a24989fffff","pm25":20.8,"ts":"2026-08-16T06:30:00+00:00","confidence":1,"city_id":"hyderabad"},{"h3_cell":"88618c4f5dfffff","pm25":25.7,"ts":"2026-08-16T10:30:00+00:00","confidence":1,"city_id":"chennai"},{"h3_cell":"88618c49dbfffff","pm25":8,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"chennai"},{"h3_cell":"88618eb357fffff","pm25":21.7,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"chennai"},{"h3_cell":"88618c48e3fffff","pm25":23,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"chennai"},{"h3_cell":"88618c419bfffff","pm25":5,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"chennai"},{"h3_cell":"883cf298e5fffff","pm25":10.6,"ts":"2026-08-16T07:30:00+00:00","confidence":1,"city_id":"kolkata"},{"h3_cell":"883cf2c759fffff","pm25":41.7,"ts":"2026-08-16T06:30:00+00:00","confidence":1,"city_id":"kolkata"},{"h3_cell":"88608852d5fffff","pm25":20,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"pune"},{"h3_cell":"88608850a5fffff","pm25":9.16,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"pune"},{"h3_cell":"8860884317fffff","pm25":11.2,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"pune"},{"h3_cell":"886088516bfffff","pm25":29.9,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"pune"},{"h3_cell":"88608841e9fffff","pm25":13.3,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"pune"},{"h3_cell":"8860885353fffff","pm25":37.8,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"pune"},{"h3_cell":"8860884321fffff","pm25":15.5,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"pune"},{"h3_cell":"886088404bfffff","pm25":18,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"pune"},{"h3_cell":"8842ceb5d9fffff","pm25":9.3,"ts":"2026-08-16T10:30:00+00:00","confidence":1,"city_id":"ahmedabad"},{"h3_cell":"8842cea741fffff","pm25":27.1,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"ahmedabad"},{"h3_cell":"8842cea407fffff","pm25":39,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"ahmedabad"},{"h3_cell":"8842cea617fffff","pm25":27.6,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"ahmedabad"},{"h3_cell":"8842cea629fffff","pm25":67.1,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"ahmedabad"},{"h3_cell":"8842cc6111fffff","pm25":23.2,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"ahmedabad"},{"h3_cell":"883da21aedfffff","pm25":61.3,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"jaipur"},{"h3_cell":"883da21881fffff","pm25":41.1,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"jaipur"},{"h3_cell":"883da219a9fffff","pm25":14,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"jaipur"},{"h3_cell":"883da21a83fffff","pm25":50,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"jaipur"},{"h3_cell":"883da20949fffff","pm25":36,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"jaipur"},{"h3_cell":"883da218b3fffff","pm25":40.5,"ts":"2026-08-16T08:30:00+00:00","confidence":1,"city_id":"jaipur"},{"h3_cell":"883d8d523dfffff","pm25":9.5,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"lucknow"},{"h3_cell":"883d8dc88bfffff","pm25":15.8,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"lucknow"},{"h3_cell":"883d8dcc5bfffff","pm25":14.3,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"lucknow"},{"h3_cell":"883d8dcd43fffff","pm25":22,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"lucknow"},{"h3_cell":"883d8dcc31fffff","pm25":39.7,"ts":"2026-08-16T09:30:00+00:00","confidence":1,"city_id":"lucknow"}]
+[
+ {
+  "h3_cell": "883da11469fffff",
+  "pm25": 32.9,
+  "ts": "2026-08-16T10:30:00+00:00",
+  "confidence": 0.6,
+  "city_id": "delhi",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 54
+  },
+  "sub_us": {
+   "pm25": 95
+  },
+  "aqi_in": 54,
+  "prominent_in": "pm25",
+  "aqi_us": 95,
+  "prominent_us": "pm25",
+  "category_in": "Satisfactory",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "883da10247fffff",
+  "pm25": 28.2,
+  "ts": "2026-08-16T10:30:00+00:00",
+  "confidence": 1,
+  "city_id": "delhi",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 47
+  },
+  "sub_us": {
+   "pm25": 87
+  },
+  "aqi_in": 47,
+  "prominent_in": "pm25",
+  "aqi_us": 87,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "883da11403fffff",
+  "pm25": 37.3,
+  "ts": "2026-08-16T10:30:00+00:00",
+  "confidence": 1,
+  "city_id": "delhi",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 62
+  },
+  "sub_us": {
+   "pm25": 105
+  },
+  "aqi_in": 62,
+  "prominent_in": "pm25",
+  "aqi_us": 105,
+  "prominent_us": "pm25",
+  "category_in": "Satisfactory",
+  "category_us": "Unhealthy for Sensitive Groups"
+ },
+ {
+  "h3_cell": "883da1336dfffff",
+  "pm25": 44.5,
+  "ts": "2026-08-16T10:30:00+00:00",
+  "confidence": 1,
+  "city_id": "delhi",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 74
+  },
+  "sub_us": {
+   "pm25": 123
+  },
+  "aqi_in": 74,
+  "prominent_in": "pm25",
+  "aqi_us": 123,
+  "prominent_us": "pm25",
+  "category_in": "Satisfactory",
+  "category_us": "Unhealthy for Sensitive Groups"
+ },
+ {
+  "h3_cell": "883da11533fffff",
+  "pm25": 32.2,
+  "ts": "2026-08-16T10:30:00+00:00",
+  "confidence": 1,
+  "city_id": "delhi",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 53
+  },
+  "sub_us": {
+   "pm25": 94
+  },
+  "aqi_in": 53,
+  "prominent_in": "pm25",
+  "aqi_us": 94,
+  "prominent_us": "pm25",
+  "category_in": "Satisfactory",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "883da11505fffff",
+  "pm25": 59,
+  "ts": "2026-08-16T10:30:00+00:00",
+  "confidence": 1,
+  "city_id": "delhi",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 98
+  },
+  "sub_us": {
+   "pm25": 153
+  },
+  "aqi_in": 98,
+  "prominent_in": "pm25",
+  "aqi_us": 153,
+  "prominent_us": "pm25",
+  "category_in": "Satisfactory",
+  "category_us": "Unhealthy"
+ },
+ {
+  "h3_cell": "883da11455fffff",
+  "pm25": 29,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 0.6,
+  "city_id": "delhi",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 48
+  },
+  "sub_us": {
+   "pm25": 88
+  },
+  "aqi_in": 48,
+  "prominent_in": "pm25",
+  "aqi_us": 88,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "883da11527fffff",
+  "pm25": 43.6,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 0.6,
+  "city_id": "delhi",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 72
+  },
+  "sub_us": {
+   "pm25": 121
+  },
+  "aqi_in": 72,
+  "prominent_in": "pm25",
+  "aqi_us": 121,
+  "prominent_us": "pm25",
+  "category_in": "Satisfactory",
+  "category_us": "Unhealthy for Sensitive Groups"
+ },
+ {
+  "h3_cell": "886189258dfffff",
+  "pm25": 13.2,
+  "ts": "2026-08-16T10:30:00+00:00",
+  "confidence": 1,
+  "city_id": "bengaluru",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 22
+  },
+  "sub_us": {
+   "pm25": 59
+  },
+  "aqi_in": 22,
+  "prominent_in": "pm25",
+  "aqi_us": 59,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "88601459c3fffff",
+  "pm25": 5.97,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "bengaluru",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 10
+  },
+  "sub_us": {
+   "pm25": 33
+  },
+  "aqi_in": 10,
+  "prominent_in": "pm25",
+  "aqi_us": 33,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Good"
+ },
+ {
+  "h3_cell": "88618925c9fffff",
+  "pm25": 20,
+  "ts": "2026-08-16T07:30:00+00:00",
+  "confidence": 1,
+  "city_id": "bengaluru",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 33
+  },
+  "sub_us": {
+   "pm25": 71
+  },
+  "aqi_in": 33,
+  "prominent_in": "pm25",
+  "aqi_us": 71,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "88608b0a53fffff",
+  "pm25": 14,
+  "ts": "2026-08-16T10:30:00+00:00",
+  "confidence": 1,
+  "city_id": "mumbai",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 23
+  },
+  "sub_us": {
+   "pm25": 60
+  },
+  "aqi_in": 23,
+  "prominent_in": "pm25",
+  "aqi_us": 60,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "88608b0a19fffff",
+  "pm25": 8.33,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "mumbai",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 14
+  },
+  "sub_us": {
+   "pm25": 46
+  },
+  "aqi_in": 14,
+  "prominent_in": "pm25",
+  "aqi_us": 46,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Good"
+ },
+ {
+  "h3_cell": "88608b42ebfffff",
+  "pm25": 17.7,
+  "ts": "2026-08-16T07:30:00+00:00",
+  "confidence": 1,
+  "city_id": "mumbai",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 30
+  },
+  "sub_us": {
+   "pm25": 67
+  },
+  "aqi_in": 30,
+  "prominent_in": "pm25",
+  "aqi_us": 67,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "88608b55c5fffff",
+  "pm25": 9.34,
+  "ts": "2026-08-16T05:30:00+00:00",
+  "confidence": 1,
+  "city_id": "mumbai",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 16
+  },
+  "sub_us": {
+   "pm25": 51
+  },
+  "aqi_in": 16,
+  "prominent_in": "pm25",
+  "aqi_us": 51,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "88608b5747fffff",
+  "pm25": 10,
+  "ts": "2026-08-15T17:30:00+00:00",
+  "confidence": 1,
+  "city_id": "mumbai",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 17
+  },
+  "sub_us": {
+   "pm25": 53
+  },
+  "aqi_in": 17,
+  "prominent_in": "pm25",
+  "aqi_us": 53,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "8860a25a3dfffff",
+  "pm25": 16,
+  "ts": "2026-08-16T07:30:00+00:00",
+  "confidence": 1,
+  "city_id": "hyderabad",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 27
+  },
+  "sub_us": {
+   "pm25": 64
+  },
+  "aqi_in": 27,
+  "prominent_in": "pm25",
+  "aqi_us": 64,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "8860a25b41fffff",
+  "pm25": 17.2,
+  "ts": "2026-08-16T06:30:00+00:00",
+  "confidence": 1,
+  "city_id": "hyderabad",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 29
+  },
+  "sub_us": {
+   "pm25": 66
+  },
+  "aqi_in": 29,
+  "prominent_in": "pm25",
+  "aqi_us": 66,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "8860a2416dfffff",
+  "pm25": 28.9,
+  "ts": "2026-08-16T06:30:00+00:00",
+  "confidence": 1,
+  "city_id": "hyderabad",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 48
+  },
+  "sub_us": {
+   "pm25": 88
+  },
+  "aqi_in": 48,
+  "prominent_in": "pm25",
+  "aqi_us": 88,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "8860a25951fffff",
+  "pm25": 27.6,
+  "ts": "2026-08-16T06:30:00+00:00",
+  "confidence": 1,
+  "city_id": "hyderabad",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 46
+  },
+  "sub_us": {
+   "pm25": 85
+  },
+  "aqi_in": 46,
+  "prominent_in": "pm25",
+  "aqi_us": 85,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "8860a24989fffff",
+  "pm25": 20.8,
+  "ts": "2026-08-16T06:30:00+00:00",
+  "confidence": 1,
+  "city_id": "hyderabad",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 35
+  },
+  "sub_us": {
+   "pm25": 73
+  },
+  "aqi_in": 35,
+  "prominent_in": "pm25",
+  "aqi_us": 73,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "88618c4f5dfffff",
+  "pm25": 25.7,
+  "ts": "2026-08-16T10:30:00+00:00",
+  "confidence": 1,
+  "city_id": "chennai",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 43
+  },
+  "sub_us": {
+   "pm25": 82
+  },
+  "aqi_in": 43,
+  "prominent_in": "pm25",
+  "aqi_us": 82,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "88618c49dbfffff",
+  "pm25": 8,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "chennai",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 13
+  },
+  "sub_us": {
+   "pm25": 44
+  },
+  "aqi_in": 13,
+  "prominent_in": "pm25",
+  "aqi_us": 44,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Good"
+ },
+ {
+  "h3_cell": "88618eb357fffff",
+  "pm25": 21.7,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "chennai",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 36
+  },
+  "sub_us": {
+   "pm25": 74
+  },
+  "aqi_in": 36,
+  "prominent_in": "pm25",
+  "aqi_us": 74,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "88618c48e3fffff",
+  "pm25": 23,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "chennai",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 38
+  },
+  "sub_us": {
+   "pm25": 77
+  },
+  "aqi_in": 38,
+  "prominent_in": "pm25",
+  "aqi_us": 77,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "88618c419bfffff",
+  "pm25": 5,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "chennai",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 8
+  },
+  "sub_us": {
+   "pm25": 28
+  },
+  "aqi_in": 8,
+  "prominent_in": "pm25",
+  "aqi_us": 28,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Good"
+ },
+ {
+  "h3_cell": "883cf298e5fffff",
+  "pm25": 10.6,
+  "ts": "2026-08-16T07:30:00+00:00",
+  "confidence": 1,
+  "city_id": "kolkata",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 18
+  },
+  "sub_us": {
+   "pm25": 54
+  },
+  "aqi_in": 18,
+  "prominent_in": "pm25",
+  "aqi_us": 54,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "883cf2c759fffff",
+  "pm25": 41.7,
+  "ts": "2026-08-16T06:30:00+00:00",
+  "confidence": 1,
+  "city_id": "kolkata",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 69
+  },
+  "sub_us": {
+   "pm25": 116
+  },
+  "aqi_in": 69,
+  "prominent_in": "pm25",
+  "aqi_us": 116,
+  "prominent_us": "pm25",
+  "category_in": "Satisfactory",
+  "category_us": "Unhealthy for Sensitive Groups"
+ },
+ {
+  "h3_cell": "88608852d5fffff",
+  "pm25": 20,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "pune",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 33
+  },
+  "sub_us": {
+   "pm25": 71
+  },
+  "aqi_in": 33,
+  "prominent_in": "pm25",
+  "aqi_us": 71,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "88608850a5fffff",
+  "pm25": 9.16,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "pune",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 15
+  },
+  "sub_us": {
+   "pm25": 51
+  },
+  "aqi_in": 15,
+  "prominent_in": "pm25",
+  "aqi_us": 51,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "8860884317fffff",
+  "pm25": 11.2,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "pune",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 19
+  },
+  "sub_us": {
+   "pm25": 55
+  },
+  "aqi_in": 19,
+  "prominent_in": "pm25",
+  "aqi_us": 55,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "886088516bfffff",
+  "pm25": 29.9,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "pune",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 50
+  },
+  "sub_us": {
+   "pm25": 90
+  },
+  "aqi_in": 50,
+  "prominent_in": "pm25",
+  "aqi_us": 90,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "88608841e9fffff",
+  "pm25": 13.3,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "pune",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 22
+  },
+  "sub_us": {
+   "pm25": 59
+  },
+  "aqi_in": 22,
+  "prominent_in": "pm25",
+  "aqi_us": 59,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "8860885353fffff",
+  "pm25": 37.8,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "pune",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 62
+  },
+  "sub_us": {
+   "pm25": 107
+  },
+  "aqi_in": 62,
+  "prominent_in": "pm25",
+  "aqi_us": 107,
+  "prominent_us": "pm25",
+  "category_in": "Satisfactory",
+  "category_us": "Unhealthy for Sensitive Groups"
+ },
+ {
+  "h3_cell": "8860884321fffff",
+  "pm25": 15.5,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "pune",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 26
+  },
+  "sub_us": {
+   "pm25": 63
+  },
+  "aqi_in": 26,
+  "prominent_in": "pm25",
+  "aqi_us": 63,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "886088404bfffff",
+  "pm25": 18,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "pune",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 30
+  },
+  "sub_us": {
+   "pm25": 68
+  },
+  "aqi_in": 30,
+  "prominent_in": "pm25",
+  "aqi_us": 68,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "8842ceb5d9fffff",
+  "pm25": 9.3,
+  "ts": "2026-08-16T10:30:00+00:00",
+  "confidence": 1,
+  "city_id": "ahmedabad",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 16
+  },
+  "sub_us": {
+   "pm25": 51
+  },
+  "aqi_in": 16,
+  "prominent_in": "pm25",
+  "aqi_us": 51,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "8842cea741fffff",
+  "pm25": 27.1,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "ahmedabad",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 45
+  },
+  "sub_us": {
+   "pm25": 85
+  },
+  "aqi_in": 45,
+  "prominent_in": "pm25",
+  "aqi_us": 85,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "8842cea407fffff",
+  "pm25": 39,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "ahmedabad",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 65
+  },
+  "sub_us": {
+   "pm25": 110
+  },
+  "aqi_in": 65,
+  "prominent_in": "pm25",
+  "aqi_us": 110,
+  "prominent_us": "pm25",
+  "category_in": "Satisfactory",
+  "category_us": "Unhealthy for Sensitive Groups"
+ },
+ {
+  "h3_cell": "8842cea617fffff",
+  "pm25": 27.6,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "ahmedabad",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 46
+  },
+  "sub_us": {
+   "pm25": 85
+  },
+  "aqi_in": 46,
+  "prominent_in": "pm25",
+  "aqi_us": 85,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "8842cea629fffff",
+  "pm25": 67.1,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "ahmedabad",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 122
+  },
+  "sub_us": {
+   "pm25": 159
+  },
+  "aqi_in": 122,
+  "prominent_in": "pm25",
+  "aqi_us": 159,
+  "prominent_us": "pm25",
+  "category_in": "Moderate",
+  "category_us": "Unhealthy"
+ },
+ {
+  "h3_cell": "8842cc6111fffff",
+  "pm25": 23.2,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "ahmedabad",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 39
+  },
+  "sub_us": {
+   "pm25": 77
+  },
+  "aqi_in": 39,
+  "prominent_in": "pm25",
+  "aqi_us": 77,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "883da21aedfffff",
+  "pm25": 61.3,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "jaipur",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 102
+  },
+  "sub_us": {
+   "pm25": 155
+  },
+  "aqi_in": 102,
+  "prominent_in": "pm25",
+  "aqi_us": 155,
+  "prominent_us": "pm25",
+  "category_in": "Moderate",
+  "category_us": "Unhealthy"
+ },
+ {
+  "h3_cell": "883da21881fffff",
+  "pm25": 41.1,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "jaipur",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 68
+  },
+  "sub_us": {
+   "pm25": 115
+  },
+  "aqi_in": 68,
+  "prominent_in": "pm25",
+  "aqi_us": 115,
+  "prominent_us": "pm25",
+  "category_in": "Satisfactory",
+  "category_us": "Unhealthy for Sensitive Groups"
+ },
+ {
+  "h3_cell": "883da219a9fffff",
+  "pm25": 14,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "jaipur",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 23
+  },
+  "sub_us": {
+   "pm25": 60
+  },
+  "aqi_in": 23,
+  "prominent_in": "pm25",
+  "aqi_us": 60,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "883da21a83fffff",
+  "pm25": 50,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "jaipur",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 83
+  },
+  "sub_us": {
+   "pm25": 137
+  },
+  "aqi_in": 83,
+  "prominent_in": "pm25",
+  "aqi_us": 137,
+  "prominent_us": "pm25",
+  "category_in": "Satisfactory",
+  "category_us": "Unhealthy for Sensitive Groups"
+ },
+ {
+  "h3_cell": "883da20949fffff",
+  "pm25": 36,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "jaipur",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 59
+  },
+  "sub_us": {
+   "pm25": 102
+  },
+  "aqi_in": 59,
+  "prominent_in": "pm25",
+  "aqi_us": 102,
+  "prominent_us": "pm25",
+  "category_in": "Satisfactory",
+  "category_us": "Unhealthy for Sensitive Groups"
+ },
+ {
+  "h3_cell": "883da218b3fffff",
+  "pm25": 40.5,
+  "ts": "2026-08-16T08:30:00+00:00",
+  "confidence": 1,
+  "city_id": "jaipur",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 67
+  },
+  "sub_us": {
+   "pm25": 113
+  },
+  "aqi_in": 67,
+  "prominent_in": "pm25",
+  "aqi_us": 113,
+  "prominent_us": "pm25",
+  "category_in": "Satisfactory",
+  "category_us": "Unhealthy for Sensitive Groups"
+ },
+ {
+  "h3_cell": "883d8d523dfffff",
+  "pm25": 9.5,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "lucknow",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 16
+  },
+  "sub_us": {
+   "pm25": 52
+  },
+  "aqi_in": 16,
+  "prominent_in": "pm25",
+  "aqi_us": 52,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "883d8dc88bfffff",
+  "pm25": 15.8,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "lucknow",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 26
+  },
+  "sub_us": {
+   "pm25": 63
+  },
+  "aqi_in": 26,
+  "prominent_in": "pm25",
+  "aqi_us": 63,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "883d8dcc5bfffff",
+  "pm25": 14.3,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "lucknow",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 24
+  },
+  "sub_us": {
+   "pm25": 61
+  },
+  "aqi_in": 24,
+  "prominent_in": "pm25",
+  "aqi_us": 61,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "883d8dcd43fffff",
+  "pm25": 22,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "lucknow",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 37
+  },
+  "sub_us": {
+   "pm25": 75
+  },
+  "aqi_in": 37,
+  "prominent_in": "pm25",
+  "aqi_us": 75,
+  "prominent_us": "pm25",
+  "category_in": "Good",
+  "category_us": "Moderate"
+ },
+ {
+  "h3_cell": "883d8dcc31fffff",
+  "pm25": 39.7,
+  "ts": "2026-08-16T09:30:00+00:00",
+  "confidence": 1,
+  "city_id": "lucknow",
+  "pollutants": {},
+  "sub_in": {
+   "pm25": 66
+  },
+  "sub_us": {
+   "pm25": 111
+  },
+  "aqi_in": 66,
+  "prominent_in": "pm25",
+  "aqi_us": 111,
+  "prominent_us": "pm25",
+  "category_in": "Satisfactory",
+  "category_us": "Unhealthy for Sensitive Groups"
+ }
+]
