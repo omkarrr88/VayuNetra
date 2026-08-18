@@ -1,15 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
-import BlameMap, { type AttrCell, type CoverageCell, type MapMode } from "./BlameMap";
+import { type AttrCell, type CoverageCell, type MapMode } from "./BlameMap";
 import ForecastPanel from "./ForecastPanel";
 import ValidationPanel from "./ValidationPanel";
 import InterventionsHindsight from "./InterventionsHindsight";
-import CityAirPanel from "./city/CityAirPanel";
 import BriefCard from "./BriefCard";
 import { api } from "./api";
-import AqiHeader from "./AqiHeader";
-import CellStoryPanel from "./CellStoryPanel";
-import LatencyWidget from "./LatencyWidget";
 import EnforcementPanel from "./EnforcementPanel";
 import CitizenPanel from "./CitizenPanel";
 import ComparativePanel from "./ComparativePanel";
@@ -21,19 +17,22 @@ import FairnessPanel from "./FairnessPanel";
 import CityStatsPanel from "./CityStatsPanel";
 import InterventionsPanel from "./InterventionsPanel";
 import DispatchQueues from "./DispatchQueues";
-import LayersControl from "./LayersControl";
-import TimeScrub, { type ScrubFrame } from "./TimeScrub";
-import { Sidebar, BottomNav, type Section } from "./Sidebar";
-import TopBar from "./TopBar";
+import { type ScrubFrame } from "./TimeScrub";
+import { SECTIONS, type Section } from "./Sidebar";
 import Tour, { tourSeen } from "./Tour";
-import { RailTabsProvider, RailTabBar, RailTab } from "./console/railTabs";
 import { CommandPalette } from "./console/CommandPalette";
 import { FLOWS } from "./console/flows";
+import MapFrame from "./console/MapFrame";
+import { Cols } from "./console/Cols";
+import { PollutantsNowPanel, AirRecordPanels, HealthPanel } from "./console/cityAir";
+import { SectionIntro } from "./console/SectionIntro";
+import { TopNav, FallbackNotice, type NavItem } from "./shell/TopNav";
+import { navigate } from "./router";
 import { Step } from "./ui";
 
 type LngLat = [number, number];
 type GeoPoint = { coordinates: [number, number] };
-type City = { city_id: string; name: string; center?: LngLat | GeoPoint; languages?: string[] };
+type City = { city_id: string; name: string; center?: LngLat | GeoPoint; bbox?: unknown; languages?: string[] };
 
 const DELHI: LngLat = [77.21, 28.61];
 
@@ -49,6 +48,9 @@ function toLngLat(center: City["center"]): LngLat {
 
 const CITY_STORE_KEY = "vayunetra-city";
 
+/** The console's nav items — the same sections, same order, as the keyboard shortcuts. */
+const NAV_ITEMS: NavItem[] = SECTIONS.map((s, i) => ({ id: s.id, label: s.label, hint: s.hint, key: String(i + 1) }));
+
 /** Step meta for <Step> from the section's flow definition (single source of truth). */
 function S(section: Section, n: number) {
   const st = FLOWS[section].steps.find((x) => x.n === n)!;
@@ -58,7 +60,7 @@ function S(section: Section, n: number) {
 // Deep links: /console?city=…&section=…&cell=…&mode=…&layers=sources,plumes,wards,freight,fires
 // Every console state is a shareable URL — a bookmarked demo path, or a link
 // you hand a judge to the exact Hyderabad cell during Q&A.
-const SECTION_IDS: Section[] = ["action", "forecast", "citizen", "compare", "whatif", "impact", "pipeline", "cityair"];
+const SECTION_IDS: Section[] = ["action", "forecast", "citizen", "compare", "whatif", "impact", "pipeline"];
 const LAYER_KEYS = ["sources", "plumes", "wards", "freight", "fires"] as const;
 
 function urlState() {
@@ -97,7 +99,6 @@ export default function App() {
   const [section, setSection] = useState<Section>(() => urlState().section ?? "action");
   const [cell, setCell] = useState<AttrCell | null>(null);
   const [attrCells, setAttrCells] = useState<AttrCell[]>([]);
-  const [fallback, setFallback] = useState(false);
   const [tour, setTour] = useState(() => !tourSeen());
   const [coverageKind, setCoverageKind] = useState<"stations" | "dense">("dense");
   const [scrub, setScrub] = useState<ScrubFrame>(null);
@@ -158,21 +159,6 @@ export default function App() {
     }
   }, [active]);
 
-  // Demo insurance: api.ts dispatches "api-fallback" when the backend is
-  // unreachable and bundled fixtures were served instead — and "api-live" on
-  // every successful response, so the banner clears itself the moment the
-  // backend is actually awake (it used to stick forever after one slow call).
-  useEffect(() => {
-    const onFallback = () => setFallback(true);
-    const onLive = () => setFallback(false);
-    window.addEventListener("api-fallback", onFallback);
-    window.addEventListener("api-live", onLive);
-    return () => {
-      window.removeEventListener("api-fallback", onFallback);
-      window.removeEventListener("api-live", onLive);
-    };
-  }, []);
-
   // A ref (always current, unlike a captured `cell`/state closure) records
   // whether a story is already open for this city — so an async auto-open can
   // never overwrite a selection the user made while attribution was loading.
@@ -197,6 +183,7 @@ export default function App() {
   // first thing seen is the full "why", else the highest-confidence cell.
   function autoOpenBest(cells: AttrCell[]) {
     if (openedRef.current || !cells.length) return;
+    if (section !== "action") return; // no map on screen — nothing to point at
     if (urlCellRef.current) {
       const wanted = cells.find((c) => c.h3_cell === urlCellRef.current);
       urlCellRef.current = null;
@@ -214,6 +201,14 @@ export default function App() {
       setCell(best);
     }
   }
+
+  useEffect(() => {
+    let alive = true;
+    api<AttrCell[]>(`/attribution?city=${active}`)
+      .then((rows) => { if (alive) setAttrCells(rows); })
+      .catch(() => { if (alive) setAttrCells([]); });
+    return () => { alive = false; };
+  }, [active]);
 
   useEffect(() => {
     let alive = true; // rapid city switches: a slow older fetch must not win
@@ -244,168 +239,115 @@ export default function App() {
   const city = cities.find((c) => c.city_id === active);
   const center = toLngLat(city?.center);
 
+  // The map lives on the pages that act on places. Everywhere else it would be decoration,
+  // and the public site already has a full-bleed map of its own.
+  const wantsMap = section === "action";
+
+  const mapFrame = (
+    <MapFrame
+      city={active}
+      center={center}
+      bbox={city?.bbox}
+      mode={mode}
+      onMode={setMode}
+      cell={cell}
+      onSelect={handleSelect}
+      onCellsLoaded={(c) => { setAttrCells(c); autoOpenBest(c); }}
+      onAct={() => setSection("action")}
+      showSources={showSources} onShowSources={setShowSources}
+      showPlumes={showPlumes} onShowPlumes={setShowPlumes}
+      showWards={showWards} onShowWards={setShowWards}
+      showFreight={showFreight} onShowFreight={setShowFreight}
+      showFires={showFires} onShowFires={setShowFires}
+      coverageKind={coverageKind} onCoverageKind={setCoverageKind}
+      coverage={coverage}
+      scrub={scrub}
+      onScrub={(f) => { setScrub(f); if (f && mode !== "coverage") setMode("coverage"); }}
+      caption={`Every ~1 km cell in ${city?.name ?? "this city"}, coloured by its dominant source. Click one for its story.`}
+    />
+  );
+
   return (
-    <div className="vn-console flex h-full w-full flex-col bg-[var(--vn-canvas)]">
-      <TopBar cities={cities} active={active} onCity={setActive} section={section} onReplayTour={() => setTour(true)} present={present} onTogglePresent={() => setPresent((v) => !v)} />
+    <div className="vn vn-console" style={{ display: "flex", minHeight: "100dvh", flexDirection: "column", background: "var(--canvas)" }}>
+      <TopNav
+        subtitle="OPERATIONS"
+        navLabel="Console sections"
+        items={NAV_ITEMS}
+        activeId={section}
+        onSelect={(id) => setSection(id as Section)}
+        city={active}
+        cities={cities.map((c) => ({ city_id: c.city_id, name: c.name }))}
+        onCity={setActive}
+        action={{ label: "Public site", title: "The citizen-facing pages for this city", onClick: () => navigate(`/city/${active}`) }}
+        extras={
+          <>
+            <button
+              onClick={() => setPresent((v) => !v)}
+              aria-pressed={present}
+              title="Presentation mode (P) — larger type for the projector"
+              style={{ height: 32, padding: "0 10px", borderRadius: "var(--r-sm)", border: "1px solid var(--line)", background: present ? "var(--primary-soft)" : "var(--surface-2)", color: present ? "var(--primary)" : "var(--muted)", fontSize: "var(--t-xs)", fontWeight: 700, cursor: "pointer" }}
+            >
+              Present
+            </button>
+            <button
+              onClick={() => setTour(true)}
+              title="Replay the guided tour"
+              style={{ height: 32, padding: "0 10px", borderRadius: "var(--r-sm)", border: "1px solid var(--line)", background: "var(--surface-2)", color: "var(--muted)", fontSize: "var(--t-xs)", fontWeight: 700, cursor: "pointer" }}
+            >
+              Tour
+            </button>
+          </>
+        }
+      />
+      <FallbackNotice />
 
-      <div className="flex min-h-0 flex-1">
-        <Sidebar active={section} onSelect={setSection} />
+      <main data-tour="panel" data-rail className="vn-page" style={{ flex: 1, minWidth: 0 }}>
+        <SectionIntro section={section} cityName={city?.name} />
 
-        <main className="relative min-h-0 flex-1 overflow-y-auto pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:overflow-hidden lg:pb-0">
-          {/* Map — in-flow on mobile, full-bleed behind panels on desktop */}
-          <div data-tour="map" className="relative z-0 h-[42vh] min-h-[21rem] w-full lg:absolute lg:inset-0 lg:h-full lg:min-h-0">
-            <BlameMap
-              city={active}
-              center={center}
-              mode={mode}
-              selected={cell?.h3_cell}
-              onSelect={handleSelect}
-              onCellsLoaded={(c) => {
-                setAttrCells(c);
-                autoOpenBest(c);
-              }}
-              showSources={showSources}
-              showPlumes={showPlumes}
-              showWards={showWards}
-              showFreight={showFreight}
-              showFires={showFires}
-              coverageCells={coverage?.cells ?? []}
-              coverageKind={coverageKind}
-              scrub={scrub}
-            />
+        <div key={section} className="vn-fade" style={{ display: "flex", flexDirection: "column", gap: "var(--s-5)", marginTop: "var(--s-6)" }}>
+          {wantsMap && mapFrame}
 
-            {/* Live status — top-left so the section panel owns the right edge */}
-            <div className="absolute left-2 top-2 z-10 flex flex-wrap items-start gap-2 lg:left-4 lg:top-3 lg:max-w-[calc(100%-32rem)] 2xl:max-w-[calc(100%-36rem)]">
-              <AqiHeader city={active} />
-              <LatencyWidget city={active} />
-            </div>
+          {section === "action" && (
+            <>
+              <Step {...S("action", 1)}><BriefCard city={active} /></Step>
+              <Step {...S("action", 2)}><EnforcementPanel city={active} focusCell={cell?.h3_cell ?? null} /></Step>
+              <Cols>
+                <Step {...S("action", 4)}><DispatchQueues city={active} /></Step>
+                <Step {...S("action", 5)}><InterventionsPanel city={active} /></Step>
+              </Cols>
+              <CityIntelPanel city={active} />
+            </>
+          )}
+          {section === "forecast" && (
+            <>
+              <Step {...S("forecast", 1)}><ForecastPanel city={active} /></Step>
+              <Cols>
+                <Step {...S("forecast", 2)}><ValidationPanel city={active} /></Step>
+                <Step {...S("forecast", 3)}><InterventionsHindsight city={active} /></Step>
+              </Cols>
+              <Step {...S("forecast", 6)}><PollutantsNowPanel city={active} /></Step>
+              <Step {...S("forecast", 7)}><AirRecordPanels city={active} /></Step>
+              <CityStatsPanel city={active} cells={attrCells} coverageCells={coverage?.cells ?? []} />
+            </>
+          )}
+          {section === "citizen" && (
+            <>
+              <CitizenPanel city={active} languages={city?.languages} center={center} />
+              <Step {...S("citizen", 5)}><HealthPanel city={active} /></Step>
+            </>
+          )}
+          {section === "compare" && <ComparativePanel onSelectCity={setActive} />}
+          {section === "whatif" && <WhatIfPanel city={active} />}
+          {section === "impact" && (
+            <>
+              <RoiPanel city={active} />
+              <Step {...S("impact", 3)}><FairnessPanel /></Step>
+            </>
+          )}
+          {section === "pipeline" && <TraceViewer city={active} />}
+        </div>
+      </main>
 
-            {/* Cell story — slide-in drawer under the status strip (desktop) */}
-            {cell && (
-              <div className="vn-slide-in-left absolute bottom-4 left-4 top-[17.5rem] z-10 hidden w-72 lg:block min-[1280px]:top-48">
-                <div className="vn-scroll max-h-full overflow-y-auto rounded-xl">
-                  <CellStoryPanel
-                    city={active}
-                    cell={cell}
-                    onClose={() => setCell(null)}
-                    onAct={() => setSection("action")} // keep the cell focused — enforcement sorts by it
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Time scrub — bottom-centre of the map (desktop); switches the
-                map to the PM2.5 field while replaying so the change is visible */}
-            <div className={`pointer-events-none absolute bottom-2 z-10 hidden -translate-x-1/2 lg:block ${
-              cell ? "lg:left-[calc((100%-7rem)/2)] 2xl:left-[calc((100%-11rem)/2)]" : "lg:left-[calc((100%-26rem)/2)] 2xl:left-[calc((100%-30rem)/2)]"
-            }`}>
-              <TimeScrub
-                city={active}
-                denseCells={coverage?.cells ?? []}
-                onFrame={(f) => {
-                  setScrub(f);
-                  if (f && mode !== "coverage") setMode("coverage");
-                }}
-              />
-            </div>
-
-            {/* Map layers — bottom-right corner of the map, clear of the
-                cell-story drawer (left) and the section panel (right edge) */}
-            <div className="absolute bottom-2 left-2 z-10 lg:bottom-auto lg:left-auto lg:right-[27.25rem] lg:top-3 2xl:right-[31.25rem]">
-              <LayersControl
-                mode={mode}
-                onMode={setMode}
-                showSources={showSources}
-                onShowSources={setShowSources}
-                showPlumes={showPlumes}
-                onShowPlumes={setShowPlumes}
-                showWards={showWards}
-                onShowWards={setShowWards}
-                showFreight={showFreight}
-                onShowFreight={setShowFreight}
-            showFires={showFires}
-            onShowFires={setShowFires}
-                coverageKind={coverageKind}
-                onCoverageKind={setCoverageKind}
-                coverage={coverage}
-              />
-            </div>
-
-            {fallback && (
-              <div
-                role="status"
-                className="pointer-events-none absolute inset-x-2 top-2 z-10 mx-auto max-w-md rounded-md bg-amber-100 px-3 py-1.5 text-center text-xs text-amber-900 shadow lg:inset-x-auto lg:left-1/2 lg:-translate-x-1/2"
-              >
-                {/* the notice must never block the map controls beneath it — only its buttons take clicks */}
-                ⚠ backend waking up — showing bundled demo snapshot.{" "}
-                <button className="pointer-events-auto underline" onClick={() => window.location.reload()}>
-                  retry
-                </button>
-                <button aria-label="Dismiss notice" className="pointer-events-auto ml-2 text-amber-500" onClick={() => setFallback(false)}>
-                  ✕
-                </button>
-              </div>
-            )}
-
-            <div className="absolute bottom-1 right-2 z-10 text-[11px] text-slate-500 lg:hidden">scroll for panels ↓</div>
-          </div>
-
-          {/* Section content — right panel on desktop, stacked below map on mobile */}
-          <div
-            data-tour="panel"
-            data-rail
-            className="vn-scroll relative z-10 space-y-3 p-3 lg:absolute lg:bottom-3 lg:right-3 lg:top-3 lg:w-[26rem] lg:overflow-y-auto lg:p-0 lg:pl-1 2xl:w-[30rem]"
-          >
-          <RailTabsProvider section={section}>
-            <RailTabBar section={section} cityName={city?.name} />
-            {/* Mobile keeps the cell story inline, above the section content */}
-            {cell && (
-              <div className="lg:hidden">
-                <CellStoryPanel
-                  city={active}
-                  cell={cell}
-                  onClose={() => setCell(null)}
-                  onAct={() => setSection("action")}
-                />
-              </div>
-            )}
-
-            <div key={section} className="space-y-3 lg:vn-slide-in-right">
-              {section === "action" && (
-                <>
-                  <Step {...S("action", 1)}><BriefCard city={active} /></Step>
-                  <Step {...S("action", 2)}><EnforcementPanel city={active} focusCell={cell?.h3_cell ?? null} /></Step>
-                  <Step {...S("action", 4)}><DispatchQueues city={active} /></Step>
-                  <Step {...S("action", 5)}><InterventionsPanel city={active} /></Step>
-                  <RailTab n={5}><CityIntelPanel city={active} /></RailTab>
-                </>
-              )}
-              {section === "forecast" && (
-                <>
-                  <Step {...S("forecast", 1)}><ForecastPanel city={active} /></Step>
-                  <Step {...S("forecast", 2)}><ValidationPanel city={active} /></Step>
-                  <Step {...S("forecast", 3)}><InterventionsHindsight city={active} /></Step>
-                  <CityStatsPanel city={active} cells={attrCells} coverageCells={coverage?.cells ?? []} />
-                </>
-              )}
-              {section === "cityair" && <CityAirPanel city={active} />}
-              {section === "citizen" && <CitizenPanel city={active} languages={city?.languages} center={center} />}
-              {section === "compare" && <ComparativePanel onSelectCity={setActive} />}
-              {section === "whatif" && <WhatIfPanel city={active} />}
-              {section === "impact" && (
-                <>
-                  <RoiPanel city={active} />
-                  <Step {...S("impact", 3)}><FairnessPanel /></Step>
-                </>
-              )}
-              {section === "pipeline" && <TraceViewer city={active} />}
-            </div>
-          </RailTabsProvider>
-          </div>
-        </main>
-      </div>
-
-      <BottomNav active={section} onSelect={setSection} />
       <CommandPalette
         cities={cities.map((c) => ({ city_id: c.city_id, name: c.name }))}
         activeCity={active}

@@ -173,7 +173,7 @@ export default function Landing() {
   const asOf = snap ? new Date(snap.generated_at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "18 August 2026";
 
   return (
-    <div className="min-h-full overflow-y-auto bg-white text-slate-700 antialiased" style={{ scrollBehavior: "smooth" }}>
+    <div className="vn-landing min-h-full overflow-y-auto antialiased" style={{ scrollBehavior: "smooth" }}>
       {/* Nav */}
       <nav className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
@@ -194,6 +194,10 @@ export default function Landing() {
               className="flex h-6 w-6 items-center justify-center text-slate-500 transition-colors hover:text-slate-900" title="Source on GitHub" aria-label="Source on GitHub">
               <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true"><path d={IC.github} /></svg>
             </a>
+            <a href="/city/delhi" onClick={(e) => linkClick(e, "/city/delhi")}
+              className="hidden rounded-md border border-slate-300 px-3.5 py-1.5 text-[13px] font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900 sm:block">
+              Check your city
+            </a>
             <a href="/console" onClick={(e) => linkClick(e, "/console")}
               className="rounded-md bg-slate-900 px-3.5 py-1.5 text-[13px] font-semibold text-white transition-colors hover:bg-slate-700">
               Open console
@@ -203,7 +207,7 @@ export default function Landing() {
       </nav>
 
       {/* Hero */}
-      <header className="mx-auto max-w-6xl px-6 pb-12 pt-16 sm:pt-24">
+      <header className="vn-hero vn-rise mx-auto max-w-6xl px-6 pb-12 pt-16 sm:pt-24" style={{ ["--wash" as string]: cat?.color ?? "var(--primary)" }}>
         <p className="font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-sky-700">
           ET AI Hackathon 2026 · Problem Statement 5
         </p>
@@ -218,10 +222,14 @@ export default function Landing() {
           Live today across 10 Indian cities — from Delhi to Lucknow — built entirely on free public infrastructure.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
-          <a href="/console" onClick={(e) => linkClick(e, "/console")}
-            className="flex items-center gap-2 rounded-md bg-sky-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-700">
-            Open the console
+          <a href="/city/delhi" onClick={(e) => linkClick(e, "/city/delhi")}
+            className="flex items-center gap-2 rounded-md bg-sky-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-800">
+            Check your city's air
             <Icon d={IC.arrow} className="h-4 w-4" />
+          </a>
+          <a href="/console" onClick={(e) => linkClick(e, "/console")}
+            className="rounded-md border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900">
+            Open the console
           </a>
           <a href="#how"
             className="rounded-md border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900">
@@ -291,15 +299,15 @@ export default function Landing() {
                 <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Ten cities, this minute.</h2>
                 <p className="text-[13px] text-slate-500">Indian National AQI (CPCB) — the maximum of each city's pollutant sub-indices. Open any city.</p>
               </div>
-              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              <div className="vn-stagger mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 {[...board].sort((a, b) => (b.aqi_in ?? 0) - (a.aqi_in ?? 0)).map((c) => {
                   const idx = c.aqi_in ?? null;
                   const cat = idx !== null ? categoryForIndex(idx, "in") : null;
                   return (
                     <a
                       key={c.city_id}
-                      href={`/console?city=${c.city_id}&section=cityair`}
-                      onClick={(e) => linkClick(e, `/console?city=${c.city_id}&section=cityair`)}
+                      href={`/city/${c.city_id}`}
+                      onClick={(e) => linkClick(e, `/city/${c.city_id}`)}
                       className="group rounded-xl border border-slate-200 p-3 transition-shadow hover:shadow-md"
                       title={`${c.name} — open the live city page${c.prominent_in ? ` · set by ${POLLUTANT_LABEL[c.prominent_in] ?? c.prominent_in}` : ""}`}
                     >

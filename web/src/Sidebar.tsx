@@ -5,8 +5,7 @@ export type Section =
   | "compare"
   | "whatif"
   | "impact"
-  | "pipeline"
-  | "cityair";
+  | "pipeline";
 
 type SectionDef = {
   id: Section;
@@ -60,12 +59,6 @@ export const SECTIONS: SectionDef[] = [
     hint: "Watch the 6 AI agents run live",
     icon: "M5 3a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm14 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-7 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM7 5h10M6 7l5 10m8-10-5 10",
   },
-  {
-    id: "cityair",
-    label: "City air",
-    hint: "Live index, pollutants, calendar, trend and health advice",
-    icon: "M4 14a4 4 0 0 1 .6-7.95 5 5 0 0 1 9.5-1.6A4.5 4.5 0 0 1 19 13.5M8 18h9a2.5 2.5 0 1 0-2.2-3.7M6 21h6",
-  },
 ];
 
 function Icon({ d, className }: { d: string; className?: string }) {
@@ -95,7 +88,7 @@ interface SidebarProps {
 // shortcuts never move when a section is added.
 const GROUPS: { label: string; ids: Section[] }[] = [
   { label: "Operate", ids: ["action", "forecast", "citizen"] },
-  { label: "Understand", ids: ["cityair", "compare", "impact"] },
+  { label: "Understand", ids: ["compare", "impact"] },
   { label: "Explore", ids: ["whatif", "pipeline"] },
 ];
 
@@ -143,7 +136,7 @@ export function Sidebar({ active, onSelect }: SidebarProps) {
         <br />
         ₹0 infrastructure · open source
         <br />
-        <span className="text-slate-400">keys 1–8 sections · [ ] city · P present</span>
+        <span className="text-slate-400">keys 1–7 sections · [ ] city · P present</span>
       </div>
     </nav>
   );

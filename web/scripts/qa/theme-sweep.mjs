@@ -4,7 +4,7 @@ import { chromium } from "playwright";
 import { mkdirSync } from "fs";
 const OUT = process.env.OUT ?? ".qa-out/theme";
 mkdirSync(OUT, { recursive: true });
-const SECTIONS = ["action", "forecast", "citizen", "compare", "whatif", "impact", "pipeline", "cityair"];
+const SECTIONS = ["action", "forecast", "citizen", "compare", "whatif", "impact", "pipeline"];
 const b = await chromium.launch();
 const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
 const errs = [];

@@ -1,0 +1,202 @@
+/* ---------------------------------------------------------------------------
+   VayuNetra design system — the surface layer of the console.
+
+   One scale for type, one for space, one for elevation, one for motion. Panels
+   never pick a hex, a pixel size or a duration: they compose the primitives in
+   design/ui.tsx, which read only from here. Both themes define the same token
+   names, so a component is written once and is correct in either.
+
+   Density: this is an operations console read at arm's length AND projected in
+   a hall, so the base is 15px with generous line-height and fewer borders —
+   depth comes from surface and shadow, not from lines everywhere.
+   --------------------------------------------------------------------------- */
+
+:root {
+  /* type — a 1.2 scale anchored at 15px, with two display sizes for numbers */
+  --t-2xs: 10.5px;
+  --t-xs: 11.5px;
+  --t-sm: 13px;
+  --t-md: 15px;
+  --t-lg: 17px;
+  --t-xl: 21px;
+  --t-display: 30px;
+  --t-metric: 44px;
+  --lh-tight: 1.15;
+  --lh-snug: 1.35;
+  --lh-body: 1.55;
+  --tracking-tight: -0.015em;
+  --tracking-wide: 0.08em;
+
+  /* space — 4px base, used for every gap and pad */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+
+  /* shape + elevation */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+  --r-full: 9999px;
+  --e-0: none;
+  --e-1: 0 1px 2px rgb(15 23 42 / 0.05);
+  --e-2: 0 2px 8px -2px rgb(15 23 42 / 0.10), 0 8px 24px -16px rgb(15 23 42 / 0.22);
+  --e-3: 0 6px 20px -6px rgb(15 23 42 / 0.16), 0 24px 60px -28px rgb(15 23 42 / 0.32);
+  --e-float: 0 10px 30px -10px rgb(15 23 42 / 0.28), 0 30px 80px -40px rgb(15 23 42 / 0.40);
+
+  /* motion — one easing, three speeds; everything animates through these */
+  --ease: cubic-bezier(0.22, 0.72, 0.24, 1);
+  --fast: 120ms;
+  --base: 220ms;
+  --slow: 420ms;
+
+  /* colour roles */
+  --ink: #0b1220;
+  --ink-2: #334155;
+  --muted: #64748b;
+  --faint: #94a3b8;
+  --line: #e6ebf2;
+  --line-strong: #cfd8e6;
+  --surface: #ffffff;
+  --surface-2: #f7f9fc;
+  --surface-3: #eef2f8;
+  --canvas: #e9eef5;
+  --glass: rgb(255 255 255 / 0.86);
+  --glass-line: rgb(255 255 255 / 0.55);
+  --primary: #1d4ed8;
+  --primary-ink: #ffffff;
+  --primary-soft: #e6edff;
+  --accent: #0f766e;
+  --accent-soft: #d7f2ee;
+  --warn: #b45309;
+  --warn-soft: #fdf0d5;
+  --danger: #be123c;
+  --danger-soft: #ffe4e9;
+  --nav: #0c1526;
+  --nav-ink: #cbd5e1;
+  --nav-ink-strong: #ffffff;
+}
+
+[data-theme="dark"] {
+  --ink: #eef3fb;
+  --ink-2: #cbd5e1;
+  --muted: #93a4bd;
+  --faint: #7385a1;
+  --line: #1e2b45;
+  --line-strong: #2a3a58;
+  --surface: #121c30;
+  --surface-2: #0f1829;
+  --surface-3: #172236;
+  --canvas: #0a1120;
+  --glass: rgb(18 28 48 / 0.82);
+  --glass-line: rgb(148 163 184 / 0.16);
+  --primary: #60a5fa;
+  --primary-ink: #06142e;
+  --primary-soft: #16264a;
+  --accent: #2dd4bf;
+  --accent-soft: #0f2f2c;
+  --warn: #fbbf24;
+  --warn-soft: #33280c;
+  --danger: #fb7185;
+  --danger-soft: #3a1420;
+  --nav: #080e1b;
+  --nav-ink: #94a3b8;
+  --nav-ink-strong: #ffffff;
+  --e-2: 0 2px 8px -2px rgb(0 0 0 / 0.5), 0 8px 24px -16px rgb(0 0 0 / 0.7);
+  --e-3: 0 6px 20px -6px rgb(0 0 0 / 0.55), 0 24px 60px -28px rgb(0 0 0 / 0.8);
+  --e-float: 0 10px 30px -10px rgb(0 0 0 / 0.6), 0 30px 80px -40px rgb(0 0 0 / 0.85);
+  color-scheme: dark;
+}
+
+/* ---- element defaults ---------------------------------------------------- */
+.vn {
+  font-family: "Source Sans 3", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: var(--t-md);
+  line-height: var(--lh-body);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- motion primitives --------------------------------------------------- */
+@keyframes vn-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes vn-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes vn-sheet { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes vn-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@keyframes vn-pulse-ring { 0% { opacity: .55; transform: scale(1); } 100% { opacity: 0; transform: scale(2.6); } }
+
+.vn-rise { animation: vn-rise var(--base) var(--ease) both; }
+.vn-fade { animation: vn-fade var(--base) var(--ease) both; }
+.vn-sheet { animation: vn-sheet var(--base) var(--ease) both; }
+.vn-stagger > * { animation: vn-rise var(--base) var(--ease) both; }
+.vn-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.vn-stagger > *:nth-child(2) { animation-delay: 40ms; }
+.vn-stagger > *:nth-child(3) { animation-delay: 80ms; }
+.vn-stagger > *:nth-child(4) { animation-delay: 120ms; }
+.vn-stagger > *:nth-child(5) { animation-delay: 160ms; }
+.vn-stagger > *:nth-child(n+6) { animation-delay: 200ms; }
+
+.vn-skeleton {
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 37%, var(--surface-2) 63%);
+  background-size: 200% 100%;
+  animation: vn-shimmer 1.4s linear infinite;
+  border-radius: var(--r-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vn-rise, .vn-fade, .vn-sheet, .vn-stagger > *, .vn-skeleton { animation: none !important; }
+}
+
+/* ---- focus, always visible ------------------------------------------------ */
+.vn :where(button, a, select, input, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+/* ---- scrollbars ----------------------------------------------------------- */
+.vn-scroll-thin { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--faint) 55%, transparent) transparent; }
+.vn-scroll-thin::-webkit-scrollbar { width: 7px; height: 7px; }
+.vn-scroll-thin::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--faint) 45%, transparent); border-radius: var(--r-full); }
+.vn-scroll-thin::-webkit-scrollbar-track { background: transparent; }
+
+/* ---- public site: one breakpoint between the wide nav and the compact sheet -- */
+.vn-nav-sheet { display: none; }
+@media (max-width: 900px) {
+  .vn-nav-wide { display: none !important; }
+  .vn-nav-narrow { display: grid !important; }
+  .vn-nav-sheet { display: block; }
+}
+@media (min-width: 901px) {
+  .vn-nav-narrow { display: none !important; }
+  .vn-nav-sheet { display: none !important; }
+}
+
+/* ---- public site layout --------------------------------------------------- */
+.vn-page { margin: 0 auto; max-width: 1360px; padding: var(--s-8) var(--s-5) var(--s-10); }
+@media (max-width: 640px) { .vn-page { padding: var(--s-5) var(--s-4) var(--s-8); } }
+.vn-grid-2 { display: grid; gap: var(--s-5); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1060px) { .vn-grid-2 { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); } }
+.vn-grid-3 { display: grid; gap: var(--s-4); grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+
+/* The hero's band wash: the category colour bled into the page, never a flat block. */
+.vn-wash { position: relative; overflow: hidden; }
+.vn-wash::before {
+  content: ""; position: absolute; inset: -40% -10% auto -10%; height: 320px; pointer-events: none;
+  background: radial-gradient(60% 100% at 20% 0%, var(--wash) 0%, transparent 72%);
+  opacity: .55; animation: vn-fade var(--slow) var(--ease) both;
+}
+[data-theme="dark"] .vn-wash::before { opacity: .34; }
+
+/* A line drawing itself in — used by the 24-hour sparkline. */
+@keyframes vn-draw { from { stroke-dashoffset: var(--len); } to { stroke-dashoffset: 0; } }
+.vn-draw { stroke-dasharray: var(--len); animation: vn-draw 1100ms var(--ease) both; }
+@media (prefers-reduced-motion: reduce) { .vn-draw { animation: none; stroke-dashoffset: 0; } }
+
+/* The map box is a fixed size so it never jumps when the city or the page changes. */
+@media (max-width: 640px) { .vn-mapbox { height: 380px !important; } }

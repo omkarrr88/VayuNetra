@@ -1,6 +1,5 @@
 // Shared UI primitives — one card/button language across every panel.
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { shownStep, useRail } from "./console/railContext";
 
 /** Cross-panel refresh signal: an officer action (approve/dispatch) changed enforcement state,
  *  so ward queues and intervention tracking refetch without a page reload. */
@@ -17,27 +16,21 @@ export function useEnforcementChanged(fn: () => void): void {
 }
 
 /** Numbered step in a section's flow — provided by <Step> so a panel can show its badge without
- *  knowing where it sits in the story. Inside the console rail the steps are TABS: a Step
- *  registers itself with the rail and renders only while it is the selected tab, so the officer
- *  sees one card at a time instead of a long scroll. Outside a rail (public pages, PDFs) a Step
- *  simply renders its children. */
+ *  knowing where it sits in the story. Console sections are full pages, so every step renders in
+ *  order; the section header links to each one by its number. */
 export type StepInfo = { n: number; label: string; info?: ReactNode };
 export const StepContext = createContext<StepInfo | null>(null);
 
 export function Step({ n, label, info, children }: StepInfo & { children: ReactNode }) {
-  const rail = useRail();
-  useEffect(() => { rail?.register(n); }, [rail, n]);
-  const body = (
+  return (
     <StepContext.Provider value={{ n, label, info }}>
-      <div data-step={n} className="scroll-mt-20">{children}</div>
+      <div data-step={n} style={{ scrollMarginTop: 80, minWidth: 0 }}>{children}</div>
     </StepContext.Provider>
   );
-  if (!rail) return body;
-  return n === shownStep(rail.active, rail.steps) ? <div className="vn-fade-in">{body}</div> : null;
 }
 
 /** "What is this?" popover — plain-language explanation of what a card shows, where the
- *  numbers come from and what to do with them. Keyboard + hover friendly. */
+ *  numbers come from and what to do with it. Keyboard + hover friendly. */
 export function InfoTip({ children, label = "What is this?" }: { children: ReactNode; label?: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -55,19 +48,33 @@ export function InfoTip({ children, label = "What is this?" }: { children: React
     };
   }, [open]);
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} style={{ position: "relative" }}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={label}
         aria-expanded={open}
         title={label}
-        className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-full text-[11px] font-bold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+        style={{
+          width: 22, height: 22, display: "grid", placeItems: "center", borderRadius: "var(--r-full)",
+          border: "1px solid var(--line)", background: "var(--surface-2)", color: "var(--muted)",
+          fontSize: "var(--t-xs)", fontWeight: 800, cursor: "help",
+          transition: "color var(--fast) var(--ease), border-color var(--fast) var(--ease)",
+        }}
       >
         ?
       </button>
       {open && (
-        <div role="dialog" className="vn-pop absolute right-0 top-6 z-30 w-72 rounded-lg border border-slate-200 bg-white p-3 text-[12px] leading-5 text-slate-700 shadow-xl">
+        <div
+          role="dialog"
+          className="vn-sheet vn-scroll-thin"
+          style={{
+            position: "absolute", right: 0, top: 28, zIndex: 40, width: "19rem", maxHeight: "22rem", overflowY: "auto",
+            borderRadius: "var(--r-md)", border: "1px solid var(--line)", background: "var(--surface)",
+            boxShadow: "var(--e-3)", padding: "var(--s-3)",
+            fontSize: "var(--t-sm)", lineHeight: "var(--lh-body)", color: "var(--ink-2)",
+          }}
+        >
           {children}
         </div>
       )}
@@ -75,6 +82,8 @@ export function InfoTip({ children, label = "What is this?" }: { children: React
   );
 }
 
+/** The one card in the product. Every console panel is one of these, so its frame, its type
+ *  and its spacing come from the same place as the public site's. */
 export function Panel({
   title,
   tag,
@@ -93,19 +102,40 @@ export function Panel({
   const step = useContext(StepContext);
   const tip = info ?? step?.info;
   return (
-    <section className={`vn-card p-3 text-sm ${className}`} aria-label={typeof title === "string" ? title : undefined}>
+    <section
+      className={`vn-panel ${className}`}
+      aria-label={typeof title === "string" ? title : undefined}
+      style={{
+        background: "var(--surface)",
+        border: "1px solid var(--line)",
+        borderRadius: "var(--r-lg)",
+        boxShadow: "var(--e-1)",
+        padding: "var(--s-4)",
+        fontSize: "var(--t-sm)",
+        color: "var(--ink-2)",
+      }}
+    >
       {title !== undefined && (
-        <div className="vn-card-hd">
-          <div className="flex min-w-0 items-center gap-1.5">
-            {step && <span className="vn-step" aria-label={`Step ${step.n}`}>{step.n}</span>}
-            <span className="truncate text-[13.5px] font-bold tracking-tight text-slate-800">{title}</span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--s-2)", marginBottom: "var(--s-3)" }}>
+          <div style={{ display: "flex", minWidth: 0, alignItems: "center", gap: "var(--s-2)" }}>
+            {step && (
+              <span
+                aria-label={`Step ${step.n}`}
+                style={{ display: "inline-grid", placeItems: "center", width: 20, height: 20, flex: "none", borderRadius: "var(--r-full)", background: "var(--primary)", color: "var(--primary-ink)", fontSize: "var(--t-2xs)", fontWeight: 800 }}
+              >
+                {step.n}
+              </span>
+            )}
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "var(--t-md)", fontWeight: 700, letterSpacing: "-0.01em", color: "var(--ink)" }}>
+              {title}
+            </span>
             {tag && (
-              <span className="whitespace-nowrap rounded bg-slate-100 px-1 py-px text-[10.5px] font-semibold uppercase tracking-wider text-slate-600">
+              <span style={{ flex: "none", whiteSpace: "nowrap", borderRadius: "var(--r-full)", background: "var(--surface-3)", padding: "2px 8px", fontSize: "var(--t-2xs)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "var(--tracking-wide)", color: "var(--muted)" }}>
                 {tag}
               </span>
             )}
           </div>
-          <div className="flex shrink-0 items-center gap-1.5">
+          <div style={{ display: "flex", flex: "none", alignItems: "center", gap: "var(--s-2)" }}>
             {right}
             {tip && <InfoTip>{tip}</InfoTip>}
           </div>
@@ -116,7 +146,7 @@ export function Panel({
   );
 }
 
-/** Consistent empty/error state — an icon, a one-line reason, an optional retry. */
+/** Consistent empty/error state — a mark, a one-line reason, an optional retry. */
 export function EmptyState({
   message,
   onRetry,
@@ -127,13 +157,16 @@ export function EmptyState({
   tone?: "muted" | "error";
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-1.5 rounded-lg bg-slate-50 px-3 py-5 text-center">
-      <span className={`text-lg ${tone === "error" ? "text-amber-500" : "text-slate-400"}`} aria-hidden="true">
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "var(--s-2)", borderRadius: "var(--r-md)", background: "var(--surface-2)", padding: "var(--s-5) var(--s-3)", textAlign: "center" }}>
+      <span aria-hidden="true" style={{ fontSize: "var(--t-lg)", color: tone === "error" ? "var(--warn)" : "var(--faint)" }}>
         {tone === "error" ? "⚠" : "○"}
       </span>
-      <span className="text-xs text-slate-500">{message}</span>
+      <span style={{ fontSize: "var(--t-xs)", color: "var(--muted)" }}>{message}</span>
       {onRetry && (
-        <button onClick={onRetry} className="mt-0.5 cursor-pointer rounded-md bg-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-300">
+        <button
+          onClick={onRetry}
+          style={{ marginTop: 2, cursor: "pointer", borderRadius: "var(--r-sm)", border: "1px solid var(--line)", background: "var(--surface)", padding: "5px 12px", fontSize: "var(--t-xs)", fontWeight: 700, color: "var(--ink-2)" }}
+        >
           Retry
         </button>
       )}
@@ -157,9 +190,15 @@ export function SegBtn({
     <button
       onClick={onClick}
       aria-pressed={active}
-      className={`cursor-pointer rounded-md px-2 py-1 text-xs font-medium transition-colors ${
-        active ? "bg-blue-700 text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-      } ${className}`}
+      className={className}
+      style={{
+        cursor: "pointer", borderRadius: "var(--r-full)", padding: "5px 11px", minHeight: 28,
+        fontSize: "var(--t-xs)", fontWeight: 700,
+        border: `1px solid ${active ? "transparent" : "var(--line)"}`,
+        background: active ? "var(--primary)" : "var(--surface-2)",
+        color: active ? "var(--primary-ink)" : "var(--muted)",
+        transition: "background var(--fast) var(--ease), color var(--fast) var(--ease)",
+      }}
     >
       {children}
     </button>

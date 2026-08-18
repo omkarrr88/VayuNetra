@@ -19,6 +19,14 @@ test("landing renders and links into the console", async ({ page }) => {
   await expect(page).toHaveURL(/\/console$/);
 });
 
+test("landing links into the public city page, which opens on Delhi", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: /check your city/i }).first().click();
+  await expect(page).toHaveURL(/\/city\/delhi$/);
+  await expect(page.getByRole("heading", { name: "Delhi", exact: true })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("navigation", { name: "Site sections" }).first()).toBeVisible();
+});
+
 test("first-run tour shows once, then never again", async ({ page }) => {
   // legacy hash URL (old QR codes) must upgrade to the clean path
   await page.goto("/#/console");
@@ -32,12 +40,12 @@ test("first-run tour shows once, then never again", async ({ page }) => {
   await expect(dialog).toBeHidden();
 });
 
-test("console loads the sidebar shell and the layer control", async ({ page }) => {
+test("console loads its section nav and the layer control", async ({ page }) => {
   await page.goto("/console");
-  const sidebar = page.getByRole("navigation", { name: "Console sections" }).first();
-  await expect(sidebar.getByRole("button", { name: "Enforcement" })).toBeVisible();
-  await expect(sidebar.getByRole("button", { name: "Simulator" })).toBeVisible();
-  await expect(sidebar.getByRole("button", { name: "Pipeline" })).toBeVisible();
+  const nav = page.getByRole("navigation", { name: "Console sections" }).first();
+  await expect(nav.getByRole("button", { name: "Enforcement" })).toBeVisible();
+  await expect(nav.getByRole("button", { name: "Simulator" })).toBeVisible();
+  await expect(nav.getByRole("button", { name: "Pipeline" })).toBeVisible();
   // Layer control starts as a compact chip; it expands on click.
   await page.getByRole("button", { name: /^Layers/ }).click();
   await expect(page.getByText("Map layers")).toBeVisible();
@@ -46,7 +54,7 @@ test("console loads the sidebar shell and the layer control", async ({ page }) =
 
 test("every section shows its spine: verb, blurb and numbered steps", async ({ page }) => {
   await page.goto("/console");
-  const sidebar = page.getByRole("navigation", { name: "Console sections" }).first();
+  const nav = page.getByRole("navigation", { name: "Console sections" }).first();
   for (const [label, verb, firstStep] of [
     ["Enforcement", "Act", "Morning brief"],
     ["Forecast", "Anticipate", "72-hour outlook"],
@@ -56,11 +64,11 @@ test("every section shows its spine: verb, blurb and numbered steps", async ({ p
     ["Impact", "Fund", "The funding case"],
     ["Pipeline", "Trust", "Run the agents"],
   ] as const) {
-    await sidebar.getByRole("button", { name: label, exact: true }).click();
+    await nav.getByRole("button", { name: label, exact: true }).click();
     const spine = page.locator("[data-tour=spine]");
-    await expect(spine.getByText(verb, { exact: true })).toBeVisible();
-    // the spine is the rail's tab bar: each step is a tab and only its card is mounted
-    await expect(spine.getByRole("tab", { name: new RegExp(firstStep) })).toBeVisible();
+    await expect(spine.getByText(new RegExp(`^${verb}`))).toBeVisible();
+    // sections are full pages now: the spine links to each numbered card below it
+    await expect(spine.getByRole("link", { name: new RegExp(firstStep) })).toBeVisible();
   }
 });
 
@@ -73,8 +81,7 @@ test("a cell story auto-opens with an explanation (never an empty box)", async (
 
 test("enforcement worklist renders and a dossier opens", async ({ page }) => {
   await page.goto("/console");
-  await page.getByRole("tab", { name: /Ranked worklist/ }).click();
-  await expect(page.getByText("Enforcement Worklist")).toBeVisible();
+  await expect(page.getByText("Enforcement Worklist")).toBeVisible({ timeout: 15_000 });
   const dossier = page.getByRole("button", { name: /evidence dossier/i }).first();
   await expect(dossier).toBeVisible({ timeout: 15_000 });
   await dossier.click();
@@ -87,7 +94,7 @@ test("simulator section shows the what-if engine", async ({ page }) => {
   await page
     .getByRole("navigation", { name: "Console sections" })
     .first()
-    .getByRole("button", { name: "Simulator" })
+    .getByRole("button", { name: "Simulator", exact: true })
     .click();
   await expect(page.getByText("Choose an intervention").first()).toBeVisible();
   await expect(page.getByRole("button", { name: /run simulation/i })).toBeVisible();
