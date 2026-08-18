@@ -35,7 +35,7 @@ switch the language to Hindi → *IVR call* tab.
    regulatory citations + one-click draft Notice PDF. Officer-in-the-loop; dispatching arms
    automatic before/after impact tracking.
 4. **Protect** — citizen advisories in **eight languages** (Hindi, Kannada, Marathi, Tamil, Telugu,
-   Bengali, Gujarati, English) over the app, a live Telegram bot, a working IVR demo line and public displays — targeted by 2,624
+   Bengali, Gujarati, English) over the app, a live Telegram bot, a working IVR demo line and public displays — targeted by 5,495
    vulnerability-scored zones (hospitals, schools, outdoor workers × real population).
 
 Plus a Swachh-Vayu-style **10-city ranking**, a cited what-if **simulator** with an inspector-hour

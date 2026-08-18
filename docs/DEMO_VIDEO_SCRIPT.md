@@ -73,6 +73,6 @@ Not shown (deliberate, no time): guided tour, map layer toggles (plumes/wards/fr
 ## Editing notes
 
 - Hard cuts on every speaker change; no transitions/music under speech (light music bed at −25 dB is fine).
-- Overlay small text chips when a number is spoken: "61% traffic" (0:25), "0.6 s end-to-end" (1:10), "18% · 15,000 residents" (1:25), "8 languages · own scripts" (2:05), "₹0.88 L cr / yr" (2:45).
+- Overlay small text chips when a number is spoken: "61% traffic" (0:25), "1.4 s signal → recommendation" (1:10; read the live widget), "18% · 15,000 residents" (1:25), "8 languages · own scripts" (2:05), "₹0.88 L cr / yr" (2:45).
 - End-card (2 s, after 3:00 if the rules allow a title card): logo + `vayunetra-aqi.vercel.app` + team names.
 - Export 1080p, H.264, target ≤ 500 MB.

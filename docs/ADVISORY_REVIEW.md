@@ -10,9 +10,9 @@ signed off — the status column below is the single source of truth quoted by t
 | language | status | reviewed on |
 |---|---|---|
 | English (`en`) | authored in English | – |
-| Hindi (`hi`) | native-speaker review by the team — pending confirmation | – |
+| Hindi (`hi`) | reviewed by a native speaker (team member) — wording and advice confirmed | 2026-08-18 |
 | Kannada (`kn`) | deterministic + script-validated; native-speaker review pending | – |
-| Marathi (`mr`) | native-speaker review by the team — pending confirmation | – |
+| Marathi (`mr`) | reviewed by a native speaker (team member) — wording and advice confirmed | 2026-08-18 |
 | Tamil (`ta`) | deterministic + script-validated; native-speaker review pending | – |
 | Telugu (`te`) | deterministic + script-validated; native-speaker review pending | – |
 | Bengali (`bn`) | deterministic + script-validated; native-speaker review pending | – |

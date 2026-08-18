@@ -113,7 +113,7 @@ svg text{font-family:inherit}
 <div class="deck"><div class="stage" id="stage">
 
 <!-- 1 · TITLE -->
-<section class="slide" data-init="title" data-notes="[Speaker A · 0:00] Good morning. Every Indian metro measures its air; several forecast it. Nothing acts on it. VayuNetra is the operations layer: it traces who is polluting each square kilometre, predicts the next 72 hours with calibrated probabilities, ranks where to send an inspector with cited evidence, and tells citizens in their own script — live in ten cities on zero infrastructure cost. The map behind me is live: each dot is a city's PM2.5 as of this morning.">
+<section class="slide" data-init="title" data-notes="[Speaker A · 0:00] Good morning. Every Indian metro measures its air; several forecast it. Nothing acts on it. VayuNetra is the operations layer: it traces who is polluting each square kilometre, predicts the next 72 hours with honest probabilities, ranks where to send an inspector with cited evidence, and tells citizens in their own script — live in ten cities, at zero infrastructure cost. The map behind me is live.">
   <div class="haze" id="haze"></div>
   <svg id="indiaTitle" viewBox="0 0 1000 1000" style="position:absolute;right:2%;top:2%;height:96%;opacity:1"></svg>
   <div style="position:relative;z-index:2;max-width:56%;margin-top:auto;margin-bottom:auto">
@@ -144,7 +144,7 @@ svg text{font-family:inherit}
 </section>
 
 <!-- 3 · WHAT IT DOES -->
-<section class="slide" data-init="loop" data-notes="[A · 0:55] One loop, four verbs. Trace: a hybrid of gradient boosting with SHAP and chemical-signature priors assigns blame per square-kilometre cell — and abstains when it lacks skill. Predict: a LightGBM quantile forecast, blended with persistence and conformally calibrated, so every cell carries a probability of crossing Very Poor. Act: sources ranked by contribution, people exposed, actionability and confidence, each with a Sentinel-2 image, retrieved regulation and a draft notice; the officer approves, dispatches, and closes the case with the field finding on an audit trail. Protect: templated advisories in eight scripts over app, Telegram, IVR and displays. Six agents on one graph; the compute is seconds; the human steps are timestamped.">
+<section class="slide" data-init="loop" data-notes="[A · 0:55] One loop, four verbs. Trace: who is to blame in each square kilometre — and it says so where it lacks skill. Predict: the next 72 hours, with each cell's chance of turning Very Poor. Act: sites ranked by contribution, people exposed and confidence — real satellite image, the regulation, a draft notice; the officer approves, dispatches, closes the case on an audit trail. Protect: advisories in eight scripts. Six agents, one graph, seconds of compute — every human step timestamped.">
   <div class="kicker a a1">What VayuNetra does</div>
   <h2 class="a a2">One loop: trace → predict → act → protect</h2>
   <div class="loop a a3" style="margin-top:1.4em;font-size:1.06em">
@@ -160,7 +160,7 @@ svg text{font-family:inherit}
 </section>
 
 <!-- 4 · DELHI'S WINTER, REPLAYED -->
-<section class="slide" data-init="winter" data-notes="[A · 1:35] This is Delhi's last winter, day by day, on 39 station cells — real CPCB data. Watch the markers: those are the government's actual GRAP orders. Below each, what our forecast said 24 hours before the order was signed. Stage III on 11 November and Stage IV on 13 December: flagged a full day ahead across essentially the whole network — probability of Very Poor above 80 percent when persistence, which just repeats today, said 225 and the city hit 400. The two October orders we did not foresee, and we say so on the slide. Press R to replay.">
+<section class="slide" data-init="winter" data-notes="[A · 1:35] This is Delhi's last winter, day by day, on 39 station cells — real CPCB data. Watch the markers: those are the government's actual GRAP orders. Below each, what our forecast said 24 hours before the order was signed. Stage III on 11 November and Stage IV on 13 December: flagged a full day ahead across essentially the whole network — probability of Very Poor above 80 percent when persistence, which just repeats today, said 225 and the city measured 407. The two October orders we did not foresee, and we say so on the slide. Press R to replay.">
   <div class="kicker a a1">Early warning, in hindsight</div>
   <h2 class="a a2">Delhi's winter 2025-26, replayed — with the government's real orders</h2>
   <div class="row a a3" style="margin-top:.8em;flex:1;min-height:0">
@@ -175,7 +175,7 @@ svg text{font-family:inherit}
 </section>
 
 <!-- 5 · PROOF -->
-<section class="slide" data-init="proof" data-notes="[A · 2:20] Every number is measured, including the ones that hurt. Left: served forecast skill over persistence on a strict temporal split, monthly refit — Delhi plus 9, 13, 12 percent at one, two, three days; Mumbai and Kolkata similar. Middle: of the clean-to-Very-Poor onsets, our calibrated alarm catches about half one to three days ahead; persistence catches zero by construction. Right: the probabilities are honest — the reliability curve sits on the diagonal, the 80 percent band covers 78 percent of more than two hundred thousand held-out hours. Attribution is checked bucket by bucket against TERI-ARAI and Guttikunda; agreements and disagreements both published. Now, the product itself.">
+<section class="slide" data-init="proof" data-notes="[A · 2:20] Every number is measured — including the ones that hurt. Skill over persistence on a strict temporal split: Delhi plus 9, 13, 12 percent at one, two, three days. Of the clean-to-Very-Poor onsets, our calibrated alarm catches about half, days ahead — persistence catches none. The probabilities are honest: the reliability curve sits on the diagonal. Attribution is checked against the published studies — disagreements on the record. SAFAR and the DSS forecast the air; nothing turns a forecast into a traced, cited, delivered, closed action. We do — here it is. (hand over)">
   <div class="kicker a a1">Technical rigour</div>
   <h2 class="a a2">Every number is measured — including our failures</h2>
   <div class="grid3 a a3" style="margin-top:1em;flex:1;min-height:0">
@@ -223,7 +223,7 @@ svg text{font-family:inherit}
 </section>
 
 <!-- 8 · CLOSE -->
-<section class="slide" data-init="close" data-notes="[B · 7:30] India measures. India forecasts. VayuNetra operates — traced, predicted, cited, delivered, closed. In seconds of compute, in eight scripts, for zero rupees today and 2,700 a month for the whole NCAP list. It is live right now at vayunetra-aqi.vercel.app; the QR takes you there. Thank you — we would love your hardest questions.">
+<section class="slide" data-init="close" data-notes="[B · 7:30] India measures. India forecasts. VayuNetra operates — traced, predicted, cited, delivered, closed. In seconds, in eight scripts, for zero rupees today and 2,700 a month for every NCAP city. It is live now — the QR takes you there. We are ready to run it for the first city that says yes. Thank you.">
   <svg id="indiaClose" viewBox="0 0 1000 1000" style="position:absolute;right:0;top:8%;height:84%;opacity:.7"></svg>
   <div style="position:relative;z-index:2;margin:auto 0;max-width:56%">
     <p class="a a1 sub" style="font-size:1.4em">India measures. India forecasts.</p>

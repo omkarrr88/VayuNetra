@@ -72,6 +72,7 @@ Adding a city means adding one YAML file with a bounding box, languages and regu
 | Prediction interval coverage | Raw intervals under-covered at 48–63% against a nominal 80%; conformal calibration brought this to 78% measured on 207k Delhi test hours; every forecast also carries a calibrated P(>120) / P(>250) (Brier skill +51% / +31% vs climatology at 24 h) |
 | Model selection | A Temporal Fusion Transformer was trained on GPU and rejected. LightGBM won on held-out skill in every launch city. |
 | Signal to cited recommendation | 0.8–9.7 seconds of compute, measured in production; approval → dispatch → closure timestamped per action |
+| Accessibility & mobile | axe-core: 0 violation types on the landing page and all 7 console sections; 390-px mobile check: no horizontal overflow, ≥ 24 px tap targets (`docs/qa/`, rerunnable scripts) |
 | Test coverage | 204 backend tests (64% line coverage, CI gate 55%) and 16 end-to-end browser flows (7 smoke in CI + 9 live officer-journey), run on every push |
 
 Current live scale (18 Aug 2026; the landing page reads these live): 10 cities, 16,529 modelled cells, 647 emission sources, 5,495 vulnerability zones and ~480 enforcement recommendations, every one of which carries a real Sentinel-2 image and retrieved citations. All of the validation above is reproducible from the notebook in the repository.
@@ -81,7 +82,7 @@ Current live scale (18 Aug 2026; the landing page reads these live): 10 cities, 
 Some of the more useful decisions were about what to leave out.
 
 - The attribution model abstains rather than guessing. Below its skill threshold it says so and falls back to cited priors.
-- Health advice is generated from deterministic templates, not a language model, so it cannot hallucinate medical guidance. New cities launch in English/Hindi until native-speaker-reviewed templates exist for their languages.
+- Health advice is generated from deterministic templates, not a language model, so it cannot hallucinate medical guidance. Hindi and Marathi templates are native-speaker reviewed (team members); Kannada, Tamil, Telugu, Bengali and Gujarati are script-validated with native-speaker review pending — status per language in `docs/ADVISORY_REVIEW.md`. Enforcement recommendations are scored on a transparent CPCB/GRAP-derived rubric; the independent expert-review protocol is published (`docs/EXPERT_RATING_SHEET.md`) and no external ratings have been collected yet — we say so rather than imply otherwise.
 - Notices are drafts. They carry a "pending officer authorisation" stamp and are never sent automatically — and they never cite an instrument that does not bind that city.
 - Impact figures return null rather than fall back on invented constants, and sources contributing under 2% never reach the worklist.
 - No socio-economic data exists anywhere in the pipeline or the schema, so enforcement priority cannot encode income or land value. The fairness audit publishes what does drive it.
