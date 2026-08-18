@@ -1,6 +1,6 @@
 # channels/ — citizen delivery
 
-Owner: **Sejal**. Spec: ARCHITECTURE.md §13, PRD §14.2.
+Spec: ARCHITECTURE.md §13, PRD §14.2.
 
 - **Primary (free):** Telegram bot + PWA push.
 - **IVR — outbound:** Twilio call reads the advisory (Polly.Raveena, repeated once) to

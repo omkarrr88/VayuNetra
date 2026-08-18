@@ -1,4 +1,4 @@
-"""E7 — cited factor tables for health & carbon quantification.  Owner: Sejal.
+"""E7 — cited factor tables for health & carbon quantification.
 
 PRD §12.15 / ARCH §9.13 / Validation #12: *every* ₹ / health / CO₂e figure must
 trace to a published WHO / CPCB / emission-factor source — **never an invented
@@ -127,6 +127,20 @@ CITY_POPULATION = {
                         "UN World Urbanization Prospects (2018) — Bengaluru"),
     "mumbai": Factor(21_700_000, "people (urban agglomeration)",
                      "UN World Urbanization Prospects (2018) — Mumbai"),
+    "hyderabad": Factor(10_800_000, "people (urban agglomeration)",
+                        "UN World Urbanization Prospects (2018) — Hyderabad"),
+    "chennai": Factor(11_800_000, "people (urban agglomeration)",
+                      "UN World Urbanization Prospects (2018) — Chennai"),
+    "kolkata": Factor(15_600_000, "people (urban agglomeration)",
+                      "UN World Urbanization Prospects (2018) — Kolkata"),
+    "pune": Factor(7_100_000, "people (urban agglomeration)",
+                   "UN World Urbanization Prospects (2018) — Pune"),
+    "ahmedabad": Factor(8_800_000, "people (urban agglomeration)",
+                        "UN World Urbanization Prospects (2018) — Ahmedabad"),
+    "jaipur": Factor(4_100_000, "people (urban agglomeration)",
+                     "UN World Urbanization Prospects (2018) — Jaipur"),
+    "lucknow": Factor(4_000_000, "people (urban agglomeration)",
+                      "UN World Urbanization Prospects (2018) — Lucknow"),
 }
 CITY_ANNUAL_PM25 = {
     "delhi": Factor(92.0, "µg/m³ annual mean",
@@ -135,6 +149,20 @@ CITY_ANNUAL_PM25 = {
                         "IQAir World Air Quality Report (2023) — Bengaluru annual PM2.5"),
     "mumbai": Factor(43.0, "µg/m³ annual mean",
                      "IQAir World Air Quality Report (2023) — Mumbai annual PM2.5"),
+    "hyderabad": Factor(40.1, "µg/m³ annual mean",
+                        "IQAir World Air Quality Report (2023) — Hyderabad annual PM2.5"),
+    "chennai": Factor(31.4, "µg/m³ annual mean",
+                      "IQAir World Air Quality Report (2023) — Chennai annual PM2.5"),
+    "kolkata": Factor(51.6, "µg/m³ annual mean",
+                      "IQAir World Air Quality Report (2023) — Kolkata annual PM2.5"),
+    "pune": Factor(41.5, "µg/m³ annual mean",
+                   "IQAir World Air Quality Report (2023) — Pune annual PM2.5"),
+    "ahmedabad": Factor(50.6, "µg/m³ annual mean",
+                        "IQAir World Air Quality Report (2023) — Ahmedabad annual PM2.5"),
+    "jaipur": Factor(52.4, "µg/m³ annual mean",
+                     "IQAir World Air Quality Report (2023) — Jaipur annual PM2.5"),
+    "lucknow": Factor(65.4, "µg/m³ annual mean",
+                      "IQAir World Air Quality Report (2023) — Lucknow annual PM2.5"),
 }
 _FALLBACK_POP = Factor(5_000_000, "people (assumed)", "VayuNetra default when a city is unlisted")
 _FALLBACK_PM25 = Factor(60.0, "µg/m³ annual mean (assumed)", "VayuNetra Indian-metro default")

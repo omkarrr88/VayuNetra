@@ -1,0 +1,15 @@
+# City onboarding config — Chennai. Added for the 10-city expansion (Aug 2026).
+city_id: chennai
+name: Chennai
+state: TN
+bbox: [80.10, 12.85, 80.35, 13.25]
+center: [80.27, 13.08]
+languages: [ta, en]
+h3_res: 8
+# optional pin-list — ingestion discovers stations by bbox (see delhi.yml)
+caaqms_station_ids: []
+ward_geojson_ref: "data/wards/chennai.geojson"
+regulatory:
+  authority: "Tamil Nadu Pollution Control Board (TNPCB)"
+  grap_applies: false
+active: true

@@ -9,13 +9,15 @@ interface TopBarProps {
   onCity: (id: string) => void;
   section: Section;
   onReplayTour: () => void;
+  present: boolean;
+  onTogglePresent: () => void;
 }
 
 /** Slim navy header: brand, city switcher, current section, help. */
-export default function TopBar({ cities, active, onCity, section, onReplayTour }: TopBarProps) {
+export default function TopBar({ cities, active, onCity, section, onReplayTour, present, onTogglePresent }: TopBarProps) {
   const current = SECTIONS.find((s) => s.id === section);
   return (
-    <header className="z-20 flex h-12 shrink-0 items-center gap-3 bg-[#1b294a] pl-3 pr-2 shadow-md shadow-slate-900/20 sm:gap-4 sm:pl-4 sm:pr-3">
+    <header className="z-20 flex h-12 shrink-0 items-center gap-3 bg-[var(--vn-nav)] pl-3 pr-2 shadow-md shadow-slate-900/20 sm:gap-4 sm:pl-4 sm:pr-3">
       <a href="/" onClick={(e) => linkClick(e, "/")} className="flex shrink-0 items-center gap-2 text-[15px] font-extrabold tracking-tight text-white" title="Back to landing page">
         <img src="/icon-192.png" alt="" className="h-7 w-7 rounded-lg" width={28} height={28} />
         <span className="hidden sm:inline">VayuNetra</span>
@@ -38,12 +40,26 @@ export default function TopBar({ cities, active, onCity, section, onReplayTour }
 
       {current && (
         <div className="hidden min-w-0 items-baseline gap-2 md:flex" title={current.hint}>
-          <span className="text-[13px] font-bold text-white">{current.label}</span>
-          <span className="truncate text-[11px] text-slate-400">{current.hint}</span>
+          <span className="text-[12px] font-semibold text-slate-300">{current.label}</span>
+          <span className="hidden truncate text-[11px] text-slate-400 xl:inline">· {current.hint}</span>
         </div>
       )}
 
       <div className="ml-auto flex shrink-0 items-center gap-1.5">
+        <button
+          onClick={onTogglePresent}
+          title={present ? "Exit presentation mode (P)" : "Presentation mode — larger type for a projector (P)"}
+          aria-label="Toggle presentation mode"
+          aria-pressed={present}
+          className={`hidden h-8 items-center gap-1.5 rounded-md px-2 text-[11px] font-semibold transition-colors lg:flex ${
+            present ? "bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30" : "text-slate-400 hover:bg-white/10 hover:text-white"
+          }`}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8m-4-4v4" />
+          </svg>
+          {present ? "Presenting" : "Present"}
+        </button>
         <button
           onClick={onReplayTour}
           title="Replay the quick tour"

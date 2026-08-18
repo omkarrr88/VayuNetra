@@ -1,4 +1,4 @@
-"""Tests for api.main (FastAPI read-API) — Abhinav.
+"""Tests for api.main (FastAPI read-API).
 
 Uses FastAPI TestClient in DEMO_MODE (no Supabase needed).
 """

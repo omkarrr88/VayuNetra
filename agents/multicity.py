@@ -1,4 +1,4 @@
-"""Agent 5 - Multi-City Comparative Intelligence (Sejal).
+"""Agent 5 - Multi-City Comparative Intelligence.
 
 Stage-2 (E7): each city card also carries its annual PM2.5 health burden
 (premature deaths/yr + ₹) so cities are comparable by *impact*, not just AQI —

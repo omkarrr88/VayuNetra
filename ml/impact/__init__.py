@@ -1,4 +1,4 @@
-"""E7 — health & carbon quantification (Sejal, Stage 2).
+"""E7 — health & carbon quantification (Stage 2).
 
 Cited factor tables (`factors`) + a quantification engine (`quantify`) that turns
 a PM2.5 change into premature-deaths-averted, ₹ health cost, and CO₂e co-benefit,

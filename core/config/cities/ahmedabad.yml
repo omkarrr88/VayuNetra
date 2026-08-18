@@ -1,0 +1,15 @@
+# City onboarding config — Ahmedabad. Added for the 10-city expansion (Aug 2026).
+city_id: ahmedabad
+name: Ahmedabad
+state: GJ
+bbox: [72.45, 22.90, 72.75, 23.15]
+center: [72.58, 23.02]
+languages: [gu, en, hi]
+h3_res: 8
+# optional pin-list — ingestion discovers stations by bbox (see delhi.yml)
+caaqms_station_ids: []
+ward_geojson_ref: "data/wards/ahmedabad.geojson"
+regulatory:
+  authority: "Gujarat Pollution Control Board (GPCB)"
+  grap_applies: false
+active: true

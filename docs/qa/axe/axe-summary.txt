@@ -1,0 +1,18 @@
+
+== /: 0 violation types
+
+== /console?city=delhi&section=action: 0 violation types
+
+== /console?city=delhi&section=forecast: 0 violation types
+
+== /console?city=delhi&section=citizen: 0 violation types
+
+== /console?city=delhi&section=compare: 0 violation types
+
+== /console?city=delhi&section=whatif: 0 violation types
+
+== /console?city=delhi&section=impact: 0 violation types
+
+== /console?city=delhi&section=pipeline: 0 violation types
+
+TOTALS {}

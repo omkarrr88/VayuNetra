@@ -1,0 +1,15 @@
+# City onboarding config — Jaipur. Added for the 10-city expansion (Aug 2026).
+city_id: jaipur
+name: Jaipur
+state: RJ
+bbox: [75.70, 26.75, 75.95, 27.05]
+center: [75.79, 26.91]
+languages: [hi, en]
+h3_res: 8
+# optional pin-list — ingestion discovers stations by bbox (see delhi.yml)
+caaqms_station_ids: []
+ward_geojson_ref: "data/wards/jaipur.geojson"
+regulatory:
+  authority: "Rajasthan State Pollution Control Board (RSPCB)"
+  grap_applies: false
+active: true

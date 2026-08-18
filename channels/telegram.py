@@ -48,13 +48,15 @@ async def send_telegram_message(chat_id: str, text: str, reply_markup: Any | Non
 def _city_keyboard():
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
-    return InlineKeyboardMarkup([
-        [
-            InlineKeyboardButton("Delhi", callback_data="subscribe:delhi"),
-            InlineKeyboardButton("Bengaluru", callback_data="subscribe:bengaluru"),
-            InlineKeyboardButton("Mumbai", callback_data="subscribe:mumbai"),
-        ]
-    ])
+    from core.cities import list_cities
+
+    buttons = [
+        InlineKeyboardButton(c["name"], callback_data=f"subscribe:{c['city_id']}")
+        for c in list_cities()
+    ]
+    # rows of three keep the keyboard thumb-sized however many cities exist
+    rows = [buttons[i : i + 3] for i in range(0, len(buttons), 3)]
+    return InlineKeyboardMarkup(rows)
 
 
 def _upsert_subscriber(db: Any, chat_id: str, city_id: str, language: str = "en") -> None:
@@ -110,6 +112,41 @@ async def broadcast_telegram_advisory(advisory: dict, db: Any | None = None) -> 
     }
 
 
+async def broadcast_telegram_text(city_id: str, text: str, db: Any | None = None) -> dict:
+    """Send a plain-text message (e.g. the officer morning brief) to a city's subscribers.
+    Telegram caps a message at 4096 chars — long briefs are split on section breaks."""
+    chat_ids: list[str] = []
+    if db is not None:
+        try:
+            chat_ids.extend(subscriber_chat_ids(db, city_id))
+        except Exception:  # noqa: BLE001
+            chat_ids = []
+    fallback = os.getenv("TELEGRAM_CHAT_ID")
+    if fallback and fallback not in chat_ids:
+        chat_ids.append(fallback)
+    if not chat_ids:
+        return {"status": "skipped", "detail": "no Telegram subscribers or TELEGRAM_CHAT_ID configured", "sent": 0}
+    chunks: list[str] = []
+    cur = ""
+    for para in text.split("\n\n"):
+        if len(cur) + len(para) + 2 > 3900 and cur:
+            chunks.append(cur)
+            cur = para
+        else:
+            cur = f"{cur}\n\n{para}" if cur else para
+    if cur:
+        chunks.append(cur)
+    sent, errors = 0, []
+    for chat_id in chat_ids:
+        try:
+            for c in chunks:
+                await send_telegram_message(chat_id, c)
+            sent += 1
+        except Exception as exc:  # noqa: BLE001
+            errors.append({"chat_id": chat_id, "detail": str(exc)[:160]})
+    return {"status": "sent" if sent else "error", "sent": sent, "total": len(chat_ids), "errors": errors[:3]}
+
+
 async def handle_subscription_update(update: dict, db: Any) -> dict:
     """Handle Telegram /start and inline city-pick callbacks."""
     message = update.get("message") or {}
@@ -130,10 +167,12 @@ async def handle_subscription_update(update: dict, db: Any) -> dict:
         )
         return {"status": "city_prompted", "chat_id": str(chat_id)}
 
+    from core.cities import list_city_ids
+
     city = None
     if data.startswith("subscribe:"):
         city = data.split(":", 1)[1]
-    elif text in {"delhi", "bengaluru", "mumbai"}:
+    elif text in set(list_city_ids()):
         city = text
 
     if city:
@@ -141,7 +180,7 @@ async def handle_subscription_update(update: dict, db: Any) -> dict:
         await send_telegram_message(str(chat_id), f"Subscribed to VayuNetra {city.title()} advisories.")
         return {"status": "subscribed", "chat_id": str(chat_id), "city_id": city}
 
-    await send_telegram_message(str(chat_id), "Send /start to choose Delhi, Bengaluru, or Mumbai alerts.")
+    await send_telegram_message(str(chat_id), "Send /start and pick your city to receive alerts.")
     return {"status": "help_sent", "chat_id": str(chat_id)}
 
 

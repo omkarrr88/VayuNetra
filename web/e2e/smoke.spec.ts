@@ -38,9 +38,29 @@ test("console loads the sidebar shell and the layer control", async ({ page }) =
   await expect(sidebar.getByRole("button", { name: "Enforcement" })).toBeVisible();
   await expect(sidebar.getByRole("button", { name: "Simulator" })).toBeVisible();
   await expect(sidebar.getByRole("button", { name: "Pipeline" })).toBeVisible();
-  // Layer control opens expanded on desktop viewports.
+  // Layer control starts as a compact chip; it expands on click.
+  await page.getByRole("button", { name: /^Layers/ }).click();
   await expect(page.getByText("Map layers")).toBeVisible();
   await expect(page.getByRole("button", { name: /wind plumes/i })).toBeVisible();
+});
+
+test("every section shows its spine: verb, blurb and numbered steps", async ({ page }) => {
+  await page.goto("/console");
+  const sidebar = page.getByRole("navigation", { name: "Console sections" }).first();
+  for (const [label, verb, firstStep] of [
+    ["Enforcement", "Act", "Morning brief"],
+    ["Forecast", "Anticipate", "72-hour outlook"],
+    ["Advisories", "Inform", "Advisories by ward"],
+    ["Cities", "Compare", "Scoreboard"],
+    ["Simulator", "Decide", "Choose an intervention"],
+    ["Impact", "Fund", "The funding case"],
+    ["Pipeline", "Trust", "Run the agents"],
+  ] as const) {
+    await sidebar.getByRole("button", { name: label, exact: true }).click();
+    const spine = page.locator("[data-tour=spine]");
+    await expect(spine.getByText(verb, { exact: true })).toBeVisible();
+    await expect(spine.getByRole("button", { name: new RegExp(firstStep) })).toBeVisible();
+  }
 });
 
 test("a cell story auto-opens with an explanation (never an empty box)", async ({ page }) => {
@@ -67,6 +87,6 @@ test("simulator section shows the what-if engine", async ({ page }) => {
     .first()
     .getByRole("button", { name: "Simulator" })
     .click();
-  await expect(page.getByText("What-if Simulator")).toBeVisible();
+  await expect(page.getByText("Choose an intervention").first()).toBeVisible();
   await expect(page.getByRole("button", { name: /run simulation/i })).toBeVisible();
 });

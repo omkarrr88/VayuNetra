@@ -18,9 +18,28 @@ client = TestClient(m.app)
 
 
 def _fixture_message(city: str) -> str:
-    rows = [r for r in m.fixture_rows("advisory", city) if (r.get("language") or "en") == "en"]
-    assert rows, f"fixture must contain an English advisory for {city}"
+    """The advisory a caller hears: the city's showcase language when Polly can voice it
+    (Hindi for Delhi/Mumbai/…), else English — mirrors api.main._ivr_language."""
+    lang = m._ivr_language(city)
+    rows = [r for r in m.fixture_rows("advisory", city) if (r.get("language") or "en") == lang and r.get("city_id") == city]
+    if not rows:
+        rows = [r for r in m.fixture_rows("advisory", city) if (r.get("language") or "en") == "en"]
+    assert rows, f"fixture must contain an advisory for {city}"
     return str(rows[0]["message"]).strip()
+
+
+def test_hindi_city_calls_are_spoken_in_hindi_by_kajal():
+    r = client.post("/ivr/advisory", data={"Digits": "1"})   # Delhi: languages [hi, en]
+    assert r.status_code == 200
+    assert 'voice="Polly.Kajal-Neural" language="hi-IN"' in r.text
+    assert "वायु गुणवत्ता" in r.text
+
+
+def test_non_hindi_city_calls_fall_back_to_english_voice():
+    digit = next(d for d, (cid, _) in IVR_CITY_MENU.items() if cid == "chennai")
+    r = client.post("/ivr/advisory", data={"Digits": digit})
+    assert r.status_code == 200
+    assert 'voice="Polly.Raveena" language="en-IN"' in r.text
 
 
 # --- welcome menu -------------------------------------------------------------
@@ -62,9 +81,17 @@ def test_advisory_get_with_query_digits():
 
 
 def test_advisory_unknown_digits_defaults_to_delhi():
-    r = client.post("/ivr/advisory", data={"Digits": "9"})
+    # ten cities now fill digits 1-9 and 0, so only a non-digit key is unmapped
+    r = client.post("/ivr/advisory", data={"Digits": "#"})
     assert r.status_code == 200
     assert html.escape(_fixture_message("delhi")) in r.text
+
+
+def test_advisory_digit_9_is_a_real_city_now():
+    # regression guard for the 10-city menu: 9 must NOT silently fall back to Delhi
+    r = client.post("/ivr/advisory", data={"Digits": "9"})
+    assert r.status_code == 200
+    assert "Lucknow" in r.text
 
 
 def test_advisory_no_input_defaults_to_delhi():
@@ -93,5 +120,6 @@ def test_advisory_message_is_xml_escaped():
 
 def test_latest_advisory_never_returns_wrong_city():
     # fixture_rows falls back to ALL rows for unknown cities; _latest_advisory
-    # must return None rather than another city's advisory (spoken as the wrong city)
-    assert m._latest_advisory("kolkata") is None
+    # must return None rather than another city's advisory (spoken as the wrong city).
+    # (Kolkata used to be the example here — it is a live city since Aug 2026.)
+    assert m._latest_advisory("atlantis") is None

@@ -14,7 +14,7 @@ function Bar({ label, r, tone, note }: { label: string; r: number; tone: "blue" 
       <div className="mt-0.5 h-2 rounded bg-slate-100">
         <div className={`h-2 rounded ${tone === "blue" ? "bg-blue-600" : "bg-slate-400"}`} style={{ width }} />
       </div>
-      <div className="mt-0.5 text-[11px] text-gray-400">{note}</div>
+      <div className="mt-0.5 text-[11px] text-gray-500">{note}</div>
     </div>
   );
 }
@@ -24,7 +24,7 @@ export default function FairnessPanel() {
   return (
     <Panel title="Fairness audit" tag={`n=${f.n} live recs`}>
       <div className="text-xs text-gray-600">
-        What drives enforcement priority — measured on every live recommendation across all 3 cities ({f.asOf}):
+        What drives enforcement priority — measured on every live recommendation across all cities ({f.asOf}):
       </div>
       <div className="mt-2.5 space-y-2.5">
         <Bar
@@ -45,7 +45,7 @@ export default function FairnessPanel() {
         contribution, population exposed, actionability, and model confidence — no income,
         land-value, or demographic feature exists anywhere in the pipeline or schema.
       </div>
-      <div className="mt-1.5 text-[11px] text-gray-400">
+      <div className="mt-1.5 text-[11px] text-gray-500">
         Ward-income partial-correlation audit is roadmap — it needs ward-level socio-economic data
         that no free public source provides today.
       </div>

@@ -16,6 +16,8 @@ from .seasonal import add_calendar_features
 POLLUTANTS = ["pm25", "pm10", "no2", "so2", "co", "o3"]
 MET = ["temp", "rh", "precip", "wind_u", "wind_v", "blh"]
 LAGS = (1, 24)
+# Upper bound per pollutant (µg/m³; CO in mg/m³) — anything above is a sensor glitch, not air.
+PLAUSIBLE_MAX = {"pm25": 1500.0, "pm10": 3000.0, "no2": 1000.0, "so2": 1000.0, "co": 100.0, "o3": 1000.0}
 
 
 def add_advected_pm25(wide: pd.DataFrame, hours: float = 6.0) -> pd.DataFrame:
@@ -55,6 +57,11 @@ def build_feature_table(long_df: pd.DataFrame) -> pd.DataFrame:
     df["ts"] = pd.to_datetime(df["ts"], utc=True).dt.floor("h")
 
     poll = df[df["variable"].isin(POLLUTANTS)]
+    # Physical-plausibility guard: CPCB/OpenAQ feeds carry sentinel and glitch values
+    # (negatives, 100000, 418000). A single 418,000 µg/m³ row would dominate every RMSE
+    # and every quantile; drop values outside the instrument range before pivoting.
+    cap = poll["variable"].map(PLAUSIBLE_MAX).fillna(1e9)
+    poll = poll[(poll["value"] > 0) & (poll["value"] <= cap)]
     poll_wide = poll.pivot_table(
         index=["city_id", "h3_cell", "ts"], columns="variable", values="value"
     ).reset_index()

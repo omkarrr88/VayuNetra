@@ -1,4 +1,4 @@
-"""OpenAQ ground-AQI connector (v3).  Owner: Omkar.  Spec: ARCHITECTURE.md §7.1; PRD §11.
+"""OpenAQ ground-AQI connector (v3).  Spec: ARCHITECTURE.md §7.1; PRD §11.
 
 Pulls real station PM2.5/PM10/NO2/SO2/CO/O3 (hourly history) near a city, maps each
 station to its H3 cell, and writes canonical `measurements`. This is what turns the
@@ -168,10 +168,10 @@ def fetch_city(
 def push_to_supabase(rows: list[dict]) -> None:
     from core.supa import client
 
-    client = client()
-    for i in range(0, len(rows), 500):
-        client.table("measurements").insert(rows[i : i + 500]).execute()
-    print(f"pushed {len(rows)} OpenAQ measurements to Supabase")
+    from core.supa import insert_measurements
+
+    insert_measurements(rows, client())
+    print(f"pushed {len(rows)} OpenAQ measurements to Supabase (duplicates ignored)")
 
 
 def main() -> None:

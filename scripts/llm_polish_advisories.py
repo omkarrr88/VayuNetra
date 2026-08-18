@@ -26,10 +26,12 @@ import re
 import requests
 
 import core.env  # noqa: F401
+from agents.advisory import foreign_script_chars, script_ok
 
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
-LANG_NAME = {"en": "English", "hi": "Hindi (Devanagari)", "kn": "Kannada (Kannada script)", "mr": "Marathi (Devanagari)"}
+LANG_NAME = {"en": "English", "hi": "Hindi (Devanagari)", "kn": "Kannada (Kannada script)", "mr": "Marathi (Devanagari)",
+             "ta": "Tamil (Tamil script)", "te": "Telugu (Telugu script)", "bn": "Bengali (Bengali script)", "gu": "Gujarati (Gujarati script)"}
 
 
 def polish(message: str, lang: str, api_key: str) -> str | None:
@@ -53,8 +55,10 @@ def polish(message: str, lang: str, api_key: str) -> str | None:
         return None
 
 
-def facts_survive(original: str, candidate: str) -> bool:
-    """The non-negotiable gate: locked facts intact, nothing numeric invented."""
+def facts_survive(original: str, candidate: str, lang: str | None = None) -> bool:
+    """The non-negotiable gate: locked facts intact, nothing numeric invented, right script."""
+    if lang and not script_ok(candidate, lang):
+        return False
     zone = re.search(r"zone-[0-9a-f]+", original)
     if zone and zone.group(0) not in candidate:
         return False
@@ -94,7 +98,13 @@ def main() -> None:
     accepted = 0
     for r in rows:
         candidate = polish(r["message"], args.lang, api_key)
-        if candidate and facts_survive(r["message"], candidate):
+        # one retry with explicit feedback if the script check failed (LLMs occasionally leak
+        # a glyph from another script); after that the template is kept — never a garbled SMS.
+        if candidate and not script_ok(candidate, args.lang):
+            bad = foreign_script_chars(candidate, args.lang)
+            print(f"  script check failed for {r['ward_id']} (foreign chars: {bad!r}) — retrying once")
+            candidate = polish(r["message"], args.lang, api_key)
+        if candidate and facts_survive(r["message"], candidate, args.lang):
             accepted += 1
             print(f"ACCEPT {r['ward_id']}:\n  tmpl : {r['message']}\n  llm  : {candidate}")
             if args.push:

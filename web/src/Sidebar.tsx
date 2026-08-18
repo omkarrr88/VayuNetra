@@ -32,13 +32,13 @@ export const SECTIONS: SectionDef[] = [
   {
     id: "citizen",
     label: "Advisories",
-    hint: "Citizen alerts in 4 languages + clean-air zones",
+    hint: "Citizen alerts in 8 languages + clean-air zones",
     icon: "M11 5 6 9H3v6h3l5 4V5Zm5.5 2.5a5 5 0 0 1 0 9M19 4a9 9 0 0 1 0 16",
   },
   {
     id: "compare",
     label: "Cities",
-    hint: "Delhi · Bengaluru · Mumbai side by side",
+    hint: "10 Indian cities side by side",
     icon: "M3 21h18M6 21V10m6 11V4m6 17v-8",
   },
   {
@@ -83,39 +83,59 @@ interface SidebarProps {
   onSelect: (s: Section) => void;
 }
 
-/** Desktop navigation rail — navy brand, icon + label per section. */
+// The seven sections stay top-level; the group labels only tell a new user what kind of
+// question each answers. Number = keyboard shortcut (1–7).
+const GROUPS: { label: string; ids: Section[] }[] = [
+  { label: "Operate", ids: ["action", "forecast", "citizen"] },
+  { label: "Understand", ids: ["compare", "impact"] },
+  { label: "Explore", ids: ["whatif", "pipeline"] },
+];
+
+/** Desktop navigation rail — grouped, numbered, icon + label; collapses to icons < 1280px. */
 export function Sidebar({ active, onSelect }: SidebarProps) {
   return (
     <nav
-      className="hidden w-48 shrink-0 flex-col bg-[#1b294a] lg:flex"
+      className="hidden w-14 shrink-0 flex-col bg-[var(--vn-nav)] lg:flex xl:w-52"
       aria-label="Console sections"
       data-tour="sidebar"
     >
-      <div className="flex-1 space-y-0.5 px-2.5 pt-3">
-        {SECTIONS.map((s) => {
-          const on = active === s.id;
-          return (
-            <button
-              key={s.id}
-              onClick={() => onSelect(s.id)}
-              title={s.hint}
-              className={`group flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/80 ${
-                on ? "bg-white/10 text-white" : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
-              }`}
-            >
-              <span
-                className={`h-4 w-0.5 rounded-full transition-colors ${on ? "bg-emerald-400" : "bg-transparent"}`}
-              />
-              <Icon d={s.icon} className="h-[18px] w-[18px] shrink-0" />
-              {s.label}
-            </button>
-          );
-        })}
+      <div className="flex-1 space-y-3 px-2 pt-3">
+        {GROUPS.map((g) => (
+          <div key={g.label}>
+            <div className="mb-1 hidden px-2.5 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 xl:block">{g.label}</div>
+            <div className="space-y-0.5">
+              {g.ids.map((id) => {
+                const s = SECTIONS.find((x) => x.id === id)!;
+                const n = SECTIONS.findIndex((x) => x.id === id) + 1;
+                const on = active === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => onSelect(s.id)}
+                    title={`${s.label} — ${s.hint} (${n})`}
+                    aria-label={s.label}
+                    aria-current={on ? "page" : undefined}
+                    className={`group flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2 py-2 text-left text-[13px] font-semibold transition-colors xl:px-2.5 ${
+                      on ? "bg-white/10 text-white" : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
+                    }`}
+                  >
+                    <span className={`h-4 w-0.5 rounded-full transition-colors ${on ? "bg-emerald-400" : "bg-transparent"}`} />
+                    <Icon d={s.icon} className="h-[18px] w-[18px] shrink-0" />
+                    <span className="hidden flex-1 truncate xl:inline">{s.label}</span>
+                    <kbd className={`hidden h-4 min-w-4 items-center justify-center rounded border px-1 font-mono text-[9.5px] xl:flex ${on ? "border-white/30 text-slate-200" : "border-white/10 text-slate-400 group-hover:text-slate-300"}`}>{n}</kbd>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
-      <div className="border-t border-white/10 px-4 py-3 text-[10px] leading-relaxed text-slate-400">
-        Delhi · Bengaluru · Mumbai
+      <div className="hidden border-t border-white/10 px-4 py-3 text-[10px] leading-relaxed text-slate-400 xl:block">
+        10 cities · Delhi to Lucknow
         <br />
         ₹0 infrastructure · open source
+        <br />
+        <span className="text-slate-400">keys 1–7 sections · [ ] city · P present</span>
       </div>
     </nav>
   );
@@ -125,7 +145,7 @@ export function Sidebar({ active, onSelect }: SidebarProps) {
 export function BottomNav({ active, onSelect }: SidebarProps) {
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-30 flex justify-between overflow-x-auto border-t border-slate-800 bg-[#1b294a] px-1 pb-[env(safe-area-inset-bottom)] lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 flex justify-between overflow-x-auto border-t border-slate-800 bg-[var(--vn-nav)] px-1 pb-[env(safe-area-inset-bottom)] lg:hidden"
       aria-label="Console sections"
     >
       {SECTIONS.map((s) => {

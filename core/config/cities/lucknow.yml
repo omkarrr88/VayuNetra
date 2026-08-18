@@ -1,0 +1,15 @@
+# City onboarding config — Lucknow. Added for the 10-city expansion (Aug 2026).
+city_id: lucknow
+name: Lucknow
+state: UP
+bbox: [80.85, 26.75, 81.05, 26.95]
+center: [80.95, 26.85]
+languages: [hi, en]
+h3_res: 8
+# optional pin-list — ingestion discovers stations by bbox (see delhi.yml)
+caaqms_station_ids: []
+ward_geojson_ref: "data/wards/lucknow.geojson"
+regulatory:
+  authority: "Uttar Pradesh Pollution Control Board (UPPCB)"
+  grap_applies: false
+active: true

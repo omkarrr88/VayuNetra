@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { H3HexagonLayer } from "@deck.gl/geo-layers";
-import { GeoJsonLayer, PolygonLayer, ScatterplotLayer } from "@deck.gl/layers";
+import { GeoJsonLayer, LineLayer, PolygonLayer, ScatterplotLayer } from "@deck.gl/layers";
 import { api } from "./api";
+import { cellToLatLng } from "h3-js";
+import { inGeometry, type Geometry } from "./placeName";
 import { colorFor, dominantSource, pm25Color, satColor, type Shares } from "./sources";
 
 export type ShapDriver = { feature: string; source: string; contribution: number };
@@ -18,6 +20,22 @@ export type EmissionSource = {
   detection_confidence?: number;
   coordinates: [number, number];
 };
+
+// Satellite patch for a hovered source — fetched lazily, cached, and the
+// tooltip re-renders once it lands. Only rec sources have patches; others
+// simply show no image (never a fake one).
+type Patch = { image_ref: string | null; title?: string | null; placeholder?: boolean };
+const patchCache = new Map<string, Patch | "loading">();
+function patchFor(id: string, onReady: () => void): Patch | null {
+  const hit = patchCache.get(id);
+  if (hit === "loading") return null;
+  if (hit) return hit;
+  patchCache.set(id, "loading");
+  api<Patch>(`/sources/${id}/patch`)
+    .then((p) => { patchCache.set(id, p ?? { image_ref: null }); onReady(); })
+    .catch(() => patchCache.set(id, { image_ref: null }));
+  return null;
+}
 
 // The live API returns PostGIS GeoJSON (`geom.coordinates`); fixtures use a flat
 // `coordinates`. Normalize both so the overlay renders on real data too.
@@ -157,8 +175,10 @@ export default function BlameMap({
   showPlumes = false,
   showWards = false,
   showFreight = false,
+  showFires = false,
   coverageCells = [],
   coverageKind = "dense",
+  scrub = null,
 }: {
   city: string;
   center: [number, number];
@@ -170,17 +190,43 @@ export default function BlameMap({
   showPlumes?: boolean;
   showWards?: boolean;
   showFreight?: boolean;
+  showFires?: boolean;
   coverageCells?: CoverageCell[];
   coverageKind?: "stations" | "dense";
+  scrub?: { hour: string; scale: Record<string, number> } | null;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const overlayRef = useRef<MapboxOverlay | null>(null);
   const [cells, setCells] = useState<AttrCell[]>([]);
+  const [patchTick, setPatchTick] = useState(0); // bumps when a hovered source's patch arrives
   const [sources, setSources] = useState<EmissionSource[]>([]);
   const [plume, setPlume] = useState<PlumeData | null>(null);
   const [wards, setWards] = useState<WardCollection | null>(null);
+  const wardMeansRef = useRef<Map<string, number>>(new Map());
+  const [wardMeansVersion, setWardMeansVersion] = useState(0);
+  useEffect(() => {
+    if (!wards || !coverageCells.length) { wardMeansRef.current = new Map(); setWardMeansVersion((v) => v + 1); return; }
+    const sums = new Map<string, [number, number]>();
+    const feats = wards.features as Array<WardFeature & { geometry: Geometry }>;
+    for (const c of coverageCells) {
+      const [lat, lng] = cellToLatLng(c.h3_cell);
+      for (const f of feats) {
+        if (f.geometry && inGeometry(lng, lat, f.geometry)) {
+          const k = f.properties.ward_id;
+          const cur = sums.get(k) ?? [0, 0];
+          sums.set(k, [cur[0] + c.pm25, cur[1] + 1]);
+          break;
+        }
+      }
+    }
+    const out = new Map<string, number>();
+    for (const [k, [sum, n]] of sums) if (n) out.set(k, sum / n);
+    wardMeansRef.current = out;
+    setWardMeansVersion((v) => v + 1);
+  }, [wards, coverageCells]);
   const [freight, setFreight] = useState<FreightCollection | null>(null);
+  const [fires, setFires] = useState<import("geojson").FeatureCollection | null>(null);
   const [phase, setPhase] = useState(0);
 
   const [mapError, setMapError] = useState(false);
@@ -270,6 +316,19 @@ export default function BlameMap({
     };
   }, [city, showFreight]);
 
+  useEffect(() => {
+    if (!showFires) return;
+    let alive = true;
+    setFires(null);
+    fetch(`/fires/${city}.geojson`)
+      .then((r) => (r.ok ? (r.json() as Promise<import("geojson").FeatureCollection>) : null))
+      .then((d) => alive && setFires(d))
+      .catch(() => alive && setFires(null));
+    return () => {
+      alive = false;
+    };
+  }, [city, showFires]);
+
   // Slow opacity pulse gives the plumes a "drifting" feel without particle cost.
   useEffect(() => {
     if (!showPlumes) return;
@@ -301,11 +360,16 @@ export default function BlameMap({
       id: "coverage",
       data: coverageCells,
       getHexagon: (d) => d.h3_cell,
-      getFillColor: (d) => pm25Color(coverageKind === "stations" ? d.pm25_stations : d.pm25),
+      getFillColor: (d) => {
+        const base = coverageKind === "stations" ? d.pm25_stations : d.pm25;
+        const k = scrub ? (scrub.scale[d.h3_cell] ?? 1) : 1;
+        return pm25Color(base * k);
+      },
       stroked: false,
       extruded: false,
       pickable: true,
-      updateTriggers: { getFillColor: coverageKind },
+      transitions: { getFillColor: 400 },
+      updateTriggers: { getFillColor: [coverageKind, scrub?.hour ?? "live"] },
     });
 
     type AnyLayer =
@@ -313,20 +377,31 @@ export default function BlameMap({
       | H3HexagonLayer<CoverageCell>
       | ScatterplotLayer<EmissionSource>
       | PolygonLayer<Plume>
+      | LineLayer<{ from: [number, number]; to: [number, number] }>
       | GeoJsonLayer;
     // (freight corridors reuse GeoJsonLayer)
     const layers: AnyLayer[] = [mode === "coverage" ? coverage : blame];
     if (showWards && wards) {
+      // Ward heat: mean PM2.5 of the dense-field cells inside each ward — the
+      // unit NCAP officers think and report in. Computed once per (wards, field).
+      const wardMean = wardMeansRef.current;
       layers.push(
         new GeoJsonLayer({
           id: "wards",
           data: wards as unknown as import("geojson").FeatureCollection,
           stroked: true,
           filled: true,
-          getFillColor: [148, 163, 184, 8], // near-invisible tint keeps hover picking alive
-          getLineColor: [51, 65, 85, 160],
+          getFillColor: (f: unknown) => {
+            const wid = (f as WardFeature).properties?.ward_id;
+            const m = wid ? wardMean.get(wid) : undefined;
+            if (m === undefined) return [148, 163, 184, 8];
+            const [r, g, b] = pm25Color(m);
+            return [r, g, b, 95];
+          },
+          getLineColor: [51, 65, 85, 170],
           lineWidthMinPixels: 1,
           pickable: true,
+          updateTriggers: { getFillColor: wardMeansVersion },
         }),
       );
     }
@@ -340,6 +415,65 @@ export default function BlameMap({
           getLineColor: [124, 58, 237, 190],
           lineWidthMinPixels: 2,
           pickable: true,
+        }),
+      );
+    }
+    if (showFires && fires?.features?.length) {
+      layers.push(
+        new GeoJsonLayer({
+          id: "fires",
+          data: fires,
+          pointType: "circle",
+          getPointRadius: 380,
+          pointRadiusUnits: "meters",
+          getFillColor: [234, 88, 12, 200],
+          getLineColor: [255, 237, 213, 220],
+          lineWidthMinPixels: 1,
+          stroked: true,
+          pickable: true,
+        }),
+      );
+    }
+    // Wind arrows — a sparse grid over the city, all carrying the city-mean
+    // wind (direction + speed as length), so a viewer can see WHY the plumes
+    // point the way they do. Rendered as short LineLayers with an arrow tip.
+    if (showPlumes && plume?.wind && !plume.wind.calm && cells.length) {
+      const w = plume.wind;
+      const lats = cells.map((c) => cellToLatLng(c.h3_cell)[0]);
+      const lngs = cells.map((c) => cellToLatLng(c.h3_cell)[1]);
+      const minLat = Math.min(...lats), maxLat = Math.max(...lats), minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+      const rows = 6, cols = 8;
+      const toDeg = (b: number) => (b * Math.PI) / 180;
+      // bearing_deg is the direction the wind blows TOWARD (u/v convention)
+      const dirLat = Math.cos(toDeg(w.bearing_deg));
+      const dirLng = Math.sin(toDeg(w.bearing_deg));
+      const len = Math.min(0.02, 0.006 + w.speed_ms * 0.0025); // degrees, ~0.6–2 km
+      const segs: Array<{ from: [number, number]; to: [number, number] }> = [];
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+        const lat = minLat + ((r + 0.5) / rows) * (maxLat - minLat);
+        const lng = minLng + ((c + 0.5) / cols) * (maxLng - minLng);
+        const midLat = lat, midLng = lng;
+        segs.push({ from: [midLng - dirLng * len * 0.5, midLat - dirLat * len * 0.5], to: [midLng + dirLng * len * 0.5, midLat + dirLat * len * 0.5] });
+      }
+      // arrow tips: two short strokes off the head
+      const tips: Array<{ from: [number, number]; to: [number, number] }> = [];
+      for (const sgm of segs) {
+        const [hx, hy] = sgm.to; const back = len * 0.28;
+        for (const ang of [150, -150]) {
+          const a = toDeg(w.bearing_deg + ang);
+          tips.push({ from: [hx, hy], to: [hx + Math.sin(a) * back, hy + Math.cos(a) * back] });
+        }
+      }
+      layers.push(
+        new LineLayer<{ from: [number, number]; to: [number, number] }>({
+          id: "wind-arrows",
+          data: [...segs, ...tips],
+          getSourcePosition: (d) => d.from,
+          getTargetPosition: (d) => d.to,
+          getColor: [30, 41, 59, 150],
+          getWidth: 2,
+          widthUnits: "pixels",
+          pickable: false,
         }),
       );
     }
@@ -403,8 +537,10 @@ export default function BlameMap({
         if ("properties" in o) {
           const p = o.properties as { ward_id?: string; name: string; highway?: string; policy?: string };
           if (p.ward_id) {
+            const m = wardMeansRef.current.get(p.ward_id);
             return {
-              html: `<b>${p.name}</b><br/><span style="color:#888">ward ${p.ward_id}</span>`,
+              html: `<b>${p.name}</b><br/><span style="color:#888">ward ${p.ward_id}</span>` +
+                (m !== undefined ? `<br/><b>${Math.round(m)} µg/m³</b> mean PM2.5 (dense field)` : ""),
               style: { fontSize: "12px" },
             };
           }
@@ -415,13 +551,18 @@ export default function BlameMap({
             style: { fontSize: "12px" },
           };
         }
+        const patch = patchFor(String(o.id), () => setPatchTick((t) => t + 1));
+        const img = patch?.image_ref && !patch.placeholder
+          ? `<img src="${patch.image_ref}" alt="" style="display:block;width:220px;height:146px;object-fit:cover;border-radius:6px;margin-bottom:6px" />` +
+            `<div style="color:#0369a1;font-size:10px;font-weight:600;letter-spacing:.04em;margin-bottom:2px">SENTINEL-2 · REAL SITE IMAGERY</div>`
+          : "";
         return {
-          html: `<b>${o.name}</b><br/>${o.type.replace("_", " ")} · ${Math.round((o.detection_confidence ?? 0) * 100)}% · ${o.source_origin ?? "registry"}`,
-          style: { fontSize: "12px" },
+          html: `${img}<b>${o.name}</b><br/>${o.type.replace("_", " ")} · ${Math.round((o.detection_confidence ?? 0) * 100)}% · ${o.source_origin ?? "registry"}`,
+          style: { fontSize: "12px", maxWidth: "240px" },
         };
       },
     });
-  }, [cells, mode, selected, onSelect, showSources, sources, coverageCells, coverageKind, showPlumes, plume, showWards, wards, showFreight, freight, phase]);
+  }, [cells, mode, selected, onSelect, showSources, sources, coverageCells, coverageKind, showPlumes, plume, showWards, wards, wardMeansVersion, showFreight, freight, phase, patchTick]);
 
   return (
     <div className="relative h-full w-full">

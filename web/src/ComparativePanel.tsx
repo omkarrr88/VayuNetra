@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Bar, BarChart, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, Legend, Tooltip, XAxis, YAxis } from "recharts";
+import SizedChart from "./SizedChart";
 import { api } from "./api";
 import { inr, intfmt } from "./format";
 import { EmptyState, Panel } from "./ui";
@@ -55,12 +56,12 @@ export default function ComparativePanel({ onSelectCity }: { onSelectCity: (city
         <>
       <div className="text-xs text-gray-600">
         {data?.summary.shared_pattern ?? "Loading city comparison…"}
-        <span className="ml-1 text-slate-400">· city-average PM2.5</span>
+        <span className="ml-1 text-slate-500">· city-average PM2.5</span>
       </div>
 
       {chart.length > 0 && (
         <div className="mt-2 h-32">
-          <ResponsiveContainer width="100%" height="100%">
+          <SizedChart>
             <BarChart data={chart} margin={{ top: 4, right: 4, left: -10, bottom: -6 }} barGap={2}>
               <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 9, fill: "#94a3b8" }} axisLine={false} tickLine={false} width={34} />
@@ -74,22 +75,43 @@ export default function ComparativePanel({ onSelectCity }: { onSelectCity: (city
               <Bar dataKey="avg now" fill="#64748b" radius={[3, 3, 0, 0]} maxBarSize={26} />
               <Bar dataKey="+24h" fill="#2563eb" radius={[3, 3, 0, 0]} maxBarSize={26} />
             </BarChart>
-          </ResponsiveContainer>
+          </SizedChart>
         </div>
       )}
 
+      {(data?.cities.length ?? 0) > 1 && (
+        <div className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          Clean-air ranking
+          <span className="ml-1 font-normal normal-case tracking-normal text-slate-500">
+            — Swachh Vayu style, by current PM2.5 (cleanest first)
+          </span>
+        </div>
+      )}
       <div className="mt-2 space-y-2">
-        {data?.cities.map((c) => (
+        {[...(data?.cities ?? [])]
+          .sort((a, b) => a.current_pm25 - b.current_pm25)
+          .map((c, rank) => (
           <button
             key={c.city_id}
             onClick={() => onSelectCity(c.city_id)}
             className="block w-full rounded-lg border border-slate-200 p-2.5 text-left transition-colors hover:border-blue-300 hover:bg-blue-50"
           >
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-slate-800">{c.name}</span>
+              <span className="font-semibold text-slate-800">
+                <span
+                  className={`mr-1.5 inline-block w-8 rounded px-1 text-center text-[11px] font-bold ${
+                    rank === 0
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  #{rank + 1}
+                </span>
+                {c.name}
+              </span>
               <span
                 className={`rounded px-1.5 py-0.5 text-[11px] font-medium ${
-                  c.trend === "deteriorating" ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"
+                  c.trend === "deteriorating" ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-700"
                 }`}
               >
                 {c.trend}

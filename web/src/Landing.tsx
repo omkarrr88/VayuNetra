@@ -37,22 +37,22 @@ const STEPS = [
   {
     icon: IC.hex,
     title: "Trace",
-    body: "A gradient-boosted model with SHAP explanations assigns PM2.5 blame to traffic, construction, industry and burning — per square-kilometre H3 cell, cross-checked against published emission inventories (cosine 0.92 vs SAFAR-Delhi).",
+    body: "A gradient-boosted model with SHAP explanations assigns PM2.5 blame to traffic, construction, industry and burning — per square-kilometre H3 cell, cross-checked, bucket by bucket, against published apportionment studies for Delhi and Bengaluru — agreements and disagreements both shown.",
   },
   {
     icon: IC.chart,
     title: "Predict",
-    body: "Quantile forecasts at 24, 48 and 72 hours for every cell, with conformal-calibrated intervals. Backtested walk-forward against persistence and climatology — both baselines shown in the product.",
+    body: "Quantile forecasts at 24, 48 and 72 hours for every cell, with conformal-calibrated intervals and a calibrated probability of crossing Very Poor / Severe. Benchmarked on a strict temporal split against persistence, seasonal-naive and climatology — the numbers, including the weak spots, are printed in the product.",
   },
   {
     icon: IC.scale,
     title: "Act",
-    body: "A ranked enforcement worklist scores 547 registered and satellite-detected sources. One click opens an evidence dossier with a real Sentinel-2 patch, regulatory citations, and a draft notice PDF.",
+    body: "A ranked enforcement worklist scores 647 registered and satellite-detected sources across 10 cities. One click opens an evidence dossier with a real Sentinel-2 patch, regulatory citations, and a draft notice PDF.",
   },
   {
     icon: IC.megaphone,
     title: "Protect",
-    body: "Health advisories generated from the forecast and targeted at the most vulnerable zones — 6,000+ mapped hospitals, schools, elder-care homes and outdoor-work sites — in four languages over the web app, Telegram, IVR calls and public displays.",
+    body: "Health advisories generated from the forecast and targeted at the most vulnerable zones — 11,000+ mapped hospitals, 7,700+ schools, elder-care homes and outdoor-work sites — in eight Indian languages (Hindi, Kannada, Marathi, Tamil, Telugu, Bengali, Gujarati, English) over the web app, Telegram, IVR calls and public displays.",
   },
 ];
 
@@ -63,28 +63,37 @@ const FEATURES = [
   { icon: IC.flame, title: "Multi-hazard alerts", body: "Heat×smog compound risk (IMD × CPCB criteria), dust×traffic co-occurrence corridors, and the statutory CAQM GRAP stage triggered a day early — by our own forecast." },
   { icon: IC.chip, title: "What-if simulator + optimiser", body: "Cited counterfactuals — odd-even, construction bans, full GRAP packages — and an optimiser that ranks intervention bundles by impact per inspector-hour." },
   { icon: IC.rupee, title: "Health & carbon ROI", body: "Every ΔPM2.5 priced in ₹, lives and CO₂e using WHO HRAPIE dose–response and GPW population — the NCAP funding case, fully cited." },
-  { icon: IC.shield, title: "Vulnerability-targeted advisories", body: "2,624 zones scored from real OSM hospitals, clinics, schools, elder-care and outdoor-work sites × population. Advisories escalate where forecast air is bad and sensitive people are." },
+  { icon: IC.shield, title: "Vulnerability-targeted advisories", body: "5,495 zones scored from real OSM hospitals, clinics, schools, elder-care and outdoor-work sites × population. Advisories escalate where forecast air is bad and sensitive people are." },
   { icon: IC.leaf, title: "Clean-air zones", body: "The flip side of the blame map: the cleanest ~1 km cells right now, computed from the dense coverage field, with one-tap directions." },
-  { icon: IC.globe, title: "Multi-city, config-driven", body: "Delhi, Bengaluru, Mumbai live today with cross-city playbooks. Onboarding a new city is one API call — rehearsed live on production." },
-  { icon: IC.megaphone, title: "Citizen channels", body: "English, Hindi, Kannada, Marathi over PWA, a Telegram bot judges can subscribe to live (/start), IVR voice calls and a public-display mode." },
+  { icon: IC.globe, title: "Multi-city, config-driven", body: "10 cities live today — Delhi, Bengaluru, Mumbai, Hyderabad, Chennai, Kolkata, Pune, Ahmedabad, Jaipur, Lucknow — with cross-city playbooks. Seven were onboarded from config in one week; every layer is city-agnostic." },
+  { icon: IC.megaphone, title: "Citizen channels", body: "Eight languages in their own scripts — Hindi, Kannada, Marathi, Tamil, Telugu, Bengali, Gujarati, English — over PWA, a Telegram bot judges can subscribe to live (/start), IVR voice calls and a public-display mode." },
   { icon: IC.chip, title: "Visible multi-agent pipeline", body: "Six agents on one LangGraph with per-node latency stamps. A 'Run agents live' button replays the whole detect → decide → issue chain on stage." },
   { icon: IC.doc, title: "Honest by construction", body: "Attribution abstains without out-of-sample skill; intervals are calibrated; fairness is audited on live data; demo fixtures are labeled as fixtures. Nothing fabricated." },
 ];
 
 const VALIDATION: Array<[string, string, string]> = [
-  ["Attribution matches official inventories", "cosine 0.92 / 0.88 / 0.79", "vs SAFAR-Delhi 2018, CSTEP-Bengaluru 2022, Urban-Emissions Mumbai"],
+  ["Attribution checked against published apportionment", "cosine 0.88 / 0.90 / 0.93", "vs SAFAR-Delhi 2018, CSTEP-Bengaluru 2022 (verified from the report), Urban-Emissions Mumbai — plus bucket-by-bucket tables vs TERI-ARAI and Guttikunda et al."],
   ["Attribution behaves physically", "2.30× traffic signal in rush hours", "IST rush vs off-peak SHAP, weather controlled"],
-  ["Forecast beats real baselines", "+4–8% Delhi · +9–30% Bengaluru, Mumbai", "walk-forward RMSE vs persistence and climatology"],
-  ["Uncertainty intervals are honest", "48–63% raw → 75–80% after CQR", "conformal recalibration audit, nominal 80%"],
-  ["Enforcement is equitable", "no socio-economic inputs, by construction", "fairness audit on all 390 live recommendations"],
-  ["Model choice was earned", "TFT trained on GPU — and rejected", "LightGBM won all three cities on held-out skill"],
-  ["The loop is fast", "seconds from signal to cited action", "live per-node agent traces, target under 5 minutes"],
+  ["Forecast beats real baselines", "Delhi +9 / +13 / +12% · Mumbai +17 / +19 / +21% at 24/48/72 h", "multi-season temporal split (2025-26 winter + summer 2026), monthly refit on the trailing 90 d; served forecast = LightGBM blended with persistence; vs persistence and weekly seasonal-naive — the raw model's weaker numbers ship too"],
+  ["It warns before the air turns", "51–54% of Very-Poor onsets flagged 1–3 days ahead", "alarm on the calibrated probability P ≥ 0.3 (precision 0.64–0.68); persistence catches 0% by construction; the Severe tail stays weak — stated, not hidden"],
+  ["Uncertainty is calibrated", "80% band → 78% measured · P(>120) Brier skill +51%", "conformal calibration; exceedance probabilities on every cell forecast drive the alarms"],
+  ["Enforcement is equitable", "no socio-economic inputs, by construction", "fairness audit on every live recommendation (n=390 at the July audit)"],
+  ["Model choice was earned", "TFT trained on GPU — and rejected", "LightGBM won every launch city on held-out skill"],
+  ["The loop is fast", "seconds from signal to cited recommendation", "live per-node agent traces; approval, dispatch and closure timestamped per action"],
 ];
 
 const DATA_SOURCES = ["CPCB / CAAQMS", "Sentinel-5P", "Sentinel-2", "Open-Meteo · ERA5", "NASA FIRMS", "OpenStreetMap", "GPW v4.11"];
 
-// Production snapshot, 19 July 2026 — real aggregates (live attribution mean
-// across Delhi cells; /comparison city averages). Colors match the console.
+// Fallback snapshot (production, 18 August 2026) — used only until GET /landing/snapshot
+// answers; the live payload replaces every number below. Colors match the console.
+const MIX_COLOR: Record<string, string> = { traffic: "#ef4444", transported: "#3b82f6", industrial: "#9333ea", construction_dust: "#ca8a04", biomass_burning: "#16a34a", other: "#6b7280" };
+const MIX_LABEL: Record<string, string> = { construction_dust: "construction dust", biomass_burning: "biomass burning" };
+type Snapshot = {
+  generated_at: string;
+  mix: { source: string; pct: number }[];
+  cities: { name: string; now: number | null; next: number | null; trend: string | null }[];
+  scale: { cells: number | null; sources: number | null; zones: number | null; recs: number | null };
+};
 const SNAPSHOT_MIX: Array<[string, number, string]> = [
   ["traffic", 50.2, "#ef4444"],
   ["transported", 13.5, "#3b82f6"],
@@ -93,22 +102,33 @@ const SNAPSHOT_MIX: Array<[string, number, string]> = [
   ["other", 10.6, "#6b7280"],
 ];
 const SNAPSHOT_CITIES: Array<[string, number, number, string]> = [
-  ["Delhi", 35.1, 58.4, "deteriorating"],
-  ["Bengaluru", 19.1, 13.4, "stable"],
-  ["Mumbai", 20.1, 14.2, "stable"],
+  ["Delhi", 38.3, 43.0, "stable"],
+  ["Jaipur", 40.5, 37.6, "stable"],
+  ["Ahmedabad", 32.2, 30.6, "stable"],
+  ["Kolkata", 26.1, 21.1, "stable"],
+  ["Hyderabad", 22.1, 21.8, "stable"],
+  ["Lucknow", 20.3, 19.4, "stable"],
+  ["Pune", 20.1, 16.4, "stable"],
+  ["Chennai", 16.7, 19.6, "stable"],
+  ["Bengaluru", 13.1, 10.2, "stable"],
+  ["Mumbai", 12.3, 19.7, "stable"],
 ];
 const SNAPSHOT_SCALE: Array<[string, string]> = [
-  ["6,394", "~1 km² cells modeled across 3 cities"],
-  ["547", "registered + satellite-detected sources"],
-  ["2,624", "vulnerability-scored zones (hospitals, schools, outdoor work)"],
-  ["390", "live enforcement recommendations"],
+  ["16,529", "~1 km² cells modeled across 10 cities"],
+  ["647", "registered + satellite-detected sources"],
+  ["5,495", "vulnerability-scored zones (hospitals, schools, outdoor work)"],
+  ["480", "live enforcement recommendations"],
 ];
 
 export default function Landing() {
   const [aqi, setAqi] = useState<number | null>(null);
   const [latencyS, setLatencyS] = useState<string | null>(null);
+  const [snap, setSnap] = useState<Snapshot | null>(null);
 
   useEffect(() => {
+    api<Snapshot>("/landing/snapshot")
+      .then((d) => { if (d && d.mix?.length && d.cities?.length) setSnap(d); })
+      .catch(() => {});
     api<AqiRow[]>("/aqi/current?city=delhi")
       .then((rows) => {
         const pm = rows.map((r) => r.pm25 ?? r.value).filter((v): v is number => typeof v === "number");
@@ -124,6 +144,22 @@ export default function Landing() {
   }, []);
 
   const cat = aqi !== null ? aqiCategory(aqi) : null;
+  const mix: Array<[string, number, string]> = snap
+    ? snap.mix.filter((m) => m.pct > 0).map((m) => [MIX_LABEL[m.source] ?? m.source, m.pct, MIX_COLOR[m.source] ?? "#6b7280"])
+    : SNAPSHOT_MIX;
+  const cities: Array<[string, number, number, string]> = snap
+    ? snap.cities.filter((c) => c.now !== null).map((c) => [c.name, Math.round((c.now ?? 0) * 10) / 10, Math.round((c.next ?? c.now ?? 0) * 10) / 10, c.trend ?? "stable"])
+    : SNAPSHOT_CITIES;
+  const fmt = (n: number | null | undefined, fallback: string) => (typeof n === "number" && n > 0 ? n.toLocaleString("en-IN") : fallback);
+  const scale: Array<[string, string]> = snap
+    ? [
+        [fmt(snap.scale.cells, SNAPSHOT_SCALE[0][0]), SNAPSHOT_SCALE[0][1]],
+        [fmt(snap.scale.sources, SNAPSHOT_SCALE[1][0]), SNAPSHOT_SCALE[1][1]],
+        [fmt(snap.scale.zones, SNAPSHOT_SCALE[2][0]), SNAPSHOT_SCALE[2][1]],
+        [fmt(snap.scale.recs, SNAPSHOT_SCALE[3][0]), SNAPSHOT_SCALE[3][1]],
+      ]
+    : SNAPSHOT_SCALE;
+  const asOf = snap ? new Date(snap.generated_at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "18 August 2026";
 
   return (
     <div className="min-h-full overflow-y-auto bg-white text-slate-700 antialiased" style={{ scrollBehavior: "smooth" }}>
@@ -144,7 +180,7 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-4">
             <a href="https://github.com/omkarrr88/VayuNetra" target="_blank" rel="noreferrer"
-              className="text-slate-400 transition-colors hover:text-slate-900" title="Source on GitHub" aria-label="Source on GitHub">
+              className="flex h-6 w-6 items-center justify-center text-slate-500 transition-colors hover:text-slate-900" title="Source on GitHub" aria-label="Source on GitHub">
               <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true"><path d={IC.github} /></svg>
             </a>
             <a href="/console" onClick={(e) => linkClick(e, "/console")}
@@ -167,12 +203,12 @@ export default function Landing() {
           India already measures its air — 900+ CAAQMS stations — yet a 2024 CAG audit found only 31% of
           monitored cities have any actionable response protocol. VayuNetra is that missing layer: it traces
           PM2.5 to its sources square-kilometre by square-kilometre, forecasts 72 hours ahead with calibrated
-          uncertainty, and turns both into cited enforcement notices and citizen alerts in four languages.
-          Live today for Delhi, Bengaluru and Mumbai — built entirely on free public infrastructure.
+          uncertainty, and turns both into cited enforcement notices and citizen alerts in eight languages.
+          Live today across 10 Indian cities — from Delhi to Lucknow — built entirely on free public infrastructure.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <a href="/console" onClick={(e) => linkClick(e, "/console")}
-            className="flex items-center gap-2 rounded-md bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-700">
+            className="flex items-center gap-2 rounded-md bg-sky-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-700">
             Open the console
             <Icon d={IC.arrow} className="h-4 w-4" />
           </a>
@@ -190,13 +226,13 @@ export default function Landing() {
             live
             {cat && (
               <>
-                <span className="text-slate-300">·</span>
-                Delhi AQI <span style={{ color: cat.color }} className="font-bold">{aqi} {cat.label}</span>
+                <span className="text-slate-400">·</span>
+                Delhi AQI <span style={{ background: cat.color, color: cat.text }} className="rounded px-1.5 py-0.5 font-bold">{aqi} {cat.label}</span>
               </>
             )}
             {latencyS && (
               <>
-                <span className="text-slate-300">·</span>
+                <span className="text-slate-400">·</span>
                 last pipeline run {latencyS}s end-to-end
               </>
             )}
@@ -218,14 +254,14 @@ export default function Landing() {
           <img src="/console.jpg" alt="VayuNetra operations console: source blame map with SHAP explanation, forecast, enforcement worklist and a Sentinel-2 evidence dossier"
             className="block w-full" width={2400} height={1500} />
         </div>
-        <p className="mt-3 text-center font-mono text-[11px] text-slate-400">
+        <p className="mt-3 text-center font-mono text-[11px] text-slate-500">
           The live console — a Delhi cell opened: attribution shares with the SHAP "why", 72 h forecast, and the enforcement dossier with real satellite evidence.
         </p>
       </div>
 
       {/* Data sources strip */}
       <div className="mx-auto max-w-6xl px-6 py-14">
-        <p className="text-center font-mono text-[11px] uppercase tracking-[0.2em] text-slate-400">
+        <p className="text-center font-mono text-[11px] uppercase tracking-[0.2em] text-slate-500">
           Built on public data infrastructure
         </p>
         <div className="mt-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 font-mono text-[13px] text-slate-500">
@@ -247,7 +283,7 @@ export default function Landing() {
                   {(() => {
                     const R = 15.9155; // circumference = 100
                     let off = 0;
-                    return SNAPSHOT_MIX.map(([, pct, color]) => {
+                    return mix.map(([, pct, color]) => {
                       const el = (
                         <circle
                           key={color + off}
@@ -261,7 +297,7 @@ export default function Landing() {
                   })()}
                 </svg>
                 <div className="space-y-1">
-                  {SNAPSHOT_MIX.map(([name, pct, color]) => (
+                  {mix.map(([name, pct, color]) => (
                     <div key={name} className="flex items-center gap-2 text-[12px] text-slate-600">
                       <span className="h-2.5 w-2.5 rounded-sm" style={{ background: color }} />
                       {name} <b className="text-slate-800">{pct}%</b>
@@ -274,24 +310,18 @@ export default function Landing() {
             {/* City PM2.5 now vs +24h */}
             <div>
               <h3 className="text-[14px] font-bold text-slate-900">City PM2.5 — now vs forecast +24h</h3>
-              <div className="mt-3 space-y-3">
-                {SNAPSHOT_CITIES.map(([name, now, next, trend]) => (
-                  <div key={name}>
-                    <div className="flex items-baseline justify-between text-[12px]">
-                      <span className="font-semibold text-slate-700">{name}</span>
-                      <span className={trend === "deteriorating" ? "text-red-600" : "text-emerald-600"}>{trend}</span>
+              <div className="mt-1 text-[10px] text-slate-500"><span className="inline-block h-2 w-3 rounded-sm bg-slate-400/70 align-middle" /> now &nbsp;·&nbsp; <span className="inline-block h-2 w-0.5 bg-blue-600 align-middle" /> +24h forecast &nbsp;·&nbsp; µg/m³, sorted by current level</div>
+              <div className="mt-3 space-y-1.5">
+                {cities.map(([name, now, next, trend]) => (
+                  <div key={name} className="flex items-center gap-2 text-[11px]">
+                    <span className="w-[4.6rem] shrink-0 truncate font-semibold text-slate-700">{name}</span>
+                    <div className="relative h-2.5 flex-1 rounded-full bg-slate-100" title={`now ${now} · +24h ${next} µg/m³ · ${trend}`}>
+                      <div className="absolute inset-y-0 left-0 rounded-full bg-slate-400/70" style={{ width: `${Math.min(100, (Number(now) / 60) * 100)}%` }} />
+                      <div className="absolute inset-y-0 left-0 rounded-full border-r-2 border-blue-600" style={{ width: `${Math.min(100, (Number(next) / 60) * 100)}%` }} />
                     </div>
-                    <div className="mt-1 space-y-1">
-                      {[["now", now, "#94a3b8"], ["+24h", next, "#2563eb"] as const].map(([label, v, color]) => (
-                        <div key={String(label)} className="flex items-center gap-2">
-                          <span className="w-8 text-right font-mono text-[10px] text-slate-400">{label}</span>
-                          <div className="h-2.5 flex-1 rounded-full bg-slate-100">
-                            <div className="h-2.5 rounded-full" style={{ width: `${Math.min(100, (Number(v) / 60) * 100)}%`, background: String(color) }} />
-                          </div>
-                          <span className="w-8 font-mono text-[10px] text-slate-500">{v}</span>
-                        </div>
-                      ))}
-                    </div>
+                    <span className="w-14 shrink-0 text-right font-mono text-[10px] text-slate-500">
+                      {now}<span className="text-slate-400">→</span>{next}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -301,7 +331,7 @@ export default function Landing() {
             <div>
               <h3 className="text-[14px] font-bold text-slate-900">Running scale</h3>
               <div className="mt-3 grid grid-cols-2 gap-3">
-                {SNAPSHOT_SCALE.map(([n, label]) => (
+                {scale.map(([n, label]) => (
                   <div key={label} className="rounded-lg border border-slate-200 p-3">
                     <div className="text-xl font-extrabold tracking-tight text-slate-900">{n}</div>
                     <div className="mt-0.5 text-[11px] leading-4 text-slate-500">{label}</div>
@@ -310,9 +340,9 @@ export default function Landing() {
               </div>
             </div>
           </div>
-          <p className="mt-6 text-[11px] text-slate-400">
-            Live snapshot from the production system, 19 July 2026 — aggregated from real station measurements and model
-            attribution. Open the console for the current numbers.
+          <p className="mt-6 text-[11px] text-slate-500">
+            {snap ? "Live from the production system, as of " : "Snapshot from the production system, "}{asOf} — aggregated from real station measurements
+            and the latest attribution run; refreshed every 10 minutes. Open the console for the cell-level numbers.
           </p>
         </div>
       </section>
@@ -333,7 +363,7 @@ export default function Landing() {
               <div key={s.title}>
                 <div className="flex items-center gap-3">
                   <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-100 text-sky-700"><Icon d={s.icon} /></span>
-                  <span className="font-mono text-[11px] text-slate-400">0{i + 1}</span>
+                  <span className="font-mono text-[11px] text-slate-500">0{i + 1}</span>
                 </div>
                 <h3 className="mt-3 text-[15px] font-semibold text-slate-900">{s.title}</h3>
                 <p className="mt-1.5 text-[13px] leading-relaxed text-slate-600">{s.body}</p>
@@ -394,13 +424,14 @@ export default function Landing() {
             Every number is checked — including the failures.
           </h2>
           <p className="mt-3 max-w-2xl text-[15px] text-slate-600">
-            Each claim below is reproducible from the evaluation notebook in the repository. Where a method
-            underperformed, that result ships too.
+            Each claim below is reproducible from the repository — the evaluation notebook and{" "}
+            <code className="rounded bg-slate-100 px-1 text-[13px]">python -m ml.eval.benchmark</code>, whose
+            artifacts the API serves and the console prints. Where a method underperformed, that result ships too.
           </p>
           <div className="mt-8 overflow-x-auto">
             <table className="w-full min-w-[640px] border-collapse text-left">
               <thead>
-                <tr className="border-b border-slate-300 font-mono text-[11px] uppercase tracking-wider text-slate-400">
+                <tr className="border-b border-slate-300 font-mono text-[11px] uppercase tracking-wider text-slate-500">
                   <th className="py-3 pr-4 font-medium">Claim</th>
                   <th className="py-3 pr-4 font-medium">Result</th>
                   <th className="py-3 font-medium">Method</th>
@@ -425,9 +456,9 @@ export default function Landing() {
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-8 px-6 py-14 lg:flex-row lg:items-center">
           <div>
             <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">See it running on live data.</h2>
-            <p className="mt-1 text-[14px] text-slate-600">Three cities, real measurements, no sign-up.</p>
+            <p className="mt-1 text-[14px] text-slate-600">Ten cities, real measurements, no sign-up.</p>
             <a href="/console" onClick={(e) => linkClick(e, "/console")}
-              className="mt-5 inline-flex items-center gap-2 rounded-md bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-700">
+              className="mt-5 inline-flex items-center gap-2 rounded-md bg-sky-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-700">
               Open the console
               <Icon d={IC.arrow} className="h-4 w-4" />
             </a>
@@ -436,12 +467,12 @@ export default function Landing() {
             <div className="rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm">
               <img src="/qr-app.svg" alt="QR code — open the VayuNetra app" className="mx-auto h-28 w-28" width={112} height={112} />
               <p className="mt-2 text-xs font-semibold text-slate-700">Open on your phone</p>
-              <p className="font-mono text-[11px] text-slate-400">vayunetra-aqi.vercel.app</p>
+              <p className="font-mono text-[11px] text-slate-500">vayunetra-aqi.vercel.app</p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm">
               <img src="/qr-telegram.svg" alt="QR code — subscribe to air-quality alerts on Telegram" className="mx-auto h-28 w-28" width={112} height={112} />
               <p className="mt-2 text-xs font-semibold text-slate-700">Subscribe on Telegram</p>
-              <p className="font-mono text-[11px] text-slate-400">/start → pick your city</p>
+              <p className="font-mono text-[11px] text-slate-500">/start → pick your city</p>
             </div>
           </div>
         </div>
@@ -456,29 +487,29 @@ export default function Landing() {
               VayuNetra
             </div>
             <p className="mt-2 max-w-xs text-[12px] leading-relaxed text-slate-500">
-              Air-quality intelligence for smart-city intervention. Delhi · Bengaluru · Mumbai.
+              Air-quality intelligence for smart-city intervention. Live in 10 Indian cities.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-10 text-[13px] sm:grid-cols-3">
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-wider text-slate-400">Product</p>
+              <p className="font-mono text-[10px] uppercase tracking-wider text-slate-500">Product</p>
               <div className="mt-2 space-y-1.5 text-slate-600">
-                <a href="/console" onClick={(e) => linkClick(e, "/console")} className="block transition-colors hover:text-slate-900">Console</a>
-                <a href="#how" className="block transition-colors hover:text-slate-900">How it works</a>
-                <a href="#architecture" className="block transition-colors hover:text-slate-900">Architecture</a>
-                <a href="#validation" className="block transition-colors hover:text-slate-900">Validation</a>
+                <a href="/console" onClick={(e) => linkClick(e, "/console")} className="block py-0.5 transition-colors hover:text-slate-900">Console</a>
+                <a href="#how" className="block py-0.5 transition-colors hover:text-slate-900">How it works</a>
+                <a href="#architecture" className="block py-0.5 transition-colors hover:text-slate-900">Architecture</a>
+                <a href="#validation" className="block py-0.5 transition-colors hover:text-slate-900">Validation</a>
               </div>
             </div>
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-wider text-slate-400">Resources</p>
+              <p className="font-mono text-[10px] uppercase tracking-wider text-slate-500">Resources</p>
               <div className="mt-2 space-y-1.5 text-slate-600">
-                <a href="https://github.com/omkarrr88/VayuNetra" target="_blank" rel="noreferrer" className="block transition-colors hover:text-slate-900">GitHub</a>
-                <a href="https://vayunetra-c8i8.onrender.com/docs" target="_blank" rel="noreferrer" className="block transition-colors hover:text-slate-900">API reference</a>
-                <a href="https://vayunetra-c8i8.onrender.com/health" target="_blank" rel="noreferrer" className="block transition-colors hover:text-slate-900">API status</a>
+                <a href="https://github.com/omkarrr88/VayuNetra" target="_blank" rel="noreferrer" className="block py-0.5 transition-colors hover:text-slate-900">GitHub</a>
+                <a href="https://vayunetra-c8i8.onrender.com/docs" target="_blank" rel="noreferrer" className="block py-0.5 transition-colors hover:text-slate-900">API reference</a>
+                <a href="https://vayunetra-c8i8.onrender.com/health" target="_blank" rel="noreferrer" className="block py-0.5 transition-colors hover:text-slate-900">API status</a>
               </div>
             </div>
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-wider text-slate-400">Team</p>
+              <p className="font-mono text-[10px] uppercase tracking-wider text-slate-500">Team</p>
               <div className="mt-2 space-y-1.5 text-slate-600">
                 <span className="block">Omkar Kadam</span>
                 <span className="block">Abhinav Prasad</span>
@@ -487,7 +518,7 @@ export default function Landing() {
             </div>
           </div>
         </div>
-        <div className="border-t border-slate-200 py-4 text-center font-mono text-[11px] text-slate-400">
+        <div className="border-t border-slate-200 py-4 text-center font-mono text-[11px] text-slate-500">
           © 2026 VayuNetra · open source · built for ET AI Hackathon 2026 · ₹0 infrastructure
         </div>
       </footer>

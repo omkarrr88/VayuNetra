@@ -1,7 +1,7 @@
 """VayuNetra Enforcement UI Panel — web component (enforcement.html).
 
 Standalone HTML page for the enforcement worklist + dossier view.
-Can be embedded in Sejal's React app shell as an iframe or converted to a
+Can be embedded in the React app shell as an iframe or converted to a
 React component. Reads from the FastAPI /enforcement and /enforcement/{id}/dossier
 endpoints (VITE_API_BASE_URL or localhost:8000 in dev).
 

@@ -75,7 +75,7 @@ function NodeIcon({ d, color }: { d: string; color: string }) {
 function Timeline({ steps }: { steps: TraceStep[] }) {
   if (!steps.length) {
     return (
-      <div className="mt-2 rounded-md border border-dashed border-slate-200 p-3 text-center text-xs text-gray-400">
+      <div className="mt-2 rounded-md border border-dashed border-slate-200 p-3 text-center text-xs text-gray-500">
         No trace yet — press "Run agents live" to watch the pipeline think.
       </div>
     );
@@ -127,8 +127,8 @@ function Timeline({ steps }: { steps: TraceStep[] }) {
                 <span className="z-10 flex h-[23px] w-[23px] shrink-0 items-center justify-center rounded-full border border-dashed border-slate-300 bg-white">
                   <NodeIcon d={node.icon} color="#94a3b8" />
                 </span>
-                <span className="w-24 shrink-0 font-medium text-slate-400">{node.label}</span>
-                <span className="text-[10.5px] italic text-slate-400">
+                <span className="w-24 shrink-0 font-medium text-slate-500">{node.label}</span>
+                <span className="text-[10.5px] italic text-slate-500">
                   {name === "enforcement" ? "skipped — air is clean, nothing to enforce" : "not in this run"}
                 </span>
               </div>
@@ -157,7 +157,7 @@ function Timeline({ steps }: { steps: TraceStep[] }) {
                     }}
                     aria-hidden="true"
                   />
-                  <span className="font-mono text-[10px] text-gray-400">{(stepMs[i] / 1000).toFixed(1)}s</span>
+                  <span className="font-mono text-[10px] text-gray-500">{(stepMs[i] / 1000).toFixed(1)}s</span>
                 </span>
               )}
             </div>
@@ -169,8 +169,8 @@ function Timeline({ steps }: { steps: TraceStep[] }) {
           <span className="z-10 flex h-[23px] w-[23px] shrink-0 items-center justify-center rounded-full border border-dashed border-slate-300 bg-white">
             <NodeIcon d={MULTICITY.icon} color="#94a3b8" />
           </span>
-          <span className="w-24 shrink-0 font-medium text-slate-400">{MULTICITY.label}</span>
-          <span className="text-[10.5px] italic text-slate-400">cross-city playbooks — see the Cities section</span>
+          <span className="w-24 shrink-0 font-medium text-slate-500">{MULTICITY.label}</span>
+          <span className="text-[10.5px] italic text-slate-500">cross-city playbooks — see the Cities section</span>
         </div>
       </div>
     </div>
@@ -225,7 +225,7 @@ export default function TraceViewer({ city }: { city: string }) {
         ) : undefined
       }
     >
-      <div className="text-[11px] text-gray-400">last multi-agent run · detect → decide → issue</div>
+      <div className="text-[11px] text-gray-500">last multi-agent run · detect → decide → issue</div>
       <Timeline steps={steps} />
       <button
         onClick={runLive}

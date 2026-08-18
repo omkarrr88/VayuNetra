@@ -63,3 +63,5 @@ logs/
 .coverage
 web/test-results/
 web/playwright-report/
+docs/sources/
+docs/pitch/render/

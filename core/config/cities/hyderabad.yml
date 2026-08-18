@@ -1,0 +1,15 @@
+# City onboarding config — Hyderabad. Added for the 10-city expansion (Aug 2026).
+city_id: hyderabad
+name: Hyderabad
+state: TG
+bbox: [78.20, 17.20, 78.70, 17.60]
+center: [78.47, 17.39]
+languages: [te, en, hi]
+h3_res: 8
+# optional pin-list — ingestion discovers stations by bbox (see delhi.yml)
+caaqms_station_ids: []
+ward_geojson_ref: "data/wards/hyderabad.geojson"
+regulatory:
+  authority: "Telangana State Pollution Control Board (TSPCB)"
+  grap_applies: false
+active: true

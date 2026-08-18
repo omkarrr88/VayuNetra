@@ -1,8 +1,1 @@
-[
-  { "city_id": "delhi", "name": "Delhi", "state": "DL", "center": [77.21, 28.61],
-    "bbox": [76.84, 28.40, 77.35, 28.88], "languages": ["hi", "en"], "active": true },
-  { "city_id": "bengaluru", "name": "Bengaluru", "state": "KA", "center": [77.59, 12.97],
-    "bbox": [77.45, 12.83, 77.75, 13.14], "languages": ["kn", "en"], "active": true },
-  { "city_id": "mumbai", "name": "Mumbai", "state": "MH", "center": [72.87, 19.07],
-    "bbox": [72.77, 18.89, 72.99, 19.27], "languages": ["mr", "en", "hi"], "active": true }
-]
+[{"city_id":"delhi","name":"Delhi","state":"DL","center":[77.21,28.61],"bbox":[76.84,28.4,77.35,28.88],"languages":["hi","en"],"active":true},{"city_id":"bengaluru","name":"Bengaluru","state":"KA","center":[77.59,12.97],"bbox":[77.45,12.83,77.75,13.14],"languages":["kn","en"],"active":true},{"city_id":"mumbai","name":"Mumbai","state":"MH","center":[72.87,19.07],"bbox":[72.77,18.89,72.99,19.27],"languages":["mr","en","hi"],"active":true},{"city_id":"hyderabad","name":"Hyderabad","state":"TG","center":[78.47,17.39],"bbox":[78.2,17.2,78.7,17.6],"languages":["en","hi"],"active":true},{"city_id":"chennai","name":"Chennai","state":"TN","center":[80.27,13.08],"bbox":[80.1,12.85,80.35,13.25],"languages":["en"],"active":true},{"city_id":"kolkata","name":"Kolkata","state":"WB","center":[88.36,22.57],"bbox":[88.2,22.45,88.5,22.75],"languages":["en","hi"],"active":true},{"city_id":"pune","name":"Pune","state":"MH","center":[73.86,18.52],"bbox":[73.7,18.4,74.0,18.65],"languages":["mr","en"],"active":true},{"city_id":"ahmedabad","name":"Ahmedabad","state":"GJ","center":[72.58,23.02],"bbox":[72.45,22.9,72.75,23.15],"languages":["en","hi"],"active":true},{"city_id":"jaipur","name":"Jaipur","state":"RJ","center":[75.79,26.91],"bbox":[75.7,26.75,75.95,27.05],"languages":["hi","en"],"active":true},{"city_id":"lucknow","name":"Lucknow","state":"UP","center":[80.95,26.85],"bbox":[80.85,26.75,81.05,26.95],"languages":["hi","en"],"active":true}]

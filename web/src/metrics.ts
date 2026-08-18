@@ -33,7 +33,7 @@ export const FORECAST_SKILL: Record<string, CitySkill> = {
 
 export const SKILL_ASOF = "2026-07-06";
 
-// Fairness audit over the LIVE enforcement recommendations (all 3 cities).
+// Fairness audit over the LIVE enforcement recommendations (measured on the 3 launch cities; re-audit pending for the 7 added Aug 2026).
 // Computed 2026-07-19 on n=390 recs: Pearson r of priority_score vs each
 // disclosed input, and the partial correlation of population exposure after
 // controlling for pollution contribution. The scorer's ONLY inputs are

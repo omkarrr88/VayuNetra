@@ -1,4 +1,4 @@
-"""E2 — 1 km downscaling CNN.  Owner: Sejal.
+"""E2 — 1 km downscaling CNN.
 
 Learned spatial super-resolution (PRD §12.8 / ARCH §9.6): fuse a coarse PM2.5
 field (sparse stations + AOD→PM2.5) with a high-resolution land-use covariate to

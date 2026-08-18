@@ -14,8 +14,12 @@ import fxLatency from "./fixtures/latency.json";
 import fxDossier from "./fixtures/dossier.json";
 import fxSimulate from "./fixtures/simulate.json";
 import fxRoi from "./fixtures/roi.json";
+import fxInterventionsDelhi from "./fixtures/interventions_delhi.json";
+import fxAttrMethods from "./fixtures/attribution_methods.json";
 import fxStatic from "./fixtures/static_layers.json";
 import fxCoverage from "./fixtures/coverage.json";
+import fxTrend from "./fixtures/history_trend.json";
+import fxBench from "./fixtures/benchmarks.json";
 
 const BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 // Supabase anon key — safe to expose in the browser (publishable by design).
@@ -25,6 +29,10 @@ const TOKEN = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 // demo-snapshot fallback. 25s tolerates warm-but-slow; a true cold start
 // (30-60s) still falls back — which is exactly what the insurance is for.
 const TIMEOUT_MS = 25_000;
+// The live agent run regenerates a spiking city's whole enforcement worklist —
+// legitimately slower than any read. It gets its own generous budget instead
+// of the read timeout (which would abort a run the server happily finishes).
+const AGENT_RUN_TIMEOUT_MS = 240_000;
 
 export const API_BASE = BASE;
 export const API_TOKEN = TOKEN;
@@ -64,6 +72,23 @@ function fixtureFor(path: string): unknown {
   }
   if (p === "/enforcement") return byCity(fxEnforcement as Row[], city);
   if (/^\/enforcement\/\d+\/dossier$/.test(p)) return fxDossier;
+  if (p === "/history/trend") {
+    // real captured daily series per city (30/90/365d); nearest range wins
+    const days = Number(url.searchParams.get("days") ?? 90);
+    const key = String([365, 90, 30].reduce((a, b) => (Math.abs(b - days) < Math.abs(a - days) ? b : a)));
+    const perCity = (fxTrend as Record<string, Record<string, unknown>>)[city ?? "delhi"];
+    const entry = (perCity?.[key] ?? {}) as { series?: unknown[]; verdict?: unknown; days_of_history?: number };
+    return { city_id: city ?? "delhi", days, series: entry.series ?? [], verdict: entry.verdict ?? null,
+             days_of_history: entry.days_of_history ?? 0, note: url.searchParams.get("cell") ? "city-level history (offline snapshot)" : null };
+  }
+  if (p === "/metrics/benchmark") {
+    const byId = fxBench as Record<string, unknown>;
+    return byId[city ?? "delhi"] ?? byId["delhi"];
+  }
+  if (p === "/exposure") return undefined; // no offline fixture: the card simply hides itself
+  if (p === "/metrics/interventions") return (city ?? "delhi") === "delhi" ? fxInterventionsDelhi : undefined; // Delhi's published artifact
+  if (p === "/metrics/attribution") return fxAttrMethods; // production breakdown, 18 Aug 2026
+  if (p === "/landing/snapshot") return undefined; // the landing keeps its bundled snapshot
   if (p === "/comparison") return fxComparison;
   if (p === "/latency") return fxLatency;
   if (p === "/simulate") return fxSimulate;
@@ -100,7 +125,8 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   }
   const method = (init?.method ?? "GET").toUpperCase();
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+  const isAgentRun = new URL(path, "http://x").pathname === "/agent/query";
+  const timer = setTimeout(() => ctrl.abort(), isAgentRun ? AGENT_RUN_TIMEOUT_MS : TIMEOUT_MS);
   try {
     const res = await fetch(`${BASE}${path}`, { ...init, headers, signal: ctrl.signal });
     const env = (await res.json()) as Envelope<T>;

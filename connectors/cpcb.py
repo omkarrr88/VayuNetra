@@ -1,4 +1,4 @@
-"""CPCB CAAQMS connector via data.gov.in.  Owner: Omkar.  Spec: ARCHITECTURE.md §7.1; PRD §11.
+"""CPCB CAAQMS connector via data.gov.in.  Spec: ARCHITECTURE.md §7.1; PRD §11.
 
 The authoritative Indian ground source — real-time AQI per CPCB station (a *current
 snapshot*, not history; complements OpenAQ's hourly series). Maps each station to its H3
@@ -91,10 +91,19 @@ def rows_from_records(city_id: str, records: list[dict], h3_res: int = 8) -> lis
 
 
 # data.gov.in city labels differ from our city_ids (and sometimes use old names).
+# Cities not listed here fall back to their config display name, which matches
+# for most; add an entry whenever the registry uses a different/older label.
 CITY_ALIASES = {
     "delhi": ["Delhi"],
     "bengaluru": ["Bengaluru", "Bangalore"],
     "mumbai": ["Mumbai"],
+    "hyderabad": ["Hyderabad"],
+    "chennai": ["Chennai", "Madras"],
+    "kolkata": ["Kolkata", "Calcutta"],
+    "pune": ["Pune"],
+    "ahmedabad": ["Ahmedabad"],
+    "jaipur": ["Jaipur"],
+    "lucknow": ["Lucknow"],
 }
 
 
@@ -136,9 +145,9 @@ def fetch_city(city_id: str, limit: int = 500) -> list[dict]:
 def push_to_supabase(rows: list[dict]) -> None:
     from core.supa import client
 
-    client = client()
-    for i in range(0, len(rows), 500):
-        client.table("measurements").insert(rows[i : i + 500]).execute()
+    from core.supa import insert_measurements
+
+    insert_measurements(rows, client())
     print(f"pushed {len(rows)} CPCB measurements to Supabase")
 
 

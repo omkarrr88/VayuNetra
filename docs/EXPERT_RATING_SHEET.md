@@ -95,7 +95,7 @@ Rec ID: ________  City: ____________
 *In the app: Advisories section. Switch the language dropdown (English / Hindi / Kannada /
 Marathi) and the channel tabs (App / Telegram / IVR call / Big screen). Advisories are
 deliberately template-generated (no LLM) so health guidance cannot be hallucinated, and
-are targeted using 2,624 vulnerability-scored zones (hospitals, schools, outdoor work).*
+are targeted using 5,495 vulnerability-scored zones (hospitals, schools, outdoor work).*
 
 | # | Question | Score 1–5 |
 |---|---|---|

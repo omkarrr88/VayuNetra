@@ -32,4 +32,24 @@ export default defineConfig({
         }),
     ],
     server: { port: 5173 },
+    build: {
+        // Vendor chunks: the map stack and the chart lib download in parallel with the app
+        // code and stay cached across deploys; the landing page never pulls the map stack.
+        rollupOptions: {
+            output: {
+                manualChunks: function (id) {
+                    if (id.includes("node_modules")) {
+                        if (/maplibre-gl|@deck\.gl|deck\.gl|@luma\.gl|@loaders\.gl|@math\.gl|h3-js/.test(id))
+                            return "vendor-map";
+                        if (/recharts|d3-|victory-vendor/.test(id))
+                            return "vendor-charts";
+                        if (/react|scheduler/.test(id))
+                            return "vendor-react";
+                    }
+                    return undefined;
+                },
+            },
+        },
+        chunkSizeWarningLimit: 1200,
+    },
 });

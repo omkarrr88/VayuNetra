@@ -50,7 +50,7 @@ function LiveDot() {
   return (
     <span className="flex items-center gap-1 text-[11px] font-medium" title={on ? "Live feed connected" : "Live feed offline"}>
       <span className={`inline-block h-2 w-2 rounded-full ${on ? "animate-pulse bg-emerald-500" : "bg-gray-300"}`} />
-      <span className={on ? "text-emerald-600" : "text-gray-400"}>{on ? "LIVE" : "OFF"}</span>
+      <span className={on ? "text-emerald-700" : "text-gray-500"}>{on ? "LIVE" : "OFF"}</span>
     </span>
   );
 }
@@ -117,7 +117,7 @@ export default function AqiHeader({ city }: { city: string }) {
     chips.push(
       <span
         key="dust"
-        className="rounded-md bg-amber-600 px-1.5 py-0.5 text-[11px] font-bold text-white"
+        className="rounded-md bg-amber-700 px-1.5 py-0.5 text-[11px] font-bold text-white"
         title="Cells where construction dust AND traffic are both major contributors (attribution shares ≥25% each) — traffic resuspends construction dust, so these corridors escalate fastest"
       >
         🚧 Dust×Traffic · {compound.dust_traffic.count} cell{compound.dust_traffic.count > 1 ? "s" : ""}
@@ -146,7 +146,7 @@ export default function AqiHeader({ city }: { city: string }) {
                 {cat.label}
               </div>
               <div className="text-gray-500">worst cell · PM2.5 {Math.round(worst!)} µg/m³</div>
-              <div className="flex items-center gap-2 text-gray-400">
+              <div className="flex items-center gap-2 text-gray-500">
                 <span>data {agoLabel(latest)}</span>
                 <LiveDot />
               </div>

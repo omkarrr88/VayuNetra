@@ -1,7 +1,7 @@
 # VayuNetra — API Contract (F3)
 
 > **The app contract.** Frontends and agents code against *this*, not against each other.
-> Source: [ARCHITECTURE.md](ARCHITECTURE.md) §11. Owners: **Abhinav** (serve) + **Sejal** (consume).
+> Source: [ARCHITECTURE.md](ARCHITECTURE.md) §11.
 > Base URL (local): `http://localhost:8000` · Auth: Supabase JWT (Bearer) · All responses use the envelope below.
 
 ## Response envelope (every endpoint)
@@ -20,26 +20,49 @@
 
 ## Endpoints
 
-| Method | Path | Purpose | Role | Owner |
-|---|---|---|---|---|
-| GET | `/health` | liveness + `DEMO_MODE` flag | all | Abhinav |
-| GET | `/cities` | list onboarded cities | all | Abhinav |
-| GET | `/aqi/current?city&bbox` | live AQI per H3 cell | all | Abhinav |
-| GET | `/attribution?city&cell\|ward&ts` | source split + confidence (blame map) | officer+ | Abhinav |
-| GET | `/forecast?city&cell&horizon` | forecast + intervals + persistence | all | Abhinav |
-| GET | `/enforcement?city&date` | ranked enforcement recommendations | officer+ | Abhinav |
-| POST | `/enforcement/{id}/dossier` | cited evidence packet + satellite patch (E6) | officer+ | Abhinav |
-| GET | `/advisory?city&ward&lang` | localized citizen advisory | all | Abhinav |
-| GET | `/static-layers?city` | OSM/WorldPop-style sources, roads, vulnerability | all | Sejal |
-| GET | `/mobility?city` | traffic proxy measurements from OSM roads + time model | all | Sejal |
-| GET | `/comparison` | Agent 5 multi-city trends + playbook recommendations | all | Sejal |
-| GET | `/latency?city` | latest signal-to-action widget payload | all | Sejal |
-| POST | `/agent/query` | conversational orchestrator (NL → action) | officer+ | Abhinav |
-| POST | `/simulate` | what-if intervention → ΔAQI + people/₹/CO₂e (E3+E7, live) | officer+ | Omkar(E3)+Sejal(E7,UI) |
-| GET | `/roi?city` | City ROI: annual health burden + NCAP savings (E7) | all | Sejal |
-| POST | `/optimize` | best intervention bundle under budget → top-3 (E5, **deferred stub**) | officer+ | Abhinav(engine)+Sejal(UI) |
-| POST | `/admin/cities` | onboard a city via config (scalability demo) | admin | Abhinav |
-| WS | `/live` | push attribution/forecast/alert updates | all | Abhinav |
+| Method | Path | Purpose | Role |
+|---|---|---|---|
+| GET | `/health` | liveness + `DEMO_MODE` flag | all |
+| GET | `/cities` | list onboarded cities | all |
+| GET | `/aqi/current?city&bbox` | live AQI per H3 cell | all |
+| GET | `/attribution?city&cell\|ward&ts` | source split + confidence (blame map) | officer+ |
+| GET | `/forecast?city&cell&horizon` | forecast + intervals + persistence | all |
+| GET | `/enforcement?city&date` | ranked enforcement recommendations | officer+ |
+| GET | `/enforcement/{id}/dossier` | cited evidence packet + the real Sentinel-2 patch (E6) | officer+ |
+| GET | `/enforcement/{id}/notice.pdf` | draft enforcement notice PDF (addressee, cited provisions, satellite image, projected impact, provenance; stamped pending authorisation) | officer+ |
+| GET | `/sources/{source_id}/patch` | the real Sentinel-2 patch for one emission source (map hover) | all |
+| GET | `/interventions?city` | before/after effect tracking for dispatched actions (armed at dispatch; effect vs city drift) | all |
+| GET | `/interventions/export?city` | PRANA-ready CSV: every tracked action with baseline / after / effect / status / closure, mapped to its NCAP head | all |
+| GET | `/history?city&hours` · `/history/cells?city&hours` · `/history/trend?city&days&cell` | trailing PM2.5: city hourly (6–168 h), per-cell hourly for the map time-scrub (6–72 h), daily trend 7–365 d with verdict and spike days (raw ∪ archived rollup) | all |
+| GET | `/coverage?city` | E2 dense ~1 km PM2.5 field (downscaled from real anchors) + stations-only baseline | all |
+| GET | `/plume?city&top` | Gaussian-plume footprints for the top sources under current wind | all |
+| GET | `/clean-zones?city&top` | cleanest reachable places over the dense field | all |
+| GET | `/alerts/compound?city` | heat × pollution compound-risk alert | all |
+| GET | `/traces?city&limit` | per-node agent traces (signal → cited recommendation) | all |
+| POST | `/advisory/broadcast` | push the latest advisory through the live channels (Telegram + optional IVR); confirmation step + server-side rate limit | all (demo) |
+| POST | `/telegram/webhook` | Telegram bot: /start → city picker → subscription | Telegram |
+| GET/POST | `/ivr/inbound` · `/ivr/advisory` | Twilio voice: keypad menu of cities → the city's latest advisory (Hindi voice for Hindi-first cities) | Twilio |
+| POST | `/report` · GET `/reports?city` · POST `/report/{id}/status` | citizen pollution report (multipart, photo + location) → officer verification funnel (`verified` registers a candidate source) | all / officer+ |
+| GET | `/advisory?city&ward&lang` | localized citizen advisory | all |
+| GET | `/static-layers?city` | OSM/WorldPop-style sources, roads, vulnerability | all |
+| GET | `/mobility?city` | traffic proxy measurements from OSM roads + time model | all |
+| GET | `/comparison` | Agent 5 multi-city trends + playbook recommendations | all |
+| GET | `/latency?city` | latest signal-to-action widget payload | all |
+| POST | `/agent/query` | conversational orchestrator (NL → action) | officer+ |
+| POST | `/simulate` | what-if intervention → ΔAQI + people/₹/CO₂e (E3+E7, live) | officer+ |
+| GET | `/roi?city` | City ROI: annual health burden + NCAP savings (E7) | all |
+| POST | `/optimize` | best intervention bundle under budget → top-3 (E5, **deferred stub**) | officer+ |
+| POST | `/admin/cities` | onboard a city via config (scalability demo) | admin |
+| GET | `/metrics/benchmark?city&full` | temporal-split forecast benchmark artifact (skill, onset recall, calibration) | all |
+| GET | `/brief?city` · `/brief.pdf?city` | officer morning brief (JSON / one-page PDF): air now vs yesterday, onset cells (P ≥ 0.3), top actions, yesterday's outcomes | all |
+| POST | `/brief/send` | push the brief to the city's Telegram subscribers (rate-limited) | all (demo) |
+| POST | `/enforcement/{id}/status` | approve / dispatch / dismiss / **close** (`finding` required: violation_found · compliant · inaccessible · not_applicable; optional `actor`, `note`); server-side write, rate-limited; dispatch arms before/after tracking; every change appended to `enforcement_status_log` | all (demo) |
+| GET | `/enforcement/{id}/log` | audit trail of one action — from → to, actor, note, finding, time | all |
+| GET | `/metrics/attribution?city` | how today's attribution was produced per city: cells per method (per-cell model / shrunk / signature priors), median out-of-sample R², mean confidence, cells with a gas marker in 24 h | all |
+| GET | `/metrics/interventions?city` | real orders in hindsight artifact (`ml.eval.interventions`): early-warning replay before each GRAP order + weather-normalised effect per window, with sources | all |
+| GET | `/landing/snapshot` | the landing page's live "data at a glance": Delhi source mix, per-city PM2.5 now vs +24 h, running scale; 10-min cache | all |
+| GET | `/exposure?city` | expected people in Very Poor / Severe air at +24/48/72 h (calibrated, population-weighted) | all |
+| WS | `/live` | push attribution/forecast/alert updates | all |
 
 ## Representative payloads (shape only — fill from real data / fixtures)
 

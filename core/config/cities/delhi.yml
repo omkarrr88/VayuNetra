@@ -24,4 +24,10 @@ caaqms_station_ids: []
 # Path/ref to ward boundary GeoJSON (Storage/R2 or repo data/)
 ward_geojson_ref: "data/wards/delhi.geojson"
 
+# Which instruments legally bind here. GRAP/CAQM are statutory in Delhi-NCR
+# only — enforcement citations outside NCR must not lean on them.
+regulatory:
+  authority: "Delhi Pollution Control Committee (DPCC) · CAQM"
+  grap_applies: true
+
 active: true

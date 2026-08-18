@@ -1,4 +1,4 @@
-"""GTFS/OSM traffic proxy for Sejal's Stage-1 mobility feed.
+"""GTFS/OSM traffic proxy for the Stage-1 mobility feed.
 
 Real-time traffic APIs are paid or fragile. This connector creates a transparent,
 repeatable proxy from OSM-style road weights + hour/day multipliers and writes canonical
@@ -81,9 +81,9 @@ def build_mobility_rows(city_id: str, hours: int = 24, start: datetime | None = 
 def push_to_supabase(rows: list[dict]) -> None:
     from core.supa import client
 
-    c = client()
-    for i in range(0, len(rows), 500):
-        c.table("measurements").insert(rows[i : i + 500]).execute()
+    from core.supa import insert_measurements
+
+    insert_measurements(rows, client())
     print(f"pushed {len(rows)} mobility measurements")
 
 

@@ -43,7 +43,7 @@ This spec turns the PRD into something the team can build against tomorrow.
 |---|---|
 | **$0 / free-tier only** | Every component must have a genuine free tier; no paid infra. Documented limits + mitigations. |
 | **City-agnostic, multi-city from day one** | Universal spatial key (H3) + config-driven city onboarding; **no per-city code**. |
-| **Showcase: Delhi + Bengaluru + Mumbai** | Languages: **Hindi, English, Kannada, Marathi**. |
+| **Live: 10 cities** — Delhi, Bengaluru, Mumbai (launch) + Hyderabad, Chennai, Kolkata, Pune, Ahmedabad, Jaipur, Lucknow (Aug 2026, config-onboarded) | Languages: **Hindi, English, Kannada, Marathi** — new cities launch en/hi (Pune: mr) until native-speaker-reviewed templates exist for te/ta/bn/gu. |
 | **No domain expert** | Enforcement quality validated by a transparent **CPCB/GRAP-derived rubric proxy**, not claimed expert review. |
 | **2–3 person team, time not constrained** | Favor managed free services over self-hosting; minimize ops burden. |
 | **Multi-agent + geospatial + RAG** | The architecture must visibly embody all three (the organizers' signal). |
@@ -534,7 +534,7 @@ flowchart TB
 | Frontend | Vercel |
 | Scheduled compute | GitHub Actions cron |
 | Secrets | GitHub Actions secrets + Cloud Run env + Supabase vault |
-| Demo safety | **Demo Mode** (`DEMO_MODE=true`): a frozen, versioned, deterministic snapshot of all 3 cities (raw + precomputed agent outputs) runs the **entire scored demo offline** — zero live-API dependency; the live system is shown alongside. Plus pre-warm Cloud Run + OpenAQ fallback. |
+| Demo safety | **Demo Mode** (`DEMO_MODE=true`): a frozen, versioned, deterministic snapshot of all cities (raw + precomputed agent outputs) runs the **entire scored demo offline** — zero live-API dependency; the live system is shown alongside. Plus pre-warm Cloud Run + OpenAQ fallback. |
 
 ---
 

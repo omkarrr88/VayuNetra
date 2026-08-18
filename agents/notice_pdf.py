@@ -158,16 +158,19 @@ def _parse(text: str):
 class _Doc:
     W, H, M = 595, 842, 50
 
-    def __init__(self):
+    def __init__(self, watermark: str | None = "DRAFT"):
         self.pages, self.ops, self.y, self.pageno = [], [], self.H - self.M, 0
+        self.watermark = watermark
 
     @property
     def cw(self) -> float:
         return self.W - 2 * self.M
 
     def _watermark(self):
+        if not self.watermark:
+            return
         self.ops.append("BT /F2 92 Tf 0.930 0.930 0.945 rg "
-                        "0.7071 0.7071 -0.7071 0.7071 150 300 Tm (DRAFT) Tj ET")
+                        f"0.7071 0.7071 -0.7071 0.7071 150 300 Tm ({_pdf_esc(self.watermark)}) Tj ET")
 
     def start_page(self):
         self.pageno += 1
@@ -275,7 +278,15 @@ def _draw_impact_chart(d: "_Doc", chart: dict) -> None:
     d.y = ly - 14
 
 
-def notice_pdf_bytes(text: str, image_data_uri: str | None = None, impact_chart: dict | None = None) -> bytes:
+def notice_pdf_bytes(
+    text: str,
+    image_data_uri: str | None = None,
+    impact_chart: dict | None = None,
+    *,
+    subtitle: str = "Urban Air Quality Intelligence - Enforcement Cell",
+    tag: str = "DRAFT FOR OFFICER REVIEW",
+    watermark: str | None = "DRAFT",
+) -> bytes:
     """Render an enforcement-notice PDF (bytes) from plain/structured notice text.
 
     `image_data_uri` (base64 JPEG) is embedded where the notice text carries the
@@ -286,15 +297,15 @@ def notice_pdf_bytes(text: str, image_data_uri: str | None = None, impact_chart:
     """
     title, meta, blocks = _parse(_ascii(text))
     img = _jpeg_from_data_uri(image_data_uri)
-    d = _Doc()
+    d = _Doc(watermark=watermark)
     d.start_page()
 
     # Header band + accent stripe
     d.rect(0, d.H - 76, d.W, 76, NAVY)
     d.rect(0, d.H - 80, d.W, 4, ACCENT)
     d.text(d.M, d.H - 40, "VAYUNETRA", 22, True, WHITE)
-    d.text(d.M, d.H - 58, "Urban Air Quality Intelligence - Enforcement Cell", 9.5, False, (0.80, 0.85, 0.92))
-    tag = "DRAFT FOR OFFICER REVIEW"
+    d.text(d.M, d.H - 58, _ascii(subtitle), 9.5, False, (0.80, 0.85, 0.92))
+    tag = _ascii(tag)
     d.text(d.W - d.M - _text_w(tag, 9, True), d.H - 40, tag, 9, True, (0.80, 0.85, 0.92))
 
     # Title

@@ -33,7 +33,7 @@ type Step = {
 const STEPS: Step[] = [
   {
     title: "One city at a time",
-    body: "Pick Delhi, Bengaluru or Mumbai up here. Everything below — map, forecasts, actions — follows the city you choose.",
+    body: "Pick any of the 10 cities up here. Everything below — map, forecasts, actions — follows the city you choose.",
     place: "lg:translate-x-0 lg:translate-y-0 lg:left-56 lg:top-16",
     arrow: "up-left",
     target: "[data-tour=city]",
@@ -46,16 +46,23 @@ const STEPS: Step[] = [
     shrink: 0.42,
   },
   {
+    title: "Every section has a path",
+    body: "The strip at the top of the panel says what this section is for and the numbered steps through it. Click a number to jump; the cards below carry the same numbers. Every card's ? explains where its numbers come from.",
+    place: "lg:translate-x-0 lg:translate-y-0 lg:left-auto lg:right-[27rem] lg:top-20 2xl:right-[31rem]",
+    arrow: "right",
+    target: "[data-tour=spine]",
+  },
+  {
     title: "From blame to action",
-    body: "The Enforcement panel turns the science into a ranked officer worklist — each item carries cited evidence, a satellite dossier and a ready-to-send notice PDF.",
-    place: "lg:translate-x-0 lg:translate-y-0 lg:left-auto lg:right-[26.5rem] lg:top-24",
+    body: "Enforcement turns the science into a ranked officer worklist — each item carries cited evidence, a real satellite dossier and a draft notice PDF; then dispatch by ward and track the outcome.",
+    place: "lg:translate-x-0 lg:translate-y-0 lg:left-auto lg:right-[27rem] lg:top-40 2xl:right-[31rem]",
     arrow: "right",
     target: "[data-tour=panel]",
   },
   {
-    title: "Explore the rest",
-    body: "Forecast, citizen Advisories in 4 languages, city comparison, a what-if Simulator, health & ₹ Impact, and the live agent Pipeline — all in the sidebar.",
-    place: "lg:translate-x-0 lg:translate-y-0 lg:left-52 lg:top-1/3",
+    title: "Seven sections, three questions",
+    body: "Operate (Enforcement, Forecast, Advisories) · Understand (Cities, Impact) · Explore (Simulator, Pipeline). Keys 1–7 switch sections, [ ] switch cities, P is presentation mode.",
+    place: "lg:translate-x-0 lg:translate-y-0 lg:left-56 lg:top-1/3",
     arrow: "left",
     target: "[data-tour=sidebar]",
   },
@@ -168,7 +175,7 @@ export default function Tour({ onDone }: { onDone: () => void }) {
             </div>
             <div className="flex items-center gap-2">
               {!last && (
-                <button onClick={finish} className="text-[12px] font-medium text-slate-400 transition-colors hover:text-slate-600">
+                <button onClick={finish} className="text-[12px] font-medium text-slate-500 transition-colors hover:text-slate-600">
                   Skip
                 </button>
               )}

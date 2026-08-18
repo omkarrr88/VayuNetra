@@ -13,6 +13,13 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import sys
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parent.parent
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
+
 import core.env  # noqa: F401
 from connectors.vulnerability import OVERPASS_URLS, load_city
 
@@ -78,8 +85,10 @@ def fetch(city_id: str) -> dict:
 
 
 def main() -> None:
+    from core.cities import list_city_ids
+
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    for city in ("delhi", "bengaluru", "mumbai"):
+    for city in list_city_ids():
         fc = fetch(city)
         p = OUT_DIR / f"{city}.geojson"
         p.write_text(json.dumps(fc, separators=(",", ":")))

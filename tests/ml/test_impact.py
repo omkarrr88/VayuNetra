@@ -1,4 +1,4 @@
-"""E7 — health & carbon quantification tests (Sejal, Stage 2)."""
+"""E7 — health & carbon quantification tests (Stage 2)."""
 from ml.impact import city_roi, co2e_cobenefit, quantify_intervention
 from ml.impact import factors as F
 

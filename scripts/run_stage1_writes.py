@@ -1,4 +1,4 @@
-"""Run Sejal Stage-1 live writes into Supabase.
+"""Run the Stage-1 live writes into Supabase.
 
 This closes the handoff gap between code/fixtures and the live database:
 - emission_sources from static OSM/WorldPop-style layers
@@ -6,7 +6,7 @@ This closes the handoff gap between code/fixtures and the live database:
 - advisories in city languages plus English/Hindi/Kannada/Marathi coverage
 
 Run:
-  python scripts/run_sejal_stage1.py --push
+  python scripts/run_stage1_writes.py --push
 """
 from __future__ import annotations
 
@@ -16,9 +16,9 @@ from datetime import datetime, timezone
 from agents.advisory import build_advisories
 from connectors.mobility import build_mobility_rows
 from connectors.static_layers import build_static_layers, merge_all_cities
-from core.supa import client
+from core.supa import client, insert_measurements
 
-ALL_STAGE1_LANGS = ["en", "hi", "kn", "mr"]
+ALL_STAGE1_LANGS = ["en"]   # every city gets English; the rest come from its own config
 
 
 def _cities() -> list[dict]:
@@ -74,8 +74,7 @@ def _replace_mobility(city_ids: list[str], hours: int) -> int:
     for city_id in city_ids:
         c.table("measurements").delete().eq("city_id", city_id).eq("source", "osm_gtfs").execute()
         rows = build_mobility_rows(city_id, hours=hours, start=start)
-        for i in range(0, len(rows), 500):
-            c.table("measurements").insert(rows[i : i + 500]).execute()
+        insert_measurements(rows, c)
         total += len(rows)
     return total
 
@@ -116,7 +115,7 @@ def count_live() -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--push", action="store_true", help="write Stage-1 Sejal outputs into Supabase")
+    ap.add_argument("--push", action="store_true", help="write the Stage-1 outputs into Supabase")
     ap.add_argument("--hours", type=int, default=24)
     args = ap.parse_args()
 

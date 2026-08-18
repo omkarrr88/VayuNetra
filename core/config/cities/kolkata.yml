@@ -1,0 +1,15 @@
+# City onboarding config — Kolkata. Added for the 10-city expansion (Aug 2026).
+city_id: kolkata
+name: Kolkata
+state: WB
+bbox: [88.20, 22.45, 88.50, 22.75]
+center: [88.36, 22.57]
+languages: [bn, en, hi]
+h3_res: 8
+# optional pin-list — ingestion discovers stations by bbox (see delhi.yml)
+caaqms_station_ids: []
+ward_geojson_ref: "data/wards/kolkata.geojson"
+regulatory:
+  authority: "West Bengal Pollution Control Board (WBPCB)"
+  grap_applies: false
+active: true

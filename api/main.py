@@ -1,4 +1,4 @@
-"""VayuNetra API — FastAPI read-API + agent endpoints.  Owner: Abhinav.
+"""VayuNetra API — FastAPI read-API + agent endpoints.
 
 Every endpoint returns the standard {success, data, error, meta} envelope.
 In DEMO_MODE (default), all responses are served from demo/fixtures/* so the
@@ -16,6 +16,7 @@ import json
 import logging
 import math
 import os
+import threading
 import time
 import asyncio
 from datetime import datetime, timedelta, timezone
@@ -70,6 +71,40 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+def _warm_heavy_imports() -> None:
+    """Pre-import the heavy ML modules off the request path.
+
+    The first /coverage call pays ~20 s for `import torch` on a cold process — right at the
+    frontend's 25 s read timeout, which then shows the "backend waking up" banner even though
+    the backend is up. Importing in a daemon thread at startup makes the first real request
+    fast; if torch is not installed (lean deploy) this is a no-op.
+    """
+    import threading
+
+    def _load() -> None:
+        for mod in ("torch", "lightgbm"):
+            try:
+                __import__(mod)
+            except Exception:  # noqa: BLE001 — optional dependency
+                pass
+        # Then pre-compute the dense field for every city into the read cache (live mode only;
+        # WARM_ON_START=0 disables it, e.g. for tests). Failures are logged, never raised.
+        if DEMO_MODE or os.getenv("WARM_ON_START", "1") == "0":
+            return
+        try:
+            from core.cities import list_city_ids
+            for cid in list_city_ids():
+                try:
+                    _dense_field_cached(cid)
+                except Exception as e:  # noqa: BLE001
+                    logger.warning("warm coverage failed for %s: %s", cid, e)
+        except Exception as e:  # noqa: BLE001
+            logger.warning("warm-up skipped: %s", e)
+
+    threading.Thread(target=_load, name="warm-imports", daemon=True).start()
 
 
 # ---------------------------------------------------------------------------
@@ -240,6 +275,230 @@ def pm25_history(
         return _server_error("history_failed", e, "Could not load PM2.5 history right now.")
 
 
+# CPCB PM2.5 breakpoints (µg/m³) — the colour bands a layman already knows
+_PM25_BANDS = [(30, "good"), (60, "satisfactory"), (90, "moderate"), (120, "poor"), (250, "very_poor")]
+
+
+def _band(v: float) -> str:
+    for hi, name in _PM25_BANDS:
+        if v <= hi:
+            return name
+    return "severe"
+
+
+@app.get("/history/trend", tags=["data"])
+def pm25_trend(
+    city: str = Query("delhi", description="City ID"),
+    days: int = Query(90, ge=7, le=365),
+    cell: Optional[str] = Query(None, description="H3 cell — omit for the city mean"),
+) -> dict:
+    """Daily PM2.5 history for a city or a single ~1 km² cell, plus a plain-
+    language verdict, so anyone can read whether a place is getting better or
+    worse. Real station rows only; days with no readings are simply absent.
+
+    Verdict compares the latest 7-day mean with the 7 days that ended 30 days
+    earlier (falls back to the first week of the window when history is short)."""
+    if DEMO_MODE:
+        # Real daily series captured from production (all 10 cities, 30/90/365d)
+        # so the offline fallback shows the genuine history — Delhi's winter
+        # smog season included — instead of an empty chart on stage.
+        fx = fixture("history_trend", default={})
+        per_city = fx.get(city) if isinstance(fx, dict) else None
+        best_key = str(min((365, 90, 30), key=lambda k: abs(k - days)))
+        entry = (per_city or {}).get(best_key) or {}
+        return ok({"city_id": city, "cell": cell, "days": days,
+                   "series": entry.get("series") or [], "verdict": entry.get("verdict"),
+                   "days_of_history": entry.get("days_of_history", 0),
+                   "note": "city-level history (offline snapshot)" if cell and entry else None})
+    key = f"trend:{city}:{cell or '*'}:{days}"
+    now = time.time()
+    hit = _history_cache.get(key)
+    if hit and now - hit[0] < _HISTORY_TTL_S:
+        return ok(hit[1])
+    try:
+        # aggregate in SQL — raw rows through PostgREST cap out long before a
+        # year of readings and returned only the newest 2 days
+        sdb = _db()
+        rows = (sdb.rpc("pm25_daily_trend", {"p_city": city, "p_days": days, "p_cell": cell})
+                .execute().data) or []
+        proxy_cell = None
+        if cell and len(rows) < 10:
+            # No station inside this ~1 km² cell — use the nearest cell that has
+            # one (H3 ring search, ≤3 rings ≈ 3 km) and SAY so, rather than
+            # showing an empty chart for a place the model still attributes.
+            try:
+                import h3 as _h3
+
+                # distinct measured cells for the city (the attribution table is
+                # the cheap, complete index of them)
+                measured = {r["h3_cell"] for r in (
+                    sdb.table("attribution").select("h3_cell").eq("city_id", city)
+                    .limit(5000).execute().data or []) if r.get("h3_cell")}
+                measured.discard(cell)
+                own_rows = rows
+                proxy_dist = None
+                # nearest first, up to ~12 km — Delhi's monitors are sparse at the fringe
+                for dist, cand in sorted((_h3.grid_distance(cell, m), m) for m in measured):
+                    if dist > 12:
+                        break
+                    cand_rows = (sdb.rpc("pm25_daily_trend", {"p_city": city, "p_days": days, "p_cell": cand})
+                                 .execute().data) or []
+                    if len(cand_rows) >= 10:
+                        rows, proxy_cell, proxy_dist = cand_rows, cand, dist
+                        break
+                if proxy_cell is None:
+                    rows = own_rows  # keep whatever little the cell has
+            except Exception:  # noqa: BLE001 — fallback is best-effort
+                proxy_cell = None
+                proxy_dist = None
+        else:
+            proxy_dist = None
+        series = []
+        for r in rows:
+            try:
+                v = float(r.get("pm25"))
+            except (TypeError, ValueError):
+                continue
+            if r.get("day") and math.isfinite(v):
+                series.append({"date": str(r["day"])[:10], "pm25": round(v, 1),
+                               "n": int(r.get("n") or 0), "band": _band(v)})
+        series.sort(key=lambda p: p["date"])
+        verdict = None
+        if len(series) >= 10:
+            recent = [p["pm25"] for p in series[-7:]]
+            older_pool = series[:-7]
+            # the week ending ~30 days before the latest point, else the first week
+            older = [p["pm25"] for p in older_pool[-37:-30]] if len(older_pool) >= 37 else [p["pm25"] for p in older_pool[:7]]
+            if recent and older:
+                r_mean = sum(recent) / len(recent)
+                o_mean = sum(older) / len(older)
+                pct = round((r_mean - o_mean) / o_mean * 100) if o_mean else 0
+                direction = "worse" if pct > 5 else ("better" if pct < -5 else "about the same")
+                bands = [p["band"] for p in series[-30:]]
+                mode_band = max(set(bands), key=bands.count) if bands else None
+                verdict = {
+                    "recent_mean": round(r_mean, 1),
+                    "earlier_mean": round(o_mean, 1),
+                    "change_pct": pct,
+                    "direction": direction,
+                    "dominant_band_30d": mode_band,
+                    "days_of_history": len(series),
+                    "text": (f"{'Worse' if direction=='worse' else 'Better' if direction=='better' else 'About the same'} "
+                             f"than a month ago ({'+' if pct>0 else ''}{pct}%) · mostly "
+                             f"{(mode_band or 'unknown').replace('_',' ')} over the last 30 days"),
+                }
+        # Anomaly days: > baseline + 1.5 σ (baseline = trailing 14-day median),
+        # each with a one-line, data-backed "why" from what we already know.
+        anomalies: list[dict] = []
+        if len(series) >= 14:
+            import statistics as _st
+
+            vals = [p["pm25"] for p in series]
+            fires_by_day: dict[str, int] = {}
+            try:
+                fjson = json.loads((Path(__file__).resolve().parent.parent / "web" / "public" / "fires" / f"{city}.geojson").read_text())
+                for f in fjson.get("features", []):
+                    d0 = (f.get("properties") or {}).get("date")
+                    if d0:
+                        fires_by_day[d0] = fires_by_day.get(d0, 0) + 1
+            except Exception:  # noqa: BLE001 — layer file is optional
+                pass
+            for i in range(14, len(series)):
+                window = vals[i - 14:i]
+                med = _st.median(window)
+                sd = _st.pstdev(window) or 1.0
+                v = vals[i]
+                if v > med + 1.5 * sd and v > 60:
+                    d0 = series[i]["date"]
+                    why = []
+                    nf = fires_by_day.get(d0, 0)
+                    if nf:
+                        why.append(f"{nf} fire detection{'s' if nf > 1 else ''} in the city that day")
+                    try:
+                        wd = datetime.fromisoformat(d0).strftime("%A")
+                        if wd in ("Sunday",):
+                            why.append("a Sunday — not a traffic peak, so likely burning or a regional plume")
+                    except ValueError:
+                        wd = ""
+                    if not why:
+                        why.append(f"{round((v / med - 1) * 100)}% above the trailing two-week norm — check wind and upwind sources")
+                    anomalies.append({"date": d0, "pm25": v, "baseline": round(med, 1), "why": " · ".join(why)})
+        data = {"city_id": city, "cell": cell, "days": days, "series": series, "verdict": verdict,
+                "anomalies": anomalies[-8:],
+                "days_of_history": len(series), "proxy_cell": proxy_cell,
+                "proxy_km": proxy_dist,
+                "note": (f"no long station record inside this cell — showing the nearest monitored "
+                         f"cell, ~{proxy_dist} km away") if proxy_cell else None}
+        _history_cache[key] = (now, data)
+        return ok(data)
+    except Exception as e:  # noqa: BLE001
+        return _server_error("trend_failed", e, "Could not load PM2.5 trend right now.")
+
+
+_PATCH_TTL_S = 3600
+_patch_cache: dict[str, tuple[float, dict]] = {}
+
+
+@app.get("/sources/{source_id}/patch", tags=["data"])
+def source_patch(source_id: int) -> dict:
+    """The real Sentinel-2 patch for one emission source (for the map hover
+    card). One image per call, cached — the full patch set is ~30 MB and must
+    never ride along with /static-layers."""
+    if DEMO_MODE:
+        return ok({"source_id": source_id, "image_ref": None, "note": "no patch imagery in the offline snapshot"})
+    key = str(source_id)
+    now = time.time()
+    hit = _patch_cache.get(key)
+    if hit and now - hit[0] < _PATCH_TTL_S:
+        return ok(hit[1])
+    try:
+        rows = (_db().table("kb_chunks").select("title,image_ref,metadata")
+                .eq("modality", "image").eq("metadata->>source_id", key).limit(1).execute().data) or []
+        row = next((r for r in rows if r.get("image_ref")), None)
+        meta = (row or {}).get("metadata") or {}
+        data = {"source_id": source_id,
+                "image_ref": (row or {}).get("image_ref"),
+                "title": (row or {}).get("title"),
+                "placeholder": bool(meta.get("placeholder")),
+                "composite_window": meta.get("composite_window")}
+        _patch_cache[key] = (now, data)
+        return ok(data)
+    except Exception as e:  # noqa: BLE001
+        return _server_error("patch_failed", e, "Could not load the satellite patch.")
+
+
+@app.get("/history/cells", tags=["data"])
+def pm25_hourly_by_cell(
+    city: str = Query("delhi", description="City ID"),
+    hours: int = Query(24, ge=6, le=72),
+) -> dict:
+    """Hourly PM2.5 per monitored cell over the trailing window — the map
+    time-scrub ("play the last 24 hours"). Real station readings, hourly means."""
+    if DEMO_MODE:
+        return ok({"city_id": city, "hours": hours, "frames": [], "note": "offline snapshot has no hourly cell history"})
+    key = f"cells:{city}:{hours}"
+    now = time.time()
+    hit = _history_cache.get(key)
+    if hit and now - hit[0] < _HISTORY_TTL_S:
+        return ok(hit[1])
+    try:
+        rows = _db().rpc("pm25_hourly_cells", {"p_city": city, "p_hours": hours}).execute().data or []
+        frames: dict[str, dict[str, float]] = {}
+        for r in rows:
+            try:
+                v = float(r.get("pm25"))
+            except (TypeError, ValueError):
+                continue
+            if r.get("hour") and r.get("h3_cell") and math.isfinite(v):
+                frames.setdefault(str(r["hour"])[:13], {})[r["h3_cell"]] = round(v, 1)
+        data = {"city_id": city, "hours": hours,
+                "frames": [{"hour": f"{h}:00:00+00:00", "cells": cells} for h, cells in sorted(frames.items())]}
+        _history_cache[key] = (now, data)
+        return ok(data)
+    except Exception as e:  # noqa: BLE001
+        return _server_error("history_cells_failed", e, "Could not load hourly cell history.")
+
+
 # ---------------------------------------------------------------------------
 # Attribution
 # ---------------------------------------------------------------------------
@@ -304,7 +563,7 @@ def forecast(
 
     q = (
         db.table("forecasts")
-        .select("h3_cell,issued_at,horizon_h,target_var,value,pi_low,pi_high,persistence_value,model_version")
+        .select("h3_cell,issued_at,horizon_h,target_var,value,pi_low,pi_high,persistence_value,model_version,p_over_120,p_over_250,calibration_n")
         .eq("city_id", city)
     )
     if cell:
@@ -337,7 +596,7 @@ def enforcement_list(
         db.table("enforcement_recs")
         .select(
             "id,city_id,h3_cell,ts,source_id,priority_score,contribution,pop_exposed,"
-            "rationale,rag_citations,rubric_score,status"
+            "rationale,rag_citations,rubric_score,status,closed_at,closure_finding,closure_note"
         )
         .eq("city_id", city)
         .order("priority_score", desc=True)
@@ -355,7 +614,7 @@ def enforcement_dossier(rec_id: int, db=Depends(get_db)) -> dict:
     """Full evidence dossier for an enforcement recommendation, with RAG citations.
 
     Includes: rationale, regulatory citations, rubric score, suggested notice text,
-    and (Stage 2, Sejal E6) satellite patch.
+    and (Stage 2, E6) satellite patch.
     """
     if DEMO_MODE:
         return ok(fixture("dossier", default={"rec_id": rec_id, "citations": [], "satellite_patch": None}))
@@ -391,23 +650,69 @@ def enforcement_notice_pdf(rec_id: int, db=Depends(get_db)) -> Response:
 
 
 class StatusBody(BaseModel):
-    status: str = Field(..., pattern=r"^(proposed|approved|dispatched|dismissed)$")
+    status: str = Field(..., pattern=r"^(proposed|approved|dispatched|dismissed|closed)$")
+    actor: Optional[str] = Field(None, max_length=80, description="officer name as entered in the console")
+    note: Optional[str] = Field(None, max_length=500)
+    finding: Optional[str] = Field(None, pattern=r"^(violation_found|compliant|inaccessible|not_applicable)$",
+                                   description="required when status = closed")
+
+
+_STATUS_EVENTS: list[float] = []
+_STATUS_LOCK = threading.Lock()
+
+
+def _status_rate_ok(limit: int = 60, window_s: int = 60) -> bool:
+    """Process-local rate limit for officer status changes (a demo console, not a firehose)."""
+    now = time.time()
+    with _STATUS_LOCK:
+        while _STATUS_EVENTS and now - _STATUS_EVENTS[0] > window_s:
+            _STATUS_EVENTS.pop(0)
+        if len(_STATUS_EVENTS) >= limit:
+            return False
+        _STATUS_EVENTS.append(now)
+        return True
 
 
 @app.post("/enforcement/{rec_id}/status", tags=["enforcement"])
 def enforcement_update_status(rec_id: int, body: StatusBody, db=Depends(get_db)) -> dict:
-    """Update enforcement rec status (approved / dispatched / dismissed)."""
+    """Update enforcement rec status (approved / dispatched / dismissed / closed)."""
+    if body.status == "closed" and not body.finding:
+        raise HTTPException(status_code=422, detail="closing an action requires a finding")
     if DEMO_MODE:
         return ok({"rec_id": rec_id, "status": body.status, "demo": True})
 
-    db.table("enforcement_recs").update({"status": body.status}).eq("id", rec_id).execute()
+    # Officer action from the console. The caller still needs a valid token (get_db), but
+    # the write itself runs server-side with the service role — the anon role is read-only
+    # under RLS by design, and this endpoint is rate-limited below.
+    if not _status_rate_ok():
+        raise HTTPException(status_code=429, detail="too many status changes — slow down")
+    sdb = _db()
+    prev = (sdb.table("enforcement_recs").select("city_id,status").eq("id", rec_id).limit(1).execute().data or [None])[0]
+    if not prev:
+        raise HTTPException(status_code=404, detail=f"recommendation {rec_id} not found")
+    patch: dict = {"status": body.status}
+    if body.status == "closed":
+        patch.update({"closed_at": datetime.now(timezone.utc).isoformat(), "closure_finding": body.finding, "closure_note": body.note})
+    elif prev.get("status") == "closed":          # re-opened: the closure fields belong to the log, not the row
+        patch.update({"closed_at": None, "closure_finding": None, "closure_note": None})
+    upd = sdb.table("enforcement_recs").update(patch).eq("id", rec_id).execute()
+    if not (upd.data or []):
+        raise HTTPException(status_code=404, detail=f"recommendation {rec_id} not found")
+    # immutable audit trail — who moved it, from what, to what, when (never blocks the change)
+    try:
+        sdb.table("enforcement_status_log").insert({
+            "rec_id": rec_id, "city_id": prev.get("city_id"), "from_status": prev.get("status"),
+            "to_status": body.status, "actor": (body.actor or "").strip() or None,
+            "note": (body.note or "").strip() or None, "finding": body.finding,
+        }).execute()
+    except Exception as e:  # noqa: BLE001
+        logger.error("status log write failed for rec %s: %s", rec_id, e, exc_info=True)
 
     # First real dispatch arms the before/after effect measurement: freeze the
     # cell's trailing-7-day PM2.5 baseline now, so effectiveness is measurable
     # by design the moment an intervention actually happens in the world.
     if body.status == "dispatched":
         try:
-            sdb = _db()
             rec = (sdb.table("enforcement_recs").select("city_id,h3_cell")
                    .eq("id", rec_id).limit(1).execute().data or [None])[0]
             if rec:
@@ -428,6 +733,55 @@ def enforcement_update_status(rec_id: int, body: StatusBody, db=Depends(get_db))
     return ok({"rec_id": rec_id, "status": body.status})
 
 
+@app.get("/enforcement/{rec_id}/log", tags=["enforcement"])
+def enforcement_status_log(rec_id: int) -> dict:
+    """The audit trail of one action: every status change with actor, note, finding and time."""
+    if DEMO_MODE:
+        return ok({"rec_id": rec_id, "log": []})
+    rows = (_db().table("enforcement_status_log").select("from_status,to_status,actor,note,finding,created_at")
+            .eq("rec_id", rec_id).order("created_at", desc=False).limit(200).execute().data or [])
+    return ok({"rec_id": rec_id, "log": rows})
+
+
+def _interventions_data(city: str) -> dict:
+    """Before/after effect tracking for dispatched recs (shared by /interventions and the brief)."""
+    from core.interventions import effect_summary, mean
+
+    sdb = _db()
+    tracked = (sdb.table("intervention_tracking").select("*")
+               .eq("city_id", city).order("dispatched_at", desc=True)
+               .limit(20).execute().data or [])
+    if not tracked:
+        return {"city_id": city, "tracked": [],
+                "note": "No real-world intervention dispatched yet — tracking arms automatically at first dispatch."}
+
+    def city_mean(since: str, until: str | None = None) -> float | None:
+        q = (sdb.table("measurements").select("value").eq("city_id", city)
+             .eq("variable", "pm25").gte("ts", since).limit(5000))
+        if until:
+            q = q.lte("ts", until)
+        return mean([r.get("value") for r in (q.execute().data or [])])
+
+    out = []
+    for t in tracked:
+        cell_rows = (sdb.table("measurements").select("value")
+                     .eq("city_id", city).eq("variable", "pm25")
+                     .eq("h3_cell", t["h3_cell"]).gte("ts", t["dispatched_at"])
+                     .limit(2000).execute().data or [])
+        before7 = (datetime.fromisoformat(str(t["dispatched_at"]).replace("Z", "+00:00"))
+                   - timedelta(days=7)).isoformat()
+        summary = effect_summary(
+            baseline_pm25=t.get("baseline_pm25"),
+            cell_after=mean([r.get("value") for r in cell_rows]),
+            city_before=city_mean(before7, t["dispatched_at"]),
+            city_after=city_mean(t["dispatched_at"]),
+            dispatched_at=t["dispatched_at"],
+        )
+        out.append({"rec_id": t["rec_id"], "h3_cell": t["h3_cell"],
+                    "dispatched_at": t["dispatched_at"], **summary})
+    return {"city_id": city, "tracked": out}
+
+
 @app.get("/interventions", tags=["enforcement"])
 def interventions(city: str = Query("delhi", description="City ID")) -> dict:
     """Before/after effect tracking for dispatched enforcement recs.
@@ -440,43 +794,82 @@ def interventions(city: str = Query("delhi", description="City ID")) -> dict:
         return ok({"city_id": city, "tracked": [],
                    "note": "No real-world intervention dispatched yet — tracking arms automatically at first dispatch."})
     try:
-        from core.interventions import effect_summary, mean
-
-        sdb = _db()
-        tracked = (sdb.table("intervention_tracking").select("*")
-                   .eq("city_id", city).order("dispatched_at", desc=True)
-                   .limit(20).execute().data or [])
-        if not tracked:
-            return ok({"city_id": city, "tracked": [],
-                       "note": "No real-world intervention dispatched yet — tracking arms automatically at first dispatch."})
-
-        def city_mean(since: str, until: str | None = None) -> float | None:
-            q = (sdb.table("measurements").select("value").eq("city_id", city)
-                 .eq("variable", "pm25").gte("ts", since).limit(5000))
-            if until:
-                q = q.lte("ts", until)
-            return mean([r.get("value") for r in (q.execute().data or [])])
-
-        out = []
-        for t in tracked:
-            cell_rows = (sdb.table("measurements").select("value")
-                         .eq("city_id", city).eq("variable", "pm25")
-                         .eq("h3_cell", t["h3_cell"]).gte("ts", t["dispatched_at"])
-                         .limit(2000).execute().data or [])
-            before7 = (datetime.fromisoformat(str(t["dispatched_at"]).replace("Z", "+00:00"))
-                       - timedelta(days=7)).isoformat()
-            summary = effect_summary(
-                baseline_pm25=t.get("baseline_pm25"),
-                cell_after=mean([r.get("value") for r in cell_rows]),
-                city_before=city_mean(before7, t["dispatched_at"]),
-                city_after=city_mean(t["dispatched_at"]),
-                dispatched_at=t["dispatched_at"],
-            )
-            out.append({"rec_id": t["rec_id"], "h3_cell": t["h3_cell"],
-                        "dispatched_at": t["dispatched_at"], **summary})
-        return ok({"city_id": city, "tracked": out})
+        return ok(_interventions_data(city))
     except Exception as e:  # noqa: BLE001
         return _server_error("interventions_failed", e, "Could not load intervention tracking.")
+
+
+# NCAP action-plan spending heads, keyed by source category — the export maps
+# each measured intervention onto the head a city reports against on PRANA.
+_NCAP_HEAD = {
+    "construction": "C&D dust control",
+    "construction_dust": "C&D dust control",
+    "industry": "Industrial emission control",
+    "industrial": "Industrial emission control",
+    "waste_burn": "Solid waste / open-burning control",
+    "biomass_burning": "Solid waste / open-burning control",
+    "diesel_corridor": "Vehicular emission control",
+    "traffic": "Vehicular emission control",
+}
+
+
+@app.get("/interventions/export", tags=["enforcement"])
+def interventions_export(city: str = Query("delhi", description="City ID")) -> Response:
+    """PRANA-ready evidence export (CSV).
+
+    Every dispatched intervention with its measured before/after effect,
+    mapped to the NCAP action-plan head a city reports against — so the
+    platform's output drops straight into official NCAP/PRANA reporting
+    instead of competing with it.
+    """
+    tracked = []
+    if not DEMO_MODE:
+        payload = interventions(city)
+        body = payload.body if isinstance(payload, Response) else None
+        data = json.loads(body)["data"] if body else (payload.get("data") or {})
+        tracked = data.get("tracked") or []
+
+    sdb = None if DEMO_MODE else _db()
+    authority = ""
+    try:
+        from core.cities import load_city as _load_city_cfg
+
+        authority = (_load_city_cfg(city).get("regulatory") or {}).get("authority", "")
+    except Exception:
+        pass
+
+    lines = ["city,rec_id,h3_cell,source_name,source_category,ncap_head,dispatched_at,"
+             "baseline_pm25,after_pm25,effect_vs_city_drift,provisional,status,closed_at,closure_finding,reporting_authority"]
+    for t in tracked:
+        source_name, category = "", ""
+        status, closed_at, finding = "", "", ""
+        if sdb is not None:
+            try:
+                rec_rows = (sdb.table("enforcement_recs").select("source_id,evidence,status,closed_at,closure_finding")
+                            .eq("id", t["rec_id"]).limit(1).execute().data or [])
+                if rec_rows:
+                    status = rec_rows[0].get("status") or ""
+                    closed_at = rec_rows[0].get("closed_at") or ""
+                    finding = rec_rows[0].get("closure_finding") or ""
+                if rec_rows and rec_rows[0].get("source_id"):
+                    src = (sdb.table("emission_sources").select("name,type")
+                           .eq("id", rec_rows[0]["source_id"]).limit(1).execute().data or [])
+                    if src:
+                        source_name = (src[0].get("name") or "").replace(",", " ")
+                        category = src[0].get("type") or ""
+            except Exception:  # noqa: BLE001 — one bad row must not kill the export
+                pass
+        lines.append(",".join(str(v) for v in [
+            city, t.get("rec_id"), t.get("h3_cell"), source_name, category,
+            _NCAP_HEAD.get(category, "Other"), t.get("dispatched_at"),
+            t.get("baseline_pm25"), t.get("after_pm25"), t.get("effect"),
+            t.get("provisional"), status, closed_at, finding, authority.replace(",", " "),
+        ]))
+    csv_body = "\n".join(lines) + "\n"
+    return Response(
+        content=csv_body, media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="ncap_evidence_{city}.csv"'},
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -487,7 +880,7 @@ def interventions(city: str = Query("delhi", description="City ID")) -> dict:
 def advisory(
     city: str = Query(..., description="City ID"),
     ward: Optional[str] = Query(None, description="Ward name/ID"),
-    lang: str = Query("en", description="Language code: en|hi|kn|mr"),
+    lang: str = Query("en", description="Language code: en|hi|kn|mr|ta|te|bn|gu"),
     db=Depends(get_db)
 ) -> dict:
     """Ward-level citizen health advisories in specified language."""
@@ -519,21 +912,184 @@ _BROADCAST_WINDOW_S = 300
 _last_broadcast: dict[str, float] = {}
 
 
-def _latest_advisory(city: str) -> Optional[dict]:
-    """Freshest English advisory for a city (fixture rows in DEMO_MODE)."""
+# ---------------------------------------------------------------------------
+# Citizen reports — the complaint loop (photo -> candidate source -> SLA)
+# ---------------------------------------------------------------------------
+
+_REPORT_WINDOW_S = 60           # one report per client-IP per minute
+_last_report: dict[str, float] = {}
+_REPORT_CATEGORIES = {"waste_burning", "construction_dust", "industrial_smoke",
+                      "vehicle_smoke", "other"}
+# citizen category -> emission_sources type, used when an officer verifies
+_REPORT_SOURCE_TYPE = {
+    "waste_burning": "waste_burn",
+    "construction_dust": "construction",
+    "industrial_smoke": "industry",
+    "vehicle_smoke": "diesel_corridor",
+    "other": "industry",
+}
+_MAX_PHOTO_BYTES = 4_000_000
+
+
+@app.post("/report", tags=["citizen"])
+async def submit_report(request: Request) -> dict:
+    """Citizen pollution report: multipart form with lat/lng/category and an
+    optional photo. Public endpoint (rate-limited); the report enters the
+    enforcement funnel as a candidate source once an officer verifies it."""
+    ip = (request.client.host if request.client else "?")
+    now_s = time.time()
+    if now_s - _last_report.get(ip, 0) < _REPORT_WINDOW_S:
+        return err("rate_limited", "One report per minute — please retry shortly.")
+
+    form = await request.form()
+    city = str(form.get("city") or "").strip().lower()
+    category = str(form.get("category") or "").strip()
+    description = str(form.get("description") or "").strip()[:500]
+    try:
+        lat, lng = float(form.get("lat")), float(form.get("lng"))
+    except (TypeError, ValueError):
+        return err("bad_request", "lat and lng are required numbers")
+    if category not in _REPORT_CATEGORIES:
+        return err("bad_request", f"category must be one of {sorted(_REPORT_CATEGORIES)}")
+    if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+        return err("bad_request", "coordinates out of range")
+    try:
+        from core.cities import load_city as _lc
+        _lc(city)
+    except Exception:
+        return err("bad_request", f"unknown city '{city}'")
+
+    from core.spatial.h3_utils import latlng_to_cell
+    cell = latlng_to_cell(lat, lng, 8)
+
     if DEMO_MODE:
-        # strict city match — fixture_rows falls back to ALL rows for unknown
-        # cities, and speaking another city's advisory is worse than none
-        rows = [
-            r for r in fixture_rows("advisory", city)
-            if (r.get("language") or "en") == "en" and r.get("city_id") == city
-        ]
-    else:
-        rows = (
-            _db().table("advisories").select("*").eq("city_id", city)
-            .eq("language", "en").order("issued_at", desc=True).limit(1).execute().data
-        ) or []
-    return rows[0] if rows else None
+        _last_report[ip] = now_s
+        return ok({"report_id": 0, "h3_cell": cell, "status": "received",
+                   "note": "demo mode — report accepted but not persisted"})
+
+    photo_url = None
+    photo = form.get("photo")
+    if photo is not None and hasattr(photo, "read"):
+        blob = await photo.read()
+        if blob and len(blob) <= _MAX_PHOTO_BYTES:
+            try:
+                sdb = _db()
+                name = f"{city}/{int(now_s)}_{cell}.jpg"
+                sdb.storage.from_("citizen-reports").upload(
+                    name, blob, {"content-type": getattr(photo, "content_type", None) or "image/jpeg"})
+                photo_url = sdb.storage.from_("citizen-reports").get_public_url(name)
+            except Exception as e:  # noqa: BLE001 — a failed upload must not lose the report
+                logger.error("report photo upload failed: %s", e)
+
+    try:
+        row = (_db().table("citizen_reports").insert({
+            "city_id": city, "h3_cell": cell, "lat": lat, "lng": lng,
+            "category": category, "description": description, "photo_url": photo_url,
+        }).execute().data or [{}])[0]
+        _last_report[ip] = now_s
+        return ok({"report_id": row.get("id"), "h3_cell": cell,
+                   "status": row.get("status", "received"), "photo_url": photo_url,
+                   "sla_hours": row.get("sla_hours", 72)})
+    except Exception as e:  # noqa: BLE001
+        return _server_error("report_failed", e, "Could not record the report.")
+
+
+@app.get("/reports", tags=["citizen"])
+def list_reports(city: str = Query(..., description="City ID"),
+                 limit: int = Query(20, le=100)) -> dict:
+    """Public list of citizen reports with SLA state (transparency by design)."""
+    if DEMO_MODE:
+        return ok({"city_id": city, "reports": [],
+                   "note": "no citizen reports in demo fixtures"})
+    try:
+        rows = (_db().table("citizen_reports")
+                .select("id,h3_cell,lat,lng,category,description,photo_url,status,sla_hours,created_at,resolved_at")
+                .eq("city_id", city).order("created_at", desc=True)
+                .limit(limit).execute().data or [])
+        now_dt = datetime.now(timezone.utc)
+        for r in rows:
+            try:
+                created = datetime.fromisoformat(str(r["created_at"]).replace("Z", "+00:00"))
+                elapsed_h = (now_dt - created).total_seconds() / 3600
+                r["sla_remaining_h"] = round(r.get("sla_hours", 72) - elapsed_h, 1)
+                r["sla_breached"] = r["sla_remaining_h"] < 0 and r.get("status") not in ("resolved", "rejected")
+            except Exception:  # noqa: BLE001
+                r["sla_remaining_h"] = None
+                r["sla_breached"] = False
+        return ok({"city_id": city, "reports": rows})
+    except Exception as e:  # noqa: BLE001
+        return _server_error("reports_failed", e, "Could not load citizen reports.")
+
+
+@app.post("/report/{report_id}/status", tags=["citizen"])
+def update_report_status(report_id: int, payload: dict, db=Depends(get_db)) -> dict:
+    """Officer transition for a report. 'verified' also registers the location
+    as a candidate emission source so the next enforcement run scores it —
+    the complaint loop feeding the worklist."""
+    status = str(payload.get("status") or "").strip()
+    if status not in {"verified", "actioned", "resolved", "rejected"}:
+        return err("bad_request", "status must be verified|actioned|resolved|rejected")
+    if DEMO_MODE:
+        return ok({"report_id": report_id, "status": status, "note": "demo mode"})
+    try:
+        sdb = _db()
+        rows = sdb.table("citizen_reports").select("*").eq("id", report_id).limit(1).execute().data
+        if not rows:
+            return err("not_found", f"report {report_id} not found")
+        report = rows[0]
+        update: dict = {"status": status, "updated_at": datetime.now(timezone.utc).isoformat()}
+        if status in ("resolved", "rejected"):
+            update["resolved_at"] = datetime.now(timezone.utc).isoformat()
+
+        if status == "verified" and not report.get("source_id"):
+            src = (sdb.table("emission_sources").insert({
+                "city_id": report["city_id"],
+                "geom": f'POINT({report["lng"]} {report["lat"]})',
+                "type": _REPORT_SOURCE_TYPE.get(report["category"], "industry"),
+                "name": f"Citizen report #{report_id} ({report['category'].replace('_', ' ')})",
+                "source_origin": "citizen_report",
+                "detection_confidence": 0.5,
+                "attributes": {"citizen_report_id": report_id, "photo_url": report.get("photo_url")},
+            }).execute().data or [{}])[0]
+            if src.get("id"):
+                update["source_id"] = src["id"]
+        sdb.table("citizen_reports").update(update).eq("id", report_id).execute()
+        return ok({"report_id": report_id, **update})
+    except Exception as e:  # noqa: BLE001
+        return _server_error("report_status_failed", e, "Could not update the report.")
+
+
+def _latest_advisory(city: str, language: str = "en") -> Optional[dict]:
+    """Freshest advisory for a city in `language` (fixture rows in DEMO_MODE), English fallback."""
+    def _pick(lang: str) -> Optional[dict]:
+        if DEMO_MODE:
+            # strict city match — fixture_rows falls back to ALL rows for unknown
+            # cities, and speaking another city's advisory is worse than none
+            rows = [
+                r for r in fixture_rows("advisory", city)
+                if (r.get("language") or "en") == lang and r.get("city_id") == city
+            ]
+        else:
+            rows = (
+                _db().table("advisories").select("*").eq("city_id", city)
+                .eq("language", lang).order("issued_at", desc=True).limit(1).execute().data
+            ) or []
+        return rows[0] if rows else None
+    return _pick(language) or (_pick("en") if language != "en" else None)
+
+
+def _ivr_language(city: str) -> str:
+    """The language a call should be spoken in: the city's first showcase language if Polly
+    can voice it (Hindi), else English."""
+    try:
+        from channels.ivr import IVR_SPOKEN_LANGS
+        from core.cities import load_city
+        for lang in load_city(city).get("languages") or []:
+            if lang in IVR_SPOKEN_LANGS:
+                return lang
+    except Exception:  # noqa: BLE001
+        pass
+    return "en"
 
 
 class BroadcastBody(BaseModel):
@@ -626,7 +1182,7 @@ async def ivr_advisory(request: Request) -> Response:
             pass
     city_id, city_name = IVR_CITY_MENU.get(digits.strip(), IVR_CITY_MENU["1"])
     try:
-        adv = _latest_advisory(city_id)
+        adv = _latest_advisory(city_id, _ivr_language(city_id))
     except Exception as e:  # noqa: BLE001 — DB down must not kill the call
         logger.error("ivr advisory fetch failed for %s: %s", city_id, e, exc_info=True)
         adv = None
@@ -732,7 +1288,7 @@ def compound_alerts(city: str = Query("delhi", description="City ID"), db=Depend
 
 
 # ---------------------------------------------------------------------------
-# Sejal Stage-1 static layers, mobility, comparison, and latency widgets
+# Stage-1 static layers, mobility, comparison, and latency widgets
 # ---------------------------------------------------------------------------
 
 @app.get("/static-layers", tags=["data"])
@@ -774,6 +1330,14 @@ def mobility(city: str = Query(..., description="City ID")) -> dict:
     return ok(rows)
 
 
+# The comparison scans thousands of rows across all cities and its inputs only
+# change on the hourly ingest / daily model cron, so cache the built result —
+# a cold build measured 6.1 s, which the Cities panel would otherwise pay on
+# every open. Same TTL pattern as /plume.
+_COMPARISON_TTL_S = 300
+_comparison_cache: dict[str, tuple[float, dict]] = {}
+
+
 @app.get("/comparison", tags=["data"])
 def comparison() -> dict:
     """Agent 5 multi-city comparison: trends, signatures, and playbook recommendations.
@@ -783,40 +1347,63 @@ def comparison() -> dict:
     (was previously always the demo fixture, even live)."""
     if DEMO_MODE:
         return ok(fixture("comparison", default={"summary": {}, "cities": []}))
+    now = time.time()
+    hit = _comparison_cache.get("all")
+    if hit and now - hit[0] < _COMPARISON_TTL_S:
+        return ok(hit[1])
     try:
         from agents.multicity import build_comparison
 
         sdb = _db()
         cities = sdb.table("cities").select("city_id,name").execute().data or []
 
-        # latest pm25 per cell per city
-        meas = (
-            sdb.table("measurements").select("city_id,h3_cell,ts,value")
-            .eq("variable", "pm25").order("ts", desc=True).limit(8000).execute().data
-        ) or []
-        # dominant source per cell from attribution (highest-share category)
-        attr = sdb.table("attribution").select("city_id,h3_cell,source_category,share").execute().data or []
-        best: dict[tuple, float] = {}
-        dom_by_cell: dict[tuple, str] = {}
-        for r in attr:
-            k = (r["city_id"], r["h3_cell"])
-            s = float(r.get("share") or 0)
-            if s > best.get(k, -1.0):
-                best[k] = s
-                dom_by_cell[k] = r["source_category"]
-
-        seen: set[tuple] = set()
+        # Per city: latest PM2.5 per cell (a global newest-first slice would be swallowed by
+        # the big station networks and leave small cities with nothing) and the dominant
+        # source per cell from the most recent attribution window (PostgREST caps an
+        # unbounded select at 1,000 rows — never rely on it for "all rows").
         aqi_rows: list[dict] = []
-        for r in meas:
-            k = (r["city_id"], r["h3_cell"])
-            if k in seen:
-                continue
-            seen.add(k)
-            aqi_rows.append({
-                "city_id": r["city_id"],
-                "pm25": r["value"],
-                "dominant_source": dom_by_cell.get(k, "unknown"),
-            })
+
+        def _city_rows(cid: str) -> tuple[list[dict], list[dict]]:
+            m = (
+                sdb.table("measurements").select("h3_cell,ts,value")
+                .eq("city_id", cid).eq("variable", "pm25")
+                .order("ts", desc=True).limit(600).execute().data
+            ) or []
+            a = (
+                sdb.table("attribution").select("h3_cell,source_category,share,ts_window")
+                .eq("city_id", cid).order("ts_window", desc=True).limit(600).execute().data
+            ) or []
+            return m, a
+
+        # 10 cities × 2 reads: fetch concurrently so a cold cache answers in ~2 s, not 25 s
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=min(10, max(1, len(cities)))) as pool:
+            fetched = dict(zip([c["city_id"] for c in cities], pool.map(_city_rows, [c["city_id"] for c in cities])))
+
+        for c in cities:
+            cid = c["city_id"]
+            meas, attr = fetched.get(cid, ([], []))
+            best: dict[str, float] = {}
+            dom_by_cell: dict[str, str] = {}
+            for r in attr:
+                cell = r["h3_cell"]
+                if cell in best and best[cell] >= 0 and r.get("share") is None:
+                    continue
+                sh = float(r.get("share") or 0)
+                if sh > best.get(cell, -1.0):
+                    best[cell] = sh
+                    dom_by_cell[cell] = r["source_category"]
+            seen: set[str] = set()
+            for r in meas:
+                cell = r["h3_cell"]
+                if cell in seen or r.get("value") is None:
+                    continue
+                seen.add(cell)
+                aqi_rows.append({
+                    "city_id": cid,
+                    "pm25": r["value"],
+                    "dominant_source": dom_by_cell.get(cell, "unknown"),
+                })
 
         fc = sdb.table("forecasts").select("city_id,horizon_h,value").eq("horizon_h", 24).execute().data or []
         forecast_rows = [
@@ -826,9 +1413,132 @@ def comparison() -> dict:
         rec_statuses = (
             sdb.table("enforcement_recs").select("city_id,status").limit(5000).execute().data
         ) or []
-        return ok(build_comparison(cities, aqi_rows, forecast_rows, rec_statuses))
+        data = build_comparison(cities, aqi_rows, forecast_rows, rec_statuses)
+        _comparison_cache["all"] = (now, data)
+        return ok(data)
     except Exception as e:  # noqa: BLE001
         return _server_error("comparison_error", e, "Failed to build multi-city comparison")
+
+
+METHOD_LABEL = {
+    "hybrid-gbm-shap-v2": "per-cell model (GBM + SHAP, passed the R² gate)",
+    "signature-citymean-v1": "shrunk toward the city model mean (no local gas markers)",
+    "signature-v1": "chemical-signature priors only (model failed the R² gate or too little history)",
+}
+
+
+@app.get("/metrics/attribution", tags=["metrics"])
+def attribution_methods(city: Optional[str] = Query(None, description="City ID; omit for all cities")) -> dict:
+    """How the current attribution was produced, city by city — the honest breakdown a
+    reviewer would otherwise have to query for: cells per method (per-cell model / shrunk /
+    signature priors), the model's out-of-sample R² where one exists, mean confidence, and
+    how many cells carry a real NO₂ / CO / SO₂ marker in the last 24 h. Same rows the map shows."""
+    try:
+        if DEMO_MODE:
+            rows = fixture("attribution", default=[]) or []
+            recs = [{"city_id": r.get("city_id"), "h3_cell": r["h3_cell"], "method_version": r.get("method_version") or "hybrid-gbm-shap-v2",
+                     "confidence": r.get("confidence"), "evidence": r.get("evidence") or {}} for r in rows]
+            marker_cells: dict[str, set] = {}
+        else:
+            db = _db()
+            q = db.table("attribution").select("city_id,h3_cell,method_version,confidence,evidence").limit(20000)
+            if city:
+                q = q.eq("city_id", city)
+            recs = q.execute().data or []
+            since = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+            mq = db.table("measurements").select("city_id,h3_cell").in_("variable", ["no2", "co", "so2"]).gte("ts", since).limit(20000)
+            if city:
+                mq = mq.eq("city_id", city)
+            marker_cells = {}
+            for r in mq.execute().data or []:
+                marker_cells.setdefault(r["city_id"], set()).add(r["h3_cell"])
+        by_city: dict[str, dict] = {}
+        seen: set = set()
+        for r in recs:
+            key = (r["city_id"], r["h3_cell"])
+            if key in seen:
+                continue
+            seen.add(key)
+            c = by_city.setdefault(r["city_id"], {"n_cells": 0, "methods": {}, "r2": [], "confidence": []})
+            c["n_cells"] += 1
+            mv = r.get("method_version") or "unknown"
+            c["methods"][mv] = c["methods"].get(mv, 0) + 1
+            ev = r.get("evidence") or {}
+            if isinstance(ev, dict) and isinstance(ev.get("model_r2"), (int, float)):
+                c["r2"].append(float(ev["model_r2"]))
+            if r.get("confidence") is not None:
+                c["confidence"].append(float(r["confidence"]))
+        out = []
+        for cid, c in sorted(by_city.items()):
+            r2s = sorted(c["r2"])
+            out.append({
+                "city_id": cid,
+                "n_cells": c["n_cells"],
+                "methods": [{"method": m, "label": METHOD_LABEL.get(m, m), "n_cells": n} for m, n in sorted(c["methods"].items(), key=lambda kv: -kv[1])],
+                "share_per_cell_model": round(c["methods"].get("hybrid-gbm-shap-v2", 0) / c["n_cells"], 2) if c["n_cells"] else None,
+                "median_model_r2": round(r2s[len(r2s) // 2], 2) if r2s else None,
+                "mean_confidence": round(sum(c["confidence"]) / len(c["confidence"]), 2) if c["confidence"] else None,
+                "cells_with_gas_marker_24h": len(marker_cells.get(cid, set())),
+            })
+        return ok({"cities": out, "gate": "per-cell model used only above out-of-sample R² 0.15; otherwise shrunk toward the city model mean where local gas markers are missing, else cited signature priors",
+                   "note": "recomputed daily from the latest hour; the split moves with station marker coverage — stated, not smoothed"})
+    except Exception as e:  # noqa: BLE001
+        return _server_error("attribution_methods_error", e, "Failed to summarise attribution methods")
+
+
+_SNAPSHOT_TTL_S = 600
+_snapshot_cache: dict[str, tuple[float, dict]] = {}
+
+
+@app.get("/landing/snapshot", tags=["data"])
+def landing_snapshot() -> dict:
+    """The landing page's 'data at a glance' block, computed from live rows so the public
+    page never shows a stale hand-pasted number: Delhi source mix (city mean of the latest
+    attribution run), per-city PM2.5 now vs +24 h (same rows as /comparison) and the running
+    scale (modelled cells, sources, vulnerability zones, enforcement recommendations)."""
+    now = time.time()
+    hit = _snapshot_cache.get("all")
+    if hit and now - hit[0] < _SNAPSHOT_TTL_S:
+        return ok(hit[1])
+    try:
+        if DEMO_MODE:
+            attr = [r for r in (fixture("attribution", default=[]) or []) if r.get("city_id") == "delhi"]
+            comp = fixture("comparison", default={"cities": []}) or {"cities": []}
+            scale = {"cells": None, "sources": None, "zones": None, "recs": len(fixture("enforcement", default=[]) or [])}
+        else:
+            db = _db()
+            attr = db.table("attribution").select("h3_cell,source_category,share").eq("city_id", "delhi").limit(5000).execute().data or []
+            attr = [{"shares": {r["source_category"]: float(r["share"])}} for r in attr]
+            comp = comparison().get("data") or {"cities": []}
+            # modelled-cell count only when every city's dense field is in the warm cache — a
+            # partial sum would understate the scale, so it is None until the warm-up finishes
+            cells = 0
+            for c in comp.get("cities", []):
+                cached = _dense_cache.get(c["city_id"])
+                if not cached:
+                    cells = 0
+                    break
+                cells += len(cached[1].get("cells") or [])
+            counts = {}
+            for t in ("emission_sources", "vulnerability", "enforcement_recs"):
+                counts[t] = db.table(t).select("*", count="exact").limit(1).execute().count or 0
+            scale = {"cells": cells or None, "sources": counts["emission_sources"], "zones": counts["vulnerability"], "recs": counts["enforcement_recs"]}
+        sums: dict[str, float] = {}
+        n: dict[str, int] = {}
+        for r in attr:
+            for k, v in (r.get("shares") or {}).items():
+                sums[k] = sums.get(k, 0.0) + float(v or 0)
+                n[k] = n.get(k, 0) + 1
+        mix = sorted(({"source": k, "pct": round(100 * sums[k] / n[k], 1)} for k in sums if n[k]), key=lambda m: -m["pct"])
+        cities = sorted((
+            {"city_id": c.get("city_id"), "name": c.get("name"), "now": c.get("current_pm25"), "next": c.get("forecast_24h_pm25"), "trend": c.get("trend")}
+            for c in comp.get("cities", []) if c.get("current_pm25")
+        ), key=lambda c: -(c["now"] or 0))
+        data = {"generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(), "mix": mix, "cities": cities, "scale": scale, "demo": DEMO_MODE}
+        _snapshot_cache["all"] = (now, data)
+        return ok(data)
+    except Exception as e:  # noqa: BLE001
+        return _server_error("snapshot_error", e, "Failed to build landing snapshot")
 
 
 @app.get("/latency", tags=["system"])
@@ -844,6 +1554,217 @@ def latency_widget(city: Optional[str] = Query(None, description="City ID")) -> 
         q = q.eq("city_id", city)
     rows = q.execute().data
     return ok(rows[0] if city and rows else rows)
+
+
+BENCHMARKS = Path(__file__).resolve().parent.parent / "docs" / "benchmarks"
+
+
+def _benchmark_summary(res: dict) -> dict:
+    """Headline numbers the UI shows first; the full JSON stays available for the table."""
+    heads = []
+    for h in res.get("horizons", []):
+        full = (h.get("regimes") or {}).get("full_test") or {}
+        winter = (h.get("regimes") or {}).get("winter_nov_feb") or {}
+        ep = (h.get("episodes") or {}).get("observed_over_120") or {}
+        ew = (h.get("early_warning") or {}).get("very_poor") or {}
+        cal = h.get("calibration") or {}
+        heads.append({
+            "horizon_h": h.get("horizon_h"),
+            "n_test": h.get("n_test"),
+            "skill_vs_persistence": full.get("skill_model_vs_persistence"),
+            "skill_vs_seasonal_naive": _skill(full.get("rmse_model"), full.get("rmse_seasonal_naive")),
+            "winter_skill_vs_persistence": winter.get("skill_model_vs_persistence") if winter.get("n") else None,
+            "very_poor_hours_skill": ep.get("skill_model_vs_persistence") if ep.get("n") else None,
+            "very_poor_hours_n": ep.get("n", 0),
+            "onset_recall_model": ew.get("onset_recall_model"),
+            "onset_recall_persistence": ew.get("onset_recall_persistence"),
+            # operating point on the calibrated probability (alarm = P(>120) >= 0.3): recall/precision
+            "onset_recall_p30": next((pa.get("onset_recall") for pa in ew.get("probability_alarms", []) if pa.get("tau") == 0.3), None),
+            "precision_p30": next((pa.get("precision") for pa in ew.get("probability_alarms", []) if pa.get("tau") == 0.3), None),
+            "skill_raw_vs_persistence": full.get("skill_model_raw_vs_persistence"),
+            "onsets": ew.get("onsets", 0),
+            "pi80_coverage": cal.get("pi80_coverage"),
+            "brier_skill_very_poor": ((cal.get("very_poor") or {}).get("brier_skill")),
+        })
+    return {"city_id": res.get("city_id"), "source": res.get("source"), "window": res.get("window"),
+            "stations_cells": res.get("stations_cells"), "generated_at": res.get("generated_at"),
+            "headline": heads}
+
+
+def _skill(rm, rb):
+    try:
+        return round(1 - float(rm) / float(rb), 3) if rb else None
+    except (TypeError, ValueError):
+        return None
+
+
+@app.get("/metrics/benchmark", tags=["system"])
+def metrics_benchmark(
+    city: str = Query(..., description="City ID"),
+    full: bool = Query(False, description="include the complete per-regime tables"),
+) -> dict:
+    """Temporal-split forecast benchmark for a city — recomputed artifacts, not typed-in numbers.
+
+    Serves docs/benchmarks/<city>.json (multi-season history run) and <city>_live.json
+    (last-quarter split on the live 90-day window) when present. Every figure comes from
+    `python -m ml.eval.benchmark`; the API only reads the files.
+    """
+    out: dict[str, Any] = {"city_id": city, "history": None, "live": None}
+    for key, name in (("history", f"{city}.json"), ("live", f"{city}_live.json")):
+        p = BENCHMARKS / name
+        if p.exists():
+            try:
+                res = json.loads(p.read_text())
+            except json.JSONDecodeError:
+                continue
+            out[key] = res if full else _benchmark_summary(res)
+    if out["history"] is None and out["live"] is None:
+        raise HTTPException(status_code=404, detail=f"no benchmark artifact for {city}")
+    return ok(out)
+
+
+@app.get("/metrics/interventions", tags=["system"])
+def metrics_interventions(city: str = Query(..., description="City ID")) -> dict:
+    """Real, dated interventions in hindsight — the artifact written by
+    `python -m ml.eval.interventions` (docs/benchmarks/<city>_interventions.json): would the
+    served forecast have warned before each order, and did the air change once weather is
+    taken out. The API only reads the file; every number is computed there, sources included."""
+    p = BENCHMARKS / f"{city}_interventions.json"
+    if not p.exists():
+        raise HTTPException(status_code=404, detail=f"no intervention artifact for {city}")
+    try:
+        return ok(json.loads(p.read_text()))
+    except json.JSONDecodeError as e:
+        return _server_error("interventions_artifact", e, "Intervention artifact is unreadable")
+
+
+@app.get("/exposure", tags=["stage2"])
+def exposure(city: str = Query(..., description="City ID"), db=Depends(get_db)) -> dict:
+    """Who the forecast puts in bad air: expected people in Very Poor (>120) / Severe (>250)
+    at +24/48/72 h, population-weighted over calibrated exceedance probabilities, plus
+    person-hours across the outlook. Self-computed from this city's forecasts; the response
+    states the population basis (GPW cells vs uniform cited city population)."""
+    from ml.impact.exposure import compute_exposure
+    from ml.impact.factors import population_for
+
+    if DEMO_MODE:
+        rows = fixture_rows("forecast", city)
+        pop_rows = []
+    else:
+        rows = (
+            db.table("forecasts").select("h3_cell,horizon_h,value,p_over_120,p_over_250")
+            .eq("city_id", city).execute().data
+        ) or []
+        pop_rows = (
+            db.table("measurements").select("h3_cell,value")
+            .eq("city_id", city).eq("variable", "population").execute().data
+        ) or []
+    pop_by_cell = {r["h3_cell"]: float(r["value"]) for r in pop_rows if r.get("value")}
+    pop = population_for(city)
+    res = compute_exposure(rows, pop_by_cell, float(pop.value))
+    res.update({"city_id": city, "city_population": pop.value, "population_citation": pop.cite()})
+    return ok(res)
+
+
+# ---------------------------------------------------------------------------
+# Officer morning brief — one page per city, from stored model output (LLM-free)
+# ---------------------------------------------------------------------------
+
+def _public_base() -> str:
+    return os.getenv("PUBLIC_API_BASE_URL", "").rstrip("/")
+
+
+def _brief_data(city: str) -> dict:
+    from agents.brief import build_brief
+    from core.cities import load_city
+
+    cfg = load_city(city)
+    if DEMO_MODE:
+        meas = fixture_rows("aqi_current", city) or []
+        fc = fixture_rows("forecast", city) or []
+        recs = fixture_rows("enforcement", city) or []
+        adv = fixture_rows("advisory", city) or []
+        inter: list[dict] = []
+        # aqi_current fixture rows carry pm25 as `value` under `ts`? normalise to measurements shape
+        meas = [{"h3_cell": r.get("h3_cell"), "ts": r.get("ts"), "value": r.get("pm25", r.get("value"))} for r in meas]
+    else:
+        sdb = _db()
+        since = (datetime.now(timezone.utc) - timedelta(hours=36)).isoformat()
+        # PostgREST caps a single response at 1,000 rows — page explicitly (36 h of a big
+        # station network is several thousand rows)
+        meas: list[dict] = []
+        start = 0
+        while True:
+            batch = (sdb.table("measurements").select("h3_cell,ts,value").eq("city_id", city)
+                     .eq("variable", "pm25").gte("ts", since).order("ts", desc=True)
+                     .range(start, start + 999).execute().data) or []
+            meas.extend(batch)
+            if len(batch) < 1000 or len(meas) >= 20000:
+                break
+            start += 1000
+        fc = (sdb.table("forecasts").select("h3_cell,horizon_h,value,p_over_120,p_over_250")
+              .eq("city_id", city).execute().data) or []
+        recs = (sdb.table("enforcement_recs").select("id,h3_cell,priority_score,contribution,pop_exposed,rationale,status")
+                .eq("city_id", city).order("priority_score", desc=True).limit(50).execute().data) or []
+        adv = (sdb.table("advisories").select("ward_id,risk_tier,language").eq("city_id", city).limit(500).execute().data) or []
+        try:
+            inter = _interventions_data(city).get("tracked", [])
+        except Exception:  # noqa: BLE001 — the brief must still render
+            inter = []
+    base = _public_base()
+    return build_brief(
+        city, cfg.get("name", city.title()),
+        measurements=meas, forecasts=fc, recs=recs, interventions=inter, advisories=adv,
+        notice_url=(lambda rid: f"{base}/enforcement/{rid}/notice.pdf") if base else None,
+    )
+
+
+@app.get("/brief", tags=["enforcement"])
+def brief(city: str = Query(..., description="City ID")) -> dict:
+    """Officer morning brief as JSON: air now vs yesterday, cells about to cross Very Poor
+    (calibrated P ≥ 0.3), top 3 actions with notice links, yesterday's measured outcomes,
+    advisory summary. Every line comes from stored rows; nothing from a language model."""
+    try:
+        return ok(_brief_data(city))
+    except Exception as e:  # noqa: BLE001
+        return _server_error("brief_failed", e, "Could not build the morning brief.")
+
+
+@app.get("/brief.pdf", tags=["enforcement"])
+def brief_pdf(city: str = Query(..., description="City ID")) -> Response:
+    """The same brief as a one-page PDF (same renderer as the enforcement notice)."""
+    from agents.brief import render_brief_text
+    from agents.notice_pdf import notice_pdf_bytes
+
+    b = _brief_data(city)
+    text = render_brief_text(b, console_url=os.getenv("PUBLIC_WEB_URL"))
+    pdf = notice_pdf_bytes(text, subtitle="Urban Air Quality Intelligence - Officer Morning Brief",
+                           tag=f"BRIEF · {b['generated_at'][:10]}", watermark=None)
+    return Response(content=pdf, media_type="application/pdf",
+                    headers={"Content-Disposition": f'attachment; filename="brief_{city}_{b["generated_at"][:10]}.pdf"'})
+
+
+class BriefSendBody(BaseModel):
+    city: str = _CITY
+
+
+@app.post("/brief/send", tags=["enforcement"])
+def brief_send(body: BriefSendBody, db=Depends(get_db)) -> dict:
+    """Push today's brief to the city's Telegram subscribers (real send; rate-limited)."""
+    from agents.brief import render_brief_text
+
+    if not _status_rate_ok(limit=10, window_s=600):
+        raise HTTPException(status_code=429, detail="brief already sent recently — slow down")
+    b = _brief_data(body.city)
+    text = render_brief_text(b, console_url=os.getenv("PUBLIC_WEB_URL"))
+    if DEMO_MODE or not os.getenv("TELEGRAM_BOT_TOKEN"):
+        return ok({"status": "skipped", "detail": "Telegram not configured (or DEMO_MODE)", "chars": len(text)})
+    try:
+        from channels.telegram import broadcast_telegram_text
+        r = asyncio.run(broadcast_telegram_text(body.city, text, _db()))
+        return ok(r)
+    except Exception as e:  # noqa: BLE001
+        return _server_error("brief_send_failed", e, "Telegram send failed")
 
 
 # ---------------------------------------------------------------------------
@@ -886,7 +1807,7 @@ def agent_query(body: AgentQueryBody, db=Depends(get_db)) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# What-if simulator (E3 engine, live) + E7 health/carbon quantification (Sejal)
+# What-if simulator (E3 engine, live) + E7 health/carbon quantification
 # ---------------------------------------------------------------------------
 
 class SimulateBody(BaseModel):
@@ -965,11 +1886,28 @@ def coverage(city: str = Query("delhi", description="City ID")) -> dict:
         picked = data.get(city) if isinstance(data, dict) else None
         return ok(picked or {"cells": [], "city_id": city})
     try:
-        return ok(_live_dense_field(city))
+        return ok(_dense_field_cached(city))
     except ValueError as e:
         return err("bad_request", str(e))
     except Exception as e:  # noqa: BLE001
         return _server_error("coverage_error", e, "Failed to compute coverage field")
+
+
+_DENSE_TTL_S = 600
+_dense_cache: dict[str, tuple[float, dict]] = {}
+
+
+def _dense_field_cached(city: str) -> dict:
+    """/coverage is the heaviest read (downscaler over the whole city grid) and its inputs
+    change hourly at most — serve a 10-minute in-process cache; the warm-up thread fills it
+    for every city right after start so the first click on stage is instant."""
+    now = time.time()
+    hit = _dense_cache.get(city)
+    if hit and now - hit[0] < _DENSE_TTL_S:
+        return hit[1]
+    data = _live_dense_field(city)
+    _dense_cache[city] = (now, data)
+    return data
 
 
 def _live_dense_field(city: str) -> dict:
@@ -1063,7 +2001,7 @@ def clean_zones(
         return ok({"city_id": city, "basis": "demo_fixture",
                    "zones": _zones_from_field(city, field, top)})
     try:
-        field = _live_dense_field(city)
+        field = _dense_field_cached(city)
         return ok({
             "city_id": city,
             "basis": f"E2 dense 1km field, anchors: {field.get('anchors_from')}",
@@ -1173,7 +2111,7 @@ def plume_layer(
 
 
 # ---------------------------------------------------------------------------
-# Prescriptive optimiser (E5 — Abhinav Stage 2; stub with demo fixture)
+# Prescriptive optimiser (E5 — Stage 2; stub with demo fixture)
 # ---------------------------------------------------------------------------
 
 class OptimizeBody(BaseModel):

@@ -1,4 +1,4 @@
-"""Open-Meteo weather connector.  Owner: Omkar.  Spec: ARCHITECTURE.md §7.1, §9.2; PRD §11.
+"""Open-Meteo weather connector.  Spec: ARCHITECTURE.md §7.1, §9.2; PRD §11.
 
 Free, no API key. Pulls hourly met variables (the forecast model's drivers) for a city,
 converts to canonical `measurements`, and (optionally) pushes to Supabase.
@@ -129,10 +129,10 @@ def fetch_city(
 def push_to_supabase(rows: list[dict]) -> None:
     from core.supa import client
 
-    client = client()
-    for i in range(0, len(rows), 500):
-        client.table("measurements").insert(rows[i : i + 500]).execute()
-    print(f"pushed {len(rows)} weather measurements to Supabase")
+    from core.supa import insert_measurements
+
+    insert_measurements(rows, client())
+    print(f"pushed {len(rows)} weather measurements to Supabase (duplicates ignored)")
 
 
 def main() -> None:

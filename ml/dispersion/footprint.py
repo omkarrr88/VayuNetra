@@ -1,4 +1,4 @@
-"""Plume footprint polygons for the map overlay.  Owner: Omkar.
+"""Plume footprint polygons for the map overlay.
 
 Turns the Gaussian plume physics (plume.py, Briggs urban) into per-source
 teardrop polygons oriented by the real wind vector. Intensity is RELATIVE

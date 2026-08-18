@@ -193,6 +193,25 @@ class _RestClient:
     def table(self, name: str):
         return _TableQuery(name, self.api_key, token=self.postgrest._token)
 
+    def rpc(self, fn: str, params: dict[str, Any] | None = None):
+        """Call a Postgres function via PostgREST (parity with the real SDK)."""
+        body = json.dumps(params or {}).encode()
+        req = Request(f"{_rest_url()}/rpc/{fn}", data=body, method="POST", headers={
+            "apikey": self.api_key,
+            "Authorization": f"Bearer {self.postgrest._token or self.api_key}",
+            "Content-Type": "application/json",
+        })
+        with urlopen(req, timeout=60) as resp:
+            data = json.loads(resp.read().decode() or "null")
+
+        class _R:
+            pass
+        r = _R(); r.data = data
+        class _Q:
+            def execute(self_inner):
+                return r
+        return _Q()
+
 
 def service_client():
     """Supabase client with service-role privileges for trusted server jobs."""
@@ -238,3 +257,22 @@ def load_measurements(city_id: str) -> list[dict]:
             break
         start += page
     return rows
+
+
+MEASUREMENT_KEY = "city_id,h3_cell,station_id,variable,ts,source"
+
+
+def insert_measurements(rows: list[dict], db=None, chunk: int = 500) -> int:
+    """Write readings idempotently: one row per (city, cell, station, variable, ts, source).
+
+    Every connector used plain INSERT and the hourly cron re-fetches overlapping windows,
+    so identical readings piled up ~8× and filled the free tier. Upsert with
+    ON CONFLICT DO NOTHING against ``uq_measurements_reading`` instead. ``station_id`` is
+    part of the key, so a missing one becomes '' (the column default). Returns rows sent."""
+    db = db or client()
+    sent = 0
+    for i in range(0, len(rows), chunk):
+        batch = [{**r, "station_id": r.get("station_id") or ""} for r in rows[i:i + chunk]]
+        db.table("measurements").upsert(batch, on_conflict=MEASUREMENT_KEY, ignore_duplicates=True).execute()
+        sent += len(batch)
+    return sent

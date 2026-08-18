@@ -1,4 +1,4 @@
-"""E2 — AOD→PM2.5 regressor.  Owner: Sejal.
+"""E2 — AOD→PM2.5 regressor.
 
 The established remote-sensing approach (PRD §12.8 / ARCH §9.6): map satellite
 Aerosol Optical Depth + meteorology → *surface* PM2.5, calibrated on

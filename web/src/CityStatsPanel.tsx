@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
-import { Area, AreaChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, Cell, Pie, PieChart, Tooltip, XAxis, YAxis } from "recharts";
+import SizedChart from "./SizedChart";
 import type { AttrCell, CoverageCell } from "./BlameMap";
 import { api } from "./api";
 import { aqiCategory, pm25ToAqi } from "./aqi";
 import { SOURCE_COLORS } from "./sources";
-import { Panel } from "./ui";
+import { Step, Panel } from "./ui";
+import TrendPanel from "./TrendPanel";
+import ExposureCard from "./ExposureCard";
 
 type HistoryPoint = { ts: string; pm25: number; n: number };
 type HistoryData = { series: HistoryPoint[] };
@@ -80,6 +83,14 @@ export default function CityStatsPanel({
 
   return (
     <Panel title="City Statistics" tag="LIVE">
+      {/* Forecast exposure — expected people in Very Poor / Severe air, calibrated (this is step 4) */}
+      <ExposureCard city={city} />
+      <div className="my-2 border-t border-slate-100" />
+      {/* Long-range history — daily means, CPCB bands, plain-language verdict (step 5, "The past") */}
+      <Step n={5} label="The past" info={<p>Daily station means for 30 d / 90 d / 1 y with a plain-language verdict and spike-day markers (raw readings ∪ the archived daily rollup), then the last 48 h and the live source mix.</p>}>
+        <TrendPanel city={city} compact />
+      </Step>
+      <div className="my-2 border-t border-slate-100" />
       {/* 48h trend — real station-hour means */}
       <div className="text-[12px] font-semibold text-slate-700">PM2.5 — last 48 hours</div>
       {history === null ? (
@@ -89,7 +100,7 @@ export default function CityStatsPanel({
       ) : (
         <>
           <div className="mt-1 h-24">
-            <ResponsiveContainer width="100%" height="100%">
+            <SizedChart>
               <AreaChart data={history} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
                 <XAxis dataKey="ts" tickFormatter={hourLabel} tick={{ fontSize: 9 }} interval="preserveStartEnd" minTickGap={40} />
                 <YAxis tick={{ fontSize: 9 }} width={28} domain={[0, "auto"]} />
@@ -100,9 +111,9 @@ export default function CityStatsPanel({
                 />
                 <Area type="monotone" dataKey="pm25" stroke="#2563eb" fill="#3b82f6" fillOpacity={0.15} strokeWidth={1.6} />
               </AreaChart>
-            </ResponsiveContainer>
+            </SizedChart>
           </div>
-          <div className="text-[10px] text-gray-400">city-mean of real station readings, hourly buckets</div>
+          <div className="text-[10px] text-gray-500">city-mean of real station readings, hourly buckets</div>
         </>
       )}
 
@@ -112,7 +123,7 @@ export default function CityStatsPanel({
           <div className="text-[12px] font-semibold text-slate-700">Source mix — city average</div>
           <div className="flex items-center gap-2">
             <div className="h-32 w-32 shrink-0">
-              <ResponsiveContainer width="100%" height="100%">
+              <SizedChart>
                 <PieChart>
                   <Pie data={mix} dataKey="value" nameKey="name" innerRadius={30} outerRadius={52} paddingAngle={2} stroke="none">
                     {mix.map((d) => (
@@ -121,7 +132,7 @@ export default function CityStatsPanel({
                   </Pie>
                   <Tooltip formatter={(v) => `${v}%`} contentStyle={{ fontSize: 11 }} />
                 </PieChart>
-              </ResponsiveContainer>
+              </SizedChart>
             </div>
             <div className="min-w-0 flex-1 space-y-0.5">
               {mix.map((d) => (
@@ -135,7 +146,7 @@ export default function CityStatsPanel({
               ))}
             </div>
           </div>
-          <div className="text-[10px] text-gray-400">mean attribution share across {cells.length} live cells</div>
+          <div className="text-[10px] text-gray-500">mean attribution share across {cells.length} live cells</div>
         </div>
       )}
 
@@ -156,7 +167,7 @@ export default function CityStatsPanel({
               </span>
             ))}
           </div>
-          <div className="mt-0.5 text-[10px] text-gray-400">
+          <div className="mt-0.5 text-[10px] text-gray-500">
             share of {coverageCells.length} ~1 km cells (dense model field, station-anchored)
           </div>
         </div>

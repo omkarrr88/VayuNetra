@@ -1,0 +1,15 @@
+# City onboarding config — Pune. Added for the 10-city expansion (Aug 2026).
+city_id: pune
+name: Pune
+state: MH
+bbox: [73.70, 18.40, 74.00, 18.65]
+center: [73.86, 18.52]
+languages: [mr, en]
+h3_res: 8
+# optional pin-list — ingestion discovers stations by bbox (see delhi.yml)
+caaqms_station_ids: []
+ward_geojson_ref: "data/wards/pune.geojson"
+regulatory:
+  authority: "Maharashtra Pollution Control Board (MPCB)"
+  grap_applies: false
+active: true

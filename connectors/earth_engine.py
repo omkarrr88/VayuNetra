@@ -1,4 +1,4 @@
-"""Earth Engine connector (satellite features).  Owner: Omkar.  ARCHITECTURE.md §7.1, §9.
+"""Earth Engine connector (satellite features).  ARCHITECTURE.md §7.1, §9.
 
 Samples Sentinel-5P tropospheric NO2 (a recent-window mean) at the city's H3 cells and
 writes canonical `measurements` (variable='no2_sat', unit mol/m^2, source='s5p') — the
@@ -103,10 +103,12 @@ def run(city_id: str, days: int = 30, push: bool = False,
     if push:
         c = client()
         c.table("measurements").delete().eq("city_id", city_id).in_("source", ["s5p", "modis"]).execute()
+        from core.supa import insert_measurements
+
         if no2:
-            c.table("measurements").insert(no2).execute()
+            insert_measurements(no2, c)
         if fire:
-            c.table("measurements").insert(fire).execute()
+            insert_measurements(fire, c)
         print(f"pushed {len(no2) + len(fire)} satellite measurements to Supabase")
 
 

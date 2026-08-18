@@ -28,7 +28,9 @@ import core.env  # noqa: F401,E402
 from core.supa import client  # noqa: E402
 from rag.multimodal import hash_embed, source_coordinates  # noqa: E402
 
-CITIES = ["delhi", "bengaluru", "mumbai"]
+from core.cities import list_city_ids
+
+CITIES = list_city_ids()
 BOX_DEG = 0.012          # ~1.3 km half-box around the source
 THUMB_DIM = "360x240"
 CLOUD_MAX = 20

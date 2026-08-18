@@ -1,6 +1,6 @@
 # DEMO_MODE — frozen offline snapshot (F8)
 
-> Owner: **Sejal** (F8 + DEMO_MODE wiring). Purpose: the **entire scored demo runs offline**
+> Purpose: the **entire scored demo runs offline**
 > with zero live-API dependency (ARCHITECTURE.md §15, §22; the #1-risk mitigation).
 
 ## How it works
@@ -23,5 +23,5 @@ One JSON file per endpoint payload — keys match `docs/API_CONTRACT.md`:
 
 ## At the Integration Window
 Replace the hand-authored fixtures above with a **real frozen snapshot**: dump the
-precomputed agent outputs for all 3 cities from Supabase into these files. Deterministic,
+precomputed agent outputs for all 10 cities from Supabase into these files. Deterministic,
 versioned, demo-proof.

@@ -1,6 +1,6 @@
 # eval/ — validation & evaluation harness
 
-Owner: **Abhinav** (harness) — each model owner supplies their own metrics.
+Each model supplies its own metrics to a shared harness.
 Spec: ARCHITECTURE.md §14, PRD §13. One `evaluate.ipynb` regenerates **every** number live for judges.
 
 | # | Validates | Metric |

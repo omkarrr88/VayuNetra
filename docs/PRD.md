@@ -63,7 +63,7 @@ City administrators do not need another dashboard that shows them a red number. 
 
 **Our North-Star Metric:** collapse the **time from pollution signal → validated, source-attributed enforcement action** from the *weeks-or-never* the CAG audit documents, down to **minutes**.
 
-**Why we win #1:** we hit every judging axis deliberately — a genuinely novel **satellite-ground "blame map"** (Innovation), a forecast that **provably beats the persistence baseline** with numbers (Technical Excellence + Business Impact), a **city-agnostic engine demoed across 3 cities** (Scalability), and a **map-first console + multi-language citizen advisory** (User Experience) — all wrapped in an India-scale, life-and-death business case.
+**Why we win #1:** we hit every judging axis deliberately — a genuinely novel **satellite-ground "blame map"** (Innovation), a forecast that **provably beats the persistence baseline** with numbers (Technical Excellence + Business Impact), a **city-agnostic engine live across 10 cities** (Scalability), and a **map-first console + multi-language citizen advisory** (User Experience) — all wrapped in an India-scale, life-and-death business case.
 
 ---
 
@@ -140,7 +140,7 @@ Win **1st place** at ET AI Hackathon 2026 on PS5 by maximising the weighted judg
 The judging criteria are **identical across all 8 problem statements**. We engineer the product so each feature *visibly* earns points on a specific axis.
 
 > ### 🏆 Why VayuNetra wins #1 — in one breath
-> It is the **only** entry that turns India's air *data* into *action*: a satellite-ground **blame map** (Innovation) → a forecast that **provably beats persistence** with held-out backtests (Technical) → a **<5-minute signal-to-action** loop with cited, court-defensible enforcement (Business Impact) → a **city-agnostic engine live across 3 cities + a 4th onboarded on stage** (Scalability) → a **map-first console + multilingual citizen advisory** (UX). Built **100% free (₹0)** and **demo-proofed to never break live**. *Every metric the brief names, we put a number on a slide.*
+> It is the **only** entry that turns India's air *data* into *action*: a satellite-ground **blame map** (Innovation) → a forecast that **provably beats persistence** with held-out backtests (Technical) → a **<5-minute signal-to-action** loop with cited, court-defensible enforcement (Business Impact) → a **city-agnostic engine live across 10 cities (7 onboarded from config)** (Scalability) → a **map-first console + multilingual citizen advisory** (UX). Built **100% free (₹0)** and **demo-proofed to never break live**. *Every metric the brief names, we put a number on a slide.*
 
 ### 5.1 Judging criteria → feature mapping
 
@@ -185,7 +185,7 @@ The brief's Evaluation Focus names five things. **Most teams will demo a UI. We 
 ## 7. Product Scope
 
 ### 7.1 MVP (must exist for a credible win)
-- City-agnostic data ingestion for **≥3 cities** (CAAQMS + satellite + weather + land use).
+- City-agnostic data ingestion for **10 cities** (CAAQMS + satellite + weather + land use).
 - **Source Attribution Agent** (Agent 1) producing ward/H3 apportionment + confidence.
 - **Hyperlocal Forecast Agent** (Agent 2) @24–72h, ~1 km, **with persistence baseline comparison**.
 - **Authority console**: blame map + AQI layer + forecast time-slider.
@@ -576,7 +576,7 @@ sequenceDiagram
 - **Universal spatial key (H3):** identical pipeline math for every city.
 - **Stateless, containerised agents:** horizontal scale on Cloud Run/GKE; per-city pipelines run in parallel.
 - **Demo proof:** run **Delhi + Bengaluru + Mumbai** live and switch between them on stage; show a 4th city onboarded *during* the demo from config alone.
-- **Path to scale narrative:** 3 cities today → **131 NCAP non-attainment cities** with the same engine.
+- **Path to scale narrative:** 10 cities today → **131 NCAP non-attainment cities** with the same engine.
 
 ---
 

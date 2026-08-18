@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { MapMode } from "./BlameMap";
 import { SOURCE_COLORS, PM25_LEGEND } from "./sources";
 import { SegBtn } from "./ui";
@@ -21,6 +21,8 @@ interface LayersControlProps {
   onShowWards: (v: boolean) => void;
   showFreight: boolean;
   onShowFreight: (v: boolean) => void;
+  showFires: boolean;
+  onShowFires: (v: boolean) => void;
   coverageKind: "stations" | "dense";
   onCoverageKind: (k: "stations" | "dense") => void;
   coverage: CoverageMeta;
@@ -61,12 +63,22 @@ function OverlayToggle({
 export default function LayersControl(p: LayersControlProps) {
   // Open by default only where there's room — on phones the expanded card
   // would bury the (much smaller) map.
-  const [open, setOpen] = useState(
-    // Auto-expand only where the drawer + right panel leave room for the card
-    // (the 1024–1279 window is too tight — there it starts as the compact chip).
-    () => typeof window !== "undefined" && window.matchMedia("(min-width: 1280px)").matches,
-  );
-  const overlaysOn = [p.showSources, p.showPlumes, p.showWards, p.showFreight].filter(Boolean).length;
+  // Starts as the compact chip everywhere: the map is the hero and the layer card is a
+  // tool you reach for, not a panel that competes with the section rail. The chip shows
+  // how many overlays are on so nothing is hidden by surprise.
+  const [open, setOpen] = useState(false);
+  const overlaysOn = [p.showSources, p.showPlumes, p.showWards, p.showFreight, p.showFires].filter(Boolean).length;
+
+  // Presentation mode toggled at runtime (the P key) — collapse to the chip so
+  // the scaled-up card never sits on top of the cell-story drawer.
+  useEffect(() => {
+    const root = document.documentElement;
+    const obs = new MutationObserver(() => {
+      if (root.classList.contains("vn-present")) setOpen(false);
+    });
+    obs.observe(root, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
 
   if (!open) {
     return (
@@ -93,7 +105,7 @@ export default function LayersControl(p: LayersControlProps) {
         <button
           onClick={() => setOpen(false)}
           aria-label="Collapse layer panel"
-          className="rounded p-0.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+          className="rounded p-0.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-600"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true">
             <path d="m6 9 6 6 6-6" />
@@ -138,9 +150,16 @@ export default function LayersControl(p: LayersControlProps) {
           label="Freight corridors"
           activeClass="bg-violet-700 text-white"
         />
+        <OverlayToggle
+          on={p.showFires}
+          onClick={() => p.onShowFires(!p.showFires)}
+          swatch="inline-block h-2.5 w-2.5 rounded-full border border-white bg-orange-600"
+          label="Fire / burn events (30d)"
+          activeClass="bg-orange-700 text-white"
+        />
       </div>
       {p.showWards && (
-        <div className="mt-1 text-[10px] text-gray-400">ward boundaries © Datameet community maps (ODbL)</div>
+        <div className="mt-1 text-[10px] text-gray-500">ward boundaries © Datameet / OSM (ODbL)</div>
       )}
 
       {p.mode === "blame" && (
@@ -175,7 +194,7 @@ export default function LayersControl(p: LayersControlProps) {
               </div>
             ))}
           </div>
-          <div className="mt-1 text-[11px] text-gray-400">
+          <div className="mt-1 text-[11px] text-gray-500">
             {p.coverage
               ? `${p.coverage.n_stations ?? "~"} stations → ${p.coverage.n_cells ?? p.coverage.cells.length} cells · ${
                   typeof p.coverage.validation?.skill_vs_bilinear === "number"

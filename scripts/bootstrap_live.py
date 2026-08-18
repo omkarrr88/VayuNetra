@@ -1,6 +1,6 @@
 """Populate the live Supabase project with the core Stage-1 tables.
 
-This is the missing operational step for the remaining Abhinav gaps:
+This is the operational step that fills the remaining Stage-1 tables:
 - ingest the RAG corpus into ``kb_chunks``
 - run the live enforcement graph so ``enforcement_recs`` is written
 - persist ``action_traces`` by exercising the orchestrator on live Supabase

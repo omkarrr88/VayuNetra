@@ -1,0 +1,871 @@
+{
+ "delhi": {
+  "city_id": "delhi",
+  "history": {
+   "city_id": "delhi",
+   "source": "hist",
+   "window": {
+    "start": "2025-02-17T23:00:00+00:00",
+    "end": "2026-08-15T23:00:00+00:00",
+    "split": "2025-11-01T00:00:00+00:00"
+   },
+   "stations_cells": 39,
+   "generated_at": "2026-08-17T17:28:41.303590+00:00",
+   "headline": [
+    {
+     "horizon_h": 24,
+     "n_test": 234491,
+     "skill_vs_persistence": 0.091,
+     "skill_vs_seasonal_naive": 0.259,
+     "winter_skill_vs_persistence": 0.067,
+     "very_poor_hours_skill": 0.065,
+     "very_poor_hours_n": 62866,
+     "onset_recall_model": 0.244,
+     "onset_recall_persistence": 0.0,
+     "onset_recall_p30": 0.54,
+     "precision_p30": 0.683,
+     "skill_raw_vs_persistence": 0.017,
+     "onsets": 15701,
+     "pi80_coverage": 0.783,
+     "brier_skill_very_poor": 0.513
+    },
+    {
+     "horizon_h": 48,
+     "n_test": 233555,
+     "skill_vs_persistence": 0.129,
+     "skill_vs_seasonal_naive": 0.195,
+     "winter_skill_vs_persistence": 0.114,
+     "very_poor_hours_skill": 0.106,
+     "very_poor_hours_n": 63297,
+     "onset_recall_model": 0.312,
+     "onset_recall_persistence": 0.0,
+     "onset_recall_p30": 0.544,
+     "precision_p30": 0.661,
+     "skill_raw_vs_persistence": 0.097,
+     "onsets": 18226,
+     "pi80_coverage": 0.781,
+     "brier_skill_very_poor": 0.456
+    },
+    {
+     "horizon_h": 72,
+     "n_test": 232619,
+     "skill_vs_persistence": 0.121,
+     "skill_vs_seasonal_naive": 0.158,
+     "winter_skill_vs_persistence": 0.106,
+     "very_poor_hours_skill": 0.1,
+     "very_poor_hours_n": 63784,
+     "onset_recall_model": 0.265,
+     "onset_recall_persistence": 0.0,
+     "onset_recall_p30": 0.512,
+     "precision_p30": 0.636,
+     "skill_raw_vs_persistence": 0.094,
+     "onsets": 19117,
+     "pi80_coverage": 0.774,
+     "brier_skill_very_poor": 0.379
+    }
+   ]
+  },
+  "live": {
+   "city_id": "delhi",
+   "source": "live",
+   "window": {
+    "start": "2026-06-20T10:00:00+00:00",
+    "end": "2026-08-17T16:00:00+00:00",
+    "split": "2026-08-03T02:30:00+00:00"
+   },
+   "stations_cells": 22,
+   "generated_at": "2026-08-17T17:48:44.953369+00:00",
+   "headline": [
+    {
+     "horizon_h": 24,
+     "n_test": 2235,
+     "skill_vs_persistence": 0.157,
+     "skill_vs_seasonal_naive": 0.268,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.127,
+     "onsets": 0,
+     "pi80_coverage": 0.74,
+     "brier_skill_very_poor": null
+    },
+    {
+     "horizon_h": 48,
+     "n_test": 1992,
+     "skill_vs_persistence": 0.186,
+     "skill_vs_seasonal_naive": 0.224,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.158,
+     "onsets": 0,
+     "pi80_coverage": 0.74,
+     "brier_skill_very_poor": null
+    },
+    {
+     "horizon_h": 72,
+     "n_test": 1776,
+     "skill_vs_persistence": 0.121,
+     "skill_vs_seasonal_naive": 0.187,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.112,
+     "onsets": 0,
+     "pi80_coverage": 0.718,
+     "brier_skill_very_poor": null
+    }
+   ]
+  }
+ },
+ "bengaluru": {
+  "city_id": "bengaluru",
+  "history": null,
+  "live": {
+   "city_id": "bengaluru",
+   "source": "live",
+   "window": {
+    "start": "2026-05-21T03:00:00+00:00",
+    "end": "2026-08-17T16:00:00+00:00",
+    "split": "2026-07-26T12:45:00+00:00"
+   },
+   "stations_cells": 13,
+   "generated_at": "2026-08-17T17:49:17.660932+00:00",
+   "headline": [
+    {
+     "horizon_h": 24,
+     "n_test": 1127,
+     "skill_vs_persistence": 0.142,
+     "skill_vs_seasonal_naive": 0.112,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.159,
+     "onsets": 0,
+     "pi80_coverage": 0.827,
+     "brier_skill_very_poor": null
+    },
+    {
+     "horizon_h": 48,
+     "n_test": 1046,
+     "skill_vs_persistence": 0.417,
+     "skill_vs_seasonal_naive": -0.085,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.496,
+     "onsets": 0,
+     "pi80_coverage": 0.83,
+     "brier_skill_very_poor": null
+    },
+    {
+     "horizon_h": 72,
+     "n_test": 975,
+     "skill_vs_persistence": 0.466,
+     "skill_vs_seasonal_naive": 0.028,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.518,
+     "onsets": 0,
+     "pi80_coverage": 0.873,
+     "brier_skill_very_poor": null
+    }
+   ]
+  }
+ },
+ "mumbai": {
+  "city_id": "mumbai",
+  "history": {
+   "city_id": "mumbai",
+   "source": "hist",
+   "window": {
+    "start": "2025-02-18T19:00:00+00:00",
+    "end": "2026-08-15T23:00:00+00:00",
+    "split": "2025-11-01T00:00:00+00:00"
+   },
+   "stations_cells": 27,
+   "generated_at": "2026-08-17T17:31:57.784439+00:00",
+   "headline": [
+    {
+     "horizon_h": 24,
+     "n_test": 141667,
+     "skill_vs_persistence": 0.165,
+     "skill_vs_seasonal_naive": 0.373,
+     "winter_skill_vs_persistence": 0.152,
+     "very_poor_hours_skill": -0.05,
+     "very_poor_hours_n": 1558,
+     "onset_recall_model": 0.002,
+     "onset_recall_persistence": 0.0,
+     "onset_recall_p30": 0.003,
+     "precision_p30": 0.27,
+     "skill_raw_vs_persistence": 0.176,
+     "onsets": 1197,
+     "pi80_coverage": 0.816,
+     "brier_skill_very_poor": -0.106
+    },
+    {
+     "horizon_h": 48,
+     "n_test": 141019,
+     "skill_vs_persistence": 0.191,
+     "skill_vs_seasonal_naive": 0.347,
+     "winter_skill_vs_persistence": 0.171,
+     "very_poor_hours_skill": -0.036,
+     "very_poor_hours_n": 1608,
+     "onset_recall_model": 0.001,
+     "onset_recall_persistence": 0.0,
+     "onset_recall_p30": 0.001,
+     "precision_p30": 0.152,
+     "skill_raw_vs_persistence": 0.19,
+     "onsets": 1350,
+     "pi80_coverage": 0.817,
+     "brier_skill_very_poor": -0.118
+    },
+    {
+     "horizon_h": 72,
+     "n_test": 140371,
+     "skill_vs_persistence": 0.213,
+     "skill_vs_seasonal_naive": 0.318,
+     "winter_skill_vs_persistence": 0.201,
+     "very_poor_hours_skill": -0.028,
+     "very_poor_hours_n": 1656,
+     "onset_recall_model": 0.0,
+     "onset_recall_persistence": 0.0,
+     "onset_recall_p30": 0.001,
+     "precision_p30": 0.142,
+     "skill_raw_vs_persistence": 0.211,
+     "onsets": 1472,
+     "pi80_coverage": 0.794,
+     "brier_skill_very_poor": -0.094
+    }
+   ]
+  },
+  "live": {
+   "city_id": "mumbai",
+   "source": "live",
+   "window": {
+    "start": "2026-05-21T03:00:00+00:00",
+    "end": "2026-08-17T15:00:00+00:00",
+    "split": "2026-07-26T12:00:00+00:00"
+   },
+   "stations_cells": 19,
+   "generated_at": "2026-08-17T17:49:49.974169+00:00",
+   "headline": [
+    {
+     "horizon_h": 24,
+     "n_test": 1877,
+     "skill_vs_persistence": 0.104,
+     "skill_vs_seasonal_naive": 0.507,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.07,
+     "onsets": 0,
+     "pi80_coverage": 0.723,
+     "brier_skill_very_poor": null
+    },
+    {
+     "horizon_h": 48,
+     "n_test": 1671,
+     "skill_vs_persistence": 0.144,
+     "skill_vs_seasonal_naive": 0.511,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.118,
+     "onsets": 0,
+     "pi80_coverage": 0.697,
+     "brier_skill_very_poor": null
+    },
+    {
+     "horizon_h": 72,
+     "n_test": 1468,
+     "skill_vs_persistence": 0.055,
+     "skill_vs_seasonal_naive": 0.301,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": -0.0,
+     "very_poor_hours_n": 2,
+     "onset_recall_model": 0.0,
+     "onset_recall_persistence": 0.0,
+     "onset_recall_p30": 0.0,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.053,
+     "onsets": 2,
+     "pi80_coverage": 0.795,
+     "brier_skill_very_poor": -0.003
+    }
+   ]
+  }
+ },
+ "ahmedabad": {
+  "city_id": "ahmedabad",
+  "history": null,
+  "live": {
+   "city_id": "ahmedabad",
+   "source": "live",
+   "window": {
+    "start": "2026-07-12T10:00:00+00:00",
+    "end": "2026-08-16T10:00:00+00:00",
+    "split": "2026-08-07T16:00:00+00:00"
+   },
+   "stations_cells": 6,
+   "generated_at": "2026-08-17T17:50:56.270241+00:00",
+   "headline": [
+    {
+     "horizon_h": 24,
+     "n_test": 745,
+     "skill_vs_persistence": 0.143,
+     "skill_vs_seasonal_naive": 0.185,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.106,
+     "onsets": 0,
+     "pi80_coverage": 0.79,
+     "brier_skill_very_poor": null
+    },
+    {
+     "horizon_h": 48,
+     "n_test": 619,
+     "skill_vs_persistence": 0.133,
+     "skill_vs_seasonal_naive": 0.13,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.044,
+     "onsets": 0,
+     "pi80_coverage": 0.847,
+     "brier_skill_very_poor": null
+    },
+    {
+     "horizon_h": 72,
+     "n_test": 532,
+     "skill_vs_persistence": 0.031,
+     "skill_vs_seasonal_naive": 0.012,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": -0.009,
+     "onsets": 0,
+     "pi80_coverage": 0.744,
+     "brier_skill_very_poor": null
+    }
+   ]
+  }
+ },
+ "chennai": {
+  "city_id": "chennai",
+  "history": null,
+  "live": {
+   "city_id": "chennai",
+   "source": "live",
+   "window": {
+    "start": "2026-07-12T10:00:00+00:00",
+    "end": "2026-08-16T10:00:00+00:00",
+    "split": "2026-08-07T16:00:00+00:00"
+   },
+   "stations_cells": 6,
+   "generated_at": "2026-08-17T17:50:13.415818+00:00",
+   "headline": [
+    {
+     "horizon_h": 24,
+     "n_test": 884,
+     "skill_vs_persistence": 0.055,
+     "skill_vs_seasonal_naive": 0.224,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": 0.003,
+     "very_poor_hours_n": 1,
+     "onset_recall_model": 0.0,
+     "onset_recall_persistence": 0.0,
+     "onset_recall_p30": 0.0,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.053,
+     "onsets": 1,
+     "pi80_coverage": 0.788,
+     "brier_skill_very_poor": -0.0
+    },
+    {
+     "horizon_h": 48,
+     "n_test": 764,
+     "skill_vs_persistence": 0.052,
+     "skill_vs_seasonal_naive": 0.218,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": -0.02,
+     "very_poor_hours_n": 1,
+     "onset_recall_model": 0.0,
+     "onset_recall_persistence": 0.0,
+     "onset_recall_p30": 0.0,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.052,
+     "onsets": 1,
+     "pi80_coverage": 0.749,
+     "brier_skill_very_poor": -0.0
+    },
+    {
+     "horizon_h": 72,
+     "n_test": 647,
+     "skill_vs_persistence": 0.055,
+     "skill_vs_seasonal_naive": 0.216,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": 0.009,
+     "very_poor_hours_n": 1,
+     "onset_recall_model": 0.0,
+     "onset_recall_persistence": 0.0,
+     "onset_recall_p30": 0.0,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.055,
+     "onsets": 1,
+     "pi80_coverage": 0.75,
+     "brier_skill_very_poor": -0.0
+    }
+   ]
+  }
+ },
+ "hyderabad": {
+  "city_id": "hyderabad",
+  "history": null,
+  "live": {
+   "city_id": "hyderabad",
+   "source": "live",
+   "window": {
+    "start": "2026-07-12T10:00:00+00:00",
+    "end": "2026-08-16T07:00:00+00:00",
+    "split": "2026-08-07T13:45:00+00:00"
+   },
+   "stations_cells": 6,
+   "generated_at": "2026-08-17T17:50:00.680823+00:00",
+   "headline": [
+    {
+     "horizon_h": 24,
+     "n_test": 760,
+     "skill_vs_persistence": 0.11,
+     "skill_vs_seasonal_naive": 0.316,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.069,
+     "onsets": 0,
+     "pi80_coverage": 0.775,
+     "brier_skill_very_poor": null
+    },
+    {
+     "horizon_h": 48,
+     "n_test": 656,
+     "skill_vs_persistence": 0.25,
+     "skill_vs_seasonal_naive": 0.312,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.243,
+     "onsets": 0,
+     "pi80_coverage": 0.806,
+     "brier_skill_very_poor": null
+    },
+    {
+     "horizon_h": 72,
+     "n_test": 540,
+     "skill_vs_persistence": 0.366,
+     "skill_vs_seasonal_naive": 0.274,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.38,
+     "onsets": 0,
+     "pi80_coverage": 0.732,
+     "brier_skill_very_poor": null
+    }
+   ]
+  }
+ },
+ "jaipur": {
+  "city_id": "jaipur",
+  "history": null,
+  "live": {
+   "city_id": "jaipur",
+   "source": "live",
+   "window": {
+    "start": "2026-07-12T10:00:00+00:00",
+    "end": "2026-08-16T09:00:00+00:00",
+    "split": "2026-08-07T15:15:00+00:00"
+   },
+   "stations_cells": 6,
+   "generated_at": "2026-08-17T17:51:11.339389+00:00",
+   "headline": [
+    {
+     "horizon_h": 24,
+     "n_test": 941,
+     "skill_vs_persistence": 0.06,
+     "skill_vs_seasonal_naive": 0.255,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": -0.019,
+     "onsets": 0,
+     "pi80_coverage": 0.849,
+     "brier_skill_very_poor": null
+    },
+    {
+     "horizon_h": 48,
+     "n_test": 808,
+     "skill_vs_persistence": -0.037,
+     "skill_vs_seasonal_naive": 0.075,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": -0.037,
+     "onsets": 0,
+     "pi80_coverage": 0.815,
+     "brier_skill_very_poor": null
+    },
+    {
+     "horizon_h": 72,
+     "n_test": 664,
+     "skill_vs_persistence": -0.064,
+     "skill_vs_seasonal_naive": 0.031,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": -0.108,
+     "onsets": 0,
+     "pi80_coverage": 0.7,
+     "brier_skill_very_poor": null
+    }
+   ]
+  }
+ },
+ "kolkata": {
+  "city_id": "kolkata",
+  "history": {
+   "city_id": "kolkata",
+   "source": "hist",
+   "window": {
+    "start": "2025-02-18T19:00:00+00:00",
+    "end": "2026-08-15T23:00:00+00:00",
+    "split": "2025-11-01T00:00:00+00:00"
+   },
+   "stations_cells": 10,
+   "generated_at": "2026-08-17T17:34:06.505055+00:00",
+   "headline": [
+    {
+     "horizon_h": 24,
+     "n_test": 59373,
+     "skill_vs_persistence": 0.141,
+     "skill_vs_seasonal_naive": 0.262,
+     "winter_skill_vs_persistence": 0.124,
+     "very_poor_hours_skill": 0.032,
+     "very_poor_hours_n": 4180,
+     "onset_recall_model": 0.023,
+     "onset_recall_persistence": 0.0,
+     "onset_recall_p30": 0.192,
+     "precision_p30": 0.57,
+     "skill_raw_vs_persistence": 0.125,
+     "onsets": 1607,
+     "pi80_coverage": 0.748,
+     "brier_skill_very_poor": 0.393
+    },
+    {
+     "horizon_h": 48,
+     "n_test": 59133,
+     "skill_vs_persistence": 0.096,
+     "skill_vs_seasonal_naive": 0.145,
+     "winter_skill_vs_persistence": 0.13,
+     "very_poor_hours_skill": -0.007,
+     "very_poor_hours_n": 4235,
+     "onset_recall_model": 0.034,
+     "onset_recall_persistence": 0.0,
+     "onset_recall_p30": 0.178,
+     "precision_p30": 0.507,
+     "skill_raw_vs_persistence": 0.065,
+     "onsets": 2020,
+     "pi80_coverage": 0.725,
+     "brier_skill_very_poor": 0.272
+    },
+    {
+     "horizon_h": 72,
+     "n_test": 58893,
+     "skill_vs_persistence": 0.092,
+     "skill_vs_seasonal_naive": 0.125,
+     "winter_skill_vs_persistence": 0.083,
+     "very_poor_hours_skill": -0.069,
+     "very_poor_hours_n": 4256,
+     "onset_recall_model": 0.035,
+     "onset_recall_persistence": 0.0,
+     "onset_recall_p30": 0.062,
+     "precision_p30": 0.518,
+     "skill_raw_vs_persistence": -0.007,
+     "onsets": 2134,
+     "pi80_coverage": 0.698,
+     "brier_skill_very_poor": 0.238
+    }
+   ]
+  },
+  "live": {
+   "city_id": "kolkata",
+   "source": "live",
+   "window": {
+    "start": "2026-07-12T10:00:00+00:00",
+    "end": "2026-08-16T09:00:00+00:00",
+    "split": "2026-08-07T15:15:00+00:00"
+   },
+   "stations_cells": 3,
+   "generated_at": "2026-08-17T17:50:27.538972+00:00",
+   "headline": [
+    {
+     "horizon_h": 24,
+     "n_test": 354,
+     "skill_vs_persistence": 0.117,
+     "skill_vs_seasonal_naive": 0.278,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.168,
+     "onsets": 0,
+     "pi80_coverage": 0.822,
+     "brier_skill_very_poor": null
+    },
+    {
+     "horizon_h": 48,
+     "n_test": 306,
+     "skill_vs_persistence": 0.118,
+     "skill_vs_seasonal_naive": 0.361,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.068,
+     "onsets": 0,
+     "pi80_coverage": 0.783,
+     "brier_skill_very_poor": null
+    },
+    {
+     "horizon_h": 72,
+     "n_test": 258,
+     "skill_vs_persistence": 0.295,
+     "skill_vs_seasonal_naive": 0.283,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.295,
+     "onsets": 0,
+     "pi80_coverage": 0.74,
+     "brier_skill_very_poor": null
+    }
+   ]
+  }
+ },
+ "lucknow": {
+  "city_id": "lucknow",
+  "history": null,
+  "live": {
+   "city_id": "lucknow",
+   "source": "live",
+   "window": {
+    "start": "2026-07-12T10:00:00+00:00",
+    "end": "2026-08-16T09:00:00+00:00",
+    "split": "2026-08-07T15:15:00+00:00"
+   },
+   "stations_cells": 5,
+   "generated_at": "2026-08-17T17:51:21.738963+00:00",
+   "headline": [
+    {
+     "horizon_h": 24,
+     "n_test": 810,
+     "skill_vs_persistence": 0.264,
+     "skill_vs_seasonal_naive": 0.728,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": 0.038,
+     "very_poor_hours_n": 1,
+     "onset_recall_model": 0.0,
+     "onset_recall_persistence": 0.0,
+     "onset_recall_p30": 0.0,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.264,
+     "onsets": 1,
+     "pi80_coverage": 0.809,
+     "brier_skill_very_poor": -0.212
+    },
+    {
+     "horizon_h": 48,
+     "n_test": 700,
+     "skill_vs_persistence": 0.241,
+     "skill_vs_seasonal_naive": 0.33,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": -0.078,
+     "very_poor_hours_n": 1,
+     "onset_recall_model": 0.0,
+     "onset_recall_persistence": 0.0,
+     "onset_recall_p30": 0.0,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.241,
+     "onsets": 1,
+     "pi80_coverage": 0.792,
+     "brier_skill_very_poor": -0.013
+    },
+    {
+     "horizon_h": 72,
+     "n_test": 589,
+     "skill_vs_persistence": 0.229,
+     "skill_vs_seasonal_naive": 0.32,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": -0.028,
+     "very_poor_hours_n": 1,
+     "onset_recall_model": 0.0,
+     "onset_recall_persistence": 0.0,
+     "onset_recall_p30": 0.0,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.229,
+     "onsets": 1,
+     "pi80_coverage": 0.752,
+     "brier_skill_very_poor": -0.012
+    }
+   ]
+  }
+ },
+ "pune": {
+  "city_id": "pune",
+  "history": null,
+  "live": {
+   "city_id": "pune",
+   "source": "live",
+   "window": {
+    "start": "2026-07-12T10:00:00+00:00",
+    "end": "2026-08-16T09:00:00+00:00",
+    "split": "2026-08-07T15:15:00+00:00"
+   },
+   "stations_cells": 9,
+   "generated_at": "2026-08-17T17:50:43.930823+00:00",
+   "headline": [
+    {
+     "horizon_h": 24,
+     "n_test": 1297,
+     "skill_vs_persistence": 0.197,
+     "skill_vs_seasonal_naive": 0.25,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.17,
+     "onsets": 0,
+     "pi80_coverage": 0.728,
+     "brier_skill_very_poor": null
+    },
+    {
+     "horizon_h": 48,
+     "n_test": 1101,
+     "skill_vs_persistence": 0.207,
+     "skill_vs_seasonal_naive": 0.236,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.188,
+     "onsets": 0,
+     "pi80_coverage": 0.781,
+     "brier_skill_very_poor": null
+    },
+    {
+     "horizon_h": 72,
+     "n_test": 893,
+     "skill_vs_persistence": 0.322,
+     "skill_vs_seasonal_naive": 0.277,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.321,
+     "onsets": 0,
+     "pi80_coverage": 0.835,
+     "brier_skill_very_poor": null
+    }
+   ]
+  }
+ }
+}

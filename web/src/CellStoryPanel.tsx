@@ -4,8 +4,10 @@ import { aqiCategory, pm25ToAqi } from "./aqi";
 import { SOURCE_COLORS, dominantSource, type Shares } from "./sources";
 import { DRIVER_LABELS, type AttrCell } from "./BlameMap";
 import { placeForCell } from "./placeName";
+import TrendPanel from "./TrendPanel";
+import { loadLogo, renderShareCard } from "./shareCard";
 
-type FC = { h3_cell: string; horizon_h: number; value: number; pi_low: number; pi_high: number };
+type FC = { h3_cell: string; horizon_h: number; value: number; pi_low: number; pi_high: number; p_over_120?: number | null; p_over_250?: number | null; calibration_n?: number | null };
 
 const HORIZONS = [24, 48, 72];
 
@@ -28,6 +30,7 @@ export default function CellStoryPanel({
 }) {
   const [fc, setFc] = useState<FC[] | null>(null);
   const [place, setPlace] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
 
   // Ward name from the shipped boundary files — humans read "Karol Bagh",
   // not an H3 id. Falls back to the raw id when no ward matches.
@@ -68,22 +71,69 @@ export default function CellStoryPanel({
           {place ? (
             <>
               <div className="text-sm font-bold leading-tight text-slate-800">{place}</div>
-              <div className="font-mono text-[10px] text-gray-400">~1 km² cell · {cell.h3_cell}</div>
+              <div className="font-mono text-[10px] text-gray-500">~1 km² cell · {cell.h3_cell}</div>
             </>
           ) : (
             <div className="font-mono text-xs text-gray-500">{cell.h3_cell}</div>
           )}
         </div>
-        <button aria-label="Close cell story" onClick={onClose} className="rounded px-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700">
-          ✕
-        </button>
+        <div className="flex items-center gap-0.5">
+          <button
+            aria-label="Share this place as an image"
+            title="Share this place — PNG card for WhatsApp"
+            onClick={async () => {
+              setSharing(true);
+              try {
+                const [trend, logo] = await Promise.all([
+                  api<{ series: Array<{ date: string; pm25: number; band: string }>; verdict?: { text: string; direction: string } | null }>(
+                    `/history/trend?city=${city}&days=90&cell=${cell.h3_cell}`,
+                  ).catch(() => null),
+                  loadLogo(),
+                ]);
+                const canvas = renderShareCard({
+                  cityName: city.charAt(0).toUpperCase() + city.slice(1),
+                  place: place ?? cell.h3_cell,
+                  cellId: cell.h3_cell,
+                  shares,
+                  confidence: cell.confidence,
+                  trend,
+                  forecast: (fc ?? []).map((f) => ({ horizon_h: f.horizon_h, value: f.value, pi_low: f.pi_low, pi_high: f.pi_high })),
+                  logo,
+                });
+                const blob: Blob | null = await new Promise((r) => canvas.toBlob(r, "image/png"));
+                if (!blob) return;
+                const file = new File([blob], `vayunetra-${city}-${(place ?? cell.h3_cell).replace(/\W+/g, "-").toLowerCase()}.png`, { type: "image/png" });
+                const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+                if (nav.share && nav.canShare?.({ files: [file] })) {
+                  await nav.share({ files: [file], title: `Air in ${place ?? city}`, text: "VayuNetra — who is to blame, and how the air has been." });
+                } else {
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url; a.download = file.name; a.click();
+                  URL.revokeObjectURL(url);
+                }
+              } finally {
+                setSharing(false);
+              }
+            }}
+            className="flex h-7 min-w-7 items-center justify-center rounded px-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
+            disabled={sharing}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+              <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" />
+            </svg>
+          </button>
+          <button aria-label="Close cell story" onClick={onClose} className="flex h-7 min-w-7 items-center justify-center rounded px-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700">
+            ✕
+          </button>
+        </div>
       </div>
 
       {/* 1 — Blame */}
       <div className="mt-2">
         <div className="text-xs font-semibold text-gray-700">
           1 · Who's to blame — <span className="capitalize">{dom.replace("_", " ")}</span>
-          <span className="ml-1 font-normal text-gray-400">conf {Math.round(cell.confidence * 100)}%</span>
+          <span className="ml-1 font-normal text-gray-500">conf {Math.round(cell.confidence * 100)}%</span>
         </div>
         <div className="mt-1 space-y-1">
           {shares.map(([k, v]) => {
@@ -111,7 +161,7 @@ export default function CellStoryPanel({
               {ev.shap_drivers!.map((d) => `${DRIVER_LABELS[d.feature] ?? d.feature} +${d.contribution.toFixed(1)}`).join(" · ")}
             </div>
             {typeof ev.model_r2 === "number" && (
-              <div className="mt-0.5 text-[11px] text-emerald-600">
+              <div className="mt-0.5 text-[11px] text-emerald-700">
                 out-of-sample model R² {ev.model_r2} — passed the ≥0.15 skill gate
               </div>
             )}
@@ -131,8 +181,13 @@ export default function CellStoryPanel({
           </div>
         )}
         {markerBits.length > 0 && (
-          <div className="mt-1 text-[11px] text-gray-400">evidence: {markerBits.join(" · ")}</div>
+          <div className="mt-1 text-[11px] text-gray-500">evidence: {markerBits.join(" · ")}</div>
         )}
+      </div>
+
+      {/* Past — where it has been (daily station history for this cell) */}
+      <div className="mt-3">
+        <TrendPanel city={city} cell={cell.h3_cell} compact />
       </div>
 
       {/* 2 — Forecast */}
@@ -148,19 +203,34 @@ export default function CellStoryPanel({
               const cat = aqiCategory(pm25ToAqi(r.value));
               return (
                 <div key={h} className="flex-1 rounded-md border border-gray-200 p-1.5 text-center">
-                  <div className="text-[11px] text-gray-400">+{h}h</div>
+                  <div className="text-[11px] text-gray-500">+{h}h</div>
                   <div className="text-sm font-bold" style={{ color: cat.color }}>
                     {Math.round(r.value)}
                   </div>
-                  <div className="text-[11px] text-gray-400">
+                  <div className="text-[11px] text-gray-500">
                     [{Math.round(r.pi_low)}–{Math.round(r.pi_high)}]
                   </div>
+                  {typeof r.p_over_120 === "number" && (
+                    <div
+                      className={`mt-0.5 whitespace-nowrap rounded px-1 text-[9.5px] font-semibold ${
+                        (r.p_over_250 ?? 0) >= 0.5 ? "bg-rose-100 text-rose-800" : r.p_over_120 >= 0.5 ? "bg-orange-100 text-orange-800" : "bg-slate-100 text-slate-500"
+                      }`}
+                      title="Calibrated exceedance probability — split-conformal on held-out residuals, not a threshold on the point forecast"
+                    >
+                      {(r.p_over_250 ?? 0) >= 0.5 ? `${Math.round((r.p_over_250 ?? 0) * 100)}% Severe` : `${Math.round(r.p_over_120 * 100)}% Very Poor`}
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
         ) : (
-          <div className="mt-1 text-xs text-gray-400">no per-cell forecast (see city panel)</div>
+          <div className="mt-1 text-xs text-gray-500">no per-cell forecast (see city panel)</div>
+        )}
+        {fc && fc.some((x) => typeof x.p_over_120 === "number") && (
+          <div className="mt-1 text-[10px] text-gray-500">
+            80% band + calibrated P(&gt;120 / &gt;250 µg/m³) — probabilities calibrated on held-out residuals ({fc.find((x) => typeof x.p_over_120 === "number")?.calibration_n ?? "—"} hours), not thresholds on a point.
+          </div>
         )}
       </div>
 

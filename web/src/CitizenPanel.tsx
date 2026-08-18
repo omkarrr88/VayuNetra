@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "./api";
+import CitizenReports from "./CitizenReports";
+import ExposureCorridors from "./ExposureCorridors";
 import { aqiCategory } from "./aqi";
-import { Panel, SegBtn } from "./ui";
+import { Panel, SegBtn, Step } from "./ui";
 
 type Advisory = {
   ward_id: string;
@@ -12,8 +14,8 @@ type Advisory = {
   message: string;
 };
 
-const ALL_LANGS = ["en", "hi", "kn", "mr"];
-const LABELS: Record<string, string> = { en: "English", hi: "Hindi", kn: "Kannada", mr: "Marathi" };
+const ALL_LANGS = ["en", "hi", "kn", "mr", "ta", "te", "bn", "gu"];
+const LABELS: Record<string, string> = { en: "English", hi: "Hindi", kn: "Kannada", mr: "Marathi", ta: "Tamil", te: "Telugu", bn: "Bengali", gu: "Gujarati" };
 
 type BroadcastResult = {
   telegram?: { status: string; detail?: string; message_id?: number };
@@ -30,8 +32,14 @@ type CleanZone = {
 
 type CleanZones = { basis?: string; zones: CleanZone[] };
 
-export default function CitizenPanel({ city, languages }: { city: string; languages?: string[] }) {
-  const choices = useMemo(() => Array.from(new Set([...(languages ?? []), ...ALL_LANGS])), [languages]);
+export default function CitizenPanel({ city, languages, center }: { city: string; languages?: string[]; center?: [number, number] }) {
+  // Offer only the languages this city is configured for (falling back to all
+  // four only when the config carries none). Merging in ALL_LANGS used to let a
+  // judge pick Kannada for Chennai and get a template advisory nobody reviewed.
+  const choices = useMemo(
+    () => (languages && languages.length ? languages.filter((l) => ALL_LANGS.includes(l)) : ALL_LANGS),
+    [languages],
+  );
   const [lang, setLang] = useState(choices[0] ?? "en");
   const [rows, setRows] = useState<Advisory[] | null>(null);
   const [channel, setChannel] = useState("pwa");
@@ -44,9 +52,13 @@ export default function CitizenPanel({ city, languages }: { city: string; langua
     api<CleanZones>(`/clean-zones?city=${city}&top=4`).then(setCleanZones).catch(() => setCleanZones({ zones: [] }));
   }, [city]);
 
+  // Default to the city's first showcase language (Hindi in Delhi, Marathi in Mumbai…) —
+  // the city config arrives after first paint, so re-derive when the choices change.
+  const choicesKey = choices.join(",");
   useEffect(() => {
-    if (!choices.includes(lang)) setLang(choices[0] ?? "en");
-  }, [choices, lang]);
+    setLang(choices[0] ?? "en");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [choicesKey, city]);
 
   useEffect(() => {
     setRows(null);
@@ -90,10 +102,12 @@ export default function CitizenPanel({ city, languages }: { city: string; langua
   ];
 
   return (
+    <>
     <Panel
       title="Citizen Advisory"
       right={
         <select
+          aria-label="Advisory language"
           className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700"
           value={lang}
           onChange={(e) => setLang(e.target.value)}
@@ -113,7 +127,7 @@ export default function CitizenPanel({ city, languages }: { city: string; langua
           </SegBtn>
         ))}
       </div>
-      <div className="mt-1 text-[10px] text-gray-400">how the same advisory reaches citizens on each channel</div>
+      <div className="mt-1 text-[10px] text-gray-500">how the same advisory reaches citizens on each channel</div>
 
       {rows === null ? (
         <div className="mt-3 space-y-2">
@@ -169,11 +183,11 @@ export default function CitizenPanel({ city, languages }: { city: string; langua
             </p>
           </div>
           <div className="rounded-md bg-slate-50 p-2 text-[11px] leading-4 text-gray-600">
-            Citizens can also <b>call in</b>: the line answers with a city menu — press 1 Delhi · 2 Bengaluru · 3 Mumbai — and
+            Citizens can also <b>call in</b>: the line answers with a city menu — press 1 for Delhi, 2 for Bengaluru, 3 for Mumbai, 4–9 and 0 for the other seven — and
             reads that city's latest advisory in a clear Indian-English voice.
           </div>
-          <div className="text-[10px] leading-4 text-gray-400">
-            Live calls read the English advisory today; in-language voice for calls is on the roadmap.
+          <div className="text-[10px] leading-4 text-gray-500">
+            Live calls are spoken in Hindi (Polly Kajal) for Hindi-first cities and in English elsewhere — Polly has no voice yet for the other Indian scripts.
           </div>
         </div>
       ) : (
@@ -191,19 +205,54 @@ export default function CitizenPanel({ city, languages }: { city: string; langua
               <div className="mt-0.5 text-[13px] leading-5 text-slate-200">{a.message}</div>
             </div>
           ))}
-          <div className="text-[10px] text-gray-400">public display / big-screen board rendering</div>
+          <div className="text-[10px] text-gray-500">public display / big-screen board rendering</div>
         </div>
       )}
 
-      {/* 🌿 Cleanest zones right now — the flip side of the blame map: where
+    </Panel>
+
+      {/* 2 — Send it: live multi-channel broadcast (real Telegram + real IVR call) */}
+      <Step n={2} label="Send it" info={<p>Broadcasts the latest advisory to the configured Telegram channel and places a real IVR phone call (Twilio, Indian-English neural voice). Confirmation is required — this touches the outside world.</p>}>
+        <Panel title="Send it" tag="Telegram · IVR · display">
+          {bcast === "idle" && (
+            <button
+              onClick={() => setBcast("confirm")}
+              className="w-full cursor-pointer rounded-md bg-emerald-700 px-2 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-800"
+            >
+              📣 Broadcast latest alert (Telegram + IVR)
+            </button>
+          )}
+          {bcast === "confirm" && (
+            <div className="rounded border border-amber-300 bg-amber-50 p-2 text-xs">
+              <div className="text-amber-800">Send a real Telegram message and place a real phone call?</div>
+              <div className="mt-1.5 flex gap-2">
+                <button onClick={broadcast} className="cursor-pointer rounded bg-emerald-700 px-2 py-1 text-white">
+                  Yes, broadcast
+                </button>
+                <button onClick={() => setBcast("idle")} className="cursor-pointer rounded bg-gray-200 px-2 py-1 text-gray-700">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+          {bcast === "sending" && <div className="text-center text-xs text-gray-500">broadcasting…</div>}
+          {(bcast === "done" || bcast === "error") && (
+            <div className={`rounded p-1.5 text-center text-xs ${bcast === "done" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
+              {bcastMsg}
+            </div>
+          )}
+          <div className="mt-1.5 text-[11px] leading-4 text-slate-500">
+            The same advisory, rendered per channel above; a WhatsApp-ready card for any place is one click away in its cell story.
+          </div>
+        </Panel>
+      </Step>
+
+      {/* 3 — Cleanest zones right now — the flip side of the blame map: where
           to go, computed from the E2 dense 1km field (not a hardcoded list). */}
       {cleanZones && cleanZones.zones.length > 0 && (
-        <div className="mt-3 border-t border-gray-100 pt-2">
-          <div className="flex items-baseline justify-between">
-            <div className="text-[13px] font-bold tracking-tight text-slate-800">🌿 Cleanest air right now</div>
-            <span className="text-[11px] text-slate-400">lowest ~1km cells</span>
-          </div>
-          <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+        <Step n={3} label="Clean-air routes" info={<p>Lowest ~1 km cells from the dense model field anchored on live stations, with a corridor exposure screen for commutes. A modelled guide, not a measurement.</p>}>
+        <Panel title="Cleanest air right now" tag="lowest ~1 km cells">
+          <div className="grid grid-cols-2 gap-1.5">
             {cleanZones.zones.map((z) => {
               const cat = aqiCategory(z.aqi);
               return (
@@ -222,7 +271,7 @@ export default function CitizenPanel({ city, languages }: { city: string; langua
                     >
                       {z.aqi}
                     </span>
-                    <span className="text-[11px] text-slate-400">{cat.label}</span>
+                    <span className="text-[11px] text-slate-500">{cat.label}</span>
                   </div>
                   <div className="mt-1 font-mono text-xs font-semibold text-slate-700">{z.zone_id}</div>
                   <div className="text-[11px] text-emerald-700">Directions ↗</div>
@@ -230,46 +279,20 @@ export default function CitizenPanel({ city, languages }: { city: string; langua
               );
             })}
           </div>
-          <div className="mt-1 text-[11px] leading-4 text-slate-400">
+          <div className="mt-1 text-[11px] leading-4 text-slate-500">
             Estimated from the dense 1 km model field anchored on live station data — a modeled guide, not a measurement.
           </div>
-        </div>
+          <ExposureCorridors city={city} center={center} zones={cleanZones.zones} />
+        </Panel>
+        </Step>
       )}
 
-      {/* Live multi-channel broadcast — the demo "wow" button */}
-      <div className="mt-3 border-t border-gray-100 pt-2">
-        {bcast === "idle" && (
-          <button
-            onClick={() => setBcast("confirm")}
-            className="w-full rounded bg-emerald-600 px-2 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
-          >
-            📣 Broadcast latest alert (Telegram + IVR)
-          </button>
-        )}
-        {bcast === "confirm" && (
-          <div className="rounded border border-amber-300 bg-amber-50 p-2 text-xs">
-            <div className="text-amber-800">Send a real Telegram message and place a real phone call?</div>
-            <div className="mt-1.5 flex gap-2">
-              <button onClick={broadcast} className="rounded bg-emerald-600 px-2 py-1 text-white">
-                Yes, broadcast
-              </button>
-              <button onClick={() => setBcast("idle")} className="rounded bg-gray-200 px-2 py-1 text-gray-700">
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-        {bcast === "sending" && <div className="text-center text-xs text-gray-500">broadcasting…</div>}
-        {(bcast === "done" || bcast === "error") && (
-          <div
-            className={`rounded p-1.5 text-center text-xs ${
-              bcast === "done" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
-            }`}
-          >
-            {bcastMsg}
-          </div>
-        )}
-      </div>
-    </Panel>
+      {/* 4 — Citizen reports: the loop closes (photo → verified → enforcement worklist) */}
+      <Step n={4} label="Citizen reports" info={<p>Residents report smoke, dust or burning with a photo and location. A verified report becomes an emission source in the enforcement worklist — citizens feed the officer loop.</p>}>
+        <Panel title="Citizen reports" tag="photo → verified → worklist">
+          <CitizenReports city={city} center={center} />
+        </Panel>
+      </Step>
+    </>
   );
 }
