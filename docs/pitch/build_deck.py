@@ -37,9 +37,12 @@ def main() -> None:
     html = TEMPLATE.read_text()
     data = json.loads(DATA.read_text())
     shots = {p.stem: data_uri(p, "image/jpeg") for p in sorted(SHOTS.glob("*.jpg"))}
-    arch = ROOT / "docs" / "architecture-dark.png"
-    if arch.exists():
-        shots["arch"] = data_uri(arch, "image/png")
+    arch_svg = ROOT / "docs" / "architecture-light.svg"
+    arch_png = ROOT / "docs" / "architecture-dark.png"
+    if arch_svg.exists():
+        shots["arch"] = data_uri(arch_svg, "image/svg+xml")
+    elif arch_png.exists():
+        shots["arch"] = data_uri(arch_png, "image/png")
     for name, uri in shots.items():
         html = html.replace("{{IMG:%s}}" % name, uri)
     html = html.replace("{{QR}}", qr_uri())
