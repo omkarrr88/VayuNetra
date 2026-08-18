@@ -102,6 +102,7 @@ export default function WhatIfPanel({ city }: { city: string }) {
 
   return (
     <>
+    <Step n={1} label="Choose an intervention" info={<p>Pick an intervention and a horizon; the counterfactual runs over this city's live attribution shares and forecasts.</p>}>
     <Panel title="Choose an intervention" tag="what-if">
       <div className="text-xs text-gray-600">
         Counterfactual over attribution × forecast, with cited health &amp; carbon impact.
@@ -141,6 +142,7 @@ export default function WhatIfPanel({ city }: { city: string }) {
 
       {err && <div className="mt-2 text-xs text-red-600">{err}</div>}
     </Panel>
+</Step>
 
       {/* 2 — the result: ΔAQI per cell + cited health/₹/CO₂e cards */}
       <Step n={2} label="Run & read the result" info={<p>Counterfactual over attribution shares × forecasts (E3) with cited WHO AirQ+ health economics (E7). A near-zero effect is reported as such — the engine never inflates an intervention that does not match the dominant source. Missing inputs return null, never a made-up number.</p>}>

@@ -1,5 +1,6 @@
 // Shared UI primitives — one card/button language across every panel.
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { shownStep, useRail } from "./console/railContext";
 
 /** Cross-panel refresh signal: an officer action (approve/dispatch) changed enforcement state,
  *  so ward queues and intervention tracking refetch without a page reload. */
@@ -15,17 +16,24 @@ export function useEnforcementChanged(fn: () => void): void {
   }, [fn]);
 }
 
-/** Numbered step in a section's flow — provided by <Step> in App.tsx so a panel can
- *  show its badge without knowing where it sits in the story. */
+/** Numbered step in a section's flow — provided by <Step> so a panel can show its badge without
+ *  knowing where it sits in the story. Inside the console rail the steps are TABS: a Step
+ *  registers itself with the rail and renders only while it is the selected tab, so the officer
+ *  sees one card at a time instead of a long scroll. Outside a rail (public pages, PDFs) a Step
+ *  simply renders its children. */
 export type StepInfo = { n: number; label: string; info?: ReactNode };
 export const StepContext = createContext<StepInfo | null>(null);
 
 export function Step({ n, label, info, children }: StepInfo & { children: ReactNode }) {
-  return (
+  const rail = useRail();
+  useEffect(() => { rail?.register(n); }, [rail, n]);
+  const body = (
     <StepContext.Provider value={{ n, label, info }}>
       <div data-step={n} className="scroll-mt-20">{children}</div>
     </StepContext.Provider>
   );
+  if (!rail) return body;
+  return n === shownStep(rail.active, rail.steps) ? <div className="vn-fade-in">{body}</div> : null;
 }
 
 /** "What is this?" popover — plain-language explanation of what a card shows, where the

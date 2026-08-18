@@ -1,4 +1,5 @@
 import { AqiScaleProvider } from "./aqiScale";
+import { ThemeProvider } from "./theme";
 import React, { lazy, Suspense, useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import Landing from "./Landing";
@@ -32,7 +33,7 @@ function Root() {
   if (path.startsWith("/console")) {
     return (
       <Suspense fallback={<ConsoleFallback />}>
-        <AqiScaleProvider><App /></AqiScaleProvider>
+        <ThemeProvider><AqiScaleProvider><App /></AqiScaleProvider></ThemeProvider>
       </Suspense>
     );
   }

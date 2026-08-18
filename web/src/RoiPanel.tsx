@@ -126,6 +126,7 @@ export default function RoiPanel({ city }: { city: string }) {
 
   return (
     <>
+    <Step n={1} label="The funding case" info={<p>Annual premature deaths and ₹ health cost from the cited annual PM2.5, and what a 30 % NCAP-target cut would avert. Order-of-magnitude, VSL caveat shown.</p>}>
     <Panel title="City ROI — the funding case">
       <div className="grid grid-cols-2 gap-2">
         <Big label="Attributable deaths / yr" value={intfmt(d.attributable_deaths_per_year)} tone="bad" />
@@ -164,6 +165,7 @@ export default function RoiPanel({ city }: { city: string }) {
       <div className="mt-2 rounded-md bg-slate-50 p-2 text-xs leading-snug text-gray-700">{d.narrative}</div>
       <Citations items={d.citations ?? []} />
     </Panel>
+    </Step>
     <FundGuidance city={city} />
     </>
   );

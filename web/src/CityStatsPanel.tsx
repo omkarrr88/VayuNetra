@@ -84,14 +84,15 @@ export default function CityStatsPanel({
   const bands = aqiBands(coverageCells, scale);
 
   return (
+    <>
+    <Step n={4} label="Who is in the forecast" info={<p>Expected people in Very Poor / Severe air = Σ cell population × calibrated P(&gt; band); GPW population where sampled, cited city population otherwise. Exposure, not mortality.</p>}>
+      <Panel title="Who is in the forecast" tag="LIVE">
+        <ExposureCard city={city} />
+      </Panel>
+    </Step>
+    <Step n={5} label="The past" info={<p>Daily station means for 30 d / 90 d / 1 y with a plain-language verdict and spike-day markers (raw readings ∪ the archived daily rollup), then the last 48 h, the live source mix and the band split.</p>}>
     <Panel title="City Statistics" tag="LIVE">
-      {/* Forecast exposure — expected people in Very Poor / Severe air, calibrated (this is step 4) */}
-      <ExposureCard city={city} />
-      <div className="my-2 border-t border-slate-100" />
-      {/* Long-range history — daily means, CPCB bands, plain-language verdict (step 5, "The past") */}
-      <Step n={5} label="The past" info={<p>Daily station means for 30 d / 90 d / 1 y with a plain-language verdict and spike-day markers (raw readings ∪ the archived daily rollup), then the last 48 h and the live source mix.</p>}>
-        <TrendPanel city={city} compact />
-      </Step>
+      <TrendPanel city={city} compact />
       <div className="my-2 border-t border-slate-100" />
       {/* 48h trend — real station-hour means */}
       <div className="text-[12px] font-semibold text-slate-700">PM2.5 — last 48 hours</div>
@@ -175,5 +176,7 @@ export default function CityStatsPanel({
         </div>
       )}
     </Panel>
+    </Step>
+    </>
   );
 }

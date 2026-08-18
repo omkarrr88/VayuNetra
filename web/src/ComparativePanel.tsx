@@ -5,7 +5,7 @@ import { api } from "./api";
 import { categoryForPm25, formatIndex, pm25Index, SCALES } from "./aqi";
 import { useAqiScale } from "./aqiScale";
 import { inr, intfmt } from "./format";
-import { EmptyState, Panel } from "./ui";
+import { EmptyState, Panel, Step } from "./ui";
 
 type CityCard = {
   city_id: string;
@@ -52,6 +52,7 @@ export default function ComparativePanel({ onSelectCity }: { onSelectCity: (city
   }));
 
   return (
+    <Step n={1} label="Scoreboard" info={<p>The ten cities ranked by current PM2.5 with trend, dominant source, health burden and enforcement load; click a city to switch the whole console. Playbook lines come from the multi-city agent.</p>}>
     <Panel title="Multi-City Compare">
       {failed && !data ? (
         <EmptyState message="Couldn't load the multi-city comparison." tone="error" onRetry={load} />
@@ -157,5 +158,6 @@ export default function ComparativePanel({ onSelectCity }: { onSelectCity: (city
         </>
       )}
     </Panel>
+    </Step>
   );
 }

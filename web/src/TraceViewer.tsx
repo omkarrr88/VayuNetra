@@ -3,7 +3,7 @@
 // plus a button that runs the whole pipeline live on stage.
 import { useCallback, useEffect, useState } from "react";
 import { api } from "./api";
-import { Panel } from "./ui";
+import { Panel, Step } from "./ui";
 
 type TraceStep = { node: string; ts: string; meta?: Record<string, unknown> };
 type TraceRow = { city_id: string; total_latency_ms?: number; trace?: TraceStep[]; signal_ts?: string };
@@ -215,6 +215,7 @@ export default function TraceViewer({ city }: { city: string }) {
   }
 
   return (
+    <Step n={1} label="Run the agents" info={<p>The LangGraph orchestrator: ingest → attribution → forecast → spike gate → enforcement → advisory. Each node's inputs, outputs and wall-clock are traced; the button really runs the graph against the live database.</p>}>
     <Panel
       title="Agent Pipeline"
       right={
@@ -250,5 +251,6 @@ export default function TraceViewer({ city }: { city: string }) {
       </button>
       {err && <div className="mt-1 text-[11px] text-red-600">{err}</div>}
     </Panel>
+    </Step>
   );
 }

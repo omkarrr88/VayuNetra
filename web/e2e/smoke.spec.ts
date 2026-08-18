@@ -59,7 +59,8 @@ test("every section shows its spine: verb, blurb and numbered steps", async ({ p
     await sidebar.getByRole("button", { name: label, exact: true }).click();
     const spine = page.locator("[data-tour=spine]");
     await expect(spine.getByText(verb, { exact: true })).toBeVisible();
-    await expect(spine.getByRole("button", { name: new RegExp(firstStep) })).toBeVisible();
+    // the spine is the rail's tab bar: each step is a tab and only its card is mounted
+    await expect(spine.getByRole("tab", { name: new RegExp(firstStep) })).toBeVisible();
   }
 });
 
@@ -72,6 +73,7 @@ test("a cell story auto-opens with an explanation (never an empty box)", async (
 
 test("enforcement worklist renders and a dossier opens", async ({ page }) => {
   await page.goto("/console");
+  await page.getByRole("tab", { name: /Ranked worklist/ }).click();
   await expect(page.getByText("Enforcement Worklist")).toBeVisible();
   const dossier = page.getByRole("button", { name: /evidence dossier/i }).first();
   await expect(dossier).toBeVisible({ timeout: 15_000 });

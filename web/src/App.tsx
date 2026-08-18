@@ -25,7 +25,7 @@ import TimeScrub, { type ScrubFrame } from "./TimeScrub";
 import { Sidebar, BottomNav, type Section } from "./Sidebar";
 import TopBar from "./TopBar";
 import Tour, { tourSeen } from "./Tour";
-import SectionHeader from "./console/SectionHeader";
+import { RailTabsProvider, RailTabBar, RailTab } from "./console/railTabs";
 import { FLOWS } from "./console/flows";
 import { Step } from "./ui";
 
@@ -354,7 +354,8 @@ export default function App() {
             data-rail
             className="vn-scroll relative z-10 space-y-3 p-3 lg:absolute lg:bottom-3 lg:right-3 lg:top-3 lg:w-[26rem] lg:overflow-y-auto lg:p-0 lg:pl-1 2xl:w-[30rem]"
           >
-            <SectionHeader section={section} cityName={city?.name} />
+          <RailTabsProvider section={section}>
+            <RailTabBar section={section} cityName={city?.name} />
             {/* Mobile keeps the cell story inline, above the section content */}
             {cell && (
               <div className="lg:hidden">
@@ -374,7 +375,7 @@ export default function App() {
                   <Step {...S("action", 2)}><EnforcementPanel city={active} focusCell={cell?.h3_cell ?? null} /></Step>
                   <Step {...S("action", 4)}><DispatchQueues city={active} /></Step>
                   <Step {...S("action", 5)}><InterventionsPanel city={active} /></Step>
-                  <CityIntelPanel city={active} />
+                  <RailTab n={5}><CityIntelPanel city={active} /></RailTab>
                 </>
               )}
               {section === "forecast" && (
@@ -382,20 +383,21 @@ export default function App() {
                   <Step {...S("forecast", 1)}><ForecastPanel city={active} /></Step>
                   <Step {...S("forecast", 2)}><ValidationPanel city={active} /></Step>
                   <Step {...S("forecast", 3)}><InterventionsHindsight city={active} /></Step>
-                  <Step {...S("forecast", 4)}><CityStatsPanel city={active} cells={attrCells} coverageCells={coverage?.cells ?? []} /></Step>
+                  <CityStatsPanel city={active} cells={attrCells} coverageCells={coverage?.cells ?? []} />
                 </>
               )}
-              {section === "citizen" && <Step {...S("citizen", 1)}><CitizenPanel city={active} languages={city?.languages} center={center} /></Step>}
-              {section === "compare" && <Step {...S("compare", 1)}><ComparativePanel onSelectCity={setActive} /></Step>}
-              {section === "whatif" && <Step {...S("whatif", 1)}><WhatIfPanel city={active} /></Step>}
+              {section === "citizen" && <CitizenPanel city={active} languages={city?.languages} center={center} />}
+              {section === "compare" && <ComparativePanel onSelectCity={setActive} />}
+              {section === "whatif" && <WhatIfPanel city={active} />}
               {section === "impact" && (
                 <>
-                  <Step {...S("impact", 1)}><RoiPanel city={active} /></Step>
+                  <RoiPanel city={active} />
                   <Step {...S("impact", 3)}><FairnessPanel /></Step>
                 </>
               )}
-              {section === "pipeline" && <Step {...S("pipeline", 1)}><TraceViewer city={active} /></Step>}
+              {section === "pipeline" && <TraceViewer city={active} />}
             </div>
+          </RailTabsProvider>
           </div>
         </main>
       </div>

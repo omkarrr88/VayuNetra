@@ -105,6 +105,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
 
   return (
     <>
+    <Step n={1} label="Advisories by ward" info={<p>Ward-level health advisories tiered by forecast risk and vulnerability, in the city's languages. Templated by design (no language model), script-validated in code.</p>}>
     <Panel
       title="Citizen Advisory"
       right={
@@ -212,6 +213,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
       )}
 
     </Panel>
+</Step>
 
       {/* 2 — Send it: live multi-channel broadcast (real Telegram + real IVR call) */}
       <Step n={2} label="Send it" info={<p>Broadcasts the latest advisory to the configured Telegram channel and places a real IVR phone call (Twilio, Indian-English neural voice). Confirmation is required — this touches the outside world.</p>}>
