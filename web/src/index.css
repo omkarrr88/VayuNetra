@@ -159,6 +159,12 @@ html.vn-present .vn-scroll { scrollbar-width: none; }
 [data-theme="dark"] .text-rose-600, [data-theme="dark"] .text-rose-700, [data-theme="dark"] .text-red-600, [data-theme="dark"] .text-red-700 { color: #fda4af !important; }
 [data-theme="dark"] .text-indigo-900, [data-theme="dark"] .text-violet-900 { color: #c4b5fd !important; }
 [data-theme="dark"] .text-sky-700 { color: #7dd3fc !important; }
+[data-theme="dark"] .text-emerald-900, [data-theme="dark"] .text-green-900 { color: #86efac !important; }
+[data-theme="dark"] .text-rose-800, [data-theme="dark"] .text-rose-900 { color: #fda4af !important; }
+[data-theme="dark"] .text-blue-900 { color: #93c5fd !important; }
+[data-theme="dark"] .text-violet-800, [data-theme="dark"] .text-purple-800 { color: #c4b5fd !important; }
+/* bold numerals inherit the parent's muted colour on dark; give them the ink so a "+16%" reads */
+[data-theme="dark"] b, [data-theme="dark"] strong { color: var(--vn-ink); }
 
 /* the map basemap: dim it so the dark UI does not sit on a white sheet */
 [data-theme="dark"] .maplibregl-map { filter: invert(0.92) hue-rotate(180deg) brightness(0.95) contrast(0.92); }

@@ -162,7 +162,7 @@ export default function LayersControl(p: LayersControlProps) {
         />
       </div>
       {p.showWards && (
-        <div className="mt-1 text-[10px] text-gray-500">ward boundaries © Datameet / OSM (ODbL)</div>
+        <div className="mt-1 text-[10px] text-slate-500">ward boundaries © Datameet / OSM (ODbL)</div>
       )}
 
       {p.mode === "blame" && (
@@ -176,7 +176,7 @@ export default function LayersControl(p: LayersControlProps) {
         </div>
       )}
       {p.mode === "satellite" && (
-        <div className="mt-2.5 border-t border-slate-100 pt-2 text-xs text-gray-600">
+        <div className="mt-2.5 border-t border-slate-100 pt-2 text-xs text-slate-600">
           Sentinel-5P NO2 column. Blue is lower, red is higher.
         </div>
       )}
@@ -198,7 +198,7 @@ export default function LayersControl(p: LayersControlProps) {
               </div>
             ))}
           </div>
-          <div className="mt-1 text-[11px] text-gray-500">
+          <div className="mt-1 text-[11px] text-slate-500">
             {p.coverage
               ? `${p.coverage.n_stations ?? "~"} stations → ${p.coverage.n_cells ?? p.coverage.cells.length} cells · ${
                   typeof p.coverage.validation?.skill_vs_bilinear === "number"

@@ -104,13 +104,13 @@ export default function WhatIfPanel({ city }: { city: string }) {
     <>
     <Step n={1} label="Choose an intervention" info={<p>Pick an intervention and a horizon; the counterfactual runs over this city's live attribution shares and forecasts.</p>}>
     <Panel title="Choose an intervention" tag="what-if">
-      <div className="text-xs text-gray-600">
+      <div className="text-xs text-slate-600">
         Counterfactual over attribution × forecast, with cited health &amp; carbon impact.
       </div>
 
       <div className="mt-3 space-y-2">
         <label className="block text-xs">
-          <span className="text-gray-500">Intervention</span>
+          <span className="text-slate-500">Intervention</span>
           <select
             className="mt-1 w-full rounded-md border border-slate-200 bg-slate-50 px-2 py-1.5 text-sm font-medium text-slate-700"
             value={type}
@@ -124,7 +124,7 @@ export default function WhatIfPanel({ city }: { city: string }) {
           </select>
         </label>
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-gray-500">Horizon</span>
+          <span className="text-slate-500">Horizon</span>
           {[24, 48, 72].map((h) => (
             <SegBtn key={h} active={horizon === h} onClick={() => setHorizon(h)}>
               +{h}h
@@ -156,9 +156,9 @@ export default function WhatIfPanel({ city }: { city: string }) {
       {res && (
         <div>
           {res.intervention?.description && (
-            <div className="text-xs font-medium text-gray-800">{res.intervention.description}</div>
+            <div className="text-xs font-medium text-slate-800">{res.intervention.description}</div>
           )}
-          {res.intervention?.ward && <div className="text-[11px] text-gray-500">{res.intervention.ward}</div>}
+          {res.intervention?.ward && <div className="text-[11px] text-slate-500">{res.intervention.ward}</div>}
           {Number(avgDelta) === 0 && (
             <div className="mt-2 rounded-md bg-amber-50 p-2 text-[11px] leading-4 text-amber-800">
               Near-zero effect — honest result: this source contributes ~0% of the city's current
@@ -166,7 +166,7 @@ export default function WhatIfPanel({ city }: { city: string }) {
               matching the dominant source, e.g. a traffic or construction measure.
             </div>
           )}
-          <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 text-xs text-gray-700">
+          <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 text-xs text-slate-700">
             <span>
               avg ΔAQI <b>{avgDelta}</b>
             </span>
@@ -192,7 +192,7 @@ export default function WhatIfPanel({ city }: { city: string }) {
       <div>
         <div className="flex items-center justify-between gap-2">
           <div>
-            <div className="text-xs text-gray-600">Ranked actions under the inspector-hour budget.</div>
+            <div className="text-xs text-slate-600">Ranked actions under the inspector-hour budget.</div>
           </div>
           <span className="shrink-0 rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
             {budget}h
@@ -200,7 +200,7 @@ export default function WhatIfPanel({ city }: { city: string }) {
         </div>
 
         <label className="mt-3 block text-xs">
-          <span className="text-gray-500">Inspector-hour budget</span>
+          <span className="text-slate-500">Inspector-hour budget</span>
           <input
             type="range"
             min={5}

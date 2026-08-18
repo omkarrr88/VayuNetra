@@ -75,7 +75,7 @@ function NodeIcon({ d, color }: { d: string; color: string }) {
 function Timeline({ steps }: { steps: TraceStep[] }) {
   if (!steps.length) {
     return (
-      <div className="mt-2 rounded-md border border-dashed border-slate-200 p-3 text-center text-xs text-gray-500">
+      <div className="mt-2 rounded-md border border-dashed border-slate-200 p-3 text-center text-xs text-slate-500">
         No trace yet — press "Run agents live" to watch the pipeline think.
       </div>
     );
@@ -157,7 +157,7 @@ function Timeline({ steps }: { steps: TraceStep[] }) {
                     }}
                     aria-hidden="true"
                   />
-                  <span className="font-mono text-[10px] text-gray-500">{(stepMs[i] / 1000).toFixed(1)}s</span>
+                  <span className="font-mono text-[10px] text-slate-500">{(stepMs[i] / 1000).toFixed(1)}s</span>
                 </span>
               )}
             </div>
@@ -226,7 +226,7 @@ export default function TraceViewer({ city }: { city: string }) {
         ) : undefined
       }
     >
-      <div className="text-[11px] text-gray-500">last multi-agent run · detect → decide → issue</div>
+      <div className="text-[11px] text-slate-500">last multi-agent run · detect → decide → issue</div>
       <Timeline steps={steps} />
       <button
         onClick={runLive}

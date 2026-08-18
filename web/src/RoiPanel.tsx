@@ -68,7 +68,7 @@ function FundGuidance({ city }: { city: string }) {
   return (
     <Step n={2} label="Where funds should go" info={<p>Attribution-weighted guidance across NCAP spending heads: the city's live source mix maps each share to the fund head that addresses it. Context: NCAP cities spent 67 % of funds on road dust and under 1 % on industry (CREA, 2026) because allocation was not attribution-led.</p>}>
     <Panel title="Where the funds should go" tag="attribution-weighted">
-      <div className="space-y-0.5 text-xs text-gray-700">
+      <div className="space-y-0.5 text-xs text-slate-700">
         {mix.map(([k, pct]) => (
           <div key={k}>
             <b>{Math.round(pct)}%</b> of PM2.5 is {k.replace(/_/g, " ")} → prioritise{" "}
@@ -76,7 +76,7 @@ function FundGuidance({ city }: { city: string }) {
           </div>
         ))}
       </div>
-      <div className="mt-1 text-[11px] leading-4 text-gray-500">
+      <div className="mt-1 text-[11px] leading-4 text-slate-500">
         NCAP cities spent 67% of funds on road dust and &lt;1% on industry (CREA, 2026) — because
         allocation wasn't attribution-led. This is the per-city fix.
       </div>
@@ -92,7 +92,7 @@ function Big({ label, value, tone }: { label: string; value: string; tone: "bad"
       : "border-emerald-100 bg-emerald-50 text-emerald-700";
   return (
     <div className={`rounded-md border p-2 ${cls}`}>
-      <div className="text-[11px] uppercase tracking-wide text-gray-700">{label}</div>
+      <div className="text-[11px] uppercase tracking-wide text-slate-700">{label}</div>
       <div className="text-lg font-semibold leading-tight">{value}</div>
     </div>
   );
@@ -159,10 +159,10 @@ export default function RoiPanel({ city }: { city: string }) {
         </SizedChart>
       </div>
 
-      <div className="mt-1 text-[11px] text-gray-600">
+      <div className="mt-1 text-[11px] text-slate-600">
         Annual mean {d.annual_pm25} µg/m³ vs WHO {d.who_guideline_pm25} µg/m³ · pop {intfmt(d.population)}
       </div>
-      <div className="mt-2 rounded-md bg-slate-50 p-2 text-xs leading-snug text-gray-700">{d.narrative}</div>
+      <div className="mt-2 rounded-md bg-slate-50 p-2 text-xs leading-snug text-slate-700">{d.narrative}</div>
       <Citations items={d.citations ?? []} />
     </Panel>
     </Step>

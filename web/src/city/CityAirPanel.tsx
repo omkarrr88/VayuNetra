@@ -6,25 +6,10 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import { POLLUTANT_LABEL, SCALES } from "../aqi";
 import { useAqiScale } from "../aqiScale";
-import { Step } from "../ui";
+import { Panel, Step } from "../ui";
 import { CityHero, PollutantCards, PollutantChips, type Overview, type Pollutant } from "./parts";
 import { PollutantDetail } from "./pollutantInfo";
 import { AqiCalendar, HealthAdvice, MonthlyTrend, SeriesGraph } from "./charts";
-
-function Card({ title, sub, right, children }: { title: string; sub?: string; right?: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <div>
-          <h3 className="text-[14px] font-extrabold tracking-tight text-slate-900">{title}</h3>
-          {sub && <div className="text-[11px] text-slate-500">{sub}</div>}
-        </div>
-        {right}
-      </div>
-      {children}
-    </div>
-  );
-}
 
 export default function CityAirPanel({ city }: { city: string }) {
   const { scale } = useAqiScale();
@@ -49,45 +34,43 @@ export default function CityAirPanel({ city }: { city: string }) {
   return (
     <>
       <Step n={1} label="Right now" info={<p>The city's live index on the scale chosen in the header — the maximum of its pollutant sub-indices, with the pollutant that sets it. Station means over this city's own CPCB stations; the age of the newest reading is shown.</p>}>
-        <div className="space-y-2">
-          <div className="text-[11px] font-bold uppercase tracking-widest text-blue-700">{SCALES[scale].name}</div>
+        <Panel title="Right now" tag={SCALES[scale].short} right={<span className="truncate text-[11px] text-slate-500">{d.name}</span>}>
           <CityHero d={d} scale={scale} />
-        </div>
+        </Panel>
       </Step>
 
       <Step n={2} label="Pollutants" info={<p>Every pollutant this city's stations publish, with its own sub-index on the chosen scale. The card of the pollutant that sets the city index is the prominent one. Click a card for what it is, where it comes from and the standard it is judged against.</p>}>
-        <Card title="Major air pollutants" sub={`${d.name} · latest station means`}>
+        <Panel title="Major air pollutants" tag="live" right={<span className="truncate text-[11px] text-slate-500">latest station means</span>}>
           <PollutantCards d={d} scale={scale} onPick={setPollutant} selected={pollutant} compact />
           {pollutant !== "aqi" && <PollutantDetail d={d} scale={scale} pollutant={pollutant} onClose={() => setPollutant("aqi")} />}
-        </Card>
+        </Panel>
       </Step>
 
       <Step n={3} label="Graph" info={<p>The index or a single pollutant over 24 hours (hourly means) or 7 days / 30 days / 1 year (daily means), coloured by band. Bars or line. Where the record is shorter than the range, the card says so instead of stretching the axis.</p>}>
-        <Card
+        <Panel
           title={pollutant === "aqi" ? "Air quality graph" : `${POLLUTANT_LABEL[pollutant] ?? pollutant} graph`}
-          sub={`${d.name} · historical readings`}
           right={<PollutantChips available={available} value={pollutant} onChange={setPollutant} compact />}
         >
           <SeriesGraph d={d} scale={scale} pollutant={pollutant} />
-        </Card>
+        </Panel>
       </Step>
 
       <Step n={4} label="Calendar" info={<p>One tile per day, coloured by that day's index from this city's stations. Blank tiles are days with no reading — coverage is shown, never filled in.</p>}>
-        <Card title="Air quality calendar" sub={`${d.name}${d.coverage.since ? ` · record starts ${d.coverage.since}` : ""}`}>
+        <Panel title="Air quality calendar" right={<span className="truncate text-[11px] text-slate-500">{d.coverage.since ? `since ${d.coverage.since}` : ""}</span>}>
           <AqiCalendar d={d} scale={scale} />
-        </Card>
+        </Panel>
       </Step>
 
       <Step n={5} label="Trend" info={<p>Monthly mean PM2.5 over the record, with the most and least polluted month. Delhi's winter shows here as the real smog season; cities with a short record say how short it is.</p>}>
-        <Card title="Monthly trend" sub={`${d.name} · ${d.coverage.days} days of record`}>
+        <Panel title="Monthly trend" right={<span className="truncate text-[11px] text-slate-500">{d.coverage.days} days of record</span>}>
           <MonthlyTrend d={d} scale={scale} />
-        </Card>
+        </Panel>
       </Step>
 
       <Step n={6} label="Health" info={<p>What today's air means for people: the cigarette-equivalent of the last 24 hours, what to do now, and per-condition guidance. Templated from CPCB's advisory table and WHO guidance — no language model writes health text.</p>}>
-        <Card title="Health advice" sub={`${d.name} · not medical advice`}>
+        <Panel title="Health advice" tag="not medical advice">
           <HealthAdvice d={d} />
-        </Card>
+        </Panel>
       </Step>
     </>
   );

@@ -97,9 +97,9 @@ export default function CityStatsPanel({
       {/* 48h trend — real station-hour means */}
       <div className="text-[12px] font-semibold text-slate-700">PM2.5 — last 48 hours</div>
       {history === null ? (
-        <div className="mt-1 h-24 animate-pulse rounded-md bg-gray-100" />
+        <div className="mt-1 h-24 animate-pulse rounded-md bg-slate-100" />
       ) : history.length < 3 ? (
-        <div className="mt-1 text-xs text-gray-500">Not enough recent station data for a trend.</div>
+        <div className="mt-1 text-xs text-slate-500">Not enough recent station data for a trend.</div>
       ) : (
         <>
           <div className="mt-1 h-24">
@@ -116,13 +116,13 @@ export default function CityStatsPanel({
               </AreaChart>
             </SizedChart>
           </div>
-          <div className="text-[10px] text-gray-500">city-mean of real station readings, hourly buckets</div>
+          <div className="text-[10px] text-slate-500">city-mean of real station readings, hourly buckets</div>
         </>
       )}
 
       {/* Source-mix donut — who is to blame, city-wide */}
       {mix.length > 0 && (
-        <div className="mt-3 border-t border-gray-100 pt-2">
+        <div className="mt-3 border-t border-slate-100 pt-2">
           <div className="text-[12px] font-semibold text-slate-700">Source mix — city average</div>
           <div className="flex items-center gap-2">
             <div className="h-32 w-32 shrink-0">
@@ -149,13 +149,13 @@ export default function CityStatsPanel({
               ))}
             </div>
           </div>
-          <div className="text-[10px] text-gray-500">mean attribution share across {cells.length} live cells</div>
+          <div className="text-[10px] text-slate-500">mean attribution share across {cells.length} live cells</div>
         </div>
       )}
 
       {/* AQI-band distribution — who breathes what */}
       {bands.length > 0 && (
-        <div className="mt-3 border-t border-gray-100 pt-2">
+        <div className="mt-3 border-t border-slate-100 pt-2">
           <div className="text-[12px] font-semibold text-slate-700">Who breathes what — AQI bands</div>
           <div className="mt-1.5 flex h-4 w-full overflow-hidden rounded-full">
             {bands.map((b) => (
@@ -170,7 +170,7 @@ export default function CityStatsPanel({
               </span>
             ))}
           </div>
-          <div className="mt-0.5 text-[10px] text-gray-500">
+          <div className="mt-0.5 text-[10px] text-slate-500">
             share of {coverageCells.length} ~1 km cells (dense model field, station-anchored)
           </div>
         </div>

@@ -1,7 +1,7 @@
 // Public landing page — light theme only. Console lives at /console.
 import { useEffect, useState } from "react";
 import { api } from "./api";
-import { aqiCategory, pm25ToAqi, SCALES } from "./aqi";
+import { aqiCategory, categoryForIndex, formatIndex, pm25ToAqi, POLLUTANT_LABEL, SCALES } from "./aqi";
 import { linkClick } from "./router";
 
 type AqiRow = { pm25?: number; value?: number };
@@ -88,6 +88,13 @@ const DATA_SOURCES = ["CPCB / CAAQMS", "Sentinel-5P", "Sentinel-2", "Open-Meteo 
 // answers; the live payload replaces every number below. Colors match the console.
 const MIX_COLOR: Record<string, string> = { traffic: "#ef4444", transported: "#3b82f6", industrial: "#9333ea", construction_dust: "#ca8a04", biomass_burning: "#16a34a", other: "#6b7280" };
 const MIX_LABEL: Record<string, string> = { construction_dust: "construction dust", biomass_burning: "biomass burning" };
+/** One row of the live city board — the index is the server composite (index of the city mean),
+ *  the same number that city's own page shows. */
+type CityBoardRow = {
+  city_id: string; name: string; current_pm25: number | null; forecast_24h_pm25: number | null;
+  dominant_source?: string; aqi_in?: number | null; prominent_in?: string | null;
+};
+
 type Snapshot = {
   generated_at: string;
   mix: { source: string; pct: number }[];
@@ -124,8 +131,12 @@ export default function Landing() {
   const [aqi, setAqi] = useState<number | null>(null);
   const [latencyS, setLatencyS] = useState<string | null>(null);
   const [snap, setSnap] = useState<Snapshot | null>(null);
+  const [board, setBoard] = useState<CityBoardRow[]>([]);
 
   useEffect(() => {
+    api<{ cities: CityBoardRow[] }>("/comparison")
+      .then((c) => setBoard((c.cities ?? []).filter((x) => typeof x.current_pm25 === "number")))
+      .catch(() => setBoard([]));
     api<Snapshot>("/landing/snapshot")
       .then((d) => { if (d && d.mix?.length && d.cities?.length) setSnap(d); })
       .catch(() => {});
@@ -273,6 +284,46 @@ export default function Landing() {
           (no chart library on the landing: the console bundle stays split). */}
       <section className="border-t border-slate-200">
         <div className="mx-auto max-w-6xl px-6 py-14">
+          {board.length > 0 && (
+            <div className="mb-14">
+              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-sky-700">Live right now</p>
+              <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Ten cities, this minute.</h2>
+                <p className="text-[13px] text-slate-500">Indian National AQI (CPCB) — the maximum of each city's pollutant sub-indices. Open any city.</p>
+              </div>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                {[...board].sort((a, b) => (b.aqi_in ?? 0) - (a.aqi_in ?? 0)).map((c) => {
+                  const idx = c.aqi_in ?? null;
+                  const cat = idx !== null ? categoryForIndex(idx, "in") : null;
+                  return (
+                    <a
+                      key={c.city_id}
+                      href={`/console?city=${c.city_id}&section=cityair`}
+                      onClick={(e) => linkClick(e, `/console?city=${c.city_id}&section=cityair`)}
+                      className="group rounded-xl border border-slate-200 p-3 transition-shadow hover:shadow-md"
+                      title={`${c.name} — open the live city page${c.prominent_in ? ` · set by ${POLLUTANT_LABEL[c.prominent_in] ?? c.prominent_in}` : ""}`}
+                    >
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className="truncate text-[13px] font-bold text-slate-800 group-hover:text-slate-900">{c.name}</span>
+                        <span className="text-[10px] text-slate-400 group-hover:text-sky-700">open →</span>
+                      </div>
+                      <div className="mt-1 flex items-end gap-2">
+                        <span className="text-3xl font-extrabold leading-none tracking-tight" style={{ color: cat?.color }}>{formatIndex(idx, "in")}</span>
+                        <span className="pb-0.5 text-[11px] font-semibold" style={{ color: cat?.color }}>{cat?.label}</span>
+                      </div>
+                      <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                        <div className="h-full rounded-full" style={{ width: `${Math.min(100, ((idx ?? 0) / 500) * 100)}%`, background: cat?.color }} />
+                      </div>
+                      <div className="mt-1.5 text-[11px] text-slate-500">
+                        PM2.5 {c.current_pm25} µg/m³{c.prominent_in ? ` · ${POLLUTANT_LABEL[c.prominent_in] ?? c.prominent_in}` : ""}
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-sky-700">The data, at a glance</p>
           <div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {/* Delhi source-mix donut */}

@@ -1438,6 +1438,25 @@ def comparison() -> dict:
             sdb.table("enforcement_recs").select("city_id,status").limit(5000).execute().data
         ) or []
         data = build_comparison(cities, aqi_rows, forecast_rows, rec_statuses)
+
+        # Every city number in the product comes from one computation: the index of that city's
+        # mean (see _city_now_from_hourly). Without this the scoreboard would derive an index from
+        # PM2.5 alone and disagree with the city's own page whenever PM10 or a gas is prominent.
+        def _idx(cid: str) -> dict:
+            try:
+                rows = sdb.rpc("city_pollutants_hourly", {"p_city": cid, "p_hours": 24}).execute().data or []
+                n = _city_now_from_hourly(rows)
+                return {k: n.get(k) for k in ("aqi_in", "prominent_in", "aqi_us", "prominent_us", "pm25_24h")}
+            except Exception as e:  # noqa: BLE001 — the scoreboard must render without an index
+                logger.warning("comparison index unavailable for %s: %s", cid, e)
+                return {}
+
+        ids = [c["city_id"] for c in cities]
+        with ThreadPoolExecutor(max_workers=min(10, max(1, len(ids)))) as pool:
+            indices = dict(zip(ids, pool.map(_idx, ids)))
+        for c in data.get("cities", []):
+            c.update(indices.get(c.get("city_id"), {}))
+
         _comparison_cache["all"] = (now, data)
         return ok(data)
     except Exception as e:  # noqa: BLE001

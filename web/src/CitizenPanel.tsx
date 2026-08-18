@@ -130,25 +130,25 @@ export default function CitizenPanel({ city, languages, center }: { city: string
           </SegBtn>
         ))}
       </div>
-      <div className="mt-1 text-[10px] text-gray-500">how the same advisory reaches citizens on each channel</div>
+      <div className="mt-1 text-[10px] text-slate-500">how the same advisory reaches citizens on each channel</div>
 
       {rows === null ? (
         <div className="mt-3 space-y-2">
           {[0, 1].map((i) => (
-            <div key={i} className="h-14 animate-pulse rounded-md bg-gray-100" />
+            <div key={i} className="h-14 animate-pulse rounded-md bg-slate-100" />
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="mt-3 text-xs text-gray-500">No advisory in this language yet</div>
+        <div className="mt-3 text-xs text-slate-500">No advisory in this language yet</div>
       ) : channel === "pwa" ? (
         <div className="mt-3 space-y-2">
           {items.map((a) => (
-            <div key={a.ward_id} className="rounded-md border border-gray-200 p-2">
+            <div key={a.ward_id} className="rounded-md border border-slate-200 p-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-medium">{a.ward_id}</span>
                 <span className="rounded bg-amber-100 px-1.5 py-0.5 text-amber-800">{a.risk_tier.replace("_", " ")}</span>
               </div>
-              <div className="mt-1 text-xs leading-5 text-gray-700">{a.message}</div>
+              <div className="mt-1 text-xs leading-5 text-slate-700">{a.message}</div>
             </div>
           ))}
         </div>
@@ -168,9 +168,9 @@ export default function CitizenPanel({ city, languages, center }: { city: string
               </div>
             ))}
           </div>
-          <div className="mt-2 flex items-center gap-2 rounded-md border border-gray-200 p-2">
+          <div className="mt-2 flex items-center gap-2 rounded-md border border-slate-200 p-2">
             <img src="/qr-telegram.svg" alt="QR — open the VayuNetra Telegram bot" className="h-14 w-14" width={56} height={56} />
-            <div className="text-[11px] leading-4 text-gray-600">
+            <div className="text-[11px] leading-4 text-slate-600">
               Live two-way bot: <b>/start</b> → pick a city → auto-receive advisories. Scan to subscribe on your own phone.
             </div>
           </div>
@@ -178,18 +178,18 @@ export default function CitizenPanel({ city, languages, center }: { city: string
       ) : channel === "ivr" ? (
         <div className="mt-3 space-y-2">
           {/* What a caller actually hears (mirrors channels/ivr.py wording) */}
-          <div className="rounded-md border border-gray-200 p-2.5">
+          <div className="rounded-md border border-slate-200 p-2.5">
             <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-700">📞 What callers hear</div>
-            <p className="mt-1 text-xs italic leading-5 text-gray-600">
+            <p className="mt-1 text-xs italic leading-5 text-slate-600">
               "This is an air quality alert from Vayu Netra. {items[0].message} I will now repeat this alert… Stay safe, and
               limit outdoor exposure. Goodbye."
             </p>
           </div>
-          <div className="rounded-md bg-slate-50 p-2 text-[11px] leading-4 text-gray-600">
+          <div className="rounded-md bg-slate-50 p-2 text-[11px] leading-4 text-slate-600">
             Citizens can also <b>call in</b>: the line answers with a city menu — press 1 for Delhi, 2 for Bengaluru, 3 for Mumbai, 4–9 and 0 for the other seven — and
             reads that city's latest advisory in a clear Indian-English voice.
           </div>
-          <div className="text-[10px] leading-4 text-gray-500">
+          <div className="text-[10px] leading-4 text-slate-500">
             Live calls are spoken in Hindi (Polly Kajal) for Hindi-first cities and in English elsewhere — Polly has no voice yet for the other Indian scripts.
           </div>
         </div>
@@ -208,7 +208,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
               <div className="mt-0.5 text-[13px] leading-5 text-slate-200">{a.message}</div>
             </div>
           ))}
-          <div className="text-[10px] text-gray-500">public display / big-screen board rendering</div>
+          <div className="text-[10px] text-slate-500">public display / big-screen board rendering</div>
         </div>
       )}
 
@@ -233,13 +233,13 @@ export default function CitizenPanel({ city, languages, center }: { city: string
                 <button onClick={broadcast} className="cursor-pointer rounded bg-emerald-700 px-2 py-1 text-white">
                   Yes, broadcast
                 </button>
-                <button onClick={() => setBcast("idle")} className="cursor-pointer rounded bg-gray-200 px-2 py-1 text-gray-700">
+                <button onClick={() => setBcast("idle")} className="cursor-pointer rounded bg-slate-200 px-2 py-1 text-slate-700">
                   Cancel
                 </button>
               </div>
             </div>
           )}
-          {bcast === "sending" && <div className="text-center text-xs text-gray-500">broadcasting…</div>}
+          {bcast === "sending" && <div className="text-center text-xs text-slate-500">broadcasting…</div>}
           {(bcast === "done" || bcast === "error") && (
             <div className={`rounded p-1.5 text-center text-xs ${bcast === "done" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
               {bcastMsg}

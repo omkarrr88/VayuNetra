@@ -41,7 +41,7 @@ export default function ExposureCard({ city }: { city: string }) {
     api<Exposure>(`/exposure?city=${city}`).then(setData).catch(() => setData(null));
   }, [city]);
 
-  if (data === undefined) return <div className="mt-1 h-16 animate-pulse rounded-md bg-gray-100" />;
+  if (data === undefined) return <div className="mt-1 h-16 animate-pulse rounded-md bg-slate-100" />;
   if (!data || !data.horizons.some((h) => h.n_cells > 0)) return null;
   const worst = [...data.horizons].filter((h) => h.n_cells > 0).sort((a, b) => (b.people_very_poor ?? 0) - (a.people_very_poor ?? 0))[0];
   const calibrated = data.horizons.some((h) => h.calibrated);
@@ -65,7 +65,7 @@ export default function ExposureCard({ city }: { city: string }) {
           );
         })}
       </div>
-      <div className="mt-1 text-[10px] leading-4 text-gray-500">
+      <div className="mt-1 text-[10px] leading-4 text-slate-500">
         City-scale = share of monitored population × city population ({fmt(data.city_population)}), monitored cells taken as representative. Expected people = Σ cell population × calibrated P(PM2.5 &gt; 120 / &gt; 250 µg/m³)
         {calibrated ? "" : " (probabilities pending — point-forecast indicator used)"} · {basis} ({fmt(data.population_covered)} covered)
         {(data.person_hours_24_to_72h_city_scaled?.very_poor ?? data.person_hours_24_to_72h.very_poor) ? <> · ≈{fmt(data.person_hours_24_to_72h_city_scaled?.very_poor ?? data.person_hours_24_to_72h.very_poor)} person-hours of Very Poor+ air over the 24→72 h outlook</> : null}

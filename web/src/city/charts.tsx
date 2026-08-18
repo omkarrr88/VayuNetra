@@ -108,7 +108,7 @@ export function SeriesGraph({ d, scale, pollutant }: { d: Overview; scale: AqiSc
               <XAxis dataKey="at" tickFormatter={label} tick={{ fontSize: 10 }} interval="preserveStartEnd" minTickGap={26} />
               <YAxis tick={{ fontSize: 10 }} width={38} />
               <Tooltip formatter={((v: unknown) => [`${v} ${unit}`, isIndex ? "index" : POLLUTANT_LABEL[pollutant]]) as never} labelFormatter={(l) => label(String(l))} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
-              <Area type="monotone" dataKey="value" stroke="#0d9488" strokeWidth={2} fill="#0d9488" fillOpacity={0.15} isAnimationActive={false} />
+              <Area type="monotone" dataKey="value" stroke={colour(hi.value)} strokeWidth={2} fill={colour(hi.value)} fillOpacity={0.15} isAnimationActive={false} />
             </AreaChart>
           )}
         </ResponsiveContainer>
@@ -241,12 +241,27 @@ export function MonthlyTrend({ d, scale }: { d: Overview; scale: AqiScale }) {
   );
 }
 
-export type CityRow = { city_id: string; name: string; current_pm25: number | null; forecast_24h_pm25: number | null; dominant_source?: string; trend?: string };
+export type CityRow = {
+  city_id: string; name: string; current_pm25: number | null; forecast_24h_pm25: number | null;
+  dominant_source?: string; trend?: string;
+  /** Composite indices computed server-side from this city's means (GET /comparison) — the same
+   *  definition the city's own page uses, so the scoreboard can never disagree with it. */
+  aqi_in?: number | null; prominent_in?: string | null; aqi_us?: number | null; prominent_us?: string | null;
+};
+
+/** The city's index on the chosen scale: the server composite where we have it (CPCB / EPA are
+ *  multi-pollutant), the PM2.5 multiple for WHO, which is defined on PM2.5 alone. */
+export function cityIndex(r: CityRow, scale: AqiScale): number | null {
+  if (scale === "who") return r.current_pm25 !== null ? pm25Index(r.current_pm25, "who") : null;
+  const v = scale === "us" ? r.aqi_us : r.aqi_in;
+  if (typeof v === "number") return v;
+  return r.current_pm25 !== null ? pm25Index(r.current_pm25, scale) : null;   // pre-index fixtures
+}
 
 /** Sortable table of every city we run, plus a card grid — the "how does my city compare" view. */
 export function CitiesTable({ rows, scale, onOpen, activeCity }: { rows: CityRow[]; scale: AqiScale; onOpen: (city: string) => void; activeCity?: string }) {
   const [sort, setSort] = useState<{ key: "name" | "index" | "pm25" | "next"; dir: 1 | -1 }>({ key: "index", dir: -1 });
-  const withIdx = rows.filter((r) => r.current_pm25 !== null).map((r) => ({ ...r, index: pm25Index(r.current_pm25 as number, scale) }));
+  const withIdx = rows.filter((r) => r.current_pm25 !== null).map((r) => ({ ...r, index: cityIndex(r, scale) ?? 0, prominent: scale === "us" ? r.prominent_us : r.prominent_in }));
   const sorted = [...withIdx].sort((a, b) => {
     const v = sort.key === "name" ? a.name.localeCompare(b.name)
       : sort.key === "pm25" ? (a.current_pm25 ?? 0) - (b.current_pm25 ?? 0)
@@ -273,7 +288,10 @@ export function CitiesTable({ rows, scale, onOpen, activeCity }: { rows: CityRow
               <tr key={r.city_id} className={`cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50 ${r.city_id === activeCity ? "bg-blue-50" : ""}`} onClick={() => onOpen(r.city_id)}>
                 <td className="px-3 py-2 text-[13px] font-bold text-slate-800">{r.name}</td>
                 <td className="px-3 py-2"><span className="rounded-md px-2 py-0.5 text-[11px] font-bold" style={{ background: cat.color, color: cat.text }}>{cat.label}</span></td>
-                <td className="px-3 py-2 text-right text-[14px] font-extrabold tabular-nums text-slate-900">{formatIndex(r.index, scale)}</td>
+                <td className="px-3 py-2 text-right text-[14px] font-extrabold tabular-nums text-slate-900" title={r.prominent && scale !== "who" ? `set by ${POLLUTANT_LABEL[r.prominent] ?? r.prominent}` : undefined}>
+                  {formatIndex(r.index, scale)}
+                  {r.prominent && scale !== "who" && <span className="ml-1 align-middle text-[9px] font-bold uppercase text-slate-400">{POLLUTANT_LABEL[r.prominent] ?? r.prominent}</span>}
+                </td>
                 <td className="px-3 py-2 text-right text-[13px] tabular-nums text-slate-700">{r.current_pm25}</td>
                 <td className="px-3 py-2 text-right text-[13px] tabular-nums text-slate-700">{r.forecast_24h_pm25 ?? "–"}</td>
                 <td className="px-3 py-2 text-[12px] text-slate-600">{(r.dominant_source ?? "–").replace(/_/g, " ")}</td>
@@ -292,7 +310,7 @@ export function CityCards({ rows, scale, onOpen, exclude }: { rows: CityRow[]; s
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {list.map((r) => {
-        const index = pm25Index(r.current_pm25 as number, scale);
+        const index = cityIndex(r, scale) ?? 0;
         const cat = categoryForIndex(index, scale);
         return (
           <button key={r.city_id} onClick={() => onOpen(r.city_id)} className="vn-card p-4 text-left transition-shadow hover:shadow-md">
@@ -323,10 +341,10 @@ function CigaretteMark({ color = "#e11d48" }: { color?: string }) {
         <path d="M31 8c-6 5-6 10 0 15s6 10 0 15" opacity=".35" />
       </g>
       {/* body */}
-      <rect x="42" y="38" width="42" height="12" rx="3" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="2" />
+      <rect x="42" y="38" width="42" height="12" rx="3" fill="var(--vn-surface, #f8fafc)" stroke="currentColor" className="text-slate-300" strokeWidth="2" />
       {/* filter */}
       <rect x="72" y="38" width="12" height="12" rx="3" fill="#fcd34d" stroke="#d97706" strokeWidth="1.5" />
-      <line x1="72" y1="38" x2="72" y2="50" stroke="#d97706" strokeWidth="1.5" />
+      <line x1="72" y1="38" x2="72" y2="50" stroke="#d97706" strokeWidth="1.5" opacity=".8" />
       {/* ember */}
       <rect x="42" y="38" width="7" height="12" rx="3" fill={color} />
       <circle cx="45" cy="44" r="2.4" fill="#fb923c" />

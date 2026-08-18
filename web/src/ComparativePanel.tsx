@@ -58,7 +58,7 @@ export default function ComparativePanel({ onSelectCity }: { onSelectCity: (city
         <EmptyState message="Couldn't load the multi-city comparison." tone="error" onRetry={load} />
       ) : (
         <>
-      <div className="text-xs text-gray-600">
+      <div className="text-xs text-slate-600">
         {data?.summary.shared_pattern ?? "Loading city comparison…"}
         <span className="ml-1 text-slate-500">· city-average PM2.5</span>
       </div>
@@ -121,7 +121,7 @@ export default function ComparativePanel({ onSelectCity }: { onSelectCity: (city
                 {c.trend}
               </span>
             </div>
-            <div className="mt-1 grid grid-cols-2 gap-x-2 gap-y-0.5 text-xs text-gray-600">
+            <div className="mt-1 grid grid-cols-2 gap-x-2 gap-y-0.5 text-xs text-slate-600">
               <span>
                 <span title={`${SCALES[scale].name}: ${formatIndex(pm25Index(c.current_pm25, scale), scale)} ${categoryForPm25(c.current_pm25, scale).label} — from PM2.5 only (station gases are not in this city aggregate)`} className="rounded px-1 py-0.5 font-bold" style={{ background: categoryForPm25(c.current_pm25, scale).color, color: categoryForPm25(c.current_pm25, scale).text }}>{formatIndex(pm25Index(c.current_pm25, scale), scale)}</span>{" "}
                 avg <b className="text-slate-800">{Math.round(c.current_pm25)}</b> µg/m³
@@ -133,7 +133,7 @@ export default function ComparativePanel({ onSelectCity }: { onSelectCity: (city
               <span>{c.signature_match}</span>
             </div>
             {c.health && (
-              <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-gray-500">
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-500">
                 <span>~{intfmt(c.health.attributable_deaths_per_year)} deaths/yr</span>
                 <span>·</span>
                 <span>{inr(c.health.annual_health_burden_inr)}/yr</span>
@@ -142,10 +142,10 @@ export default function ComparativePanel({ onSelectCity }: { onSelectCity: (city
                 )}
               </div>
             )}
-            <div className="mt-1.5 text-xs text-gray-600">→ {c.playbook[0]}</div>
+            <div className="mt-1.5 text-xs text-slate-600">→ {c.playbook[0]}</div>
             {c.compliance && c.compliance.total > 0 && (
-              <div className="mt-1.5 border-t border-slate-100 pt-1.5 text-[11px] text-gray-500">
-                <span className="font-medium text-gray-600">Compliance:</span> {c.compliance.total} recommendations
+              <div className="mt-1.5 border-t border-slate-100 pt-1.5 text-[11px] text-slate-500">
+                <span className="font-medium text-slate-600">Compliance:</span> {c.compliance.total} recommendations
                 {c.compliance.approved > 0 && <> · {c.compliance.approved} approved</>}
                 {c.compliance.dispatched > 0 && <> · {c.compliance.dispatched} dispatched</>}
                 {c.compliance.dismissed > 0 && <> · {c.compliance.dismissed} dismissed</>}

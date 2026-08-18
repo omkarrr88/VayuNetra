@@ -46,7 +46,7 @@ export default function CityIntelPanel({ city }: { city: string }) {
           ))}
         </div>
       ) : (
-        <div className="text-xs text-gray-500">loading city profile…</div>
+        <div className="text-xs text-slate-500">loading city profile…</div>
       )}
       {vuln.length > 0 && (
         <div
@@ -58,7 +58,7 @@ export default function CityIntelPanel({ city }: { city: string }) {
         </div>
       )}
       {(layers?.emission_sources.length ?? 0) > 0 && (
-        <div className="mt-2 space-y-1 text-xs text-gray-600">
+        <div className="mt-2 space-y-1 text-xs text-slate-600">
           <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">top registered sources</div>
           {layers!.emission_sources.slice(0, 2).map((s) => (
             <div key={s.id} className="flex justify-between gap-2">

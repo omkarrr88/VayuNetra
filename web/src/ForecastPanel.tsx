@@ -147,7 +147,7 @@ export default function ForecastPanel({ city }: { city: string }) {
       {byHorizon === null ? (
         <div className="mt-2 h-20 animate-pulse rounded-md bg-slate-100" />
       ) : rows.length ? (
-        <div className="mt-2 text-xs text-gray-700">
+        <div className="mt-2 text-xs text-slate-700">
           {spikes.length > 0 && (
             <div className="rounded-md bg-red-50 px-2 py-1 font-medium text-red-700">
               ⚠ spike alert: {spikes.length} cell{spikes.length > 1 ? "s" : ""} forecast ≥ {SPIKE} µg/m³

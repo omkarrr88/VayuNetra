@@ -27,6 +27,7 @@ import { Sidebar, BottomNav, type Section } from "./Sidebar";
 import TopBar from "./TopBar";
 import Tour, { tourSeen } from "./Tour";
 import { RailTabsProvider, RailTabBar, RailTab } from "./console/railTabs";
+import { CommandPalette } from "./console/CommandPalette";
 import { FLOWS } from "./console/flows";
 import { Step } from "./ui";
 
@@ -346,7 +347,7 @@ export default function App() {
               </div>
             )}
 
-            <div className="absolute bottom-1 right-2 z-10 text-[11px] text-gray-500 lg:hidden">scroll for panels ↓</div>
+            <div className="absolute bottom-1 right-2 z-10 text-[11px] text-slate-500 lg:hidden">scroll for panels ↓</div>
           </div>
 
           {/* Section content — right panel on desktop, stacked below map on mobile */}
@@ -405,6 +406,13 @@ export default function App() {
       </div>
 
       <BottomNav active={section} onSelect={setSection} />
+      <CommandPalette
+        cities={cities.map((c) => ({ city_id: c.city_id, name: c.name }))}
+        activeCity={active}
+        activeSection={section}
+        onCity={setActive}
+        onSection={setSection}
+      />
       {tour && <Tour onDone={() => setTour(false)} />}
     </div>
   );

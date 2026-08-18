@@ -287,7 +287,7 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
       {ordered === null ? (
         <div className="mt-2 space-y-2">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-16 animate-pulse rounded-md bg-gray-100" />
+            <div key={i} className="h-16 animate-pulse rounded-md bg-slate-100" />
           ))}
         </div>
       ) : (
@@ -304,20 +304,20 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
                   {CATEGORY_LABEL[recCategory(r.rationale)] ?? "Source"}
                   {r.h3_cell && places[r.h3_cell] ? <span className="font-normal text-slate-500"> · {places[r.h3_cell]}</span> : null}
                 </span>
-                <span className="flex items-center gap-1.5 whitespace-nowrap text-xs text-gray-500">
+                <span className="flex items-center gap-1.5 whitespace-nowrap text-xs text-slate-500">
                   {focusCell && r.h3_cell === focusCell && (
                     <span className="rounded bg-blue-600 px-1 py-0.5 text-[11px] font-semibold text-white">📍 this cell</span>
                   )}
                   {focusCell && r.h3_cell !== focusCell && typeof r.km === "number" && (
-                    <span className="text-[11px] text-gray-500">~{r.km < 1 ? "<1" : Math.round(r.km)} km</span>
+                    <span className="text-[11px] text-slate-500">~{r.km < 1 ? "<1" : Math.round(r.km)} km</span>
                   )}
                   <span title="Priority = contribution × exposure × actionability × confidence">priority {Math.round(r.priority_score * 100)}</span>
                   <span className="text-slate-400">·</span>
                   <span title="Evidence rubric out of 10">rubric {r.rubric_score?.total ?? "--"}/10</span>
                 </span>
               </div>
-              <div className="mt-1 text-xs leading-5 text-gray-700">{cleanRationale(r.rationale)}</div>
-              <div className="mt-1 text-xs text-gray-500">
+              <div className="mt-1 text-xs leading-5 text-slate-700">{cleanRationale(r.rationale)}</div>
+              <div className="mt-1 text-xs text-slate-500">
                 {Math.round(r.contribution * 100)}% contribution · {(r.pop_exposed ?? 0).toLocaleString()} exposed
                 {(r.similar ?? 0) > 0 && (
                   <span
@@ -517,7 +517,7 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
             </div>
           ))}
           {ordered.length === 0 && (
-            <div className="py-2 text-center text-xs text-gray-500">
+            <div className="py-2 text-center text-xs text-slate-500">
               {filter !== "all" || query ? (
                 <>
                   No recommendations match this filter.{" "}

@@ -49,8 +49,8 @@ function LiveDot() {
 
   return (
     <span className="flex items-center gap-1 text-[11px] font-medium" title={on ? "Live feed connected" : "Live feed offline"}>
-      <span className={`inline-block h-2 w-2 rounded-full ${on ? "animate-pulse bg-emerald-500" : "bg-gray-300"}`} />
-      <span className={on ? "text-emerald-700" : "text-gray-500"}>{on ? "LIVE" : "OFF"}</span>
+      <span className={`inline-block h-2 w-2 rounded-full ${on ? "animate-pulse bg-emerald-500" : "bg-slate-300"}`} />
+      <span className={on ? "text-emerald-700" : "text-slate-500"}>{on ? "LIVE" : "OFF"}</span>
     </span>
   );
 }
@@ -169,17 +169,17 @@ The formula runs on the latest hourly means, so the official 24-hour bulletin ca
               <div className="text-sm font-bold" style={{ color: cat.color }}>
                 {cat.label}
               </div>
-              <div className="text-gray-500">
+              <div className="text-slate-500">
                 city · {SCALES[scale].short}{prominent && scale !== "who" ? ` · prominent ${prominent}` : ""}
                 {now?.pm25_24h != null && <> · PM2.5 24 h {now.pm25_24h}</>}
               </div>
               {worstCell.index !== null && (
-                <div className="text-gray-500">
-                  worst cell <b className="text-gray-700">{formatIndex(worstCell.index, scale)}</b>
+                <div className="text-slate-500">
+                  worst cell <b className="text-slate-700">{formatIndex(worstCell.index, scale)}</b>
                   {worst !== null && <> · PM2.5 {Math.round(worst)} µg/m³</>}
                 </div>
               )}
-              <div className="flex items-center gap-2 text-gray-500">
+              <div className="flex items-center gap-2 text-slate-500">
                 <span>data {agoLabel(latest)}</span>
                 <LiveDot />
               </div>
@@ -188,7 +188,7 @@ The formula runs on the latest hourly means, so the official 24-hour bulletin ca
           {chips.length > 0 && <div className="mt-1.5 flex flex-wrap gap-1">{chips}</div>}
         </>
       ) : (
-        <div className="text-xs text-gray-500">no AQI data</div>
+        <div className="text-xs text-slate-500">no AQI data</div>
       )}
     </div>
   );
