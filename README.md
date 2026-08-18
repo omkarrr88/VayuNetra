@@ -45,10 +45,11 @@ PRANA-ready **NCAP evidence export**, a live **pipeline** trace of all six agent
 signal→cited-recommendation: **0.8–9.7 s** compute, measured; the officer's review and the field dispatch are tracked separately), and map layers for wind plumes, wards, freight
 corridors and FIRMS fire events.
 
-**Production snapshot (16 August 2026):** **10 cities** (Delhi · Bengaluru · Mumbai · Hyderabad · Chennai ·
-Kolkata · Pune · Ahmedabad · Jaipur · Lucknow) · 16,529 modeled ~1 km² cells · 647 registered +
-satellite-detected emission sources · 5,495 vulnerability zones · 454 RAG-cited enforcement
-recommendations · 717K deduplicated measurements · advisories in 8 languages (city-specific scripts).
+**Production snapshot (18 August 2026; the landing page reads these live):** **10 cities** (Delhi · Bengaluru ·
+Mumbai · Hyderabad · Chennai · Kolkata · Pune · Ahmedabad · Jaipur · Lucknow) · 16,529 modeled ~1 km² cells ·
+647 registered + satellite-detected emission sources · 5,495 vulnerability zones · ~480 RAG-cited enforcement
+recommendations · 451K unique readings live (one row per reading, older months archived) · advisories in
+8 languages (city-specific scripts).
 
 ## Validation — real numbers, both baselines
 

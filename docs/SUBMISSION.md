@@ -74,7 +74,7 @@ Adding a city means adding one YAML file with a bounding box, languages and regu
 | Signal to cited recommendation | 0.8–9.7 seconds of compute, measured in production; approval → dispatch → closure timestamped per action |
 | Test coverage | 196 backend tests (62% line coverage, CI gate 55%) and 16 end-to-end browser flows (7 smoke in CI + 9 live officer-journey), run on every push |
 
-Current live scale: 10 cities, 16,529 modelled cells, 647 emission sources, 5,495 vulnerability zones and 454 enforcement recommendations, every one of which carries a real Sentinel-2 image and retrieved citations. All of the validation above is reproducible from the notebook in the repository.
+Current live scale (18 Aug 2026; the landing page reads these live): 10 cities, 16,529 modelled cells, 647 emission sources, 5,495 vulnerability zones and ~480 enforcement recommendations, every one of which carries a real Sentinel-2 image and retrieved citations. All of the validation above is reproducible from the notebook in the repository.
 
 ## What it deliberately will not do
 

@@ -48,7 +48,7 @@ test("every section shows its spine: verb, blurb and numbered steps", async ({ p
   await page.goto("/console");
   const sidebar = page.getByRole("navigation", { name: "Console sections" }).first();
   for (const [label, verb, firstStep] of [
-    ["Enforcement", "Act", "Worst places now"],
+    ["Enforcement", "Act", "Morning brief"],
     ["Forecast", "Anticipate", "72-hour outlook"],
     ["Advisories", "Inform", "Advisories by ward"],
     ["Cities", "Compare", "Scoreboard"],

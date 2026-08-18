@@ -53,7 +53,7 @@ export default function InterventionsHindsight({ city }: { city: string }) {
   return (
     <Panel
       title="Real interventions, in hindsight"
-      tag={`${d.season.start.slice(0, 7)} → ${d.season.end.slice(0, 7)}`}
+      tag="winter 2025-26"
       right={
         <div className="flex gap-1">
           <button onClick={() => setTab("warn")} className={`rounded px-2 py-0.5 text-[11px] font-semibold ${tab === "warn" ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600"}`}>would we have warned?</button>
@@ -96,7 +96,7 @@ export default function InterventionsHindsight({ city }: { city: string }) {
                       <td className={`px-1 py-1 text-right font-mono tabular-nums ${cls(l24)}`}>{pct(l24?.p_over_120_mean)}</td>
                       <td className={`px-1 py-1 text-right font-mono tabular-nums ${cls(l48)}`}>{pct(l48?.p_over_120_mean)}</td>
                       <td className={`px-1 py-1 text-right font-mono tabular-nums ${cls(l72)}`}>{pct(l72?.p_over_120_mean)}</td>
-                      <td className="px-1 py-1 text-right font-mono tabular-nums">{l24 ? `${pct(l24.share_cells_alarm_120)} of ${l24.n_cells}` : "–"}</td>
+                      <td className="whitespace-nowrap px-1 py-1 text-right font-mono tabular-nums">{l24 ? `${pct(l24.share_cells_alarm_120)} of ${l24.n_cells}` : "–"}</td>
                     </tr>
                   );
                 })}

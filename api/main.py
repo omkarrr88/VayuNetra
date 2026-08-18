@@ -690,6 +690,8 @@ def enforcement_update_status(rec_id: int, body: StatusBody, db=Depends(get_db))
     patch: dict = {"status": body.status}
     if body.status == "closed":
         patch.update({"closed_at": datetime.now(timezone.utc).isoformat(), "closure_finding": body.finding, "closure_note": body.note})
+    elif prev.get("status") == "closed":          # re-opened: the closure fields belong to the log, not the row
+        patch.update({"closed_at": None, "closure_finding": None, "closure_note": None})
     upd = sdb.table("enforcement_recs").update(patch).eq("id", rec_id).execute()
     if not (upd.data or []):
         raise HTTPException(status_code=404, detail=f"recommendation {rec_id} not found")

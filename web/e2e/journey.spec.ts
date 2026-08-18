@@ -61,12 +61,22 @@ test("1 · enforcement: worklist → dossier → notice PDF → dispatch → out
     await expect(card.getByRole("button", { name: /dispatch team/i })).toBeVisible({ timeout: 20_000 });
     await card.getByRole("button", { name: /dispatch team/i }).click();
     await expect(card.getByText(/Dispatched · tracking armed/)).toBeVisible({ timeout: 30_000 });
+    // close the case with a field finding; the audit trail must show every step with the actor
+    await rail.getByLabel("Acting officer name").fill("Journey test");
+    await card.getByRole("button", { name: "Close case" }).click();
+    await card.getByLabel("Closure finding").selectOption("not_applicable");
+    await card.getByLabel("Closure note").fill("e2e journey — no field visit");
+    await card.getByRole("button", { name: /Record & close/ }).click();
+    await expect(card.getByText(/Closed · not applicable/)).toBeVisible({ timeout: 30_000 });
+    await card.getByRole("button", { name: "History" }).click();
+    await expect(card.getByText(/by Journey test/).first()).toBeVisible({ timeout: 30_000 });
   }
   // ward queues + interventions cards carry their step numbers and now have content
   await expect(rail.locator("[data-step='4']")).toBeVisible();
   await expect(rail.locator("[data-step='5']")).toBeVisible();
-  await expect(rail.locator("[data-step='4']").getByText(/in queue/).first()).toBeVisible({ timeout: 30_000 });
-  await expect(rail.locator("[data-step='5']").getByText(/provisional|Δ|baseline|dispatched/i).first()).toBeVisible({ timeout: 30_000 });
+  // after the close the queues may legitimately be empty again — either the queue or its honest empty state
+  await expect(rail.locator("[data-step='4']").getByText(/in queue|Nothing dispatched yet/).first()).toBeVisible({ timeout: 30_000 });
+  await expect(rail.locator("[data-step='5']").getByText(/provisional|Δ|baseline|dispatched|tracking arms/i).first()).toBeVisible({ timeout: 30_000 });
 });
 
 test("2 · map: a cell story opens with blame, forecast probabilities and a share card", async ({ page }) => {
