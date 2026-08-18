@@ -111,7 +111,6 @@ export default function HomePage() {
         kicker="what it means for you"
         title="Health advice"
         lead="The cigarette-equivalent of the last 24 hours, what to do today, and guidance per condition. Templated from CPCB's advisory table and WHO guidance — no language model writes health text."
-        note={d.health.disclaimer}
       >
         <HealthAdvice d={d} />
       </PageSection>

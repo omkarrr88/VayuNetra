@@ -4,6 +4,7 @@ import { useState } from "react";
 import { api } from "./api";
 import ImpactCards, { type ImpactData } from "./ImpactCards";
 import { Panel, SegBtn, Step } from "./ui";
+import { Cols } from "./console/Cols";
 
 type SimResult = ImpactData & {
   delta_aqi_by_cell?: Record<string, number>;
@@ -102,6 +103,7 @@ export default function WhatIfPanel({ city }: { city: string }) {
 
   return (
     <>
+    <Cols>
     <Step n={1} label="Choose an intervention" info={<p>Pick an intervention and a horizon; the counterfactual runs over this city's live attribution shares and forecasts.</p>}>
     <Panel title="Choose an intervention" tag="what-if">
       <div className="text-xs text-slate-600">
@@ -185,6 +187,7 @@ export default function WhatIfPanel({ city }: { city: string }) {
       )}
       </Panel>
       </Step>
+      </Cols>
 
       {/* 3 — best bundle under a budget */}
       <Step n={3} label="Best bundle for a budget" info={<p>The optimiser ranks intervention packages under an inspector-hour budget — which set of actions buys the most ΔAQI for the effort available today.</p>}>

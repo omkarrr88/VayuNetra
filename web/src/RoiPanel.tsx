@@ -35,7 +35,7 @@ const FUND_HEAD: Record<string, string> = {
 /** Attribution-weighted NCAP spending guidance — the answer to CREA's finding
  *  that NCAP cities put 67% of funds into road dust because they lacked
  *  attribution. Shares come straight from the live blame model. */
-function FundGuidance({ city }: { city: string }) {
+export function FundGuidance({ city }: { city: string }) {
   const [mix, setMix] = useState<Array<[string, number]> | null>(null);
 
   useEffect(() => {
@@ -166,7 +166,6 @@ export default function RoiPanel({ city }: { city: string }) {
       <Citations items={d.citations ?? []} />
     </Panel>
     </Step>
-    <FundGuidance city={city} />
     </>
   );
 }

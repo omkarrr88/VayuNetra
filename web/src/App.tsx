@@ -12,7 +12,7 @@ import ComparativePanel from "./ComparativePanel";
 import CityIntelPanel from "./CityIntelPanel";
 import TraceViewer from "./TraceViewer";
 import WhatIfPanel from "./WhatIfPanel";
-import RoiPanel from "./RoiPanel";
+import RoiPanel, { FundGuidance } from "./RoiPanel";
 import FairnessPanel from "./FairnessPanel";
 import CityStatsPanel from "./CityStatsPanel";
 import InterventionsPanel from "./InterventionsPanel";
@@ -24,7 +24,7 @@ import { CommandPalette } from "./console/CommandPalette";
 import { FLOWS } from "./console/flows";
 import MapFrame from "./console/MapFrame";
 import { Cols } from "./console/Cols";
-import { PollutantsNowPanel, AirRecordPanels, HealthPanel } from "./console/cityAir";
+import { PollutantsNowPanel, AirGraphPanel, AirRecordCols, HealthPanel } from "./console/cityAir";
 import { SectionIntro } from "./console/SectionIntro";
 import { TopNav, FallbackNotice, type NavItem } from "./shell/TopNav";
 import { navigate } from "./router";
@@ -47,6 +47,10 @@ function toLngLat(center: City["center"]): LngLat {
 }
 
 const CITY_STORE_KEY = "vayunetra-city";
+
+// Sections whose content is a single light card read better in a reading column than stretched
+// across 1360px of empty page.
+const NARROW_SECTIONS = new Set<Section>(["pipeline"]);
 
 /** The console's nav items — the same sections, same order, as the keyboard shortcuts. */
 const NAV_ITEMS: NavItem[] = SECTIONS.map((s, i) => ({ id: s.id, label: s.label, hint: s.hint, key: String(i + 1) }));
@@ -304,7 +308,7 @@ export default function App() {
       <main data-tour="panel" data-rail className="vn-page" style={{ flex: 1, minWidth: 0 }}>
         <SectionIntro section={section} cityName={city?.name} />
 
-        <div key={section} className="vn-fade" style={{ display: "flex", flexDirection: "column", gap: "var(--s-5)", marginTop: "var(--s-6)" }}>
+        <div key={section} className="vn-fade" style={{ display: "flex", flexDirection: "column", gap: "var(--s-5)", marginTop: "var(--s-6)", maxWidth: NARROW_SECTIONS.has(section) ? 940 : undefined }}>
           {wantsMap && mapFrame}
 
           {section === "action" && (
@@ -325,9 +329,10 @@ export default function App() {
                 <Step {...S("forecast", 2)}><ValidationPanel city={active} /></Step>
                 <Step {...S("forecast", 3)}><InterventionsHindsight city={active} /></Step>
               </Cols>
-              <Step {...S("forecast", 6)}><PollutantsNowPanel city={active} /></Step>
-              <Step {...S("forecast", 7)}><AirRecordPanels city={active} /></Step>
               <CityStatsPanel city={active} cells={attrCells} coverageCells={coverage?.cells ?? []} />
+              <Step {...S("forecast", 6)}><PollutantsNowPanel city={active} /></Step>
+              <Step {...S("forecast", 7)}><AirGraphPanel city={active} /></Step>
+              <AirRecordCols city={active} />
             </>
           )}
           {section === "citizen" && (
@@ -341,7 +346,10 @@ export default function App() {
           {section === "impact" && (
             <>
               <RoiPanel city={active} />
-              <Step {...S("impact", 3)}><FairnessPanel /></Step>
+              <Cols>
+                <FundGuidance city={active} />
+                <Step {...S("impact", 3)}><FairnessPanel /></Step>
+              </Cols>
             </>
           )}
           {section === "pipeline" && <TraceViewer city={active} />}

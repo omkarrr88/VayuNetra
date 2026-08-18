@@ -5,6 +5,7 @@ import ExposureCorridors from "./ExposureCorridors";
 import { categoryForPm25, formatIndex, pm25Index } from "./aqi";
 import { useAqiScale } from "./aqiScale";
 import { Panel, SegBtn, Step } from "./ui";
+import { Cols } from "./console/Cols";
 
 type Advisory = {
   ward_id: string;
@@ -253,6 +254,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
 
       {/* 3 — Cleanest zones right now — the flip side of the blame map: where
           to go, computed from the E2 dense 1km field (not a hardcoded list). */}
+      <Cols>
       {cleanZones && cleanZones.zones.length > 0 && (
         <Step n={3} label="Clean-air routes" info={<p>Lowest ~1 km cells from the dense model field anchored on live stations, with a corridor exposure screen for commutes. A modelled guide, not a measurement.</p>}>
         <Panel title="Cleanest air right now" tag="lowest ~1 km cells">
@@ -298,6 +300,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
           <CitizenReports city={city} center={center} />
         </Panel>
       </Step>
+      </Cols>
     </>
   );
 }

@@ -270,7 +270,7 @@ export function CitiesTable({ rows, scale, onOpen, activeCity }: { rows: CityRow
     return v * sort.dir;
   });
   const head = (key: typeof sort.key, label: string, align = "left") => (
-    <th className={`cursor-pointer whitespace-nowrap px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-slate-500 ${align === "right" ? "text-right" : "text-left"}`}
+    <th className={`cursor-pointer whitespace-nowrap px-3 py-2 text-[11px] font-bold tracking-wide text-slate-500 ${align === "right" ? "text-right" : "text-left"}`}
       onClick={() => setSort((s) => ({ key, dir: s.key === key ? ((s.dir * -1) as 1 | -1) : -1 }))}>
       {label} <span className="text-slate-400">{sort.key === key ? (sort.dir === 1 ? "▲" : "▼") : "↕"}</span>
     </th>
@@ -279,7 +279,7 @@ export function CitiesTable({ rows, scale, onOpen, activeCity }: { rows: CityRow
     <div className="vn-card overflow-x-auto">
       <table className="w-full min-w-[36rem]">
         <thead className="border-b border-slate-200">
-          <tr>{head("name", "city")}<th className="px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500">status</th>{head("index", SCALES[scale].short, "right")}{head("pm25", "PM2.5 µg/m³", "right")}{head("next", "+24 h PM2.5", "right")}<th className="px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500">dominant source</th></tr>
+          <tr>{head("name", "city")}<th className="px-3 py-2 text-left text-[11px] font-bold tracking-wide text-slate-500">status</th>{head("index", SCALES[scale].short, "right")}{head("pm25", "PM2.5 µg/m³", "right")}{head("next", "+24 h PM2.5", "right")}<th className="px-3 py-2 text-left text-[11px] font-bold tracking-wide text-slate-500">dominant source</th></tr>
         </thead>
         <tbody>
           {sorted.map((r) => {

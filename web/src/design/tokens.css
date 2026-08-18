@@ -19,8 +19,8 @@
   --t-md: 15px;
   --t-lg: 17px;
   --t-xl: 21px;
-  --t-display: 30px;
-  --t-metric: 44px;
+  --t-display: clamp(28px, 3.2vw, 38px);
+  --t-metric: clamp(52px, 6.5vw, 84px);
   --lh-tight: 1.15;
   --lh-snug: 1.35;
   --lh-body: 1.55;
@@ -178,7 +178,7 @@
 }
 
 /* ---- public site layout --------------------------------------------------- */
-.vn-page { margin: 0 auto; max-width: 1360px; padding: var(--s-8) var(--s-5) var(--s-10); }
+.vn-page { width: 100%; margin: 0 auto; max-width: 1360px; padding: var(--s-8) var(--s-5) var(--s-10); }
 @media (max-width: 640px) { .vn-page { padding: var(--s-5) var(--s-4) var(--s-8); } }
 .vn-grid-2 { display: grid; gap: var(--s-5); grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 1060px) { .vn-grid-2 { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); } }
