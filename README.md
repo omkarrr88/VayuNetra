@@ -34,15 +34,15 @@ switch the language to Hindi → *IVR call* tab.
 3. **Act** — a ranked, evidence-backed enforcement worklist: satellite patch + RAG-retrieved
    regulatory citations + one-click draft Notice PDF. Officer-in-the-loop; dispatching arms
    automatic before/after impact tracking.
-4. **Protect** — citizen advisories in **English, Hindi, Kannada, Marathi** over the app, a live
-   Telegram bot, real IVR phone calls and public displays — targeted by 2,624
+4. **Protect** — citizen advisories in **eight languages** (Hindi, Kannada, Marathi, Tamil, Telugu,
+   Bengali, Gujarati, English) over the app, a live Telegram bot, a working IVR demo line and public displays — targeted by 2,624
    vulnerability-scored zones (hospitals, schools, outdoor workers × real population).
 
 Plus a Swachh-Vayu-style **10-city ranking**, a cited what-if **simulator** with an inspector-hour
 optimizer, a health-₹ **impact** view with attribution-weighted NCAP fund guidance and a fairness
 audit, a **citizen complaint loop** (photo → verified → enforcement candidate, public SLA clock),
 PRANA-ready **NCAP evidence export**, a live **pipeline** trace of all six agents (typical
-signal→cited-action: **0.8–9.7 s**, measured), and map layers for wind plumes, wards, freight
+signal→cited-recommendation: **0.8–9.7 s** compute, measured; the officer's review and the field dispatch are tracked separately), and map layers for wind plumes, wards, freight
 corridors and FIRMS fire events.
 
 **Production snapshot (16 August 2026):** **10 cities** (Delhi · Bengaluru · Mumbai · Hyderabad · Chennai ·
@@ -83,9 +83,9 @@ carries its citation.
 **Honest by construction:** the attribution abstains below its R² skill gate; forecast intervals
 were audited, found under-covered, and fixed with CQR; a deep-learning forecaster (TFT) was
 trained on GPU and *rejected* because LightGBM won held-out skill in every launch city; satellite
-source detection currently runs a labelled Earth-Engine heuristic (NDVI drop → construction,
-FIRMS thermal → waste burning) while the U-Net CV model finishes training — nothing fabricated
-ever reaches production, and impact figures return `null` over invented constants.
+source detection is a labelled Earth-Engine heuristic (NDVI drop → construction,
+FIRMS thermal → waste burning), stated as such on every site — a learned CV detector is roadmap, not
+claimed — nothing fabricated ever reaches production, and impact figures return `null` over invented constants.
 
 ## Architecture
 

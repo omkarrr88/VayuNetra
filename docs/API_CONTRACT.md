@@ -42,7 +42,10 @@
 | GET | `/metrics/benchmark?city&full` | temporal-split forecast benchmark artifact (skill, onset recall, calibration) | all |
 | GET | `/brief?city` · `/brief.pdf?city` | officer morning brief (JSON / one-page PDF): air now vs yesterday, onset cells (P ≥ 0.3), top actions, yesterday's outcomes | all |
 | POST | `/brief/send` | push the brief to the city's Telegram subscribers (rate-limited) | all (demo) |
-| POST | `/enforcement/{id}/status` | approve / dispatch / dismiss (server-side write, rate-limited); dispatch arms before/after tracking | all (demo) |
+| POST | `/enforcement/{id}/status` | approve / dispatch / dismiss / **close** (`finding` required: violation_found · compliant · inaccessible · not_applicable; optional `actor`, `note`); server-side write, rate-limited; dispatch arms before/after tracking; every change appended to `enforcement_status_log` | all (demo) |
+| GET | `/enforcement/{id}/log` | audit trail of one action — from → to, actor, note, finding, time | all |
+| GET | `/metrics/attribution?city` | how today's attribution was produced per city: cells per method (per-cell model / shrunk / signature priors), median out-of-sample R², mean confidence, cells with a gas marker in 24 h | all |
+| GET | `/landing/snapshot` | the landing page's live "data at a glance": Delhi source mix, per-city PM2.5 now vs +24 h, running scale; 10-min cache | all |
 | GET | `/exposure?city` | expected people in Very Poor / Severe air at +24/48/72 h (calibrated, population-weighted) | all |
 | WS | `/live` | push attribution/forecast/alert updates | all |
 

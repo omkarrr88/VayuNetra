@@ -188,35 +188,61 @@ def rows_from_elements(city_id: str, elements: list[dict], h3_res: int = 8) -> l
 
 
 def push_to_supabase(city_id: str, rows: list[dict]) -> None:
-    """Replace the city's registry. FK order: enforcement_recs reference sources,
-    so recs pointing at OSM rows are cleared first — regenerate via bootstrap_live."""
+    """Refresh the city's OSM-origin registry *in place*, keyed by ``registry_ref``
+    (``osm:way/123``), so source ids — and therefore the enforcement recs, dispatch
+    tracker and audit log that reference them — survive the nightly run.
+
+    Sites already known are updated (name / geometry / attributes); new sites are inserted;
+    sites that vanished from OSM are deleted only when no officer-acted rec points at them
+    (otherwise the source row stays, flagged ``attributes.stale_in_osm``). The old
+    delete-and-reinsert changed every id nightly and cascaded into wiping the worklist.
+    (Row-count note: OSM sources are capped at ~20/city by CAP_PER_TYPE, far under the REST
+    client's 1000-row page — no pagination needed here.)"""
     from core.supa import client
 
     db = client()
-    # Scope the FK clear to recs that reference OSM-origin sources only.
-    # The old blanket delete wiped every rec (incl. cv_detected-backed ones);
-    # combined with the pipeline's spike gate skipping enforcement on calm
-    # days, that left the live worklist empty until the next spike.
-    # (Row-count note: OSM sources are capped at ~20/city by CAP_PER_TYPE, far
-    # under the REST client's 1000-row page — no pagination needed here.)
-    osm_ids = [
-        r["id"] for r in (
-            db.table("emission_sources").select("id")
-            .eq("city_id", city_id).eq("source_origin", "osm").execute().data or []
-        )
-    ]
-    if osm_ids:
-        db.table("enforcement_recs").delete().eq("city_id", city_id).in_("source_id", osm_ids).execute()
-    # Replace ONLY OSM-origin rows: the daily refresh was wiping the E1
-    # cv_detected rows (and any registry rows) along with its own.
-    db.table("emission_sources").delete().eq("city_id", city_id).eq("source_origin", "osm").execute()
-    try:
-        db.table("emission_sources").insert(rows).execute()
-    except Exception:  # noqa: BLE001 — PostGIS/GeoJSON casting can differ per setup
-        stripped = [{k: v for k, v in r.items() if k != "geom"} for r in rows]
-        db.table("emission_sources").insert(stripped).execute()
-    print(f"{city_id}: replaced registry with {len(rows)} OSM sources "
-          f"(cleared recs referencing {len(osm_ids)} OSM sources — the cron regenerates recs right after)")
+    existing = (
+        db.table("emission_sources").select("id,registry_ref")
+        .eq("city_id", city_id).eq("source_origin", "osm").execute().data or []
+    )
+    by_ref = {r.get("registry_ref"): r["id"] for r in existing if r.get("registry_ref")}
+    incoming = {r["registry_ref"]: r for r in rows}
+
+    def _write(fn, payload):
+        try:
+            fn(payload)
+        except Exception:  # noqa: BLE001 — PostGIS/GeoJSON casting can differ per setup
+            fn({k: v for k, v in payload.items() if k != "geom"} if isinstance(payload, dict)
+               else [{k: v for k, v in p.items() if k != "geom"} for p in payload])
+
+    updated = 0
+    for ref, row in incoming.items():
+        if ref in by_ref:
+            patch = {k: v for k, v in row.items() if k not in ("city_id", "source_origin")}
+            _write(lambda p, _id=by_ref[ref]: db.table("emission_sources").update(p).eq("id", _id).execute(), patch)
+            updated += 1
+    new_rows = [row for ref, row in incoming.items() if ref not in by_ref]
+    if new_rows:
+        _write(lambda p: db.table("emission_sources").insert(p).execute(), new_rows)
+
+    gone_ids = [sid for ref, sid in by_ref.items() if ref not in incoming]
+    kept_stale = 0
+    if gone_ids:
+        acted = (db.table("enforcement_recs").select("source_id").eq("city_id", city_id)
+                 .in_("source_id", gone_ids).neq("status", "proposed").execute().data or [])
+        protected = {r["source_id"] for r in acted}
+        deletable = [sid for sid in gone_ids if sid not in protected]
+        if deletable:
+            db.table("enforcement_recs").delete().eq("city_id", city_id).in_("source_id", deletable).execute()
+            db.table("emission_sources").delete().in_("id", deletable).execute()
+        for sid in protected:
+            cur = (db.table("emission_sources").select("attributes").eq("id", sid).limit(1).execute().data or [{}])[0]
+            attrs = dict(cur.get("attributes") or {})
+            attrs["stale_in_osm"] = True
+            db.table("emission_sources").update({"attributes": attrs}).eq("id", sid).execute()
+            kept_stale += 1
+    print(f"{city_id}: OSM registry refreshed — {updated} updated, {len(new_rows)} added, "
+          f"{len(gone_ids) - kept_stale} removed, {kept_stale} kept (referenced by acted-upon recs)")
 
 
 def main() -> None:

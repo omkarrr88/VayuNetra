@@ -3,11 +3,11 @@ import {
   Area,
   ComposedChart,
   Line,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import SizedChart from "./SizedChart";
 import { api } from "./api";
 import { aqiCategory, pm25ToAqi } from "./aqi";
 import { FORECAST_SKILL, SKILL_ASOF, pct } from "./metrics";
@@ -98,7 +98,7 @@ export default function ForecastPanel({ city }: { city: string }) {
     >
       {chart.length > 1 && (
         <div className="h-28">
-          <ResponsiveContainer width="100%" height="100%">
+          <SizedChart>
             <ComposedChart data={chart} margin={{ top: 4, right: 8, left: -10, bottom: -6 }}>
               <XAxis dataKey="h" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 9, fill: "#94a3b8" }} axisLine={false} tickLine={false} width={34} domain={[0, "dataMax + 20"]} />
@@ -115,7 +115,7 @@ export default function ForecastPanel({ city }: { city: string }) {
               <Line type="monotone" dataKey="avg" stroke="#2563eb" strokeWidth={2} dot={{ r: 3 }} />
               <Line type="monotone" dataKey="pers" stroke="#94a3b8" strokeWidth={1.5} strokeDasharray="4 3" dot={false} />
             </ComposedChart>
-          </ResponsiveContainer>
+          </SizedChart>
         </div>
       )}
       <div className="mt-0.5 flex items-center gap-3 text-[11px] text-slate-500">

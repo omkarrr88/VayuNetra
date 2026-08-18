@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Bar, BarChart, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, Legend, Tooltip, XAxis, YAxis } from "recharts";
+import SizedChart from "./SizedChart";
 import { api } from "./api";
 import { inr, intfmt } from "./format";
 import { EmptyState, Panel } from "./ui";
@@ -60,7 +61,7 @@ export default function ComparativePanel({ onSelectCity }: { onSelectCity: (city
 
       {chart.length > 0 && (
         <div className="mt-2 h-32">
-          <ResponsiveContainer width="100%" height="100%">
+          <SizedChart>
             <BarChart data={chart} margin={{ top: 4, right: 4, left: -10, bottom: -6 }} barGap={2}>
               <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 9, fill: "#94a3b8" }} axisLine={false} tickLine={false} width={34} />
@@ -74,7 +75,7 @@ export default function ComparativePanel({ onSelectCity }: { onSelectCity: (city
               <Bar dataKey="avg now" fill="#64748b" radius={[3, 3, 0, 0]} maxBarSize={26} />
               <Bar dataKey="+24h" fill="#2563eb" radius={[3, 3, 0, 0]} maxBarSize={26} />
             </BarChart>
-          </ResponsiveContainer>
+          </SizedChart>
         </div>
       )}
 

@@ -79,13 +79,21 @@ const VALIDATION: Array<[string, string, string]> = [
   ["Uncertainty is calibrated", "80% band → 78% measured · P(>120) Brier skill +51%", "conformal calibration; exceedance probabilities on every cell forecast drive the alarms"],
   ["Enforcement is equitable", "no socio-economic inputs, by construction", "fairness audit on every live recommendation (n=390 at the July audit)"],
   ["Model choice was earned", "TFT trained on GPU — and rejected", "LightGBM won every launch city on held-out skill"],
-  ["The loop is fast", "seconds from signal to cited action", "live per-node agent traces, target under 5 minutes"],
+  ["The loop is fast", "seconds from signal to cited recommendation", "live per-node agent traces; approval, dispatch and closure timestamped per action"],
 ];
 
 const DATA_SOURCES = ["CPCB / CAAQMS", "Sentinel-5P", "Sentinel-2", "Open-Meteo · ERA5", "NASA FIRMS", "OpenStreetMap", "GPW v4.11"];
 
-// Production snapshot, 16 August 2026 — real aggregates (live attribution mean
-// across Delhi cells; /comparison city averages). Colors match the console.
+// Fallback snapshot (production, 16 August 2026) — used only until GET /landing/snapshot
+// answers; the live payload replaces every number below. Colors match the console.
+const MIX_COLOR: Record<string, string> = { traffic: "#ef4444", transported: "#3b82f6", industrial: "#9333ea", construction_dust: "#ca8a04", biomass_burning: "#16a34a", other: "#6b7280" };
+const MIX_LABEL: Record<string, string> = { construction_dust: "construction dust", biomass_burning: "biomass burning" };
+type Snapshot = {
+  generated_at: string;
+  mix: { source: string; pct: number }[];
+  cities: { name: string; now: number | null; next: number | null; trend: string | null }[];
+  scale: { cells: number | null; sources: number | null; zones: number | null; recs: number | null };
+};
 const SNAPSHOT_MIX: Array<[string, number, string]> = [
   ["traffic", 50.2, "#ef4444"],
   ["transported", 13.5, "#3b82f6"],
@@ -115,8 +123,12 @@ const SNAPSHOT_SCALE: Array<[string, string]> = [
 export default function Landing() {
   const [aqi, setAqi] = useState<number | null>(null);
   const [latencyS, setLatencyS] = useState<string | null>(null);
+  const [snap, setSnap] = useState<Snapshot | null>(null);
 
   useEffect(() => {
+    api<Snapshot>("/landing/snapshot")
+      .then((d) => { if (d && d.mix?.length && d.cities?.length) setSnap(d); })
+      .catch(() => {});
     api<AqiRow[]>("/aqi/current?city=delhi")
       .then((rows) => {
         const pm = rows.map((r) => r.pm25 ?? r.value).filter((v): v is number => typeof v === "number");
@@ -132,6 +144,22 @@ export default function Landing() {
   }, []);
 
   const cat = aqi !== null ? aqiCategory(aqi) : null;
+  const mix: Array<[string, number, string]> = snap
+    ? snap.mix.filter((m) => m.pct > 0).map((m) => [MIX_LABEL[m.source] ?? m.source, m.pct, MIX_COLOR[m.source] ?? "#6b7280"])
+    : SNAPSHOT_MIX;
+  const cities: Array<[string, number, number, string]> = snap
+    ? snap.cities.filter((c) => c.now !== null).map((c) => [c.name, Math.round((c.now ?? 0) * 10) / 10, Math.round((c.next ?? c.now ?? 0) * 10) / 10, c.trend ?? "stable"])
+    : SNAPSHOT_CITIES;
+  const fmt = (n: number | null | undefined, fallback: string) => (typeof n === "number" && n > 0 ? n.toLocaleString("en-IN") : fallback);
+  const scale: Array<[string, string]> = snap
+    ? [
+        [fmt(snap.scale.cells, SNAPSHOT_SCALE[0][0]), SNAPSHOT_SCALE[0][1]],
+        [fmt(snap.scale.sources, SNAPSHOT_SCALE[1][0]), SNAPSHOT_SCALE[1][1]],
+        [fmt(snap.scale.zones, SNAPSHOT_SCALE[2][0]), SNAPSHOT_SCALE[2][1]],
+        [fmt(snap.scale.recs, SNAPSHOT_SCALE[3][0]), SNAPSHOT_SCALE[3][1]],
+      ]
+    : SNAPSHOT_SCALE;
+  const asOf = snap ? new Date(snap.generated_at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "16 August 2026";
 
   return (
     <div className="min-h-full overflow-y-auto bg-white text-slate-700 antialiased" style={{ scrollBehavior: "smooth" }}>
@@ -255,7 +283,7 @@ export default function Landing() {
                   {(() => {
                     const R = 15.9155; // circumference = 100
                     let off = 0;
-                    return SNAPSHOT_MIX.map(([, pct, color]) => {
+                    return mix.map(([, pct, color]) => {
                       const el = (
                         <circle
                           key={color + off}
@@ -269,7 +297,7 @@ export default function Landing() {
                   })()}
                 </svg>
                 <div className="space-y-1">
-                  {SNAPSHOT_MIX.map(([name, pct, color]) => (
+                  {mix.map(([name, pct, color]) => (
                     <div key={name} className="flex items-center gap-2 text-[12px] text-slate-600">
                       <span className="h-2.5 w-2.5 rounded-sm" style={{ background: color }} />
                       {name} <b className="text-slate-800">{pct}%</b>
@@ -284,7 +312,7 @@ export default function Landing() {
               <h3 className="text-[14px] font-bold text-slate-900">City PM2.5 — now vs forecast +24h</h3>
               <div className="mt-1 text-[10px] text-slate-500"><span className="inline-block h-2 w-3 rounded-sm bg-slate-400/70 align-middle" /> now &nbsp;·&nbsp; <span className="inline-block h-2 w-0.5 bg-blue-600 align-middle" /> +24h forecast &nbsp;·&nbsp; µg/m³, sorted by current level</div>
               <div className="mt-3 space-y-1.5">
-                {SNAPSHOT_CITIES.map(([name, now, next, trend]) => (
+                {cities.map(([name, now, next, trend]) => (
                   <div key={name} className="flex items-center gap-2 text-[11px]">
                     <span className="w-[4.6rem] shrink-0 truncate font-semibold text-slate-700">{name}</span>
                     <div className="relative h-2.5 flex-1 rounded-full bg-slate-100" title={`now ${now} · +24h ${next} µg/m³ · ${trend}`}>
@@ -303,7 +331,7 @@ export default function Landing() {
             <div>
               <h3 className="text-[14px] font-bold text-slate-900">Running scale</h3>
               <div className="mt-3 grid grid-cols-2 gap-3">
-                {SNAPSHOT_SCALE.map(([n, label]) => (
+                {scale.map(([n, label]) => (
                   <div key={label} className="rounded-lg border border-slate-200 p-3">
                     <div className="text-xl font-extrabold tracking-tight text-slate-900">{n}</div>
                     <div className="mt-0.5 text-[11px] leading-4 text-slate-500">{label}</div>
@@ -313,8 +341,8 @@ export default function Landing() {
             </div>
           </div>
           <p className="mt-6 text-[11px] text-slate-500">
-            Live snapshot from the production system, 16 August 2026 — aggregated from real station measurements and model
-            attribution. Open the console for the current numbers.
+            {snap ? "Live from the production system, as of " : "Snapshot from the production system, "}{asOf} — aggregated from real station measurements
+            and the latest attribution run; refreshed every 10 minutes. Open the console for the cell-level numbers.
           </p>
         </div>
       </section>

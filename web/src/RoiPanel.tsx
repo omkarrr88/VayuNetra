@@ -1,7 +1,8 @@
 // E7 — City ROI dashboard: the annual PM2.5 health burden and the NCAP-target
 // savings, i.e. "the funding case". Consumes GET /roi?city. Every figure cited.
 import { useEffect, useState } from "react";
-import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, Cell, Tooltip, XAxis, YAxis } from "recharts";
+import SizedChart from "./SizedChart";
 import { api } from "./api";
 import { Citations, type Citation } from "./ImpactCards";
 import { inr, intfmt } from "./format";
@@ -138,7 +139,7 @@ export default function RoiPanel({ city }: { city: string }) {
       </div>
 
       <div className="mt-2 h-24">
-        <ResponsiveContainer width="100%" height="100%">
+        <SizedChart>
           <BarChart data={chart} layout="vertical" margin={{ top: 0, right: 12, left: 8, bottom: 0 }}>
             <XAxis type="number" tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={false} tickLine={false}
               tickFormatter={(v: number) => `${intfmt(v)} cr`} />
@@ -154,7 +155,7 @@ export default function RoiPanel({ city }: { city: string }) {
               ))}
             </Bar>
           </BarChart>
-        </ResponsiveContainer>
+        </SizedChart>
       </div>
 
       <div className="mt-1 text-[11px] text-gray-600">

@@ -13,8 +13,17 @@ type Rec = {
   pop_exposed: number;
   rationale: string;
   status: string;
+  closed_at?: string | null;
+  closure_finding?: string | null;
+  closure_note?: string | null;
   rubric_score?: { total?: number };
 };
+
+type LogRow = { from_status: string | null; to_status: string; actor: string | null; note: string | null; finding: string | null; created_at: string };
+const FINDING_LABEL: Record<string, string> = {
+  violation_found: "violation found", compliant: "compliant", inaccessible: "site inaccessible", not_applicable: "not applicable",
+};
+const OFFICER_KEY = "vayunetra-officer";
 
 /** Rough km between two H3 cells (equirectangular — fine at city scale). */
 function cellKm(a: string, b: string): number | null {
@@ -188,20 +197,45 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
   // cell's 7-day baseline server-side and arms the before/after tracker; the ward queues and
   // the tracker card refetch on the change event.
   const [acting, setActing] = useState<number | null>(null);
-  async function setStatus(id: number, status: "approved" | "dispatched" | "dismissed") {
+  // "Acting as" — the officer's name stamped on every status change (the demo runs without
+  // sign-in, so the audit trail records what the console was told; a real deployment binds
+  // this to the authenticated user).
+  const [officer, setOfficer] = useState<string>(() => { try { return localStorage.getItem(OFFICER_KEY) ?? ""; } catch { return ""; } });
+  useEffect(() => { try { localStorage.setItem(OFFICER_KEY, officer); } catch { /* ignore */ } }, [officer]);
+  const [closing, setClosing] = useState<number | null>(null);
+  const [finding, setFinding] = useState<string>("violation_found");
+  const [closeNote, setCloseNote] = useState<string>("");
+  const [logFor, setLogFor] = useState<number | null>(null);
+  const [log, setLog] = useState<LogRow[] | null>(null);
+
+  async function setStatus(id: number, status: "approved" | "dispatched" | "dismissed" | "closed", extra?: { finding?: string; note?: string }) {
     setActing(id);
     try {
       await api(`/enforcement/${id}/status`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, actor: officer.trim() || undefined, ...(extra ?? {}) }),
       });
-      setRows((prev) => (prev ? prev.map((r) => (r.id === id ? { ...r, status } : r)) : prev));
+      setRows((prev) => (prev ? prev.map((r) => (r.id === id ? { ...r, status, ...(status === "closed" ? { closed_at: new Date().toISOString(), closure_finding: extra?.finding ?? null, closure_note: extra?.note ?? null } : {}) } : r)) : prev));
       notifyEnforcementChanged();
+      if (status === "closed") { setClosing(null); setCloseNote(""); }
+      if (logFor === id) void showLog(id);
     } catch {
       /* the button re-enables; the status chip stays as it was */
     } finally {
       setActing(null);
+    }
+  }
+
+  async function showLog(id: number) {
+    if (logFor === id) { setLogFor(null); return; }
+    setLogFor(id);
+    setLog(null);
+    try {
+      const d = await api<{ log: LogRow[] }>(`/enforcement/${id}/log`);
+      setLog(d.log ?? []);
+    } catch {
+      setLog([]);
     }
   }
 
@@ -236,6 +270,17 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
           aria-label="Search enforcement recommendations"
           className="min-w-0 flex-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-700 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
+        <label className="flex items-center gap-1 text-[11px] text-slate-500" title="Stamped on every approve / dispatch / close in the audit trail">
+          acting as
+          <input
+            type="text"
+            value={officer}
+            onChange={(e) => setOfficer(e.target.value)}
+            placeholder="officer name"
+            aria-label="Acting officer name"
+            className="w-28 rounded-md border border-slate-200 bg-white px-1.5 py-1 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+        </label>
       </div>
 
       {ordered === null ? (
@@ -329,14 +374,89 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
                   </button>
                 )}
                 {r.status === "dispatched" && (
-                  <span className="rounded bg-violet-100 px-1.5 py-0.5 text-[11px] font-semibold text-violet-800" title="Baseline frozen; before/after effect is being measured (see step 5)">
-                    ✓ Dispatched · tracking armed
+                  <>
+                    <span className="rounded bg-violet-100 px-1.5 py-0.5 text-[11px] font-semibold text-violet-800" title="Baseline frozen; before/after effect is being measured (see step 5)">
+                      ✓ Dispatched · tracking armed
+                    </span>
+                    <button
+                      onClick={() => setClosing(closing === r.id ? null : r.id)}
+                      disabled={acting === r.id}
+                      className="cursor-pointer rounded bg-slate-800 px-2 py-1 text-xs font-semibold text-white transition-colors hover:bg-slate-900 disabled:opacity-50"
+                      title="Record the field finding and close this action"
+                    >
+                      Close case
+                    </button>
+                  </>
+                )}
+                {r.status === "closed" && (
+                  <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-800" title={r.closure_note ?? undefined}>
+                    ✓ Closed · {FINDING_LABEL[r.closure_finding ?? ""] ?? "recorded"}{r.closed_at ? ` · ${r.closed_at.slice(0, 10)}` : ""}
                   </span>
                 )}
                 {r.status === "dismissed" && (
                   <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-500">Dismissed</span>
                 )}
+                {r.status !== "proposed" && (
+                  <button
+                    onClick={() => void showLog(r.id)}
+                    className="cursor-pointer rounded px-1.5 py-1 text-[11px] text-slate-500 transition-colors hover:bg-slate-100"
+                    title="Who moved this action, and when"
+                  >
+                    {logFor === r.id ? "Hide history" : "History"}
+                  </button>
+                )}
               </div>
+
+              {closing === r.id && (
+                <div className="mt-2 flex flex-wrap items-center gap-1.5 rounded-md bg-slate-50 p-2 ring-1 ring-slate-200">
+                  <span className="text-[11px] font-semibold text-slate-600">Field finding</span>
+                  <select
+                    value={finding}
+                    onChange={(e) => setFinding(e.target.value)}
+                    aria-label="Closure finding"
+                    className="rounded-md border border-slate-200 bg-white px-1.5 py-1 text-xs text-slate-700"
+                  >
+                    {Object.entries(FINDING_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                  </select>
+                  <input
+                    type="text"
+                    value={closeNote}
+                    onChange={(e) => setCloseNote(e.target.value)}
+                    placeholder="note (optional): what was seen, notice served, follow-up…"
+                    aria-label="Closure note"
+                    className="min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-1.5 py-1 text-xs text-slate-700 placeholder:text-slate-400"
+                  />
+                  <button
+                    onClick={() => setStatus(r.id, "closed", { finding, note: closeNote.trim() || undefined })}
+                    disabled={acting === r.id}
+                    className="cursor-pointer rounded bg-emerald-700 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
+                  >
+                    {acting === r.id ? "Closing…" : "Record & close"}
+                  </button>
+                </div>
+              )}
+
+              {logFor === r.id && (
+                <div className="mt-2 rounded-md bg-white p-2 text-[11px] text-slate-600 ring-1 ring-slate-200">
+                  {log === null ? (
+                    <div className="h-6 animate-pulse rounded bg-slate-100" />
+                  ) : log.length === 0 ? (
+                    <span className="text-slate-500">No status changes recorded for this action yet.</span>
+                  ) : (
+                    <ol className="space-y-0.5">
+                      {log.map((l, i) => (
+                        <li key={i} className="flex flex-wrap items-baseline gap-x-1.5">
+                          <span className="font-mono text-[10px] text-slate-400">{new Date(l.created_at).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+                          <span>{l.from_status ?? "—"} → <b>{l.to_status}</b></span>
+                          {l.actor && <span className="text-slate-500">by {l.actor}</span>}
+                          {l.finding && <span className="rounded bg-slate-100 px-1 text-slate-600">{FINDING_LABEL[l.finding] ?? l.finding}</span>}
+                          {l.note && <span className="text-slate-500">“{l.note}”</span>}
+                        </li>
+                      ))}
+                    </ol>
+                  )}
+                </div>
+              )}
 
               {open === r.id && (
                 <div className="mt-2 rounded-md bg-slate-50 p-2 ring-1 ring-slate-200">

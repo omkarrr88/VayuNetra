@@ -80,3 +80,27 @@ def test_ward_lookup_names_places_in_every_city():
     for city, (lat, lng) in probes.items():
         p = place_for_latlng(city, lat, lng)
         assert p and p["label"], city
+
+
+def test_closing_an_action_requires_a_finding_and_records_it():
+    bad = client.post("/enforcement/1/status", json={"status": "closed"})
+    assert bad.status_code == 422
+    ok_ = client.post("/enforcement/1/status", json={"status": "closed", "finding": "compliant", "actor": "Officer on duty"})
+    assert ok_.status_code == 200 and ok_.json()["data"]["status"] == "closed"
+    assert client.post("/enforcement/1/status", json={"status": "closed", "finding": "made_up"}).status_code == 422
+    log = client.get("/enforcement/1/log")
+    assert log.status_code == 200 and "log" in log.json()["data"]
+
+
+def test_attribution_method_breakdown_is_served_per_city():
+    d = client.get("/metrics/attribution?city=delhi").json()["data"]
+    assert "cities" in d and "gate" in d
+    row = next(c for c in d["cities"] if c["city_id"] == "delhi")
+    assert row["n_cells"] > 0 and sum(m["n_cells"] for m in row["methods"]) == row["n_cells"]
+
+
+def test_landing_snapshot_has_mix_cities_and_scale():
+    d = client.get("/landing/snapshot").json()["data"]
+    assert d["mix"] and abs(sum(m["pct"] for m in d["mix"]) - 100) < 1.5
+    assert len(d["cities"]) >= 3 and all("now" in c for c in d["cities"])
+    assert set(d["scale"]) == {"cells", "sources", "zones", "recs"}

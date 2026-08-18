@@ -3,7 +3,8 @@
 // verdict — better / worse / about the same than a month ago. Backed by real
 // station readings aggregated per day (GET /history/trend).
 import { useEffect, useState } from "react";
-import { Area, AreaChart, ReferenceArea, ReferenceDot, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, ReferenceArea, ReferenceDot, Tooltip, XAxis, YAxis } from "recharts";
+import SizedChart from "./SizedChart";
 import { api } from "./api";
 
 type Point = { date: string; pm25: number; n: number; band: string };
@@ -90,7 +91,7 @@ export default function TrendPanel({
             </div>
           )}
           <div className="mt-1.5 h-24">
-            <ResponsiveContainer width="100%" height="100%">
+            <SizedChart>
               <AreaChart data={series} margin={{ top: 4, right: 4, left: -22, bottom: 0 }}>
                 {BAND_COLORS.map(([lo, hi, color]) => (
                   <ReferenceArea key={lo} y1={lo} y2={Math.min(hi, maxY)} fill={color} fillOpacity={0.09} strokeOpacity={0} />
@@ -115,7 +116,7 @@ export default function TrendPanel({
                   <ReferenceDot key={a.date} x={a.date} y={a.pm25} r={3.5} fill="#dc2626" stroke="#fff" strokeWidth={1.2} ifOverflow="extendDomain" />
                 ))}
               </AreaChart>
-            </ResponsiveContainer>
+            </SizedChart>
           </div>
           <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[10px] text-slate-500">
             {BAND_COLORS.map(([, , color, name]) => (

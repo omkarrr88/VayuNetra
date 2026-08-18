@@ -595,7 +595,7 @@ def enforcement_list(
         db.table("enforcement_recs")
         .select(
             "id,city_id,h3_cell,ts,source_id,priority_score,contribution,pop_exposed,"
-            "rationale,rag_citations,rubric_score,status"
+            "rationale,rag_citations,rubric_score,status,closed_at,closure_finding,closure_note"
         )
         .eq("city_id", city)
         .order("priority_score", desc=True)
@@ -649,7 +649,11 @@ def enforcement_notice_pdf(rec_id: int, db=Depends(get_db)) -> Response:
 
 
 class StatusBody(BaseModel):
-    status: str = Field(..., pattern=r"^(proposed|approved|dispatched|dismissed)$")
+    status: str = Field(..., pattern=r"^(proposed|approved|dispatched|dismissed|closed)$")
+    actor: Optional[str] = Field(None, max_length=80, description="officer name as entered in the console")
+    note: Optional[str] = Field(None, max_length=500)
+    finding: Optional[str] = Field(None, pattern=r"^(violation_found|compliant|inaccessible|not_applicable)$",
+                                   description="required when status = closed")
 
 
 _STATUS_EVENTS: list[float] = []
@@ -668,7 +672,9 @@ def _status_rate_ok(limit: int = 60, window_s: int = 60) -> bool:
 
 @app.post("/enforcement/{rec_id}/status", tags=["enforcement"])
 def enforcement_update_status(rec_id: int, body: StatusBody, db=Depends(get_db)) -> dict:
-    """Update enforcement rec status (approved / dispatched / dismissed)."""
+    """Update enforcement rec status (approved / dispatched / dismissed / closed)."""
+    if body.status == "closed" and not body.finding:
+        raise HTTPException(status_code=422, detail="closing an action requires a finding")
     if DEMO_MODE:
         return ok({"rec_id": rec_id, "status": body.status, "demo": True})
 
@@ -678,9 +684,24 @@ def enforcement_update_status(rec_id: int, body: StatusBody, db=Depends(get_db))
     if not _status_rate_ok():
         raise HTTPException(status_code=429, detail="too many status changes — slow down")
     sdb = _db()
-    upd = sdb.table("enforcement_recs").update({"status": body.status}).eq("id", rec_id).execute()
+    prev = (sdb.table("enforcement_recs").select("city_id,status").eq("id", rec_id).limit(1).execute().data or [None])[0]
+    if not prev:
+        raise HTTPException(status_code=404, detail=f"recommendation {rec_id} not found")
+    patch: dict = {"status": body.status}
+    if body.status == "closed":
+        patch.update({"closed_at": datetime.now(timezone.utc).isoformat(), "closure_finding": body.finding, "closure_note": body.note})
+    upd = sdb.table("enforcement_recs").update(patch).eq("id", rec_id).execute()
     if not (upd.data or []):
         raise HTTPException(status_code=404, detail=f"recommendation {rec_id} not found")
+    # immutable audit trail — who moved it, from what, to what, when (never blocks the change)
+    try:
+        sdb.table("enforcement_status_log").insert({
+            "rec_id": rec_id, "city_id": prev.get("city_id"), "from_status": prev.get("status"),
+            "to_status": body.status, "actor": (body.actor or "").strip() or None,
+            "note": (body.note or "").strip() or None, "finding": body.finding,
+        }).execute()
+    except Exception as e:  # noqa: BLE001
+        logger.error("status log write failed for rec %s: %s", rec_id, e, exc_info=True)
 
     # First real dispatch arms the before/after effect measurement: freeze the
     # cell's trailing-7-day PM2.5 baseline now, so effectiveness is measurable
@@ -705,6 +726,16 @@ def enforcement_update_status(rec_id: int, body: StatusBody, db=Depends(get_db))
         except Exception as e:  # noqa: BLE001 — tracking must never block the status change
             logger.error("intervention tracking arm failed for rec %s: %s", rec_id, e, exc_info=True)
     return ok({"rec_id": rec_id, "status": body.status})
+
+
+@app.get("/enforcement/{rec_id}/log", tags=["enforcement"])
+def enforcement_status_log(rec_id: int) -> dict:
+    """The audit trail of one action: every status change with actor, note, finding and time."""
+    if DEMO_MODE:
+        return ok({"rec_id": rec_id, "log": []})
+    rows = (_db().table("enforcement_status_log").select("from_status,to_status,actor,note,finding,created_at")
+            .eq("rec_id", rec_id).order("created_at", desc=False).limit(200).execute().data or [])
+    return ok({"rec_id": rec_id, "log": rows})
 
 
 def _interventions_data(city: str) -> dict:
@@ -803,13 +834,18 @@ def interventions_export(city: str = Query("delhi", description="City ID")) -> R
         pass
 
     lines = ["city,rec_id,h3_cell,source_name,source_category,ncap_head,dispatched_at,"
-             "baseline_pm25,after_pm25,effect_vs_city_drift,provisional,reporting_authority"]
+             "baseline_pm25,after_pm25,effect_vs_city_drift,provisional,status,closed_at,closure_finding,reporting_authority"]
     for t in tracked:
         source_name, category = "", ""
+        status, closed_at, finding = "", "", ""
         if sdb is not None:
             try:
-                rec_rows = (sdb.table("enforcement_recs").select("source_id,evidence")
+                rec_rows = (sdb.table("enforcement_recs").select("source_id,evidence,status,closed_at,closure_finding")
                             .eq("id", t["rec_id"]).limit(1).execute().data or [])
+                if rec_rows:
+                    status = rec_rows[0].get("status") or ""
+                    closed_at = rec_rows[0].get("closed_at") or ""
+                    finding = rec_rows[0].get("closure_finding") or ""
                 if rec_rows and rec_rows[0].get("source_id"):
                     src = (sdb.table("emission_sources").select("name,type")
                            .eq("id", rec_rows[0]["source_id"]).limit(1).execute().data or [])
@@ -822,7 +858,7 @@ def interventions_export(city: str = Query("delhi", description="City ID")) -> R
             city, t.get("rec_id"), t.get("h3_cell"), source_name, category,
             _NCAP_HEAD.get(category, "Other"), t.get("dispatched_at"),
             t.get("baseline_pm25"), t.get("after_pm25"), t.get("effect"),
-            t.get("provisional"), authority.replace(",", " "),
+            t.get("provisional"), status, closed_at, finding, authority.replace(",", " "),
         ]))
     csv_body = "\n".join(lines) + "\n"
     return Response(
@@ -1377,6 +1413,123 @@ def comparison() -> dict:
         return ok(data)
     except Exception as e:  # noqa: BLE001
         return _server_error("comparison_error", e, "Failed to build multi-city comparison")
+
+
+METHOD_LABEL = {
+    "hybrid-gbm-shap-v2": "per-cell model (GBM + SHAP, passed the R² gate)",
+    "signature-citymean-v1": "shrunk toward the city model mean (no local gas markers)",
+    "signature-v1": "chemical-signature priors only (model failed the R² gate or too little history)",
+}
+
+
+@app.get("/metrics/attribution", tags=["metrics"])
+def attribution_methods(city: Optional[str] = Query(None, description="City ID; omit for all cities")) -> dict:
+    """How the current attribution was produced, city by city — the honest breakdown a
+    reviewer would otherwise have to query for: cells per method (per-cell model / shrunk /
+    signature priors), the model's out-of-sample R² where one exists, mean confidence, and
+    how many cells carry a real NO₂ / CO / SO₂ marker in the last 24 h. Same rows the map shows."""
+    try:
+        if DEMO_MODE:
+            rows = fixture("attribution", default=[]) or []
+            recs = [{"city_id": r.get("city_id"), "h3_cell": r["h3_cell"], "method_version": r.get("method_version") or "hybrid-gbm-shap-v2",
+                     "confidence": r.get("confidence"), "evidence": r.get("evidence") or {}} for r in rows]
+            marker_cells: dict[str, set] = {}
+        else:
+            db = _db()
+            q = db.table("attribution").select("city_id,h3_cell,method_version,confidence,evidence").limit(20000)
+            if city:
+                q = q.eq("city_id", city)
+            recs = q.execute().data or []
+            since = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+            mq = db.table("measurements").select("city_id,h3_cell").in_("variable", ["no2", "co", "so2"]).gte("ts", since).limit(20000)
+            if city:
+                mq = mq.eq("city_id", city)
+            marker_cells = {}
+            for r in mq.execute().data or []:
+                marker_cells.setdefault(r["city_id"], set()).add(r["h3_cell"])
+        by_city: dict[str, dict] = {}
+        seen: set = set()
+        for r in recs:
+            key = (r["city_id"], r["h3_cell"])
+            if key in seen:
+                continue
+            seen.add(key)
+            c = by_city.setdefault(r["city_id"], {"n_cells": 0, "methods": {}, "r2": [], "confidence": []})
+            c["n_cells"] += 1
+            mv = r.get("method_version") or "unknown"
+            c["methods"][mv] = c["methods"].get(mv, 0) + 1
+            ev = r.get("evidence") or {}
+            if isinstance(ev, dict) and isinstance(ev.get("model_r2"), (int, float)):
+                c["r2"].append(float(ev["model_r2"]))
+            if r.get("confidence") is not None:
+                c["confidence"].append(float(r["confidence"]))
+        out = []
+        for cid, c in sorted(by_city.items()):
+            r2s = sorted(c["r2"])
+            out.append({
+                "city_id": cid,
+                "n_cells": c["n_cells"],
+                "methods": [{"method": m, "label": METHOD_LABEL.get(m, m), "n_cells": n} for m, n in sorted(c["methods"].items(), key=lambda kv: -kv[1])],
+                "share_per_cell_model": round(c["methods"].get("hybrid-gbm-shap-v2", 0) / c["n_cells"], 2) if c["n_cells"] else None,
+                "median_model_r2": round(r2s[len(r2s) // 2], 2) if r2s else None,
+                "mean_confidence": round(sum(c["confidence"]) / len(c["confidence"]), 2) if c["confidence"] else None,
+                "cells_with_gas_marker_24h": len(marker_cells.get(cid, set())),
+            })
+        return ok({"cities": out, "gate": "per-cell model used only above out-of-sample R² 0.15; otherwise shrunk toward the city model mean where local gas markers are missing, else cited signature priors",
+                   "note": "recomputed daily from the latest hour; the split moves with station marker coverage — stated, not smoothed"})
+    except Exception as e:  # noqa: BLE001
+        return _server_error("attribution_methods_error", e, "Failed to summarise attribution methods")
+
+
+_SNAPSHOT_TTL_S = 600
+_snapshot_cache: dict[str, tuple[float, dict]] = {}
+
+
+@app.get("/landing/snapshot", tags=["data"])
+def landing_snapshot() -> dict:
+    """The landing page's 'data at a glance' block, computed from live rows so the public
+    page never shows a stale hand-pasted number: Delhi source mix (city mean of the latest
+    attribution run), per-city PM2.5 now vs +24 h (same rows as /comparison) and the running
+    scale (modelled cells, sources, vulnerability zones, enforcement recommendations)."""
+    now = time.time()
+    hit = _snapshot_cache.get("all")
+    if hit and now - hit[0] < _SNAPSHOT_TTL_S:
+        return ok(hit[1])
+    try:
+        if DEMO_MODE:
+            attr = [r for r in (fixture("attribution", default=[]) or []) if r.get("city_id") == "delhi"]
+            comp = fixture("comparison", default={"cities": []}) or {"cities": []}
+            scale = {"cells": None, "sources": None, "zones": None, "recs": len(fixture("enforcement", default=[]) or [])}
+        else:
+            db = _db()
+            attr = db.table("attribution").select("h3_cell,source_category,share").eq("city_id", "delhi").limit(5000).execute().data or []
+            attr = [{"shares": {r["source_category"]: float(r["share"])}} for r in attr]
+            comp = comparison().get("data") or {"cities": []}
+            cells = 0
+            for c in comp.get("cities", []):
+                cached = _dense_cache.get(c["city_id"])
+                if cached:
+                    cells += len(cached[1].get("cells") or [])
+            counts = {}
+            for t in ("emission_sources", "vulnerability", "enforcement_recs"):
+                counts[t] = db.table(t).select("*", count="exact").limit(1).execute().count or 0
+            scale = {"cells": cells or None, "sources": counts["emission_sources"], "zones": counts["vulnerability"], "recs": counts["enforcement_recs"]}
+        sums: dict[str, float] = {}
+        n: dict[str, int] = {}
+        for r in attr:
+            for k, v in (r.get("shares") or {}).items():
+                sums[k] = sums.get(k, 0.0) + float(v or 0)
+                n[k] = n.get(k, 0) + 1
+        mix = sorted(({"source": k, "pct": round(100 * sums[k] / n[k], 1)} for k in sums if n[k]), key=lambda m: -m["pct"])
+        cities = sorted((
+            {"city_id": c.get("city_id"), "name": c.get("name"), "now": c.get("current_pm25"), "next": c.get("forecast_24h_pm25"), "trend": c.get("trend")}
+            for c in comp.get("cities", []) if c.get("current_pm25")
+        ), key=lambda c: -(c["now"] or 0))
+        data = {"generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(), "mix": mix, "cities": cities, "scale": scale, "demo": DEMO_MODE}
+        _snapshot_cache["all"] = (now, data)
+        return ok(data)
+    except Exception as e:  # noqa: BLE001
+        return _server_error("snapshot_error", e, "Failed to build landing snapshot")
 
 
 @app.get("/latency", tags=["system"])

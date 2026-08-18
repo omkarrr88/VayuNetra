@@ -32,6 +32,55 @@ type Summary = {
 
 type Benchmark = { city_id: string; history: Summary | null; live: Summary | null };
 
+type AttrMethods = {
+  cities: {
+    city_id: string; n_cells: number;
+    methods: { method: string; label: string; n_cells: number }[];
+    share_per_cell_model: number | null; median_model_r2: number | null; mean_confidence: number | null; cells_with_gas_marker_24h: number;
+  }[];
+  gate: string; note: string;
+};
+
+const METHOD_SHORT: Record<string, string> = {
+  "hybrid-gbm-shap-v2": "per-cell model",
+  "signature-citymean-v1": "shrunk to city model mean",
+  "signature-v1": "signature priors",
+};
+
+/** How today's attribution was produced for this city — the split a reviewer would otherwise
+ *  have to query for. Rendered inside the Validation panel so the number sits next to the
+ *  forecast benchmark and never looks like a claim we hid. */
+function AttributionMethods({ city }: { city: string }) {
+  const [d, setD] = useState<AttrMethods | null | undefined>(undefined);
+  useEffect(() => {
+    setD(undefined);
+    api<AttrMethods>(`/metrics/attribution?city=${city}`).then(setD).catch(() => setD(null));
+  }, [city]);
+  const row = d?.cities.find((c) => c.city_id === city);
+  if (d === undefined) return <div className="mt-3 h-10 animate-pulse rounded-md bg-slate-100" />;
+  if (!d || !row) return null;
+  return (
+    <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-2 py-1.5 text-[11px] leading-4 text-slate-700">
+      <div className="flex items-baseline justify-between gap-2">
+        <b>How today's attribution was made</b>
+        <span className="text-slate-500">{row.n_cells} cells</span>
+      </div>
+      <div className="mt-1 flex flex-wrap gap-1">
+        {row.methods.map((m) => (
+          <span key={m.method} title={m.label} className="rounded bg-white px-1.5 py-0.5 ring-1 ring-slate-200">
+            {METHOD_SHORT[m.method] ?? m.method} <b>{m.n_cells}</b>
+          </span>
+        ))}
+      </div>
+      <div className="mt-1 text-slate-600">
+        {row.median_model_r2 !== null ? <>median out-of-sample R² <b>{row.median_model_r2}</b> · </> : <>no cell passed the R² ≥ 0.15 gate · </>}
+        mean confidence <b>{row.mean_confidence ?? "–"}</b> · cells reporting NO₂/CO/SO₂ in the last 24 h <b>{row.cells_with_gas_marker_24h}</b>
+      </div>
+      <div className="mt-0.5 text-[10px] text-slate-500">{d.note}</div>
+    </div>
+  );
+}
+
 const pct = (x: number | null | undefined, signed = true) =>
   x === null || x === undefined ? "–" : `${signed && x >= 0 ? "+" : ""}${Math.round(x * 100)}%`;
 const day = (iso?: string) => (iso ? iso.slice(0, 10) : "");
@@ -71,6 +120,7 @@ export default function ValidationPanel({ city }: { city: string }) {
           No benchmark artifact for this city yet — run <code className="rounded bg-slate-100 px-1">python -m ml.eval.benchmark --city {city}</code>.
           We publish measured skill, not assumed skill.
         </div>
+        <AttributionMethods city={city} />
       </Panel>
     );
   }
@@ -152,6 +202,7 @@ export default function ValidationPanel({ city }: { city: string }) {
       <div className="mt-1.5 text-[10px] text-slate-500">
         Recomputed {day(s.generated_at)} · negative numbers are kept, not hidden · full tables in docs/benchmarks/{city}.md
       </div>
+      <AttributionMethods city={city} />
     </Panel>
   );
 }

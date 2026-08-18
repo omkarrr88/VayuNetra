@@ -80,3 +80,70 @@ def test_enforcement_to_dict():
         assert "priority_score" in d
         assert "rationale" in d
         assert "status" in d
+
+
+class _FakeQuery:
+    """Just enough of the supabase-py builder for write_worklist: select/neq/eq/limit/execute,
+    update(...).eq(...).execute, delete().eq().eq().execute, insert().execute."""
+
+    def __init__(self, store, table):
+        self.store, self.table = store, table
+        self.filters, self.op, self.payload = [], "select", None
+
+    def select(self, *_): self.op = "select"; return self
+    def update(self, patch): self.op = "update"; self.payload = patch; return self
+    def delete(self): self.op = "delete"; return self
+    def insert(self, rows): self.op = "insert"; self.payload = rows; return self
+    def eq(self, k, v): self.filters.append((k, v, True)); return self
+    def neq(self, k, v): self.filters.append((k, v, False)); return self
+    def limit(self, *_): return self
+
+    def _match(self, r):
+        return all((r.get(k) == v) == want for k, v, want in self.filters)
+
+    def execute(self):
+        rows = self.store[self.table]
+        if self.op == "select":
+            return type("R", (), {"data": [dict(r) for r in rows if self._match(r)]})()
+        if self.op == "update":
+            hit = [r for r in rows if self._match(r)]
+            for r in hit: r.update(self.payload)
+            return type("R", (), {"data": hit})()
+        if self.op == "delete":
+            gone = [r for r in rows if self._match(r)]
+            self.store[self.table] = [r for r in rows if not self._match(r)]
+            return type("R", (), {"data": gone})()
+        if self.op == "insert":
+            nxt = max([r["id"] for r in rows] + [0]) + 1
+            for i, r in enumerate(self.payload):
+                rows.append({"id": nxt + i, **r})
+            return type("R", (), {"data": self.payload})()
+        raise AssertionError(self.op)
+
+
+class _FakeDb:
+    def __init__(self, rows): self.store = {"enforcement_recs": rows}
+    def table(self, name): return _FakeQuery(self.store, name)
+
+
+def test_write_worklist_keeps_acted_upon_recs_and_their_ids():
+    from agents.enforcement import write_worklist
+
+    db = _FakeDb([
+        {"id": 1, "city_id": "delhi", "h3_cell": "a", "source_id": 10, "status": "dispatched", "priority_score": 0.5},
+        {"id": 2, "city_id": "delhi", "h3_cell": "b", "source_id": 11, "status": "proposed", "priority_score": 0.4},
+        {"id": 3, "city_id": "delhi", "h3_cell": "c", "source_id": 12, "status": "closed", "priority_score": 0.3},
+        {"id": 4, "city_id": "mumbai", "h3_cell": "z", "source_id": 99, "status": "proposed", "priority_score": 0.9},
+    ])
+    new_rows = [
+        {"city_id": "delhi", "h3_cell": "a", "source_id": 10, "status": "proposed", "priority_score": 0.7},   # same source, re-ranked
+        {"city_id": "delhi", "h3_cell": "d", "source_id": 13, "status": "proposed", "priority_score": 0.6},   # brand new
+    ]
+    out = write_worklist(db, "delhi", new_rows)
+    rows = {r["id"]: r for r in db.store["enforcement_recs"]}
+    assert out == {"inserted": 1, "refreshed": 1, "deleted": 1}
+    assert rows[1]["status"] == "dispatched" and rows[1]["priority_score"] == 0.7   # kept + refreshed
+    assert rows[3]["status"] == "closed"                                            # kept even if no longer ranked
+    assert 2 not in rows                                                             # stale proposed dropped
+    assert rows[4]["city_id"] == "mumbai"                                            # other cities untouched
+    assert any(r["h3_cell"] == "d" for r in rows.values())                           # new one inserted

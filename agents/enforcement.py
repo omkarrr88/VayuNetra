@@ -463,14 +463,42 @@ def run_enforcement(
     if write_to_db and not DEMO_MODE:
         from core.supa import client
         db = client()
-        rows = [r.to_dict() for r in recs]
-        # idempotent: replace this city's worklist instead of appending duplicates
-        db.table("enforcement_recs").delete().eq("city_id", city_id).execute()
-        if rows:
-            db.table("enforcement_recs").insert(rows).execute()
-        print(f"[enforcement] Wrote {len(rows)} recommendations to Supabase.")
+        written = write_worklist(db, city_id, [r.to_dict() for r in recs])
+        print(f"[enforcement] Wrote {written['inserted']} new recommendations, refreshed {written['refreshed']} "
+              f"acted-upon ones (kept their id, status and audit trail), dropped {written['deleted']} stale proposed.")
 
     return recs
+
+
+def write_worklist(db, city_id: str, rows: list[dict]) -> dict:
+    """Replace the city's *proposed* worklist without touching what an officer has acted on.
+
+    A daily run used to delete-and-reinsert every rec, which silently reset approvals,
+    dispatches and closures overnight and orphaned the intervention tracker and audit log
+    (rec ids changed). Now: recs an officer moved (approved / dispatched / dismissed / closed)
+    keep their id and status — their evidence, priority and contribution are refreshed in
+    place when the same source is still ranked; still-proposed recs are replaced by the new
+    ranking. Returns counts for the log line.
+    """
+    keep = (db.table("enforcement_recs").select("id,h3_cell,source_id,status")
+            .eq("city_id", city_id).neq("status", "proposed").limit(5000).execute().data or [])
+    keep_by_key = {(r.get("h3_cell"), r.get("source_id")): r for r in keep}
+    refreshed = 0
+    to_insert = []
+    for row in rows:
+        k = (row.get("h3_cell"), row.get("source_id"))
+        hit = keep_by_key.get(k)
+        if hit:
+            patch = {f: row[f] for f in ("priority_score", "contribution", "pop_exposed", "rationale",
+                                          "evidence", "rag_citations", "rubric_score", "ts") if f in row}
+            db.table("enforcement_recs").update(patch).eq("id", hit["id"]).execute()
+            refreshed += 1
+        else:
+            to_insert.append(row)
+    deleted = db.table("enforcement_recs").delete().eq("city_id", city_id).eq("status", "proposed").execute()
+    if to_insert:
+        db.table("enforcement_recs").insert(to_insert).execute()
+    return {"inserted": len(to_insert), "refreshed": refreshed, "deleted": len(deleted.data or [])}
 
 
 def build_dossier(rec_id: int, city_id: str = "delhi") -> dict:

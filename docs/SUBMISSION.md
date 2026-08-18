@@ -37,9 +37,9 @@ Six agents run as a single LangGraph pipeline, once per city. The orchestrator f
 | **Trace** | A gradient-boosting model attributes PM2.5 in each cell to traffic, construction dust, industry, biomass burning, transported pollution or other, with SHAP explanations and a confidence score. Where the model has no out-of-sample skill it abstains and falls back to cited chemical-signature priors instead of guessing. |
 | **Predict** | 24, 48 and 72-hour PM2.5 forecasts per cell, with 80% prediction intervals calibrated using conformalised quantile regression. Every chart also shows the persistence baseline, so the model's value is visible rather than asserted. |
 | **Act** | Emission sources are scored on contribution, population exposed, actionability and model confidence to produce a ranked worklist. Each item opens an evidence dossier with a real Sentinel-2 image of the site and regulatory citations retrieved from the national corpus — GRAP/CAQM only where they legally apply (Delhi-NCR), CPCB dust norms and NCAP elsewhere, with the issuing state board named on the notice — plus a one-click draft notice PDF for an officer to review. |
-| **Protect** | Ward-level health advisories in English, Hindi, Kannada and Marathi, sent through the web app, a Telegram bot, IVR phone calls and public display boards. Targeting uses 5,495 vulnerability-scored zones built from hospitals, schools, elder-care and outdoor work sites weighted by population. |
+| **Protect** | Ward-level health advisories in eight languages in their own scripts (Hindi, Kannada, Marathi, Tamil, Telugu, Bengali, Gujarati, English), sent through the web app, a Telegram bot, a working IVR line and public display boards. Targeting uses 5,495 vulnerability-scored zones built from hospitals, schools, elder-care and outdoor work sites weighted by population. |
 
-The time from a pollution signal to a cited, actionable recommendation is between 0.8 and 9.7 seconds. That is measured in production, stamped per agent node, and shown in the console.
+The time from a pollution signal to a cited, actionable recommendation is between 0.8 and 9.7 seconds of compute. That is measured in production, stamped per agent node, and shown in the console. It is not the time to an intervention: the officer's approval, the dispatch and the field visit are separate, timestamped steps in the same record, and the measured effect of each dispatch is tracked against the city's drift — so the whole chain, not just the model, is on the clock.
 
 ## What is in the app
 
@@ -70,7 +70,7 @@ Adding a city means adding one YAML file with a bounding box, languages and regu
 | Forecast skill vs persistence | Multi-season temporal split, monthly refit on the trailing 90 days, served forecast = LightGBM median blended with persistence: Delhi +9 / +13 / +12%, Mumbai +17 / +19 / +21%, Kolkata +14 / +10 / +9% at 24/48/72 h; alarming on the calibrated probability flags 51–54% of clean→Very-Poor onsets 1–3 days ahead where persistence is 0 by construction; live 90-day benchmarks for all 10 cities |
 | Prediction interval coverage | Raw intervals under-covered at 48–63% against a nominal 80%; conformal calibration brought this to 78% measured on 207k Delhi test hours; every forecast also carries a calibrated P(>120) / P(>250) (Brier skill +51% / +31% vs climatology at 24 h) |
 | Model selection | A Temporal Fusion Transformer was trained on GPU and rejected. LightGBM won on held-out skill in every launch city. |
-| Signal to cited action | 0.8–9.7 seconds, measured in production |
+| Signal to cited recommendation | 0.8–9.7 seconds of compute, measured in production; approval → dispatch → closure timestamped per action |
 | Test coverage | 196 backend tests (62% line coverage, CI gate 55%) and 16 end-to-end browser flows (7 smoke in CI + 9 live officer-journey), run on every push |
 
 Current live scale: 10 cities, 16,529 modelled cells, 647 emission sources, 5,495 vulnerability zones and 454 enforcement recommendations, every one of which carries a real Sentinel-2 image and retrieved citations. All of the validation above is reproducible from the notebook in the repository.
@@ -92,5 +92,5 @@ The repository is offline-first and needs no API keys to start. Copy `.env.examp
 ## What is next
 
 - Replacing the linear rollback in the what-if engine with InMAP/PAVITRA source-receptor matrices for policy-grade counterfactuals.
-- Finishing training of the satellite CV detector so source detection moves off Earth Engine heuristics onto the full CNN pipeline.
-- Native-script advisories for Telugu, Tamil, Bengali and Gujarati (native-speaker reviewed), in-language IVR voice, and municipal permit registry connectors for enforcement.
+- A learned satellite CV detector so source detection moves off the Earth Engine heuristics.
+- Native-speaker review of the Kannada, Tamil, Telugu, Bengali and Gujarati advisory templates (status per language is kept in `docs/ADVISORY_REVIEW.md`; every template is deterministic and script-validated), in-language IVR voices, and municipal permit registry connectors for enforcement.
