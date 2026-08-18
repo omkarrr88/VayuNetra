@@ -61,3 +61,7 @@ Alarm = forecast above the band. CPCB PM2.5 bands: Poor > 90, Very Poor > 120, S
 * Enforcement: onset-flagged cells rank higher via the forecast term in the priority score.
 
 Reproduce: `python -m ml.eval.benchmark --city delhi --source hist --split 2025-11-01 --protocol rolling --window-days 90`
+
+## Against real orders
+
+The same alarm, replayed against the CAQM GRAP escalations of winter 2025-26 — what P(>120) the system carried 24/48/72 h before each order, and a weather-normalised check of the windows — is in [OUTCOMES.md](OUTCOMES.md) (`python -m ml.eval.interventions`).

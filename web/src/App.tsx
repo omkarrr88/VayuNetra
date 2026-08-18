@@ -3,6 +3,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import BlameMap, { type AttrCell, type CoverageCell, type MapMode } from "./BlameMap";
 import ForecastPanel from "./ForecastPanel";
 import ValidationPanel from "./ValidationPanel";
+import InterventionsHindsight from "./InterventionsHindsight";
 import BriefCard from "./BriefCard";
 import { api } from "./api";
 import AqiHeader from "./AqiHeader";
@@ -376,7 +377,8 @@ export default function App() {
                 <>
                   <Step {...S("forecast", 1)}><ForecastPanel city={active} /></Step>
                   <Step {...S("forecast", 2)}><ValidationPanel city={active} /></Step>
-                  <Step {...S("forecast", 3)}><CityStatsPanel city={active} cells={attrCells} coverageCells={coverage?.cells ?? []} /></Step>
+                  <Step {...S("forecast", 3)}><InterventionsHindsight city={active} /></Step>
+                  <Step {...S("forecast", 4)}><CityStatsPanel city={active} cells={attrCells} coverageCells={coverage?.cells ?? []} /></Step>
                 </>
               )}
               {section === "citizen" && <Step {...S("citizen", 1)}><CitizenPanel city={active} languages={city?.languages} center={center} /></Step>}

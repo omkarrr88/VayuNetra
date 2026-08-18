@@ -1614,6 +1614,21 @@ def metrics_benchmark(
     return ok(out)
 
 
+@app.get("/metrics/interventions", tags=["system"])
+def metrics_interventions(city: str = Query(..., description="City ID")) -> dict:
+    """Real, dated interventions in hindsight — the artifact written by
+    `python -m ml.eval.interventions` (docs/benchmarks/<city>_interventions.json): would the
+    served forecast have warned before each order, and did the air change once weather is
+    taken out. The API only reads the file; every number is computed there, sources included."""
+    p = BENCHMARKS / f"{city}_interventions.json"
+    if not p.exists():
+        raise HTTPException(status_code=404, detail=f"no intervention artifact for {city}")
+    try:
+        return ok(json.loads(p.read_text()))
+    except json.JSONDecodeError as e:
+        return _server_error("interventions_artifact", e, "Intervention artifact is unreadable")
+
+
 @app.get("/exposure", tags=["stage2"])
 def exposure(city: str = Query(..., description="City ID"), db=Depends(get_db)) -> dict:
     """Who the forecast puts in bad air: expected people in Very Poor (>120) / Severe (>250)

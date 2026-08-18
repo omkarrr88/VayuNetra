@@ -64,6 +64,13 @@ artifacts (`GET /metrics/benchmark`) and the console prints them.
 | Mumbai (142k) | **+17% / +19% / +21%** | +15% / +17% / +20% | few Very-Poor hours |
 | Kolkata (59k) | +14% / +10% / +9% | +12% / +13% / +8% | 19% / 18% / 6% |
 
+**Real orders, in hindsight** ([docs/OUTCOMES.md](docs/OUTCOMES.md)): the winter 2025-26 CAQM GRAP
+escalations replayed against the served forecast — Stage III (11 Nov) and Stage IV (13 Dec) were flagged
+a day ahead across 99–100 % of Delhi's station cells (P(>120) 0.83–0.94); the two October orders were
+not foreseen, and we say so. A weather-normalised check finds no reduction the method can detect during
+the GRAP windows (Diwali night, the positive control, shows +182 µg/m³) — association only, blind spots
+stated. `python -m ml.eval.interventions` · `GET /metrics/interventions`.
+
 The served forecast is the LightGBM median blended with persistence (weight chosen on the calibration
 tail; the raw model alone is +2 / +10 / +9% in Delhi — both columns are in the artifact).
 80% interval → 78% measured coverage; calibrated P(>120) on every forecast (Brier skill +51% vs

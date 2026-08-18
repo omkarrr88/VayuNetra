@@ -104,3 +104,12 @@ def test_landing_snapshot_has_mix_cities_and_scale():
     assert d["mix"] and abs(sum(m["pct"] for m in d["mix"]) - 100) < 1.5
     assert len(d["cities"]) >= 3 and all("now" in c for c in d["cities"])
     assert set(d["scale"]) == {"cells", "sources", "zones", "recs"}
+
+
+def test_intervention_hindsight_artifact_is_served_with_sources():
+    d = client.get("/metrics/interventions?city=delhi").json()["data"]
+    assert d["city_id"] == "delhi" and d["early_warning"]["events"] and d["deweathered"]["windows"]
+    assert all(e["source"].startswith("http") for e in d["interventions"])
+    ev = d["early_warning"]["events"][0]
+    assert set(ev["lead"]) >= {"24", "48", "72"}
+    assert client.get("/metrics/interventions?city=atlantis").status_code == 404
