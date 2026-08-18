@@ -2,7 +2,7 @@
 // advisories are always in PM2.5 µg/m³; the *scale* only changes how a concentration or an
 // index is labelled and coloured:
 //   in  — Indian National AQI (CPCB 2014): the official scale officers, GRAP and bulletins use
-//   us  — US EPA AQI (PM2.5 breakpoints revised 2024): what aqi.in / IQAir show by default
+//   us  — US EPA AQI (PM2.5 breakpoints revised 2024): the scale most international apps show
 //   who — WHO 2021 air-quality guideline: PM2.5 as multiples of the 15 µg/m³ 24-h guideline,
 //         banded by the WHO interim targets (IT-1…IT-4)
 // The server (`core/aqi.py`) computes the composite indices (max over the pollutants a cell
@@ -13,7 +13,7 @@ export type AqiScale = "in" | "us" | "who";
 
 export const SCALES: Record<AqiScale, { short: string; name: string; note: string }> = {
   in: { short: "IN · CPCB", name: "Indian National AQI (CPCB)", note: "Official Indian scale — max of pollutant sub-indices; what officers, GRAP and CPCB bulletins use." },
-  us: { short: "US · EPA", name: "US EPA AQI", note: "The scale aqi.in and IQAir show by default; same PM2.5, different breakpoints and category names." },
+  us: { short: "US · EPA", name: "US EPA AQI", note: "The international scale most global apps display — same PM2.5 concentration, different breakpoints and category names." },
   who: { short: "WHO", name: "WHO 2021 guideline", note: "PM2.5 as a multiple of the WHO 24-h guideline (15 µg/m³), banded by the WHO interim targets." },
 };
 
