@@ -67,8 +67,8 @@ Adding a city means adding one YAML file with a bounding box, languages and regu
 |---|---|
 | Attribution vs published inventories | Cosine 0.92 against SAFAR-Delhi (2018), 0.88 against CSTEP-Bengaluru (2022), 0.79 against NEERI/Urban-Emissions Mumbai |
 | Attribution behaves physically | Traffic SHAP contribution 2.30× higher during IST rush hours, weather controlled |
-| Forecast skill vs persistence | Multi-season temporal split, monthly refit on the trailing 90 days: Delhi +2 / +10 / +9%, Mumbai +18 / +19 / +21%, Kolkata +13 / +7 / −1% at 24/48/72 h; 35–38% of clean→Very-Poor onsets flagged 1–3 days ahead where persistence is 0 by construction; live 90-day benchmarks for all 10 cities |
-| Prediction interval coverage | Raw intervals under-covered at 48–63% against a nominal 80%; conformal calibration brought this to 78% measured on 207k Delhi test hours; every forecast also carries a calibrated P(>120) / P(>250) |
+| Forecast skill vs persistence | Multi-season temporal split, monthly refit on the trailing 90 days, served forecast = LightGBM median blended with persistence: Delhi +9 / +13 / +12%, Mumbai +17 / +19 / +21%, Kolkata +14 / +10 / +9% at 24/48/72 h; alarming on the calibrated probability flags 51–54% of clean→Very-Poor onsets 1–3 days ahead where persistence is 0 by construction; live 90-day benchmarks for all 10 cities |
+| Prediction interval coverage | Raw intervals under-covered at 48–63% against a nominal 80%; conformal calibration brought this to 78% measured on 207k Delhi test hours; every forecast also carries a calibrated P(>120) / P(>250) (Brier skill +51% / +31% vs climatology at 24 h) |
 | Model selection | A Temporal Fusion Transformer was trained on GPU and rejected. LightGBM won on held-out skill in every launch city. |
 | Signal to cited action | 0.8–9.7 seconds, measured in production |
 | Test coverage | 196 backend tests (62% line coverage, CI gate 55%) and 16 end-to-end browser flows (7 smoke in CI + 9 live officer-journey), run on every push |

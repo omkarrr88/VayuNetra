@@ -58,13 +58,15 @@ mask, persistence / weekly seasonal-naive / climatology baselines. Regenerate wi
 `python -m ml.eval.benchmark` ([docs/BENCHMARKS.md](docs/BENCHMARKS.md)); the API serves the
 artifacts (`GET /metrics/benchmark`) and the console prints them.
 
-| City (test station-hours) | skill vs persistence (24/48/72 h) | winter only | Very-Poor onsets flagged (persistence = 0) |
+| City (test station-hours) | served-forecast skill vs persistence (24/48/72 h) | winter only | Very-Poor onsets flagged, alarm on P ≥ 0.3 (persistence = 0) |
 |---|---|---|---|
-| Delhi (207k) | **+2% / +10% / +9%** | −4% / +7% / +6% | **35% / 38% / 38%** |
-| Mumbai (142k) | **+18% / +19% / +21%** | +18% / +17% / +20% | few Very-Poor hours |
-| Kolkata (53k) | +13% / +7% / −1% | +10% / +9% / −5% | 4–5% |
+| Delhi (207k) | **+9% / +13% / +12%** | +7% / +11% / +11% | **54% / 54% / 51%** |
+| Mumbai (142k) | **+17% / +19% / +21%** | +15% / +17% / +20% | few Very-Poor hours |
+| Kolkata (59k) | +14% / +10% / +9% | +12% / +13% / +8% | 19% / 18% / 6% |
 
-80% interval → 78% measured coverage; calibrated P(>120) on every forecast (Brier skill +49% vs
+The served forecast is the LightGBM median blended with persistence (weight chosen on the calibration
+tail; the raw model alone is +2 / +10 / +9% in Delhi — both columns are in the artifact).
+80% interval → 78% measured coverage; calibrated P(>120) on every forecast (Brier skill +51% vs
 climatology at 24 h). Live 90-day benchmarks exist for all 10 cities.
 
 *skill = 1 − RMSE_model / RMSE_baseline. Negative numbers are kept — the Delhi 24 h and Severe-tail weak spots ship too.*

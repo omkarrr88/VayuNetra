@@ -23,39 +23,39 @@ real anticipatory value.
 
 Alarm = forecast above the band. CPCB PM2.5 bands: Poor > 90, Very Poor > 120, Severe > 250 µg/m³.
 
-| band | h | events | model P / R / F1 | persistence P / R / F1 | onsets | **onset recall — model** | onset recall — persistence |
-|---|---:|---:|---|---|---:|---:|---:|
-| Poor (>90) | 24 | 84,470 | 0.79 / 0.82 / 0.80 | 0.79 / 0.80 / 0.79 | 17,262 | **34 %** | 0 |
-| Poor (>90) | 48 | 85,024 | 0.77 / 0.81 / 0.79 | 0.76 / 0.77 / 0.76 | 19,613 | **39 %** | 0 |
-| Poor (>90) | 72 | 85,522 | 0.76 / 0.80 / 0.78 | 0.75 / 0.76 / 0.75 | 20,741 | **43 %** | 0 |
-| **Very Poor (>120)** | 24 | 62,866 | 0.75 / 0.79 / 0.77 | 0.74 / 0.75 / 0.75 | 15,701 | **35 %** | 0 |
-| **Very Poor (>120)** | 48 | 63,297 | 0.71 / 0.77 / 0.74 | 0.70 / 0.71 / 0.71 | 18,226 | **38 %** | 0 |
-| **Very Poor (>120)** | 72 | 63,784 | 0.66 / 0.72 / 0.69 | 0.69 / 0.70 / 0.70 | 19,117 | **38 %** | 0 |
-| Severe (>250) | 24 | 17,678 | 0.48 / 0.19 / 0.27 | 0.55 / 0.56 / 0.56 | 7,772 | 2 % | 0 |
-| Severe (>250) | 48 | 17,694 | 0.37 / 0.12 / 0.18 | 0.45 / 0.45 / 0.45 | 9,656 | 4 % | 0 |
-| Severe (>250) | 72 | 17,778 | 0.38 / 0.02 / 0.04 | 0.40 / 0.41 / 0.40 | 10,548 | 1 % | 0 |
+| band | h | events | median alarm P / R / F1 | **P ≥ 0.3 alarm** P / R / F1 | persistence P / R / F1 | onsets | onset recall — median alarm | **onset recall — P ≥ 0.3** | onset recall — persistence |
+|---|---:|---:|---|---|---|---:|---:|---:|---:|
+| Poor (>90) | 24 | 84,467 | 0.79 / 0.82 / 0.81 | 0.74 / 0.87 / 0.80 | 0.79 / 0.80 / 0.79 | 17,190 | 26 % | **44 %** | 0 |
+| Poor (>90) | 48 | 85,025 | 0.77 / 0.81 / 0.79 | 0.73 / 0.85 / 0.79 | 0.76 / 0.77 / 0.76 | 19,578 | 30 % | **42 %** | 0 |
+| Poor (>90) | 72 | 85,523 | 0.75 / 0.80 / 0.78 | 0.72 / 0.85 / 0.78 | 0.75 / 0.76 / 0.75 | 20,694 | 30 % | **44 %** | 0 |
+| **Very Poor (>120)** | 24 | 62,866 | 0.74 / 0.79 / 0.77 | 0.68 / 0.87 / 0.77 | 0.74 / 0.75 / 0.75 | 15,701 | 24 % | **54 %** | 0 |
+| **Very Poor (>120)** | 48 | 63,297 | 0.70 / 0.77 / 0.74 | 0.66 / 0.85 / 0.74 | 0.70 / 0.71 / 0.71 | 18,226 | 31 % | **54 %** | 0 |
+| **Very Poor (>120)** | 72 | 63,784 | 0.67 / 0.74 / 0.70 | 0.64 / 0.84 / 0.72 | 0.69 / 0.70 / 0.70 | 19,117 | 26 % | **51 %** | 0 |
+| Severe (>250) | 24 | 17,692 | 0.60 / 0.45 / 0.51 | 0.48 / 0.66 / 0.56 | 0.55 / 0.56 / 0.56 | 7,756 | 1 % | **24 %** | 0 |
+| Severe (>250) | 48 | 17,705 | 0.49 / 0.34 / 0.40 | 0.38 / 0.53 / 0.44 | 0.45 / 0.45 / 0.45 | 9,661 | 1 % | **21 %** | 0 |
+| Severe (>250) | 72 | 17,788 | 0.50 / 0.28 / 0.36 | 0.38 / 0.46 / 0.41 | 0.40 / 0.41 / 0.40 | 10,569 | 0 % | **19 %** | 0 |
 
 **Read-out (honest).**
 
-* On overall alarm F1 the model matches or edges persistence at Poor / Very Poor at every
-  horizon (0.80 vs 0.79 @24 h; 0.78 vs 0.75 @72 h). Persistence is strong here only because
-  most bad hours are *continuations* of an already-bad spell.
-* The distinct value is **onsets**: the model flags **35–38 % of clean→Very-Poor
-  transitions 24–72 h ahead** (34–43 % for Poor). That is lead time a reactive trigger
-  structurally cannot have.
-* **Severe (>250) is our weak point and we say so.** Recall 2–19 %, onset recall ≤ 4 %:
-  the model under-predicts the extreme tail (as does the official WRF-Chem system, which
-  CEEW found under-predicts PM2.5 by −24 µg/m³ in winter). This is why every forecast now
-  ships a **calibrated P(>250)** rather than a point: at +24 h P(>250) has a Brier skill of
-  +23 % over climatology (`docs/benchmarks/delhi.md`, Calibration) — the probability carries
-  the warning even when the median does not cross the line.
-* Precision/recall trade off with the alarm threshold; these use the plain CPCB cut-offs,
-  not a tuned operating point. Tuning the alarm on P(>band) rather than the median is the
-  obvious next step and is on the roadmap.
+* Two alarms are reported. The **median alarm** (served forecast > band) matches or edges persistence
+  on F1 but, because the served forecast is persistence-blended, it sees only 24–31 % of Very-Poor
+  onsets. The **probability alarm** — P(>120) ≥ 0.3 from the calibrated exceedance distribution — is
+  the operating point the product uses (brief, cell chips, advisories): it flags **54 % / 54 % / 51 %**
+  of clean→Very-Poor onsets 1–3 days ahead at precision 0.68 / 0.66 / 0.64, with F1
+  0.77 / 0.74 / 0.72 vs persistence 0.75 / 0.71 / 0.70. Persistence is
+  structurally 0 on onsets. τ = 0.2 buys 61–65 % recall at 0.64–0.66 precision; τ = 0.5 gives 41 % at
+  0.75 — the trade-off is printed, not hidden (`docs/benchmarks/delhi.md`, "Probability alarms").
+* **Severe (>250) stays our weak point and we say so.** Median-alarm recall on Severe hours is
+  2–19 % and onset recall ≤ 4 %; the probability alarm helps but the extreme tail is under-predicted (as
+  the official WRF-Chem system's is — CEEW found −24 µg/m³ winter bias). The calibrated P(>250) carries
+  the warning even when the median does not cross the line: Brier skill +30.7 % at 24 h.
+* Thresholds are the plain CPCB cut-offs, not tuned operating points; τ is the one knob and its full
+  curve is in the artifact.
 
 ## How this reaches a decision-maker
 
 * Cell story: `P(> 120)` / `P(> 250)` chip beside every horizon.
+* Morning brief: "where the air is about to turn" lists every cell with P(>120) ≥ 0.3 at any horizon.
 * Advisories: the same probability, in words, in the city's languages.
 * City stats: expected people in Very Poor / Severe air (`docs/HEALTH_IMPACT.md`).
 * Enforcement: onset-flagged cells rank higher via the forecast term in the priority score.

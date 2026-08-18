@@ -74,9 +74,9 @@ const FEATURES = [
 const VALIDATION: Array<[string, string, string]> = [
   ["Attribution matches official inventories", "cosine 0.92 / 0.88 / 0.79", "vs SAFAR-Delhi 2018, CSTEP-Bengaluru 2022, Urban-Emissions Mumbai"],
   ["Attribution behaves physically", "2.30× traffic signal in rush hours", "IST rush vs off-peak SHAP, weather controlled"],
-  ["Forecast beats real baselines", "+18–21% Mumbai · +2 / +10 / +9% Delhi at 24/48/72 h", "multi-season temporal split (2025-26 winter + summer 2026), monthly refit on the trailing 90 d; vs persistence and weekly seasonal-naive — the weak 24 h Delhi number ships too"],
-  ["It warns before the air turns", "35–38% of Very-Poor onsets flagged 1–3 days ahead", "persistence catches 0% by construction; the Severe tail is under-predicted — stated, not hidden"],
-  ["Uncertainty is calibrated", "80% band → 78% measured · P(>120) Brier skill +49%", "conformal calibration; exceedance probabilities on every cell forecast"],
+  ["Forecast beats real baselines", "Delhi +9 / +13 / +12% · Mumbai +17 / +19 / +21% at 24/48/72 h", "multi-season temporal split (2025-26 winter + summer 2026), monthly refit on the trailing 90 d; served forecast = LightGBM blended with persistence; vs persistence and weekly seasonal-naive — the raw model's weaker numbers ship too"],
+  ["It warns before the air turns", "51–54% of Very-Poor onsets flagged 1–3 days ahead", "alarm on the calibrated probability P ≥ 0.3 (precision 0.64–0.68); persistence catches 0% by construction; the Severe tail stays weak — stated, not hidden"],
+  ["Uncertainty is calibrated", "80% band → 78% measured · P(>120) Brier skill +51%", "conformal calibration; exceedance probabilities on every cell forecast drive the alarms"],
   ["Enforcement is equitable", "no socio-economic inputs, by construction", "fairness audit on every live recommendation (n=390 at the July audit)"],
   ["Model choice was earned", "TFT trained on GPU — and rejected", "LightGBM won every launch city on held-out skill"],
   ["The loop is fast", "seconds from signal to cited action", "live per-node agent traces, target under 5 minutes"],
