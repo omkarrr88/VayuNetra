@@ -10,7 +10,6 @@ import "./index.css";
 // The console pulls in MapLibre + Deck.gl + Recharts (~1.5 MB). Landing needs
 // none of it, so the console is code-split out and only fetched at /console.
 const App = lazy(() => import("./App"));
-const CityPage = lazy(() => import("./city/CityPage"));
 
 // Old '#/console' QR codes and bookmarks land on the clean path.
 upgradeLegacyHash();
@@ -31,11 +30,14 @@ function Root() {
     window.addEventListener("popstate", on);
     return () => window.removeEventListener("popstate", on);
   }, []);
+  // One app: /city/<id> is a shareable doorway that lands on the console's City air section,
+  // so a citizen link and an officer link open the same product.
   if (path.startsWith("/city/")) {
     const cityId = decodeURIComponent(path.split("/")[2] ?? "delhi");
+    window.history.replaceState(null, "", `/console?city=${cityId}&section=cityair`);
     return (
       <Suspense fallback={<ConsoleFallback />}>
-        <ThemeProvider><AqiScaleProvider><CityPage cityId={cityId} /></AqiScaleProvider></ThemeProvider>
+        <ThemeProvider><AqiScaleProvider><App /></AqiScaleProvider></ThemeProvider>
       </Suspense>
     );
   }

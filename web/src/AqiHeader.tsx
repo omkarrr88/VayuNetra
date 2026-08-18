@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { api, API_BASE, API_TOKEN } from "./api";
-import { agoLabel, headline, formatIndex, POLLUTANT_LABEL, SCALES, type AqiRow } from "./aqi";
+import { agoLabel, categoryForIndex, headline, formatIndex, pm25Index, POLLUTANT_LABEL, SCALES, type AqiRow } from "./aqi";
 import { useAqiScale } from "./aqiScale";
 
 
@@ -64,15 +64,26 @@ type Compound = {
 
 const GRAP_ROMAN = ["", "I", "II", "III", "IV"];
 
+/** The city's air right now — GET /city/now, the single definition of this city's index
+ *  (index of the city mean). The map tile shows it; the worst cell rides along as a chip. */
+type CityNow = {
+  pollutants: Record<string, { value: number; unit?: string | null; hour: string; n?: number }>;
+  pm25_24h: number | null;
+  aqi_in: number | null; prominent_in: string | null; sub_in?: Record<string, number>;
+  aqi_us: number | null; prominent_us: string | null; sub_us?: Record<string, number>;
+};
+
 /** Hero AQI badge: worst-cell CPCB AQI, category color, data freshness. */
 export default function AqiHeader({ city }: { city: string }) {
   const { scale } = useAqiScale();
   const [rows, setRows] = useState<AqiRow[] | null>(null);
+  const [now, setNow] = useState<CityNow | null>(null);
   const [compound, setCompound] = useState<Compound | null>(null);
 
   useEffect(() => {
     setRows(null);
     api<AqiRow[]>(`/aqi/current?city=${city}`).then(setRows).catch(() => setRows([]));
+    api<CityNow>(`/city/now?city=${city}`).then(setNow).catch(() => setNow(null));
     api<Compound>(`/alerts/compound?city=${city}`).then(setCompound).catch(() => setCompound(null));
   }, [city]);
 
@@ -80,14 +91,24 @@ export default function AqiHeader({ city }: { city: string }) {
     return <div className="h-14 w-44 animate-pulse rounded-lg bg-white/80 shadow" />;
   }
 
-  const h = headline(rows, scale);
-  const aqi = h.index, cat = h.category, worst = h.worstPm25;
+  // The headline is the CITY index (index of the city mean, from /city/now) so this tile, the
+  // City air section and the public page can never show two different "AQI"s for one city. The
+  // worst cell — what an officer actually drives to — is shown beside it, labelled.
+  const worstCell = headline(rows, scale);
+  const cityIndex = now
+    ? (scale === "us" ? now.aqi_us : scale === "in" ? now.aqi_in : now.pollutants.pm25 ? pm25Index(now.pollutants.pm25.value, "who") : null)
+    : worstCell.index;
+  const aqi = cityIndex;
+  const cat = aqi !== null ? categoryForIndex(aqi, scale) : null;
+  const worst = worstCell.worstPm25;
   const latest = rows.map((r) => r.ts).filter(Boolean).sort().pop();
-  const prominent = h.prominent ? POLLUTANT_LABEL[h.prominent] ?? h.prominent : null;
-  const subs = h.cell ? (scale === "us" ? h.cell.sub_us : scale === "in" ? h.cell.sub_in : undefined) : undefined;
-  const tip = h.cell
-    ? `${SCALES[scale].name} — ${SCALES[scale].note}\nWorst cell ${h.cell.h3_cell}: ${subs && Object.keys(subs).length ? Object.entries(subs).map(([k, v]) => `${POLLUTANT_LABEL[k] ?? k} ${v}`).join(" · ") : `PM2.5 ${Math.round(worst ?? 0)} µg/m³`}\nCity mean PM2.5 ${h.meanPm25 !== null ? Math.round(h.meanPm25) : "–"} µg/m³.\nFormula on the latest hourly readings (the official 24-h bulletin can differ); only pollutants this cell reports enter its index.`
-    : "";
+  const promKey = now ? (scale === "us" ? now.prominent_us : now.prominent_in) : worstCell.prominent;
+  const prominent = promKey ? POLLUTANT_LABEL[promKey] ?? promKey : null;
+  const subs = now ? (scale === "us" ? now.sub_us : scale === "in" ? now.sub_in : undefined) : undefined;
+  const tip = `${SCALES[scale].name} — ${SCALES[scale].note}
+This city: the index of the city mean over the stations reporting each pollutant${subs && Object.keys(subs).length ? ` — ${Object.entries(subs).map(([k, v]) => `${POLLUTANT_LABEL[k] ?? k} ${v}`).join(" · ")}` : ""}.
+Worst cell right now: ${worstCell.index !== null ? `${formatIndex(worstCell.index, scale)} (PM2.5 ${Math.round(worst ?? 0)} µg/m³)` : "–"} — the place an inspector would go.
+The formula runs on the latest hourly means, so the official 24-hour bulletin can differ.`;
 
   const chips: ReactNode[] = [];
   if (compound && compound.level !== "none") {
@@ -149,9 +170,15 @@ export default function AqiHeader({ city }: { city: string }) {
                 {cat.label}
               </div>
               <div className="text-gray-500">
-                {SCALES[scale].short}{prominent && scale !== "who" && prominent !== "PM2.5" ? ` · prominent ${prominent}` : ""} · worst cell PM2.5 {Math.round(worst!)} µg/m³
-                {h.meanPm25 !== null && <> · city mean {Math.round(h.meanPm25)}</>}
+                city · {SCALES[scale].short}{prominent && scale !== "who" ? ` · prominent ${prominent}` : ""}
+                {now?.pm25_24h != null && <> · PM2.5 24 h {now.pm25_24h}</>}
               </div>
+              {worstCell.index !== null && (
+                <div className="text-gray-500">
+                  worst cell <b className="text-gray-700">{formatIndex(worstCell.index, scale)}</b>
+                  {worst !== null && <> · PM2.5 {Math.round(worst)} µg/m³</>}
+                </div>
+              )}
               <div className="flex items-center gap-2 text-gray-500">
                 <span>data {agoLabel(latest)}</span>
                 <LiveDot />

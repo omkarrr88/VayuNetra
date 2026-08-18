@@ -313,6 +313,27 @@ export function CityCards({ rows, scale, onOpen, exclude }: { rows: CityRow[]; s
   );
 }
 
+/** Our own cigarette mark for the "how many cigarettes is this air" figure — a lit cigarette with
+ *  drifting smoke, drawn inline so nothing is fetched and it recolours with the band. */
+function CigaretteMark({ color = "#e11d48" }: { color?: string }) {
+  return (
+    <svg viewBox="0 0 96 64" className="h-14 w-20 shrink-0" role="img" aria-label="Cigarette equivalent">
+      <g fill="none" stroke="currentColor" className="text-slate-400" strokeWidth="2" strokeLinecap="round">
+        <path d="M20 12c-5 4-5 8 0 12s5 8 0 12" opacity=".55" />
+        <path d="M31 8c-6 5-6 10 0 15s6 10 0 15" opacity=".35" />
+      </g>
+      {/* body */}
+      <rect x="42" y="38" width="42" height="12" rx="3" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="2" />
+      {/* filter */}
+      <rect x="72" y="38" width="12" height="12" rx="3" fill="#fcd34d" stroke="#d97706" strokeWidth="1.5" />
+      <line x1="72" y1="38" x2="72" y2="50" stroke="#d97706" strokeWidth="1.5" />
+      {/* ember */}
+      <rect x="42" y="38" width="7" height="12" rx="3" fill={color} />
+      <circle cx="45" cy="44" r="2.4" fill="#fb923c" />
+    </svg>
+  );
+}
+
 /** Health section: what to do now, the cigarette equivalent, and per-condition guidance. */
 export function HealthAdvice({ d }: { d: Overview }) {
   const [cond, setCond] = useState(d.health.conditions[0]?.key ?? "asthma");
@@ -323,9 +344,12 @@ export function HealthAdvice({ d }: { d: Overview }) {
       <div className="vn-card p-4">
         <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
           <div>
-            <div className="flex items-end gap-2">
-              <span className="text-5xl font-extrabold text-rose-600">{cig.per_day ?? "–"}</span>
-              <span className="pb-1 text-[13px] font-semibold text-slate-600">cigarettes / day</span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-end gap-2">
+                <span className="text-5xl font-extrabold text-rose-600">{cig.per_day ?? "–"}</span>
+                <span className="pb-1 text-[13px] font-semibold text-slate-600">cigarettes / day</span>
+              </div>
+              <CigaretteMark />
             </div>
             <p className="mt-2 text-[13px] text-slate-600">
               Breathing {d.name}'s air over the last 24 hours is comparable to smoking about <b className="text-slate-900">{cig.per_day ?? "–"}</b> cigarettes a day.

@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import { POLLUTANT_LABEL, SCALES } from "../aqi";
 import { useAqiScale } from "../aqiScale";
-import { navigate } from "../router";
 import { Step } from "../ui";
 import { CityHero, PollutantCards, PollutantChips, type Overview, type Pollutant } from "./parts";
 import { PollutantDetail } from "./pollutantInfo";
@@ -47,24 +46,11 @@ export default function CityAirPanel({ city }: { city: string }) {
     );
   }
   const available = Object.keys(d.now.pollutants);
-  const publicLink = (
-    <button
-      onClick={() => navigate(`/city/${city}`)}
-      className="rounded-md border border-slate-300 px-2 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-100"
-      title="The same numbers as a public page a citizen or journalist can read"
-    >
-      public page ↗
-    </button>
-  );
-
   return (
     <>
       <Step n={1} label="Right now" info={<p>The city's live index on the scale chosen in the header — the maximum of its pollutant sub-indices, with the pollutant that sets it. Station means over this city's own CPCB stations; the age of the newest reading is shown.</p>}>
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-widest text-blue-700">{SCALES[scale].name}</span>
-            {publicLink}
-          </div>
+          <div className="text-[11px] font-bold uppercase tracking-widest text-blue-700">{SCALES[scale].name}</div>
           <CityHero d={d} scale={scale} />
         </div>
       </Step>

@@ -1672,6 +1672,44 @@ def _city_or_404(city: str) -> dict:
         raise HTTPException(status_code=404, detail=f"unknown city: {city}")
 
 
+def _city_now_from_hourly(hourly_rows: list[dict]) -> dict:
+    """The city's air *right now*, from city-mean hourly rows: the newest value per pollutant, the
+    composite indices over those means (CPCB + US EPA, each with its prominent pollutant) and the
+    24-hour PM2.5 mean.
+
+    This is the single definition of "this city's index" in the product: **the index of the city
+    mean**, not the mean of station indices and not the worst station. Every surface that shows a
+    city number — the map status tile, the City air section, the public city page — reads it from
+    here, so two panels can never disagree. The worst *cell* is shown separately and labelled as
+    such, because an officer needs the worst place, not only the average."""
+    from core.aqi import composite
+
+    now_by: dict[str, dict] = {}
+    for r in sorted(hourly_rows, key=lambda x: str(x["hour"])):
+        now_by[r["pollutant"]] = {"value": round(float(r["value"]), 1), "unit": r.get("unit"), "hour": r["hour"], "n": r.get("n")}
+    idx = composite([{"pollutant": p, "value": v["value"], "unit": v.get("unit")} for p, v in now_by.items()])
+    pm25_hours = [float(r["value"]) for r in hourly_rows if r["pollutant"] == "pm25"]
+    pm25_24h = round(sum(pm25_hours) / len(pm25_hours), 1) if pm25_hours else None
+    return {"pollutants": now_by, "pm25_24h": pm25_24h, **idx}
+
+
+@app.get("/city/now", tags=["data"])
+def city_now(city: str = Query(..., description="City ID")) -> dict:
+    """This city's air right now — the same ``now`` block ``/city/overview`` returns, without the
+    history. One RPC, so the map's status tile can show the city index without pulling a year of
+    daily rows. Index of the city mean over the stations reporting each pollutant; the formula runs
+    on the latest hourly means, so the official 24-hour bulletin can differ."""
+    _city_or_404(city)
+    if DEMO_MODE:
+        data = fixture("city_overview", default={})
+        picked = (data.get(city) or {}).get("now") if isinstance(data, dict) else None
+        if picked:
+            return ok(picked)
+        raise HTTPException(status_code=404, detail=f"no city overview fixture for {city}")
+    rows = _db().rpc("city_pollutants_hourly", {"p_city": city, "p_hours": 24}).execute().data or []
+    return ok(_city_now_from_hourly(rows))
+
+
 @app.get("/city/overview", tags=["data"])
 def city_overview(city: str = Query(..., description="City ID")) -> dict:
     """Everything the public city page shows, in one call — city-agnostic, same shape for all ten.
@@ -1702,15 +1740,8 @@ def city_overview(city: str = Query(..., description="City ID")) -> dict:
     hourly_rows = sdb.rpc("city_pollutants_hourly", {"p_city": city, "p_hours": 24}).execute().data or []
     daily_rows = sdb.rpc("city_pollutants_daily", {"p_city": city, "p_days": 730}).execute().data or []
 
-    # ---- now: newest hour per pollutant
-    now_by: dict[str, dict] = {}
-    for r in sorted(hourly_rows, key=lambda x: str(x["hour"])):
-        now_by[r["pollutant"]] = {"value": round(float(r["value"]), 1), "unit": r.get("unit"), "hour": r["hour"], "n": r.get("n")}
-    idx = composite([{"pollutant": p, "value": v["value"], "unit": v.get("unit")} for p, v in now_by.items()])
-    pm25_24h = None
-    pm25_hours = [float(r["value"]) for r in hourly_rows if r["pollutant"] == "pm25"]
-    if pm25_hours:
-        pm25_24h = round(sum(pm25_hours) / len(pm25_hours), 1)
+    now_block = _city_now_from_hourly(hourly_rows)
+    now_by, idx, pm25_24h = now_block["pollutants"], {k: v for k, v in now_block.items() if k not in ("pollutants", "pm25_24h")}, now_block["pm25_24h"]
 
     # ---- hourly series per pollutant (+ index series for the graph)
     hourly: dict[str, list] = defaultdict(list)
@@ -1762,7 +1793,7 @@ def city_overview(city: str = Query(..., description="City ID")) -> dict:
     return ok({
         "city_id": city, "name": cfg.get("name", city.title()), "languages": cfg.get("languages", []),
         "generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
-        "now": {"pollutants": now_by, "pm25_24h": pm25_24h, **idx},
+        "now": now_block,
         "hourly": {"pollutants": dict(hourly), "index": index_series,
                    "min": min(index_series, key=lambda x: x["aqi_in"]) if index_series else None,
                    "max": max(index_series, key=lambda x: x["aqi_in"]) if index_series else None},
