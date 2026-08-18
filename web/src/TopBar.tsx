@@ -1,5 +1,6 @@
 import { SECTIONS, type Section } from "./Sidebar";
 import { linkClick } from "./router";
+import { AqiScaleToggle } from "./aqiScale";
 
 type City = { city_id: string; name: string };
 
@@ -46,6 +47,7 @@ export default function TopBar({ cities, active, onCity, section, onReplayTour, 
       )}
 
       <div className="ml-auto flex shrink-0 items-center gap-1.5">
+        <div className="hidden md:block"><AqiScaleToggle /></div>
         <button
           onClick={onTogglePresent}
           title={present ? "Exit presentation mode (P)" : "Presentation mode — larger type for a projector (P)"}

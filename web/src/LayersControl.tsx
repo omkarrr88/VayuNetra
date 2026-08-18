@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import type { MapMode } from "./BlameMap";
-import { SOURCE_COLORS, PM25_LEGEND } from "./sources";
+import { SOURCE_COLORS } from "./sources";
+import { pm25Legend, SCALES } from "./aqi";
+import { useAqiScale } from "./aqiScale";
 import { SegBtn } from "./ui";
 
 export type CoverageMeta = {
@@ -61,6 +63,7 @@ function OverlayToggle({
  *  the full layer card. Lives on the map, so layer options are found where the
  *  layers actually are — not buried in a side rail. */
 export default function LayersControl(p: LayersControlProps) {
+  const { scale } = useAqiScale();
   // Open by default only where there's room — on phones the expanded card
   // would bury the (much smaller) map.
   // Starts as the compact chip everywhere: the map is the hero and the layer card is a
@@ -187,7 +190,8 @@ export default function LayersControl(p: LayersControlProps) {
             ))}
           </div>
           <div className="mt-2 space-y-1">
-            {PM25_LEGEND.map(([label, color]) => (
+            <div className="mb-0.5 w-full text-[10px] font-semibold text-slate-500" title={SCALES[scale].note}>{SCALES[scale].short} bands · PM2.5 µg/m³</div>
+            {pm25Legend(scale).map(([label, color]) => (
               <div key={label} className="flex items-center gap-2">
                 <span className="inline-block h-3 w-3 rounded" style={{ background: color }} />
                 <span>{label}</span>

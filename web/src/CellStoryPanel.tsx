@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
-import { aqiCategory, pm25ToAqi } from "./aqi";
+import { categoryForPm25 } from "./aqi";
+import { useAqiScale } from "./aqiScale";
 import { SOURCE_COLORS, dominantSource, type Shares } from "./sources";
 import { DRIVER_LABELS, type AttrCell } from "./BlameMap";
 import { placeForCell } from "./placeName";
@@ -28,6 +29,7 @@ export default function CellStoryPanel({
   onClose: () => void;
   onAct: () => void;
 }) {
+  const { scale } = useAqiScale();
   const [fc, setFc] = useState<FC[] | null>(null);
   const [place, setPlace] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
@@ -200,7 +202,7 @@ export default function CellStoryPanel({
             {HORIZONS.map((h) => {
               const r = fc.find((x) => x.horizon_h === h);
               if (!r) return null;
-              const cat = aqiCategory(pm25ToAqi(r.value));
+              const cat = categoryForPm25(r.value, scale);
               return (
                 <div key={h} className="flex-1 rounded-md border border-gray-200 p-1.5 text-center">
                   <div className="text-[11px] text-gray-500">+{h}h</div>

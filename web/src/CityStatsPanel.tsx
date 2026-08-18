@@ -3,7 +3,8 @@ import { Area, AreaChart, Cell, Pie, PieChart, Tooltip, XAxis, YAxis } from "rec
 import SizedChart from "./SizedChart";
 import type { AttrCell, CoverageCell } from "./BlameMap";
 import { api } from "./api";
-import { aqiCategory, pm25ToAqi } from "./aqi";
+import { categoryForPm25, type AqiScale } from "./aqi";
+import { useAqiScale } from "./aqiScale";
 import { SOURCE_COLORS } from "./sources";
 import { Step, Panel } from "./ui";
 import TrendPanel from "./TrendPanel";
@@ -36,16 +37,16 @@ function sourceMix(cells: AttrCell[]): Array<{ name: string; value: number; colo
 }
 
 /** Share of the dense-field cells in each AQI band → stacked bar segments. */
-function aqiBands(cells: CoverageCell[]): Array<{ label: string; color: string; text: string; count: number; pct: number }> {
+function aqiBands(cells: CoverageCell[], scale: AqiScale): Array<{ label: string; color: string; text: string; count: number; pct: number }> {
   if (!cells.length) return [];
   const counts = new Map<string, { label: string; color: string; text: string; count: number }>();
   for (const c of cells) {
-    const cat = aqiCategory(pm25ToAqi(c.pm25));
+    const cat = categoryForPm25(c.pm25, scale);
     const cur = counts.get(cat.label) ?? { label: cat.label, color: cat.color, text: cat.text, count: 0 };
     cur.count += 1;
     counts.set(cat.label, cur);
   }
-  const ORDER = ["Good", "Satisfactory", "Moderate", "Poor", "Very Poor", "Severe"];
+  const ORDER = ["Good", "Satisfactory", "Moderate", "Poor", "Very Poor", "Severe", "Unhealthy for Sensitive Groups", "Unhealthy", "Very Unhealthy", "Hazardous", "Within guideline", "Above guideline (≤ IT-4)", "Above IT-4 (≤ IT-3)", "Above IT-3 (≤ IT-2)", "Above IT-2 (≤ IT-1)", "Above IT-1"];
   return Array.from(counts.values())
     .map((b) => ({ ...b, pct: (b.count / cells.length) * 100 }))
     .sort((a, b) => ORDER.indexOf(a.label) - ORDER.indexOf(b.label));
@@ -65,6 +66,7 @@ export default function CityStatsPanel({
   cells: AttrCell[];
   coverageCells: CoverageCell[];
 }) {
+  const { scale } = useAqiScale();
   const [history, setHistory] = useState<HistoryPoint[] | null>(null);
 
   useEffect(() => {
@@ -79,7 +81,7 @@ export default function CityStatsPanel({
   }, [city]);
 
   const mix = sourceMix(cells);
-  const bands = aqiBands(coverageCells);
+  const bands = aqiBands(coverageCells, scale);
 
   return (
     <Panel title="City Statistics" tag="LIVE">

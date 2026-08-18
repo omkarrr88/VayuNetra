@@ -205,28 +205,52 @@ def aqi_current(
     city: str = Query(..., description="City ID, e.g. 'delhi'"),
     db=Depends(get_db)
 ) -> dict:
-    """Latest per-cell AQI measurements for a city."""
+    """Latest per-cell readings for a city with both air-quality indices.
+
+    Per cell: the newest PM2.5 (``pm25``, ``ts`` — what the map and models use) plus the newest
+    value of every other index pollutant the cell reports within the last 24 h
+    (``pollutants``: pm10 / no2 / so2 / co / o3 with unit and time), and the composite indices
+    computed by ``core.aqi`` — ``aqi_in`` (CPCB National AQI, max of sub-indices, with
+    ``prominent_in``) and ``aqi_us`` (US EPA AQI, ``prominent_us``). Indices are the formula on
+    the latest hourly readings, so the official 24-h bulletin can differ; the console says so."""
     if DEMO_MODE:
         return ok(fixture_rows("aqi_current", city))
+    from core.aqi import composite
+
+    since = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
     rows = (
         db.table("measurements")
-        .select("h3_cell,ts,value,variable,confidence")
+        .select("h3_cell,ts,value,variable,unit,confidence")
         .eq("city_id", city)
-        .eq("variable", "pm25")
+        .in_("variable", ["pm25", "pm10", "no2", "so2", "co", "o3", "nh3"])
+        .gte("ts", since)
         .order("ts", desc=True)
-        .limit(5000)
+        .limit(20000)
         .execute()
         .data
-    )
+    ) or []
     latest: dict[str, dict] = {}
     for r in rows:
-        latest.setdefault(r["h3_cell"], {
-            "h3_cell": r["h3_cell"],
-            "pm25": r["value"],
-            "ts": r["ts"],
-            "confidence": r.get("confidence", 1.0),
-        })
-    return ok(list(latest.values()))
+        cell = r.get("h3_cell")
+        if not cell or r.get("value") is None:
+            continue
+        entry = latest.setdefault(cell, {"h3_cell": cell, "pm25": None, "ts": None, "confidence": r.get("confidence", 1.0), "pollutants": {}})
+        var = r["variable"]
+        if var == "pm25":
+            if entry["pm25"] is None:
+                entry["pm25"], entry["ts"] = r["value"], r["ts"]
+        elif var not in entry["pollutants"]:
+            entry["pollutants"][var] = {"value": r["value"], "unit": r.get("unit"), "ts": r["ts"]}
+    out = []
+    for e in latest.values():
+        if e["pm25"] is None:
+            continue   # PM2.5 is the anchor of every map cell; gas-only cells are not shown
+        readings = [{"pollutant": "pm25", "value": e["pm25"], "unit": "µg/m³"}] + [
+            {"pollutant": k, "value": v["value"], "unit": v.get("unit")} for k, v in e["pollutants"].items()
+        ]
+        e.update(composite(readings))
+        out.append(e)
+    return ok(out)
 
 
 # Trailing PM2.5 history cache — hourly buckets change once an hour at most.

@@ -1,7 +1,7 @@
 // Public landing page — light theme only. Console lives at /console.
 import { useEffect, useState } from "react";
 import { api } from "./api";
-import { aqiCategory, pm25ToAqi } from "./aqi";
+import { aqiCategory, pm25ToAqi, SCALES } from "./aqi";
 import { linkClick } from "./router";
 
 type AqiRow = { pm25?: number; value?: number };
@@ -227,7 +227,7 @@ export default function Landing() {
             {cat && (
               <>
                 <span className="text-slate-400">·</span>
-                Delhi AQI <span style={{ background: cat.color, color: cat.text }} className="rounded px-1.5 py-0.5 font-bold">{aqi} {cat.label}</span>
+                Delhi AQI <span title={SCALES.in.note} style={{ background: cat.color, color: cat.text }} className="rounded px-1.5 py-0.5 font-bold">{aqi} {cat.label}</span> <span className="text-slate-400">({SCALES.in.short}; the console can switch to US · EPA or WHO)</span>
               </>
             )}
             {latencyS && (

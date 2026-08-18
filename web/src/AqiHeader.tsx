@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { api, API_BASE, API_TOKEN } from "./api";
-import { agoLabel, aqiCategory, pm25ToAqi } from "./aqi";
+import { agoLabel, headline, formatIndex, POLLUTANT_LABEL, SCALES, type AqiRow } from "./aqi";
+import { useAqiScale } from "./aqiScale";
 
-type AqiRow = { h3_cell: string; pm25?: number; value?: number; aqi?: number; ts?: string };
 
 /** Pulsing dot showing the /live WebSocket connection state. */
 function LiveDot() {
@@ -66,6 +66,7 @@ const GRAP_ROMAN = ["", "I", "II", "III", "IV"];
 
 /** Hero AQI badge: worst-cell CPCB AQI, category color, data freshness. */
 export default function AqiHeader({ city }: { city: string }) {
+  const { scale } = useAqiScale();
   const [rows, setRows] = useState<AqiRow[] | null>(null);
   const [compound, setCompound] = useState<Compound | null>(null);
 
@@ -79,13 +80,14 @@ export default function AqiHeader({ city }: { city: string }) {
     return <div className="h-14 w-44 animate-pulse rounded-lg bg-white/80 shadow" />;
   }
 
-  const pm = rows
-    .map((r) => (typeof r.pm25 === "number" ? r.pm25 : typeof r.value === "number" ? r.value : null))
-    .filter((v): v is number => v !== null);
-  const worst = pm.length ? Math.max(...pm) : null;
-  const aqi = worst !== null ? pm25ToAqi(worst) : null;
-  const cat = aqi !== null ? aqiCategory(aqi) : null;
+  const h = headline(rows, scale);
+  const aqi = h.index, cat = h.category, worst = h.worstPm25;
   const latest = rows.map((r) => r.ts).filter(Boolean).sort().pop();
+  const prominent = h.prominent ? POLLUTANT_LABEL[h.prominent] ?? h.prominent : null;
+  const subs = h.cell ? (scale === "us" ? h.cell.sub_us : scale === "in" ? h.cell.sub_in : undefined) : undefined;
+  const tip = h.cell
+    ? `${SCALES[scale].name} — ${SCALES[scale].note}\nWorst cell ${h.cell.h3_cell}: ${subs && Object.keys(subs).length ? Object.entries(subs).map(([k, v]) => `${POLLUTANT_LABEL[k] ?? k} ${v}`).join(" · ") : `PM2.5 ${Math.round(worst ?? 0)} µg/m³`}\nCity mean PM2.5 ${h.meanPm25 !== null ? Math.round(h.meanPm25) : "–"} µg/m³.\nFormula on the latest hourly readings (the official 24-h bulletin can differ); only pollutants this cell reports enter its index.`
+    : "";
 
   const chips: ReactNode[] = [];
   if (compound && compound.level !== "none") {
@@ -129,7 +131,8 @@ export default function AqiHeader({ city }: { city: string }) {
     <div
       className="max-w-xs rounded-xl border border-slate-200/80 bg-white/95 px-3 py-2 shadow-lg shadow-slate-900/5 backdrop-blur"
       role="status"
-      aria-label={aqi !== null && cat ? `Air quality index ${aqi}, ${cat.label}, worst cell PM2.5 ${Math.round(worst!)} micrograms per cubic metre` : "Air quality data unavailable"}
+      aria-label={aqi !== null && cat ? `${SCALES[scale].name} ${formatIndex(aqi, scale)}, ${cat.label}, worst cell PM2.5 ${Math.round(worst!)} micrograms per cubic metre` : "Air quality data unavailable"}
+      title={tip}
     >
       {aqi !== null && cat ? (
         <>
@@ -138,14 +141,17 @@ export default function AqiHeader({ city }: { city: string }) {
               className="flex h-12 min-w-16 flex-col items-center justify-center rounded-lg px-2"
               style={{ background: cat.color, color: cat.text }}
             >
-              <span className="text-xl font-extrabold leading-none">{aqi}</span>
-              <span className="text-[11px] font-semibold uppercase tracking-wide">AQI</span>
+              <span className="text-xl font-extrabold leading-none">{formatIndex(aqi, scale)}</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide">{scale === "who" ? "× WHO" : "AQI"}</span>
             </div>
             <div className="text-xs">
               <div className="text-sm font-bold" style={{ color: cat.color }}>
                 {cat.label}
               </div>
-              <div className="text-gray-500">worst cell · PM2.5 {Math.round(worst!)} µg/m³</div>
+              <div className="text-gray-500">
+                {SCALES[scale].short}{prominent && scale !== "who" && prominent !== "PM2.5" ? ` · prominent ${prominent}` : ""} · worst cell PM2.5 {Math.round(worst!)} µg/m³
+                {h.meanPm25 !== null && <> · city mean {Math.round(h.meanPm25)}</>}
+              </div>
               <div className="flex items-center gap-2 text-gray-500">
                 <span>data {agoLabel(latest)}</span>
                 <LiveDot />

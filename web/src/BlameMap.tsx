@@ -6,7 +6,9 @@ import { GeoJsonLayer, LineLayer, PolygonLayer, ScatterplotLayer } from "@deck.g
 import { api } from "./api";
 import { cellToLatLng } from "h3-js";
 import { inGeometry, type Geometry } from "./placeName";
-import { colorFor, dominantSource, pm25Color, satColor, type Shares } from "./sources";
+import { colorFor, dominantSource, satColor, type Shares } from "./sources";
+import { pm25Rgba } from "./aqi";
+import { useAqiScale } from "./aqiScale";
 
 export type ShapDriver = { feature: string; source: string; contribution: number };
 
@@ -195,6 +197,7 @@ export default function BlameMap({
   coverageKind?: "stations" | "dense";
   scrub?: { hour: string; scale: Record<string, number> } | null;
 }) {
+  const { scale } = useAqiScale();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const overlayRef = useRef<MapboxOverlay | null>(null);
@@ -363,7 +366,7 @@ export default function BlameMap({
       getFillColor: (d) => {
         const base = coverageKind === "stations" ? d.pm25_stations : d.pm25;
         const k = scrub ? (scrub.scale[d.h3_cell] ?? 1) : 1;
-        return pm25Color(base * k);
+        return pm25Rgba(base * k, scale);
       },
       stroked: false,
       extruded: false,
@@ -395,7 +398,7 @@ export default function BlameMap({
             const wid = (f as WardFeature).properties?.ward_id;
             const m = wid ? wardMean.get(wid) : undefined;
             if (m === undefined) return [148, 163, 184, 8];
-            const [r, g, b] = pm25Color(m);
+            const [r, g, b] = pm25Rgba(m, scale);
             return [r, g, b, 95];
           },
           getLineColor: [51, 65, 85, 170],

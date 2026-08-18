@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Bar, BarChart, Legend, Tooltip, XAxis, YAxis } from "recharts";
 import SizedChart from "./SizedChart";
 import { api } from "./api";
+import { categoryForPm25, formatIndex, pm25Index, SCALES } from "./aqi";
+import { useAqiScale } from "./aqiScale";
 import { inr, intfmt } from "./format";
 import { EmptyState, Panel } from "./ui";
 
@@ -33,6 +35,7 @@ type Comparison = {
 };
 
 export default function ComparativePanel({ onSelectCity }: { onSelectCity: (city: string) => void }) {
+  const { scale } = useAqiScale();
   const [data, setData] = useState<Comparison | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -119,6 +122,7 @@ export default function ComparativePanel({ onSelectCity }: { onSelectCity: (city
             </div>
             <div className="mt-1 grid grid-cols-2 gap-x-2 gap-y-0.5 text-xs text-gray-600">
               <span>
+                <span title={`${SCALES[scale].name}: ${formatIndex(pm25Index(c.current_pm25, scale), scale)} ${categoryForPm25(c.current_pm25, scale).label} — from PM2.5 only (station gases are not in this city aggregate)`} className="rounded px-1 py-0.5 font-bold" style={{ background: categoryForPm25(c.current_pm25, scale).color, color: categoryForPm25(c.current_pm25, scale).text }}>{formatIndex(pm25Index(c.current_pm25, scale), scale)}</span>{" "}
                 avg <b className="text-slate-800">{Math.round(c.current_pm25)}</b> µg/m³
               </span>
               <span>

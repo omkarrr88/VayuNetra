@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { Area, AreaChart, ReferenceArea, ReferenceDot, Tooltip, XAxis, YAxis } from "recharts";
 import SizedChart from "./SizedChart";
 import { api } from "./api";
+import { pm25Bands } from "./aqi";
+import { useAqiScale } from "./aqiScale";
 
 type Point = { date: string; pm25: number; n: number; band: string };
 type Verdict = {
@@ -18,19 +20,15 @@ type Verdict = {
 type Anomaly = { date: string; pm25: number; baseline: number; why: string };
 type Trend = { series: Point[]; verdict: Verdict | null; days_of_history: number; note?: string | null; anomalies?: Anomaly[] };
 
-const BAND_COLORS: Array<[number, number, string, string]> = [
-  [0, 30, "#22c55e", "good"],
-  [30, 60, "#84cc16", "satisfactory"],
-  [60, 90, "#eab308", "moderate"],
-  [90, 120, "#f97316", "poor"],
-  [120, 250, "#ef4444", "very poor"],
-];
+// band backgrounds come from the selected AQI scale (see aqi.ts) — the µg/m³ values never change
 
 const RANGES: Array<[number, string]> = [[30, "30d"], [90, "90d"], [365, "1y"]];
 
 export default function TrendPanel({
   city, cell, compact = false,
 }: { city: string; cell?: string; compact?: boolean }) {
+  const { scale } = useAqiScale();
+  const bands = pm25Bands(scale);
   const [days, setDays] = useState(90);
   const [t, setT] = useState<Trend | null | "err">(null);
 
@@ -93,8 +91,8 @@ export default function TrendPanel({
           <div className="mt-1.5 h-24">
             <SizedChart>
               <AreaChart data={series} margin={{ top: 4, right: 4, left: -22, bottom: 0 }}>
-                {BAND_COLORS.map(([lo, hi, color]) => (
-                  <ReferenceArea key={lo} y1={lo} y2={Math.min(hi, maxY)} fill={color} fillOpacity={0.09} strokeOpacity={0} />
+                {bands.map((b) => (
+                  <ReferenceArea key={b.lo} y1={b.lo} y2={Math.min(b.hi, maxY)} fill={b.color} fillOpacity={0.09} strokeOpacity={0} />
                 ))}
                 <XAxis
                   dataKey="date"
@@ -119,9 +117,9 @@ export default function TrendPanel({
             </SizedChart>
           </div>
           <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[10px] text-slate-500">
-            {BAND_COLORS.map(([, , color, name]) => (
-              <span key={name} className="flex items-center gap-1">
-                <span className="inline-block h-2 w-2 rounded-sm" style={{ background: color }} /> {name}
+            {bands.filter((b) => b.lo < maxY).map((b) => (
+              <span key={b.label} className="flex items-center gap-1">
+                <span className="inline-block h-2 w-2 rounded-sm" style={{ background: b.color }} /> {b.label.toLowerCase()}
               </span>
             ))}
             <span className="ml-auto">{t.days_of_history} days of readings</span>

@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { api } from "./api";
 import CitizenReports from "./CitizenReports";
 import ExposureCorridors from "./ExposureCorridors";
-import { aqiCategory } from "./aqi";
+import { categoryForPm25, formatIndex, pm25Index } from "./aqi";
+import { useAqiScale } from "./aqiScale";
 import { Panel, SegBtn, Step } from "./ui";
 
 type Advisory = {
@@ -33,6 +34,7 @@ type CleanZone = {
 type CleanZones = { basis?: string; zones: CleanZone[] };
 
 export default function CitizenPanel({ city, languages, center }: { city: string; languages?: string[]; center?: [number, number] }) {
+  const { scale } = useAqiScale();
   // Offer only the languages this city is configured for (falling back to all
   // four only when the config carries none). Merging in ALL_LANGS used to let a
   // judge pick Kannada for Chennai and get a template advisory nobody reviewed.
@@ -254,7 +256,8 @@ export default function CitizenPanel({ city, languages, center }: { city: string
         <Panel title="Cleanest air right now" tag="lowest ~1 km cells">
           <div className="grid grid-cols-2 gap-1.5">
             {cleanZones.zones.map((z) => {
-              const cat = aqiCategory(z.aqi);
+              const cat = categoryForPm25(z.pm25, scale);
+              const zIndex = pm25Index(z.pm25, scale);
               return (
                 <a
                   key={z.h3_cell}
@@ -262,14 +265,14 @@ export default function CitizenPanel({ city, languages, center }: { city: string
                   target="_blank"
                   rel="noreferrer"
                   className="rounded-lg border border-slate-200 p-2 transition-colors hover:border-emerald-300 hover:bg-emerald-50/50"
-                  aria-label={`Open ${z.zone_id} in Google Maps — AQI ${z.aqi}, ${cat.label}`}
+                  aria-label={`Open ${z.zone_id} in Google Maps — ${formatIndex(zIndex, scale)}, ${cat.label}`}
                 >
                   <div className="flex items-center justify-between gap-1">
                     <span
                       className="rounded px-1.5 py-0.5 text-[11px] font-bold"
                       style={{ background: cat.color, color: cat.text }}
                     >
-                      {z.aqi}
+                      {formatIndex(zIndex, scale)}
                     </span>
                     <span className="text-[11px] text-slate-500">{cat.label}</span>
                   </div>
