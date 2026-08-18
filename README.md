@@ -148,7 +148,8 @@ demo/         19 offline fixtures    supabase/migrations/  schema+RLS    eval/  
 | [docs/API_CONTRACT.md](docs/API_CONTRACT.md) | The API envelope and endpoints |
 | [docs/AI_METHODOLOGY.md](docs/AI_METHODOLOGY.md) | Models, validation, fairness and guardrails |
 | [docs/PRD.md](docs/PRD.md) | Product requirements |
-| [docs/VayuNetra_Pitch.pptx](docs/VayuNetra_Pitch.pptx) | Presentation deck |
+| [docs/VayuNetra_Pitch.html](docs/VayuNetra_Pitch.html) | Finale deck — self-contained, animated (India/Delhi maps, live-data charts, embedded live console); `docs/PITCH_SCRIPT.md` has the 7½-minute script |
+| [docs/VayuNetra_Pitch.pptx](docs/VayuNetra_Pitch.pptx) · [.pdf](docs/VayuNetra_Pitch.pdf) | Static export of the same slides with speaker notes (backup) |
 | [docs/DEMO_VIDEO_SCRIPT.md](docs/DEMO_VIDEO_SCRIPT.md) · [PDF](docs/DEMO_VIDEO_SCRIPT.pdf) | The 3-minute demo, beat by beat |
 | [docs/EXPERT_RATING_SHEET.md](docs/EXPERT_RATING_SHEET.md) · [DOCX](docs/EXPERT_RATING_SHEET.docx) | Independent domain-expert review form |
 

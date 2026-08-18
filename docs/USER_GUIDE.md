@@ -278,5 +278,5 @@ Core tables: `cities, measurements, attribution, forecasts, emission_sources, en
 | `web/src/` | React console + landing (`App.tsx` shell, panels per section) |
 | `demo/fixtures/` | The 19 JSON fixtures behind DEMO_MODE |
 | `supabase/migrations/` | Schema, RLS, seeds, retention (20 migrations) |
-| `docs/` | This guide, pitch deck (`VayuNetra_Pitch.pptx`), demo script, architecture SVGs, methodology, API contract |
+| `docs/` | This guide, the finale deck (`VayuNetra_Pitch.html`, static `.pptx`/`.pdf` export, `PITCH_SCRIPT.md`; built from `docs/pitch/`), demo script, architecture SVGs, methodology, API contract |
 | `eval/evaluate.ipynb` | The full validation trail §§1–10, including the documented failures |

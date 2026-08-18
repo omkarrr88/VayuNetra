@@ -1510,11 +1510,15 @@ def landing_snapshot() -> dict:
             attr = db.table("attribution").select("h3_cell,source_category,share").eq("city_id", "delhi").limit(5000).execute().data or []
             attr = [{"shares": {r["source_category"]: float(r["share"])}} for r in attr]
             comp = comparison().get("data") or {"cities": []}
+            # modelled-cell count only when every city's dense field is in the warm cache — a
+            # partial sum would understate the scale, so it is None until the warm-up finishes
             cells = 0
             for c in comp.get("cities", []):
                 cached = _dense_cache.get(c["city_id"])
-                if cached:
-                    cells += len(cached[1].get("cells") or [])
+                if not cached:
+                    cells = 0
+                    break
+                cells += len(cached[1].get("cells") or [])
             counts = {}
             for t in ("emission_sources", "vulnerability", "enforcement_recs"):
                 counts[t] = db.table(t).select("*", count="exact").limit(1).execute().count or 0
