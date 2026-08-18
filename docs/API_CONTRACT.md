@@ -28,7 +28,21 @@
 | GET | `/attribution?city&cell\|ward&ts` | source split + confidence (blame map) | officer+ |
 | GET | `/forecast?city&cell&horizon` | forecast + intervals + persistence | all |
 | GET | `/enforcement?city&date` | ranked enforcement recommendations | officer+ |
-| POST | `/enforcement/{id}/dossier` | cited evidence packet + satellite patch (E6) | officer+ |
+| GET | `/enforcement/{id}/dossier` | cited evidence packet + the real Sentinel-2 patch (E6) | officer+ |
+| GET | `/enforcement/{id}/notice.pdf` | draft enforcement notice PDF (addressee, cited provisions, satellite image, projected impact, provenance; stamped pending authorisation) | officer+ |
+| GET | `/sources/{source_id}/patch` | the real Sentinel-2 patch for one emission source (map hover) | all |
+| GET | `/interventions?city` | before/after effect tracking for dispatched actions (armed at dispatch; effect vs city drift) | all |
+| GET | `/interventions/export?city` | PRANA-ready CSV: every tracked action with baseline / after / effect / status / closure, mapped to its NCAP head | all |
+| GET | `/history?city&hours` · `/history/cells?city&hours` · `/history/trend?city&days&cell` | trailing PM2.5: city hourly (6–168 h), per-cell hourly for the map time-scrub (6–72 h), daily trend 7–365 d with verdict and spike days (raw ∪ archived rollup) | all |
+| GET | `/coverage?city` | E2 dense ~1 km PM2.5 field (downscaled from real anchors) + stations-only baseline | all |
+| GET | `/plume?city&top` | Gaussian-plume footprints for the top sources under current wind | all |
+| GET | `/clean-zones?city&top` | cleanest reachable places over the dense field | all |
+| GET | `/alerts/compound?city` | heat × pollution compound-risk alert | all |
+| GET | `/traces?city&limit` | per-node agent traces (signal → cited recommendation) | all |
+| POST | `/advisory/broadcast` | push the latest advisory through the live channels (Telegram + optional IVR); confirmation step + server-side rate limit | all (demo) |
+| POST | `/telegram/webhook` | Telegram bot: /start → city picker → subscription | Telegram |
+| GET/POST | `/ivr/inbound` · `/ivr/advisory` | Twilio voice: keypad menu of cities → the city's latest advisory (Hindi voice for Hindi-first cities) | Twilio |
+| POST | `/report` · GET `/reports?city` · POST `/report/{id}/status` | citizen pollution report (multipart, photo + location) → officer verification funnel (`verified` registers a candidate source) | all / officer+ |
 | GET | `/advisory?city&ward&lang` | localized citizen advisory | all |
 | GET | `/static-layers?city` | OSM/WorldPop-style sources, roads, vulnerability | all |
 | GET | `/mobility?city` | traffic proxy measurements from OSM roads + time model | all |

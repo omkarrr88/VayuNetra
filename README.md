@@ -121,10 +121,10 @@ make dev                               # FastAPI :8000 + Vite :5173 in one termi
 
 # Going live (optional): fill .env, then
 npx supabase login && npx supabase link --project-ref <your-project-ref>
-npx supabase db push                   # schema + RLS + city seed (13 migrations)
+npx supabase db push                   # schema + RLS + city seed (20 migrations)
 make live-bootstrap                    # kb_chunks + enforcement_recs + action_traces
 
-make test                              # 196 backend tests (coverage gate 55%)
+make test                              # 204 backend tests (64% line coverage, CI gate 55%)
 cd web && npx playwright test          # 7 e2e smoke + 9 live journey flows (VN_LIVE=1)
 ```
 
@@ -135,8 +135,8 @@ connectors/   ingest: CPCB/OpenAQ, Open-Meteo, Earth Engine, OSM, population, tr
 core/         H3 utils, canonical schemas, impact & intervention math, city configs
 ml/           attribution, forecast, dispersion, coverage, simulator, vision
 agents/       the 6 LangGraph agents + the notice-PDF writer      rag/  retrieval corpus
-api/          FastAPI (39 routes + WebSocket)                     web/  React console + landing
-demo/         17 offline fixtures    supabase/migrations/  schema+RLS    eval/  validation notebook
+api/          FastAPI (44 routes + WebSocket)                     web/  React console + landing
+demo/         19 offline fixtures    supabase/migrations/  schema+RLS    eval/  validation notebook
 ```
 
 ## Documentation

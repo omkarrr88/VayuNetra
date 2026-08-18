@@ -47,7 +47,7 @@ Every beat below has a timestamp, the exact screen to show, and the exact words 
 
 *~150 words. The Notice PDF must be pre-downloaded once so the second download is instant on camera.*
 
-> **Numbers on record day:** "eighteen percent … fifteen thousand residents" matches the live top card when a cell is focused (verified 20 Jul). The worklist re-ranks with live data — before recording, read your actual top card and, if it differs, swap in its contribution % and exposed count. The sentence structure stays the same; never speak a number that isn't on screen.
+> **Numbers on record day:** "eighteen percent … fifteen thousand residents" matches the live top card when a cell is focused (re-check on record day — the worklist re-ranks with live data — before recording, read your actual top card and, if it differs, swap in its contribution % and exposed count. The sentence structure stays the same; never speak a number that isn't on screen.
 
 ---
 
@@ -55,7 +55,7 @@ Every beat below has a timestamp, the exact screen to show, and the exact words 
 
 | Time | Screen / action | Say exactly |
 |---|---|---|
-| 2:00–2:18 | Click **Advisories**. Switch language dropdown **English → Hindi** (Devanagari text appears). Click through channel tabs **App → Telegram → IVR call** | "The same intelligence reaches people who will never open a dashboard. Health advisories in English, Hindi, Kannada and Marathi — targeted using five and a half thousand vulnerability-scored zones: hospitals, schools, outdoor workers." |
+| 2:00–2:18 | Click **Advisories**. Switch language dropdown **English → Hindi** (Devanagari text appears). Click through channel tabs **App → Telegram → IVR call** | "The same intelligence reaches people who will never open a dashboard. Health advisories in eight languages — Hindi, Kannada, Marathi, Tamil, Telugu, Bengali, Gujarati and English — targeted using five and a half thousand vulnerability-scored zones: hospitals, schools, outdoor workers." |
 | 2:18–2:32 | On the **Telegram** tab, show the QR; cut to Sejal's phone receiving the bot message. Then the **IVR** tab | "Four channels. A live Telegram bot — scan and subscribe right now. Public display boards. And real IVR phone calls: citizens dial in, press one for Delhi, and the phone reads them today's advisory." |
 | 2:32–2:48 | Click **Simulator** → intervention "Halt construction dust" → **Run simulation** → point at the impact cards. Then click **Impact** and point at the ₹ figures | "Officers can ask *what if*: halt construction dust, and the counterfactual returns the AQI change, people protected, rupees saved and CO2 avoided — every figure cited, nothing invented. The City ROI view makes Delhi's funding case: eighty-eight thousand crore avertable every year." |
 | 2:48–3:00 | Click **Cities** (ten-city ranking on screen) — then cut to the landing page hero, hold two seconds | "Ten cities run today — seven of them onboarded from config in a single week — on zero-rupee infrastructure. India's air stack can measure and forecast. VayuNetra makes it *operate*. Thank you." |
@@ -66,13 +66,13 @@ Every beat below has a timestamp, the exact screen to show, and the exact words 
 
 ## Coverage check (nothing missed)
 
-Landing ✓ (0:00) · Blame map + layers ✓ (0:10) · Cell Story: attribution, SHAP, abstention, forecast ✓ (0:22–0:55) · Forecast panel ✓ (0:40) · Pipeline, 6 agents, spike gate, latency ✓ (1:00) · Enforcement worklist ✓ (1:15) · Dossier: satellite + RAG citations ✓ (1:32) · Notice PDF + impact chart ✓ (1:32) · Intervention tracking ✓ (1:50) · Advisories: 4 languages ✓ (2:00) · 4 channels + live Telegram + IVR ✓ (2:18) · Simulator + cited impact ✓ (2:32) · Impact / City ROI ✓ (2:32) · Cities comparison ✓ (2:48) · Scalability + ₹0 close ✓ (2:48).
+Landing ✓ (0:00) · Blame map + layers ✓ (0:10) · Cell Story: attribution, SHAP, abstention, forecast ✓ (0:22–0:55) · Forecast panel ✓ (0:40) · Pipeline, 6 agents, spike gate, latency ✓ (1:00) · Enforcement worklist ✓ (1:15) · Dossier: satellite + RAG citations ✓ (1:32) · Notice PDF + impact chart ✓ (1:32) · Intervention tracking ✓ (1:50) · Advisories: 8 languages ✓ (2:00) · 4 channels + live Telegram + IVR ✓ (2:18) · Simulator + cited impact ✓ (2:32) · Impact / City ROI ✓ (2:32) · Cities comparison ✓ (2:48) · Scalability + ₹0 close ✓ (2:48).
 
 Not shown (deliberate, no time): guided tour, map layer toggles (plumes/wards/freight/fires are visible in the hero landing image), the 24-hour map replay, satellite hover cards, ward heat, share card, clean-air zones, optimizer, broadcast button. All are live — and every screen in this script is a deep link, so bookmark them for the recording. If a judge asks, all are live in the app.
 
 ## Editing notes
 
 - Hard cuts on every speaker change; no transitions/music under speech (light music bed at −25 dB is fine).
-- Overlay small text chips when a number is spoken: "61% traffic" (0:25), "0.6 s end-to-end" (1:10), "18% · 15,000 residents" (1:25), "en · hi · kn · mr" (2:05), "₹0.88 L cr / yr" (2:45).
+- Overlay small text chips when a number is spoken: "61% traffic" (0:25), "0.6 s end-to-end" (1:10), "18% · 15,000 residents" (1:25), "8 languages · own scripts" (2:05), "₹0.88 L cr / yr" (2:45).
 - End-card (2 s, after 3:00 if the rules allow a title card): logo + `vayunetra-aqi.vercel.app` + team names.
 - Export 1080p, H.264, target ≤ 500 MB.

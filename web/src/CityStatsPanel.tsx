@@ -5,7 +5,7 @@ import type { AttrCell, CoverageCell } from "./BlameMap";
 import { api } from "./api";
 import { aqiCategory, pm25ToAqi } from "./aqi";
 import { SOURCE_COLORS } from "./sources";
-import { Panel } from "./ui";
+import { Step, Panel } from "./ui";
 import TrendPanel from "./TrendPanel";
 import ExposureCard from "./ExposureCard";
 
@@ -83,11 +83,13 @@ export default function CityStatsPanel({
 
   return (
     <Panel title="City Statistics" tag="LIVE">
-      {/* Long-range history — daily means, CPCB bands, plain-language verdict */}
-      <TrendPanel city={city} compact />
-      <div className="my-2 border-t border-slate-100" />
-      {/* Forecast exposure — expected people in Very Poor / Severe air, calibrated */}
+      {/* Forecast exposure — expected people in Very Poor / Severe air, calibrated (this is step 4) */}
       <ExposureCard city={city} />
+      <div className="my-2 border-t border-slate-100" />
+      {/* Long-range history — daily means, CPCB bands, plain-language verdict (step 5, "The past") */}
+      <Step n={5} label="The past" info={<p>Daily station means for 30 d / 90 d / 1 y with a plain-language verdict and spike-day markers (raw readings ∪ the archived daily rollup), then the last 48 h and the live source mix.</p>}>
+        <TrendPanel city={city} compact />
+      </Step>
       <div className="my-2 border-t border-slate-100" />
       {/* 48h trend — real station-hour means */}
       <div className="text-[12px] font-semibold text-slate-700">PM2.5 — last 48 hours</div>

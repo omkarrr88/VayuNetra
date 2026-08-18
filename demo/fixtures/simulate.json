@@ -14,11 +14,57 @@
   "pm25_tonnes_avoided": 2.3,
   "intervention": {
     "type": "waste_burn_ban",
-    "reductions": { "biomass_burning": 0.7 },
+    "reductions": {
+      "biomass_burning": 0.7
+    },
     "horizon_h": 24,
     "description": "Enforce crop-residue & open-waste burning ban across the upwind belt",
     "ward": "Upwind agricultural belt + Ward 12 (Sarai Kale Khan)"
   },
   "confidence": 0.81,
-  "generated_at": "2026-06-27T09:00:00Z"
+  "generated_at": "2026-06-27T09:00:00Z",
+  "cases_prevented": 0.05,
+  "health_cost_avoided_inr": 2560020,
+  "co2e_tonnes": 381.8,
+  "impact": {
+    "method": "WHO AirQ+ log-linear CRF (short-term); ΔCases = y0·Pop·(1−e^(−βΔC))·days",
+    "horizon_h": 24,
+    "co2e_available": true,
+    "citations": [
+      {
+        "figure": "premature deaths averted",
+        "value": 1.0123,
+        "unit": "RR per 10 µg/m³",
+        "source": "WHO HRAPIE (2013), all-cause (natural) mortality, short-term PM2.5, all ages",
+        "caveat": "95% CI 1.0045–1.0201"
+      },
+      {
+        "figure": "baseline mortality",
+        "value": 7.3,
+        "unit": "deaths per 1,000 population per year",
+        "source": "World Bank / SRS — India crude death rate, ~2021"
+      },
+      {
+        "figure": "₹ health cost avoided",
+        "value": 50000000.0,
+        "unit": "₹ per premature death (Value of a Statistical Life)",
+        "source": "Benefit transfer from OECD (2012) base VSL (USD 3.0M, 2005) via income elasticity 0.8; consistent with World Bank (2016) 'The Cost of Air Pollution'",
+        "caveat": "VSL estimates for India span ~₹3–12 crore; ₹5 crore is a conservative mid-point — treat the ₹ figure as order-of-magnitude, not precise"
+      },
+      {
+        "figure": "exposed population",
+        "value": 40000,
+        "unit": "people per res-8 H3 cell (metro)",
+        "source": "VayuNetra metro-cell heuristic; WorldPop-refined population is Stage-2 E2",
+        "caveat": "flat heuristic — refine with WorldPop for ward-accurate counts"
+      },
+      {
+        "figure": "CO₂e co-benefit",
+        "value": 166.0,
+        "unit": "t CO₂ per t PM2.5",
+        "source": "Derived from Andreae (2019), Atmos. Chem. Phys. — agricultural-residue burning EFs (CO₂ ≈ 1515 g/kg, PM2.5 ≈ 9.1 g/kg)",
+        "caveat": "field-burning average; real ratio varies with crop & combustion efficiency"
+      }
+    ]
+  }
 }

@@ -84,7 +84,7 @@ const VALIDATION: Array<[string, string, string]> = [
 
 const DATA_SOURCES = ["CPCB / CAAQMS", "Sentinel-5P", "Sentinel-2", "Open-Meteo · ERA5", "NASA FIRMS", "OpenStreetMap", "GPW v4.11"];
 
-// Fallback snapshot (production, 16 August 2026) — used only until GET /landing/snapshot
+// Fallback snapshot (production, 18 August 2026) — used only until GET /landing/snapshot
 // answers; the live payload replaces every number below. Colors match the console.
 const MIX_COLOR: Record<string, string> = { traffic: "#ef4444", transported: "#3b82f6", industrial: "#9333ea", construction_dust: "#ca8a04", biomass_burning: "#16a34a", other: "#6b7280" };
 const MIX_LABEL: Record<string, string> = { construction_dust: "construction dust", biomass_burning: "biomass burning" };
@@ -117,7 +117,7 @@ const SNAPSHOT_SCALE: Array<[string, string]> = [
   ["16,529", "~1 km² cells modeled across 10 cities"],
   ["647", "registered + satellite-detected sources"],
   ["5,495", "vulnerability-scored zones (hospitals, schools, outdoor work)"],
-  ["454", "live enforcement recommendations"],
+  ["480", "live enforcement recommendations"],
 ];
 
 export default function Landing() {
@@ -159,7 +159,7 @@ export default function Landing() {
         [fmt(snap.scale.recs, SNAPSHOT_SCALE[3][0]), SNAPSHOT_SCALE[3][1]],
       ]
     : SNAPSHOT_SCALE;
-  const asOf = snap ? new Date(snap.generated_at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "16 August 2026";
+  const asOf = snap ? new Date(snap.generated_at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "18 August 2026";
 
   return (
     <div className="min-h-full overflow-y-auto bg-white text-slate-700 antialiased" style={{ scrollBehavior: "smooth" }}>
