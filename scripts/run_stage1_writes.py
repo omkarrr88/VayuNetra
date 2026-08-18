@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from agents.advisory import build_advisories
 from connectors.mobility import build_mobility_rows
 from connectors.static_layers import build_static_layers, merge_all_cities
-from core.supa import client
+from core.supa import client, insert_measurements
 
 ALL_STAGE1_LANGS = ["en"]   # every city gets English; the rest come from its own config
 
@@ -74,8 +74,7 @@ def _replace_mobility(city_ids: list[str], hours: int) -> int:
     for city_id in city_ids:
         c.table("measurements").delete().eq("city_id", city_id).eq("source", "osm_gtfs").execute()
         rows = build_mobility_rows(city_id, hours=hours, start=start)
-        for i in range(0, len(rows), 500):
-            c.table("measurements").insert(rows[i : i + 500]).execute()
+        insert_measurements(rows, c)
         total += len(rows)
     return total
 

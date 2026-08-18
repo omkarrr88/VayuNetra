@@ -103,10 +103,12 @@ def run(city_id: str, days: int = 30, push: bool = False,
     if push:
         c = client()
         c.table("measurements").delete().eq("city_id", city_id).in_("source", ["s5p", "modis"]).execute()
+        from core.supa import insert_measurements
+
         if no2:
-            c.table("measurements").insert(no2).execute()
+            insert_measurements(no2, c)
         if fire:
-            c.table("measurements").insert(fire).execute()
+            insert_measurements(fire, c)
         print(f"pushed {len(no2) + len(fire)} satellite measurements to Supabase")
 
 

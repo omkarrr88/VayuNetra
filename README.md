@@ -98,7 +98,8 @@ orchestrator → attribution → forecast → *spike gate* → enforcement → a
 comparator — each run traced per node. Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 **Stack:** FastAPI (Render) · React + MapLibre + Deck.gl (Vercel) · Supabase Postgres + PostGIS +
-pgvector (RLS) · LangGraph · GitHub Actions crons — all free tier. **Adding a city is one YAML
+pgvector (RLS) · LangGraph · GitHub Actions crons — all free tier for the ten cities running today; the
+measured cost curve to all 131 NCAP cities (~₹2,700/month) is in `docs/SCALE.md`. **Adding a city is one YAML
 file** in [core/config/cities/](core/config/cities/) (bbox, languages, regulatory authority) plus
 one backfill run — every layer is city-agnostic; seven metros were onboarded that way in one week.
 

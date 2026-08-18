@@ -168,10 +168,10 @@ def fetch_city(
 def push_to_supabase(rows: list[dict]) -> None:
     from core.supa import client
 
-    client = client()
-    for i in range(0, len(rows), 500):
-        client.table("measurements").insert(rows[i : i + 500]).execute()
-    print(f"pushed {len(rows)} OpenAQ measurements to Supabase")
+    from core.supa import insert_measurements
+
+    insert_measurements(rows, client())
+    print(f"pushed {len(rows)} OpenAQ measurements to Supabase (duplicates ignored)")
 
 
 def main() -> None:

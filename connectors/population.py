@@ -74,7 +74,9 @@ def push(city_id: str, rows: list[dict]) -> None:
     # idempotent: one population row per cell
     db.table("measurements").delete().eq("city_id", city_id).eq("variable", "population").execute()
     if rows:
-        db.table("measurements").insert(rows).execute()
+        from core.supa import insert_measurements
+
+        insert_measurements(rows, db)
     print(f"{city_id}: wrote {len(rows)} population cells ({CITATION})")
 
 

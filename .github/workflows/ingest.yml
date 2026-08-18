@@ -153,10 +153,12 @@ jobs:
           PUBLIC_API_BASE_URL: ${{ secrets.PUBLIC_API_BASE_URL }}
           PUBLIC_WEB_URL: ${{ secrets.PUBLIC_WEB_URL }}
         run: python scripts/send_morning_brief.py || true
-      - name: Retention — dedup weather rows + prune beyond 90 days (free-tier headroom)
+      - name: Retention — archive raw readings older than 180 days (rollup → Storage → verify → prune)
         env:
           DEMO_MODE: "false"
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-        run: python scripts/prune_measurements.py --days 90 --dedup-weather || true
+        # Whole months only; daily PM2.5 per cell is kept forever in pm25_daily_rollup, the raw
+        # rows go to the private 'archive' bucket and are deleted only after read-back verifies.
+        run: python scripts/archive_measurements.py --keep-days 180 --apply || true

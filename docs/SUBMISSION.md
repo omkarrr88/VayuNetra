@@ -59,7 +59,7 @@ All data sources are free and open: CPCB CAAQMS via data.gov.in and OpenAQ (plus
 
 The backend is FastAPI on Render with 39 routes and a WebSocket, all returning one `{success, data, error, meta}` envelope. The frontend is React with MapLibre and Deck.gl on Vercel. Data sits in Supabase Postgres with PostGIS and pgvector, protected by row-level security, with all writes going through the service role on the server. Models are LightGBM with SHAP, quantile regression with conformal calibration, a Gaussian plume model and a coverage downscaler. Retrieval is multimodal RAG over the regulatory corpus.
 
-Adding a city means adding one YAML file with a bounding box, languages and regulatory authority, then one backfill run. There is no per-city code anywhere in the system: seven metros were onboarded that way in a single week. Total infrastructure cost is zero: everything runs on free tiers.
+Adding a city means adding one YAML file with a bounding box, languages and regulatory authority, then one backfill run. There is no per-city code anywhere in the system: seven metros were onboarded that way in a single week. Infrastructure cost is zero for the ten cities running today, and we publish where that stops: measured at ~0.21 MB of readings per city per day with 180-day retention and an archive, the free tier is sized for this deployment; all 131 NCAP cities would run for about ₹2,700 a month (`docs/SCALE.md`).
 
 ## Numbers we can defend
 

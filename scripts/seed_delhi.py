@@ -96,8 +96,9 @@ def push_to_supabase(measurements: list[dict]) -> None:
     print(f"upserted {len(cities)} cities: {[c['city_id'] for c in cities]}")
 
     # 2) measurements (batched)
-    for i in range(0, len(measurements), 500):
-        client.table("measurements").insert(measurements[i : i + 500]).execute()
+    from core.supa import insert_measurements
+
+    insert_measurements(measurements, client)
     print(f"pushed {len(measurements)} measurements to Supabase")
 
 
