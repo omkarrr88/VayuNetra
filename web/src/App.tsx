@@ -330,12 +330,16 @@ export default function App() {
             </div>
 
             {fallback && (
-              <div className="absolute inset-x-2 top-2 z-10 mx-auto max-w-md rounded-md bg-amber-100 px-3 py-1.5 text-center text-xs text-amber-900 shadow lg:inset-x-auto lg:left-1/2 lg:-translate-x-1/2">
+              <div
+                role="status"
+                className="pointer-events-none absolute inset-x-2 top-2 z-10 mx-auto max-w-md rounded-md bg-amber-100 px-3 py-1.5 text-center text-xs text-amber-900 shadow lg:inset-x-auto lg:left-1/2 lg:-translate-x-1/2"
+              >
+                {/* the notice must never block the map controls beneath it — only its buttons take clicks */}
                 ⚠ backend waking up — showing bundled demo snapshot.{" "}
-                <button className="underline" onClick={() => window.location.reload()}>
+                <button className="pointer-events-auto underline" onClick={() => window.location.reload()}>
                   retry
                 </button>
-                <button aria-label="Dismiss notice" className="ml-2 text-amber-500" onClick={() => setFallback(false)}>
+                <button aria-label="Dismiss notice" className="pointer-events-auto ml-2 text-amber-500" onClick={() => setFallback(false)}>
                   ✕
                 </button>
               </div>
