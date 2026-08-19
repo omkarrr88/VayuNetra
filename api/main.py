@@ -248,7 +248,11 @@ def aqi_current(
         readings = [{"pollutant": "pm25", "value": e["pm25"], "unit": "µg/m³"}] + [
             {"pollutant": k, "value": v["value"], "unit": v.get("unit")} for k, v in e["pollutants"].items()
         ]
-        e.update(composite(readings))
+        idx = composite(readings)
+        for p_name, eff in (idx.pop("units", None) or {}).items():   # publish the indexed unit
+            if p_name in e["pollutants"] and eff:
+                e["pollutants"][p_name]["unit"] = eff
+        e.update(idx)
         out.append(e)
     return ok(out)
 
@@ -1707,6 +1711,13 @@ def _city_now_from_hourly(hourly_rows: list[dict]) -> dict:
     for r in sorted(hourly_rows, key=lambda x: str(x["hour"])):
         now_by[r["pollutant"]] = {"value": round(float(r["value"]), 1), "unit": r.get("unit"), "hour": r["hour"], "n": r.get("n")}
     idx = composite([{"pollutant": p, "value": v["value"], "unit": v.get("unit")} for p, v in now_by.items()])
+    # Some aggregators re-label a CPCB µg/m³ feed as ppb (see core.aqi.units_are_trustworthy). The
+    # index is computed from the corrected interpretation, so the reading we publish must carry the
+    # same unit — otherwise the card would read "38 ppb" beside a sub-index derived from 38 µg/m³.
+    for p_name, eff in (idx.get("units") or {}).items():
+        if p_name in now_by and eff:
+            now_by[p_name]["unit"] = eff
+    idx.pop("units", None)
     pm25_hours = [float(r["value"]) for r in hourly_rows if r["pollutant"] == "pm25"]
     pm25_24h = round(sum(pm25_hours) / len(pm25_hours), 1) if pm25_hours else None
     return {"pollutants": now_by, "pm25_24h": pm25_24h, **idx}
