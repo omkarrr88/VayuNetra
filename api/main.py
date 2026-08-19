@@ -2390,9 +2390,19 @@ def plume_layer(
         return ok(hit[1])
     try:
         sdb = _db()
+        # The most recent wind AT OR BEFORE NOW — not simply the newest row.
+        #
+        # Open-Meteo supplies forecast hours as well as history, so `order(ts desc).limit(1)` was
+        # returning a timestamp up to about thirty hours ahead and drawing tomorrow's wind on a map
+        # labelled "now". It showed up as Delhi losing its wind arrows entirely: at the future hour
+        # the city was calm at 0.18 m/s, below the speed at which a Gaussian plume is defined, while
+        # the wind actually blowing was 1.66 m/s. Windier cities happened to be windy in both hours,
+        # so only Delhi looked broken.
+        now_iso = datetime.now(timezone.utc).isoformat()
         ts_rows = (
             sdb.table("measurements").select("ts").eq("city_id", city)
-            .eq("variable", "wind_u").order("ts", desc=True).limit(1).execute().data
+            .eq("variable", "wind_u").lte("ts", now_iso)
+            .order("ts", desc=True).limit(1).execute().data
         ) or []
         if not ts_rows:
             return err("no_wind", f"No wind data available for {city}")

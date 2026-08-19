@@ -10,6 +10,23 @@ import { EmptyState, Panel, Step } from "./ui";
 // Three states, three colours. "improving" and "stable" used to render the same green, which threw
 // away the one bit the badge exists to carry. The band the label comes from scales with the city's
 // own level — see trend_band() in agents/multicity.py — so the hint says how much movement it took.
+/** Why THIS city got THIS badge, in its own numbers.
+ *
+ *  The threshold scales with the city's level (15%, with a 5 µg/m³ floor), so two cities can move
+ *  by the same amount and be judged differently — which looks arbitrary until you can see both the
+ *  movement and the bar it had to clear. */
+function trendReason(c: CityCard): string {
+  const d = c.forecast_24h_pm25 - c.current_pm25;
+  const band = Math.max(5, 0.15 * Math.max(0, c.current_pm25));
+  const dir = d < 0 ? "falls" : "rises";
+  const verdict = Math.abs(d) >= band
+    ? `${Math.abs(d).toFixed(1)} clears it, so this counts as ${c.trend}`
+    : `${Math.abs(d).toFixed(1)} does not clear it, so this counts as stable`;
+  return `Forecast ${dir} ${Math.abs(d).toFixed(1)} µg/m³ over 24 h. `
+       + `${c.name} needs ${band.toFixed(1)} to move — 15% of its current level, or 5, whichever is larger. `
+       + `${verdict}.`;
+}
+
 const TREND_STYLE: Record<string, { cls: string; arrow: string; hint: string }> = {
   deteriorating: { cls: "bg-red-50 text-red-700", arrow: "\u2191", hint: "PM2.5 rises by more than 15% of the current level over the next 24 h" },
   improving:     { cls: "bg-emerald-50 text-emerald-700", arrow: "\u2193", hint: "PM2.5 falls by more than 15% of the current level over the next 24 h" },
@@ -155,7 +172,7 @@ export default function ComparativePanel({ onSelectCity, onOpenEnforcement }: {
               </span>
               <span
                 className={`rounded px-1.5 py-0.5 text-[11px] font-medium ${TREND_STYLE[c.trend]?.cls ?? "bg-slate-50 text-slate-600"}`}
-                title={TREND_STYLE[c.trend]?.hint}
+                title={trendReason(c)}
               >
                 {TREND_STYLE[c.trend]?.arrow ?? ""} {c.trend}
               </span>
@@ -163,10 +180,10 @@ export default function ComparativePanel({ onSelectCity, onOpenEnforcement }: {
             <div className="mt-1 grid grid-cols-2 gap-x-2 gap-y-0.5 text-xs text-slate-600">
               <span>
                 <span title={cityIndex(c, scale).note} className="rounded px-1 py-0.5 font-bold" style={{ background: categoryForPm25(c.current_pm25, scale).color, color: categoryForPm25(c.current_pm25, scale).text }}>{cityIndex(c, scale).label}</span>{" "}
-                avg <b className="text-slate-800">{Math.round(c.current_pm25)}</b> µg/m³
+                avg <b className="text-slate-800">{c.current_pm25.toFixed(1)}</b> µg/m³
               </span>
               <span>
-                +24h <b className="text-slate-800">{Math.round(c.forecast_24h_pm25)}</b> µg/m³
+                +24h <b className="text-slate-800">{c.forecast_24h_pm25.toFixed(1)}</b> µg/m³
               </span>
               <span className="capitalize">{c.dominant_source.replace("_", " ")}</span>
               <span>{c.signature_match}</span>
