@@ -120,6 +120,13 @@ export default function App() {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement | null)?.tagName;
       if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA" || e.metaKey || e.ctrlKey || e.altKey) return;
+      // The pitch deck embeds this app in an iframe and uses D to step in and back out. Once the
+      // presenter clicks inside the app the iframe owns the keyboard, so the deck never sees the
+      // keypress — the app forwards it. Only when actually embedded, so D stays free otherwise.
+      if ((e.key === "d" || e.key === "D") && window.parent !== window) {
+        window.parent.postMessage("vn-exit-demo", "*");
+        return;
+      }
       if (e.key === "p" || e.key === "P") { setPresent((v) => !v); return; }
       const n = Number(e.key);
       if (n >= 1 && n <= SECTION_IDS.length) { setSection(SECTION_IDS[n - 1]); return; }
