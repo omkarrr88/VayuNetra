@@ -26,6 +26,7 @@ from urllib.parse import parse_qsl
 
 from fastapi import FastAPI, Header, HTTPException, Query, Depends, Request, WebSocket, WebSocketDisconnect, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 
@@ -71,6 +72,53 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# Every payload here is JSON, which compresses by roughly nine tenths. /coverage alone is 278 KB
+# uncompressed and is fetched on every console page load; on a free tier that transfer IS the
+# latency. 1 KB floor so tiny envelopes are not paid for twice.
+app.add_middleware(GZipMiddleware, minimum_size=1024)
+
+
+# Responses a browser may reuse, and for how long. An allowlist, not a denylist: anything not named
+# here is left uncached, so a new endpoint can never start serving stale air by accident.
+#
+# Deliberately absent: /enforcement, /brief, /interventions and /agent/* — an officer's own actions
+# must always read back live. The browser's HTTP cache cannot be cleared from JavaScript, so the
+# app's own 10-second in-memory cache (web/src/api.ts) is what covers those.
+_CACHE_SECONDS: tuple[tuple[str, int], ...] = (
+    ("/cities", 300),                 # city configs; change only on a deploy
+    ("/static-layers", 600),          # roads, land use, industrial sites
+    ("/metrics/benchmark", 300),      # a published artifact, rewritten on refit
+    ("/metrics/attribution", 300),
+    ("/metrics/interventions", 300),
+    ("/history/trend", 120),          # closed days
+    ("/history/cells", 120),
+    ("/coverage", 120),               # the dense field, recomputed hourly
+    ("/city/overview", 60),           # hourly means
+    ("/city/now", 45),
+    ("/aqi/current", 45),
+    ("/comparison", 60),
+    ("/forecast", 60),                # issued hourly
+    ("/attribution", 60),
+    ("/exposure", 120),
+    ("/roi", 300),
+    ("/latency", 60),
+)
+
+
+@app.middleware("http")
+async def _cache_reads(request, call_next):
+    response = await call_next(request)
+    if request.method != "GET" or response.status_code != 200:
+        return response
+    path = request.url.path
+    for prefix, seconds in _CACHE_SECONDS:
+        if path == prefix or path.startswith(prefix + "/"):
+            # stale-while-revalidate lets a repeat view paint instantly while the refresh happens
+            response.headers["Cache-Control"] = f"public, max-age={seconds}, stale-while-revalidate={seconds * 4}"
+            break
+    else:
+        response.headers.setdefault("Cache-Control", "no-store")
+    return response
 
 
 @app.on_event("startup")

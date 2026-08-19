@@ -107,6 +107,32 @@ function fixtureFor(path: string): unknown {
   return undefined;
 }
 
+// ---------------------------------------------------------------- request coalescing + micro-cache
+// Console sections are full pages now, so every panel on a page mounts at once and fetches at once.
+// That made one page load ask the same question several times: /city/overview three times on the
+// forecast page (one per card that needs it), /attribution and /static-layers twice on enforcement.
+// On a free-tier API each duplicate is a real round trip a user waits for.
+//
+// Two mechanisms, both GET-only:
+//   · coalesce — a second call for a path already in flight joins the first instead of starting another
+//   · micro-cache — a completed GET is reusable for CACHE_TTL_MS, which covers the mount storm and a
+//     quick section switch, and is far too short for a stale reading to reach a decision
+//
+// Callers treat responses as read-only (they already did: the offline fixtures were always shared
+// objects). Any mutation, and any enforcement change, clears the cache immediately, so an officer
+// action never reads back through it.
+const CACHE_TTL_MS = 10_000;
+const inflight = new Map<string, Promise<unknown>>();
+const cached = new Map<string, { at: number; data: unknown }>();
+
+/** Drop everything: called after any mutation and on the enforcement-changed signal. */
+export function clearApiCache(): void {
+  cached.clear();
+}
+if (typeof window !== "undefined") {
+  window.addEventListener("vn:enforcement-changed", clearApiCache);
+}
+
 function notifyFallback() {
   window.dispatchEvent(new CustomEvent("api-fallback"));
 }
@@ -119,6 +145,29 @@ function notifyLive() {
 }
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
+  const method0 = (init?.method ?? "GET").toUpperCase();
+  const cacheable = method0 === "GET" && !init?.signal;
+  if (cacheable) {
+    const hit = cached.get(path);
+    if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.data as T;
+    const live = inflight.get(path);
+    if (live) return live as Promise<T>;
+  }
+
+  const run = fetchOnce<T>(path, init);
+  if (cacheable) {
+    inflight.set(path, run as Promise<unknown>);
+    run.then((data) => cached.set(path, { at: Date.now(), data }))
+       .catch(() => { /* never cache a failure */ })
+       .finally(() => { if (inflight.get(path) === (run as Promise<unknown>)) inflight.delete(path); });
+  } else {
+    // a mutation may have changed anything a read would return
+    run.then(clearApiCache).catch(() => { /* the caller surfaces the error */ });
+  }
+  return run;
+}
+
+async function fetchOnce<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
   if (TOKEN && !headers.has("Authorization")) {
     headers.set("Authorization", `Bearer ${TOKEN}`);
