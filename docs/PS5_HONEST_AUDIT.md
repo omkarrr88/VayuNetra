@@ -35,9 +35,11 @@ difference is called out, because that gap is what a judge finds.
 real and complete, which is rare. The exposure is not in what we built; it is in **four claims that
 outrun their evidence** (§6) and in **two demo-day landmines** (§2.1, §2.4).
 
-The satellite story is the biggest surprise of this audit: the connectors are written and were used
-once, but **nothing re-ingests satellite data on a schedule, and there are zero satellite rows in the
-database today** (§4). Two of the brief's named technologies are, right now, not running.
+The satellite story was the biggest surprise of this audit: the connectors were written and had been
+used once, but nothing re-ingested on a schedule and there were **zero satellite rows in the database**.
+**Fixed 19 Aug** — `.github/workflows/ingest.yml` now calls `earth_engine` in the daily job, and the
+database holds live rows (164 MODIS `fire`, 136 Sentinel-5P `no2_sat` at the time of writing). §4
+carries the current status.
 
 ---
 
@@ -162,7 +164,7 @@ What we must NOT do is promise SHAP and then click a Delhi cell.
 | Traffic density | **PARTIAL** | `connectors/mobility.py` is an OSM-road time-of-day proxy, not measured traffic. |
 | Construction permits | **ABSENT, and honestly so** | `connectors/permits.py:3` says it plainly: *"No Indian city publishes a machine-readable permit registry today."* Construction sites come from OSM + CV detection instead. This is a real-world data gap, not our failure — say it that way. |
 | Industrial stacks | **VERIFIED** | In the source registry with detection confidence. |
-| Satellite thermal anomalies | **BUILT, NOT RUNNING** | `connectors/earth_engine.py:32` `FIRE_BAND = "T21"` exists, but the marker reads **0.0 in every live attribution row** because nothing ingests it on a schedule. Same for `no2_sat`. |
+| Satellite thermal anomalies | **RUNNING** *(since 19 Aug)* | `connectors/earth_engine.py:32` `FIRE_BAND = "T21"`, ingested daily. 164 `fire` rows and 136 `no2_sat` rows present. Caveat worth stating out loud: the cadence is **daily, not hourly**, so these markers are a slowly-moving prior rather than a live signal, and the attribution shares they drive move correspondingly slowly. |
 | **Confidence scores** | **VERIFIED** | Every attribution row carries `confidence`; the cell story shows it. |
 | **Abstains without skill** | **VERIFIED** | The model falls back to cited chemical-signature priors when out-of-sample R² misses the gate — visible in the UI as *"Local model missed the ≥0.15 skill gate here — we fall back to cited priors rather than over-claim."* This is a genuine differentiator; most teams will not have an abstain path. |
 | Ward/zone level | **VERIFIED** | H3 res-8 (~1 km²), finer than ward. Cells are now named by locality (`placeName.ts`). |
@@ -364,9 +366,9 @@ idiomatic, or that the medical advice reads correctly to a Tamil speaker.
 
 | Technology | Status | Evidence |
 |---|---|---|
-| Sentinel-5P (NO₂) | **BUILT, NOT RUNNING** | `connectors/earth_engine.py` implements it, but `.github/workflows/ingest.yml` calls only openaq, cpcb and openmeteo — never earth_engine. **0 rows** in `measurements` for source in (s5p, modis, viirs, firms); the only source present is `openaq`. |
+| Sentinel-5P (NO₂) | **RUNNING** *(since 19 Aug)* | `connectors/earth_engine.py`, invoked by the daily job in `.github/workflows/ingest.yml`. **136 rows** in `measurements` with `source='s5p'`, `variable='no2_sat'`. Skips with a `::warning::` rather than failing when the GEE secrets are absent. |
 | Sentinel-2 | **PARTIAL** | 487 of 647 emission sources are `cv_detected`, i.e. machine-detected from imagery in an earlier offline run. Dossier patches refuse placeholders (`allow_placeholder=False`). But nothing re-ingests imagery on a schedule. |
-| MODIS / VIIRS | **BUILT, NOT RUNNING** | Same as S5P. The `fire` and `no2_sat` attribution markers therefore read 0.0 in every live row — confirmed in a real `/attribution` response. |
+| MODIS / VIIRS | **RUNNING** *(since 19 Aug)* | Same path as S5P; **164 rows** with `source='modis'`, `variable='fire'` (FIRMS `T21` band). The `fire` and `no2_sat` markers are no longer identically zero, though coverage is days-old rather than hourly — a daily job, not a live feed. |
 | Multi-agent AI | **VERIFIED (5, not 6)** | LangGraph `StateGraph`, per-node latency stamps, conditional spike gate. See §2.1. |
 | Real-time CAAQMS/IoT | **VERIFIED** | CPCB via OpenAQ, hourly GitHub Actions cron. Now 4 sensors per pollutant per city after this session's fix. |
 | Atmospheric dispersion | **VERIFIED** | Pasquill stability + Briggs urban coefficients. Real physics. |
