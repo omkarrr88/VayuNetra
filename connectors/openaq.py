@@ -141,6 +141,7 @@ def fetch_sensor_hourly(
 def fetch_city(
     city_id: str, days: int = 14, max_sensors: int = 40,
     date_from: str | None = None, date_to: str | None = None,
+    only_vars: list[str] | None = None,
 ) -> list[dict]:
     from datetime import datetime, timedelta, timezone
 
@@ -149,6 +150,12 @@ def fetch_city(
     since = date_from or (datetime.now(timezone.utc) - timedelta(days=days)).replace(microsecond=0).isoformat()
 
     sensors = find_sensors(lat, lng)
+    # A backfill usually wants one pollutant across the whole window, not the fullest station.
+    # Without this filter the sensor cap is spent on whichever pollutants happen to sort first.
+    if only_vars:
+        want = {v.lower() for v in only_vars}
+        sensors = [s for s in sensors if s["variable"] in want]
+        print(f"  filtered to {sorted(want)}: {len(sensors)} sensors")
     # most-recently-active stations first -> active stations bring their full pollutant set
     sensors.sort(key=lambda s: s.get("last") or "", reverse=True)
     if len(sensors) > max_sensors:
@@ -180,11 +187,13 @@ def main() -> None:
     ap.add_argument("--days", type=int, default=14)
     ap.add_argument("--max-sensors", type=int, default=40)
     ap.add_argument("--from", dest="date_from", help="ISO start, e.g. 2025-10-01")
+    ap.add_argument("--vars", dest="only_vars", help="comma-separated pollutants to fetch, e.g. pm25,pm10")
     ap.add_argument("--to", dest="date_to", help="ISO end, e.g. 2026-01-31")
     ap.add_argument("--push", action="store_true")
     args = ap.parse_args()
 
-    rows = fetch_city(args.city, args.days, args.max_sensors, args.date_from, args.date_to)
+    rows = fetch_city(args.city, args.days, args.max_sensors, args.date_from, args.date_to,
+                      [v.strip() for v in args.only_vars.split(",")] if args.only_vars else None)
     cells = {r["h3_cell"] for r in rows}
     variables = sorted({r["variable"] for r in rows})
     print(f"{args.city}: {len(rows)} rows · {len(cells)} cells · vars {variables}")
