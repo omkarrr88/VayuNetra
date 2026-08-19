@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Bar, BarChart, Cell, Legend, Tooltip, XAxis, YAxis } from "recharts";
 import SizedChart from "./SizedChart";
 import { api } from "./api";
-import { categoryForPm25, formatIndex, pm25Index, SCALES } from "./aqi";
+import { type AqiScale, categoryForPm25, formatIndex, pm25Index, SCALES } from "./aqi";
 import { useAqiScale } from "./aqiScale";
 import { inr, intfmt } from "./format";
 import { EmptyState, Panel, Step } from "./ui";
@@ -16,10 +16,29 @@ const TREND_STYLE: Record<string, { cls: string; arrow: string; hint: string }> 
   stable:        { cls: "bg-slate-100 text-slate-600", arrow: "\u2192", hint: "Forecast change stays inside 15% of the current level (min 5 \u00b5g/m\u00b3)" },
 };
 
+// The server already computes each city's index the way the city's own page does — over every
+// pollutant, not PM2.5 alone — so use it when it exists. Deriving the badge here from PM2.5 would
+// show 32 on the scoreboard next to the 66 the same city reports on its own page whenever PM10 or
+// a gas is the prominent one. The WHO scale has no server-side equivalent, and neither does a city
+// whose index RPC failed, so the PM2.5-only derivation stays as the labelled fallback.
+function cityIndex(c: CityCard, scale: AqiScale): { label: string; note: string } {
+  const served = scale === "in" ? c.aqi_in : scale === "us" ? c.aqi_us : null;
+  const cat = categoryForPm25(c.current_pm25, scale).label;
+  if (served != null) {
+    return { label: String(Math.round(served)), note: `${SCALES[scale].name}: ${Math.round(served)} — all pollutants, same computation as ${c.name}'s own page` };
+  }
+  const derived = formatIndex(pm25Index(c.current_pm25, scale), scale);
+  return { label: derived, note: `${SCALES[scale].name}: ${derived} ${cat} — from PM2.5 only (station gases are not in this city aggregate)` };
+}
+
 type CityCard = {
   city_id: string;
   name: string;
   current_pm25: number;
+  current_pm25_basis?: string;
+  aqi_in?: number | null;
+  aqi_us?: number | null;
+  pm25_24h?: number | null;
   forecast_24h_pm25: number;
   trend: string;
   dominant_source: string;
@@ -43,7 +62,10 @@ type Comparison = {
   cities: CityCard[];
 };
 
-export default function ComparativePanel({ onSelectCity }: { onSelectCity: (city: string) => void }) {
+export default function ComparativePanel({ onSelectCity, onOpenEnforcement }: {
+  onSelectCity: (city: string) => void;
+  onOpenEnforcement?: (city: string) => void;
+}) {
   const { scale } = useAqiScale();
   const [data, setData] = useState<Comparison | null>(null);
   const [failed, setFailed] = useState(false);
@@ -140,7 +162,7 @@ export default function ComparativePanel({ onSelectCity }: { onSelectCity: (city
             </div>
             <div className="mt-1 grid grid-cols-2 gap-x-2 gap-y-0.5 text-xs text-slate-600">
               <span>
-                <span title={`${SCALES[scale].name}: ${formatIndex(pm25Index(c.current_pm25, scale), scale)} ${categoryForPm25(c.current_pm25, scale).label} — from PM2.5 only (station gases are not in this city aggregate)`} className="rounded px-1 py-0.5 font-bold" style={{ background: categoryForPm25(c.current_pm25, scale).color, color: categoryForPm25(c.current_pm25, scale).text }}>{formatIndex(pm25Index(c.current_pm25, scale), scale)}</span>{" "}
+                <span title={cityIndex(c, scale).note} className="rounded px-1 py-0.5 font-bold" style={{ background: categoryForPm25(c.current_pm25, scale).color, color: categoryForPm25(c.current_pm25, scale).text }}>{cityIndex(c, scale).label}</span>{" "}
                 avg <b className="text-slate-800">{Math.round(c.current_pm25)}</b> µg/m³
               </span>
               <span>
@@ -168,7 +190,20 @@ export default function ComparativePanel({ onSelectCity }: { onSelectCity: (city
               const stalled = acted === 0;
               return (
                 <div className={`mt-1.5 border-t pt-1.5 text-[11px] ${stalled ? "border-amber-200 text-amber-800" : "border-slate-100 text-slate-500"}`}>
-                  <span className={`font-medium ${stalled ? "text-amber-900" : "text-slate-600"}`}>Compliance:</span> {c.compliance.total} recommendations
+                  {/* Counting a queue without offering a way into it is a dead end — this is the
+                      only place the number appears, and the queue itself lives in Enforcement. */}
+                  <span
+                    role="link"
+                    tabIndex={0}
+                    title={`Open ${c.name}'s enforcement queue`}
+                    onClick={(e) => { e.stopPropagation(); onOpenEnforcement?.(c.city_id); }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); onOpenEnforcement?.(c.city_id); }
+                    }}
+                    className={`cursor-pointer font-medium underline decoration-dotted underline-offset-2 ${stalled ? "text-amber-900" : "text-slate-600"}`}
+                  >
+                    Compliance:
+                  </span>{" "}{c.compliance.total} recommendations
                   {c.compliance.approved > 0 && <> · {c.compliance.approved} approved</>}
                   {c.compliance.dispatched > 0 && <> · {c.compliance.dispatched} dispatched</>}
                   {c.compliance.dismissed > 0 && <> · {c.compliance.dismissed} dismissed</>}

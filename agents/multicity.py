@@ -66,7 +66,15 @@ def build_comparison(
     aqi_rows: list[dict],
     forecast_rows: list[dict],
     rec_status_rows: list[dict] | None = None,
+    index_by_city: dict[str, dict] | None = None,
 ) -> dict:
+    """Rank and describe the cities.
+
+    ``index_by_city`` carries each city's canonical 24 h figures (see _city_now_from_hourly in the
+    API). Its ``pm25_24h`` is preferred over the cell aggregate below for the headline number,
+    because it is what the city's own page shows and because a 24 h mean cannot be dominated by one
+    spiking station the way a mean over a handful of cells can.
+    """
     cards = []
     status_by_city: dict[str, Counter] = {}
     for r in rec_status_rows or []:
@@ -75,7 +83,14 @@ def build_comparison(
         cid = city["city_id"]
         city_aqi = [r for r in aqi_rows if r.get("city_id") == cid]
         city_fc = [r for r in forecast_rows if r.get("city_id") == cid and int(r.get("horizon_h", 24)) == 24]
-        current_pm25 = average(city_aqi, "pm25")
+        # Mean of each cell's most recent reading. Kept only as the fallback: with six cells one
+        # faulty station at 256 ug/m3 moved Bengaluru's city figure from 25 to 56, and nothing here
+        # bounds how old a cell's "most recent" reading is — Delhi had cells three days stale.
+        cell_mean = average(city_aqi, "pm25")
+        idx = (index_by_city or {}).get(cid) or {}
+        canonical = idx.get("pm25_24h")
+        current_pm25 = float(canonical) if canonical is not None else cell_mean
+        pm25_basis = "city_24h_mean" if canonical is not None else "latest_per_cell"
         forecast_pm25 = average(city_fc, "value") or current_pm25
         source = dominant_source(city_aqi)
         trend = trend_label(forecast_pm25, current_pm25)
@@ -87,6 +102,9 @@ def build_comparison(
             "city_id": cid,
             "name": city["name"],
             "current_pm25": current_pm25,
+            # which of the two definitions this row actually used, so a disagreement with the
+            # city page is diagnosable instead of mysterious
+            "current_pm25_basis": pm25_basis,
             "forecast_24h_pm25": forecast_pm25,
             "trend": trend,
             "dominant_source": source,

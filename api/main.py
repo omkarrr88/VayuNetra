@@ -1505,8 +1505,6 @@ def comparison() -> dict:
         rec_statuses = (
             sdb.table("enforcement_recs").select("city_id,status").limit(5000).execute().data
         ) or []
-        data = build_comparison(cities, aqi_rows, forecast_rows, rec_statuses)
-
         # Every city number in the product comes from one computation: the index of that city's
         # mean (see _city_now_from_hourly). Without this the scoreboard would derive an index from
         # PM2.5 alone and disagree with the city's own page whenever PM10 or a gas is prominent.
@@ -1522,6 +1520,14 @@ def comparison() -> dict:
         ids = [c["city_id"] for c in cities]
         with ThreadPoolExecutor(max_workers=min(10, max(1, len(ids)))) as pool:
             indices = dict(zip(ids, pool.map(_idx, ids)))
+
+        # The index is fetched BEFORE the comparison is built, because the scoreboard has to rank
+        # and label with the same PM2.5 the badge is derived from. It used to rank on a separate
+        # number — the mean of each cell's most recent reading — and the two disagreed by up to
+        # 2.25x (Bengaluru read 56.2 against a 24 h mean of 25.0, because one of its six cells was
+        # sitting at 256 ug/m3 and a sixth of that lands straight on the city average). That put
+        # cities in the wrong order and printed a green badge next to an inflated number.
+        data = build_comparison(cities, aqi_rows, forecast_rows, rec_statuses, indices)
         for c in data.get("cities", []):
             c.update(indices.get(c.get("city_id"), {}))
 

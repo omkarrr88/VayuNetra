@@ -342,7 +342,12 @@ export default function App() {
               <Step {...S("citizen", 5)}><Deferred minHeight={340}><HealthPanel city={active} /></Deferred></Step>
             </>
           )}
-          {section === "compare" && <ComparativePanel onSelectCity={setActive} />}
+          {section === "compare" && (
+            <ComparativePanel
+              onSelectCity={setActive}
+              onOpenEnforcement={(id) => { setActive(id); setSection("action"); }}
+            />
+          )}
           {section === "whatif" && <WhatIfPanel city={active} />}
           {section === "impact" && (
             <>
