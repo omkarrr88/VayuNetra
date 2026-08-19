@@ -19,7 +19,8 @@ All custom training is executed on 100% free compute (Google Colab / Kaggle).
 | **1km Downscaling (E2)** | CNN / Learned Interpolation | Sparse Stations + Satellite + Land use | Kaggle GPU | Downscales AQI to hyperlocal 1km resolution. |
 | **Spike / Anomaly Detector (E4)**| STL + Isolation Forest / Autoencoder | Historical per-cell AQI series | Colab | Flags abnormal pollution events for proactive enforcement. |
 | **RAG Embeddings (Agent 3/4)** | Pre-trained local `bge-small` | NCAP / GRAP / CPCB regulations | N/A (Pre-trained) | Retrieves legal basis for enforcement dossiers. |
-| **Advisory Localisation (Agent 4)**| Pre-trained LLM (Gemini Flash) | Formatted alerts + translation prompt | N/A (Free API) | Generates citizen alerts in regional languages. |
+| **Advisory Localisation (Agent 4)**| **Deterministic templates — no model** | One authored string per risk tier per language | N/A | Citizen alerts in 8 languages. A language model CANNOT write health advice here: a hallucinated line in an asthma advisory is not a risk we accept. Script validity is checked in code (`script_ok()`). |
+| **Advisory fluency polish (optional, off)** | Gemini 2.0 Flash | Template + locked facts | N/A (Free API) | `scripts/llm_polish_advisories.py` — the LLM pathway the brief suggests, built and **fact-gated**: Gemini may only rephrase, and a candidate is rejected unless the zone id, the horizon, "N95" and every digit survive verbatim. Rejected candidates keep the template. **Not wired into any cron** — an operator choice, disclosed. |
 
 ---
 

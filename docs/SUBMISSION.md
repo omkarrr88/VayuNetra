@@ -30,7 +30,7 @@ Everything keys off the same spatial unit, an Uber H3 resolution-8 hexagon of ro
 
 ## How it works
 
-Six agents run as a single LangGraph pipeline, once per city. The orchestrator finds the cells that are spiking, attribution and forecasting run on those cells, and then a spike gate decides whether the situation actually warrants enforcement. If the air is clean, the graph skips enforcement entirely and goes straight to advisories rather than manufacturing work for an inspector.
+Five agents run as a single LangGraph pipeline, once per city, with a spike gate between forecast and enforcement. The orchestrator finds the cells that are spiking, attribution and forecasting run on those cells, and then a spike gate decides whether the situation actually warrants enforcement. If the air is clean, the graph skips enforcement entirely and goes straight to advisories rather than manufacturing work for an inspector.
 
 | Stage | What happens |
 |---|---|

@@ -601,7 +601,11 @@ def attribution(
 
     q = (
         db.table("attribution")
-        .select("h3_cell,source_category,share,confidence,evidence,ts_window")
+        # `method_version` says whether this row came from the hybrid GBM+SHAP model or from the
+        # cited chemical-signature priors it falls back to when the model has no out-of-sample
+        # skill. Without it in the response a reader cannot tell which they are looking at, and the
+        # abstain behaviour — one of the more defensible things this system does — is invisible.
+        .select("h3_cell,source_category,share,confidence,evidence,ts_window,method_version")
         .eq("city_id", city)
     )
     if cell:
@@ -617,6 +621,11 @@ def attribution(
             "shares": {},
             "confidence": r.get("confidence"),
             "evidence": r.get("evidence"),
+            # Which model produced this cell: "hybrid-gbm-shap-v2" when the GBM had out-of-sample
+            # skill, "signature-v1" when it did not and we fell back to cited chemical-signature
+            # priors. The reshape used to drop this, so a reader could not tell the two apart —
+            # which hid the abstain behaviour rather than showing it.
+            "method_version": r.get("method_version"),
         })
         c["shares"][r["source_category"]] = r["share"]
     return ok(list(cells.values()))

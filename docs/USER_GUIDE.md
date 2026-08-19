@@ -52,7 +52,7 @@ The public front door — for citizens, judges and officers who have not opened 
 
 ![Landing — how it works](guide/03-landing-how.jpg)
 
-- **How it works** — trace → predict → act → protect, with the six agents and the data sources.
+- **How it works** — trace → predict → act → protect, with the five agents and the data sources.
 - **Architecture** — the two-seam architecture diagram (schema seam, API seam) — the same SVG the pitch deck uses.
 - **Platform** — what runs where (Vercel, Render, Supabase, GitHub Actions) and the ₹0 point.
 - **Validation** — the claim / result / how-it-was-checked table: attribution vs published apportionment (cosine 0.88 / 0.90 / 0.93 plus bucket tables), forecast skill vs persistence, the calibrated probabilities, the rejected TFT model, test counts.
@@ -152,7 +152,7 @@ from, and what to do next.
 | **Cities (4)** | Ten cities on one scoreboard |
 | **Simulator (5)** | What-if interventions and the inspector-hour optimiser |
 | **Impact (6)** | The funding case: ₹, lives, where NCAP money should go, fairness |
-| **Pipeline (7)** | The six agents, visibly running |
+| **Pipeline (7)** | The agents, visibly running |
 
 Cards are sized to their content: a dense one (the worklist, the outlook) takes the full width; two
 light ones sit side by side rather than stretching a slider across the page.
@@ -415,7 +415,7 @@ Steps: **1 Run the agents · 2 Read the trace.** The last multi-agent run as a t
 
 ## 13. Under the hood
 
-### 13.1 The six agents (LangGraph)
+### 13.1 The five agents and the spike gate (LangGraph)
 | Agent | Does |
 |---|---|
 | A0 Orchestrator | Reads latest signals, finds spiking cells, routes the graph, stamps per-node latency traces |

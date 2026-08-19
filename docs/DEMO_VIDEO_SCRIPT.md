@@ -66,7 +66,7 @@ Every beat below has a timestamp, the exact screen to show, and the exact words 
 
 ## Coverage check (nothing missed)
 
-Landing ✓ (0:00) · Blame map + layers ✓ (0:10) · Cell Story: attribution, SHAP, abstention, forecast ✓ (0:22–0:55) · Forecast panel ✓ (0:40) · Pipeline, 6 agents, spike gate, latency ✓ (1:00) · Enforcement worklist ✓ (1:15) · Dossier: satellite + RAG citations ✓ (1:32) · Notice PDF + impact chart ✓ (1:32) · Intervention tracking ✓ (1:50) · Advisories: 8 languages ✓ (2:00) · 4 channels + live Telegram + IVR ✓ (2:18) · Simulator + cited impact ✓ (2:32) · Impact / City ROI ✓ (2:32) · Cities comparison ✓ (2:48) · Scalability + ₹0 close ✓ (2:48).
+Landing ✓ (0:00) · Blame map + layers ✓ (0:10) · Cell Story: attribution, SHAP, abstention, forecast ✓ (0:22–0:55) · Forecast panel ✓ (0:40) · Pipeline, 5 agents + spike gate, latency ✓ (1:00) · Enforcement worklist ✓ (1:15) · Dossier: satellite + RAG citations ✓ (1:32) · Notice PDF + impact chart ✓ (1:32) · Intervention tracking ✓ (1:50) · Advisories: 8 languages ✓ (2:00) · 4 channels + live Telegram + IVR ✓ (2:18) · Simulator + cited impact ✓ (2:32) · Impact / City ROI ✓ (2:32) · Cities comparison ✓ (2:48) · Scalability + ₹0 close ✓ (2:48).
 
 Not shown (deliberate, no time): guided tour, map layer toggles (plumes/wards/freight/fires are visible in the hero landing image), the 24-hour map replay, satellite hover cards, ward heat, share card, clean-air zones, optimizer, broadcast button. All are live — and every screen in this script is a deep link, so bookmark them for the recording. If a judge asks, all are live in the app.
 

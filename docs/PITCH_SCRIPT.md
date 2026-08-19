@@ -68,7 +68,7 @@ Speaker A: 396 words for 3:00 (≈150 wpm with the 9-second replay pause). Speak
 > lacks skill. **Predict**: the next 72 hours, with each cell's chance of turning Very Poor.
 > **Act**: sites ranked by contribution, people exposed and confidence — real satellite image, the
 > regulation, a draft notice; the officer approves, dispatches, closes the case on an audit trail.
-> **Protect**: advisories in eight scripts. Six agents, one graph, seconds of compute — every human
+> **Protect**: advisories in eight scripts. Five agents and a gate, one graph, seconds of compute — every human
 > step timestamped.
 
 ### Slide 4 · Delhi's winter, replayed (1:35 → 2:20)

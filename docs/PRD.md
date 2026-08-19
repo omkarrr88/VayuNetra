@@ -61,7 +61,9 @@ City administrators do not need another dashboard that shows them a red number. 
 
 **VayuNetra** is a city-agnostic, multi-agent AI platform that fuses CAAQMS ground sensors, **Sentinel-5P / MODIS satellite** data, mobility feeds, meteorological forecasts, and geospatial land-use layers into a single **action engine**. It runs five coordinated AI agents — **Source Attribution, Hyperlocal Forecast, Enforcement Prioritisation, Citizen Advisory, and Multi-City Comparative Intelligence** — that move a city from *reactive monitoring* to *proactive, evidence-based intervention*.
 
-**Our North-Star Metric:** collapse the **time from pollution signal → validated, source-attributed enforcement action** from the *weeks-or-never* the CAG audit documents, down to **minutes**.
+**Our North-Star Metric:** collapse the time to **produce** a validated, source-attributed, citation-backed enforcement recommendation — from the *no documented protocol at all* the 2024 CAG audit found in 69 % of monitored cities, to **about a second of compute** (measured end-to-end per node, `GET /latency`).
+
+> **Say this precisely.** We measure how long *our pipeline* takes to turn a signal into a ready-to-sign recommendation. We have **not** measured how long a municipality then takes to act — no such baseline exists for us to compare against. The claim is that the intelligence arrives in seconds instead of never, not that we have shortened anyone's administrative response.
 
 **Why we win #1:** we hit every judging axis deliberately — a genuinely novel **satellite-ground "blame map"** (Innovation), a forecast that **provably beats the persistence baseline** with numbers (Technical Excellence + Business Impact), a **city-agnostic engine live across 10 cities** (Scalability), and a **map-first console + multi-language citizen advisory** (User Experience) — all wrapped in an India-scale, life-and-death business case.
 
@@ -162,7 +164,7 @@ The brief's Evaluation Focus names five things. **Most teams will demo a UI. We 
 | AQI forecast accuracy at hyperlocal resolution (**RMSE vs persistence baseline**) | Backtest report: RMSE/MAE @24/48/72h, **our model vs persistence vs climatology**, with skill-score % |
 | Enforcement recommendation quality **rated by domain experts** | Top-10 recommendations + auto-generated cited evidence dossiers, scored on a transparent **CPCB/GRAP-derived rubric proxy** (no expert needed; independent expert validation = planned next step — see [ARCHITECTURE.md](ARCHITECTURE.md) §14) |
 | Citizen advisory **relevance & language coverage** | Live multi-language advisory (**Hindi / English / Kannada / Marathi**) + readability + native-speaker review |
-| **Demonstrated reduction in response time** from signal to intervention | Timed demo: signal → attribution → enforcement packet in minutes; contrast with CAG-documented status quo |
+| **Demonstrated reduction in response time** from signal to intervention | Timed live: signal → attribution → forecast → enforcement packet, per-node stamps, ~1.1 s measured. **This is pipeline latency, not an organisation's response time** — we contrast against the CAG finding that most monitored cities have no documented response protocol, not against a measured municipal baseline. |
 
 > **Strategic principle:** *If the brief names a metric, we will put a number on it on a slide.* That single discipline is our biggest edge.
 
@@ -222,7 +224,21 @@ The brief's Evaluation Focus names five things. **Most teams will demo a UI. We 
 
 ### Agent 1 — Geospatial Pollution Source Attribution Engine ⭐ (our hero)
 - **What it does:** Attributes pollution to **source categories** — `{vehicular/traffic, construction & road dust, industrial, biomass/waste burning, regional/transported, other}` — per **ward / H3 cell**, with **statistical confidence scores**.
-- **Inputs:** CAAQMS pollutant mix (PM2.5, PM10, NO₂, SO₂, CO, O₃), **Sentinel-5P** (NO₂, SO₂, CO, aerosol index), **MODIS/VIIRS** AOD + active-fire/thermal anomalies, **Sentinel-2** land-use & construction-site change, traffic density, OSM land use, industrial/permit registries, wind field.
+- **Inputs, as actually wired into the model** (`ml/attribution/shap_attribution.py`):
+  CAAQMS pollutant mix (PM2.5, PM10, NO₂, SO₂, CO, O₃) · **Sentinel-5P tropospheric NO₂**
+  (`no2_sat`, ingested daily) · **MODIS/VIIRS active-fire counts** (`fire`, daily) ·
+  PM10/PM2.5 ratio · upwind advected PM2.5 · ERA5 meteorology (temp, RH, precipitation, wind u/v,
+  boundary-layer height, ventilation) · calendar features (hour, day-of-week, stubble season,
+  winter inversion, Diwali window).
+- **Adjacent, but NOT features of the attribution model:** OSM land use and the industrial registry
+  populate the *emission-source registry* the enforcement agent scores against; Sentinel-2 imagery
+  produced the CV-detected sites in that registry. Neither is an input to the attribution model
+  itself.
+- **Not used, and honestly so:** MODIS/VIIRS **AOD** (fire counts only), Sentinel-2 **change
+  detection** as a live feature, and **measured traffic density** — `connectors/mobility.py` is an
+  OSM-road time-of-day proxy, not a traffic feed. Construction **permits** do not exist as an input
+  because, as `connectors/permits.py` records, no Indian city publishes a machine-readable permit
+  registry today.
 - **Method:** **Physics-informed ML** — chemical-signature priors (e.g., NO₂↑ → combustion/traffic; SO₂↑ → industrial; AOD + fire pixels → biomass burning; coarse-PM/PM10:PM2.5 ratio → dust/construction) + a learned apportionment model calibrated against published source-apportionment studies; spatial smoothing over the H3 grid.
 - **Output:** Per-cell source-share vector + confidence; the **"blame map"**.
 - **Demo moment:** Click a red ward → *"68% construction dust, 22% traffic, 10% transported — confidence 0.83,"* with the satellite + sensor evidence that proves it.

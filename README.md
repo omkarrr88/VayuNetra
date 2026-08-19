@@ -5,7 +5,7 @@
 
 India measures its air (900+ CAAQMS stations) and forecasts it, but almost no city can turn a bad
 reading into a specific, attributed, delivered intervention. **VayuNetra is that missing operate
-layer**: a six-agent AI platform that fuses ground sensors, Sentinel satellite data, weather,
+layer**: a five-agent AI platform that fuses ground sensors, Sentinel satellite data, weather,
 mobility and land use into one loop — *who is to blame for PM2.5 in each ~1 km² cell, what the air
 will be in 72 hours, which enforcement action to take, and how to warn the people breathing it.*
 
@@ -41,7 +41,7 @@ switch the language to Hindi → *IVR call* tab.
 Plus a Swachh-Vayu-style **10-city ranking**, a cited what-if **simulator** with an inspector-hour
 optimizer, a health-₹ **impact** view with attribution-weighted NCAP fund guidance and a fairness
 audit, a **citizen complaint loop** (photo → verified → enforcement candidate, public SLA clock),
-PRANA-ready **NCAP evidence export**, a live **pipeline** trace of all six agents (typical
+PRANA-ready **NCAP evidence export**, a live **pipeline** trace of every agent that ran (typical
 signal→cited-recommendation: **0.8–9.7 s** compute, measured; the officer's review and the field dispatch are tracked separately), and map layers for wind plumes, wards, freight
 corridors and FIRMS fire events.
 

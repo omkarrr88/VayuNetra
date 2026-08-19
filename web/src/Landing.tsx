@@ -67,7 +67,7 @@ const FEATURES = [
   { icon: IC.leaf, title: "Clean-air zones", body: "The flip side of the blame map: the cleanest ~1 km cells right now, computed from the dense coverage field, with one-tap directions." },
   { icon: IC.globe, title: "Multi-city, config-driven", body: "10 cities live today — Delhi, Bengaluru, Mumbai, Hyderabad, Chennai, Kolkata, Pune, Ahmedabad, Jaipur, Lucknow — with cross-city playbooks. Seven were onboarded from config in one week; every layer is city-agnostic." },
   { icon: IC.megaphone, title: "Citizen channels", body: "Eight languages in their own scripts — Hindi, Kannada, Marathi, Tamil, Telugu, Bengali, Gujarati, English — over PWA, a Telegram bot judges can subscribe to live (/start), IVR voice calls and a public-display mode." },
-  { icon: IC.chip, title: "Visible multi-agent pipeline", body: "Six agents on one LangGraph with per-node latency stamps. A 'Run agents live' button replays the whole detect → decide → issue chain on stage." },
+  { icon: IC.chip, title: "Visible multi-agent pipeline", body: "Five agents on one LangGraph with per-node latency stamps, plus a spike gate that decides whether enforcement should run at all. A 'Run agents live' button replays the whole detect → decide → issue chain on stage — including the gate skipping enforcement when the air is clean." },
   { icon: IC.doc, title: "Honest by construction", body: "Attribution abstains without out-of-sample skill; intervals are calibrated; fairness is audited on live data; demo fixtures are labeled as fixtures. Nothing fabricated." },
 ];
 
@@ -79,7 +79,7 @@ const VALIDATION: Array<[string, string, string]> = [
   ["Uncertainty is calibrated", "80% band → 78% measured · P(>120) Brier skill +51%", "conformal calibration; exceedance probabilities on every cell forecast drive the alarms"],
   ["Enforcement is equitable", "no socio-economic inputs, by construction", "fairness audit on every live recommendation (n=390 at the July audit)"],
   ["Model choice was earned", "TFT trained on GPU — and rejected", "LightGBM won every launch city on held-out skill"],
-  ["The loop is fast", "seconds from signal to cited recommendation", "live per-node agent traces; approval, dispatch and closure timestamped per action"],
+  ["The loop is fast", "seconds from signal to cited recommendation", "measured pipeline latency with live per-node agent traces — the time to PRODUCE the recommendation, not a municipality's response time; approval, dispatch and closure are timestamped per action"],
 ];
 
 const DATA_SOURCES = ["CPCB / CAAQMS", "Sentinel-5P", "Sentinel-2", "Open-Meteo · ERA5", "NASA FIRMS", "OpenStreetMap", "GPW v4.11"];
@@ -437,7 +437,7 @@ export default function Landing() {
         <div className="mx-auto max-w-6xl px-6 py-16">
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-sky-700">Architecture</p>
           <h2 className="mt-3 max-w-2xl text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-            Two seams. Six agents. Zero blocking.
+            Two seams. Five agents and a gate. Zero blocking.
           </h2>
           <p className="mt-3 max-w-2xl text-[15px] text-slate-600">
             Everything decouples through the Supabase schema and the API contract: models write rows, the API
