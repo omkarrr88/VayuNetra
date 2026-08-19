@@ -1,6 +1,6 @@
 # Forecast benchmark — kolkata (hist)
 
-Window 2025-02-18 → 2026-08-15, test from **2025-11-01** (rolling-origin monthly refit, 90-day training window; train strictly before each test origin). 10 station cells, 114,182 hourly rows. Model: LightGBM quantile (median) — same class/params as production (ml.forecast.train). Generated 2026-08-19T12:13Z by `python -m ml.eval.benchmark`.
+Window 2025-02-18 → 2026-08-15, test from **2025-11-01** (rolling-origin monthly refit, 90-day training window; train strictly before each test origin). 10 station cells, 114,182 hourly rows. Model: LightGBM quantile (median) — same class/params as production (ml.forecast.train). Generated 2026-08-19T13:17Z by `python -m ml.eval.benchmark`.
 
 ## RMSE (µg/m³) on the shared support mask
 
@@ -92,6 +92,22 @@ Blend weights (w on model, chosen per training origin on its calibration tail): 
 - **+24h**: 80% PI empirical coverage 0.749 (mean width 51.3 µg/m³); P(>90) Brier 0.0678 vs climatology 0.1402 (skill +51.6%); P(>120) Brier 0.0441 vs climatology 0.0726 (skill +39.3%); P(>250) Brier 0.0034 vs climatology 0.0034 (skill +0.5%)
 - **+48h**: 80% PI empirical coverage 0.725 (mean width 58.4 µg/m³); P(>90) Brier 0.0846 vs climatology 0.1407 (skill +39.9%); P(>120) Brier 0.0532 vs climatology 0.073 (skill +27.2%); P(>250) Brier 0.0036 vs climatology 0.0035 (skill -2.8%)
 - **+72h**: 80% PI empirical coverage 0.699 (mean width 60.8 µg/m³); P(>90) Brier 0.0871 vs climatology 0.1417 (skill +38.5%); P(>120) Brier 0.0559 vs climatology 0.0733 (skill +23.8%); P(>250) Brier 0.0036 vs climatology 0.0035 (skill -3.0%)
+
+### Coverage by predicted level
+
+Grouped by *predicted* PM2.5, not observed — at forecast time the outcome is exactly
+what we do not have, so this is the only breakdown a served band can be held to.
+Every cell should read ~0.80; the worst in each row is bolded.
+
+| horizon | Q1 lowest | Q2 | Q3 | Q4 | Q5 highest | overall |
+|---|---|---|---|---|---|---|
+| +24h | 0.803 | 0.778 | 0.761 | **0.668** | 0.733 | 0.749 |
+| +48h | 0.799 | 0.793 | 0.725 | **0.62** | 0.687 | 0.725 |
+| +72h | 0.812 | 0.785 | 0.649 | **0.547** | 0.699 | 0.699 |
+
+- +24h quintile edges (µg/m³): 8.5 · 24.8 · 37.9 · 56.4 · 75.8 · 244.7
+- +48h quintile edges (µg/m³): 10.5 · 25.8 · 36.9 · 53.5 · 69.5 · 270.8
+- +72h quintile edges (µg/m³): 11.7 · 25.9 · 36.5 · 55.9 · 72.5 · 232.2
 
 ## Meteorology ablation
 

@@ -100,9 +100,13 @@ def test_conditional_coverage_groups_by_predicted_level():
 
 
 def test_conditional_coverage_refuses_to_split_thin_data():
-    """A quintile of forty rows estimates 0.80 to about ±0.13 — better to report nothing."""
+    """Below ~400 rows a bin the cells are noise, and the live benchmark already proved once that
+    a small-sample coverage number gets over-read. Better to report nothing."""
     import numpy as np
-    from ml.eval.benchmark import _conditional_coverage
+    from ml.eval.benchmark import MIN_ROWS_PER_COVERAGE_BIN, _conditional_coverage
 
     rng = np.random.default_rng(1)
-    assert _conditional_coverage(rng.uniform(5, 200, 200), rng.random(200) < 0.8) is None
+    thin = 5 * MIN_ROWS_PER_COVERAGE_BIN - 1
+    assert _conditional_coverage(rng.uniform(5, 200, thin), rng.random(thin) < 0.8) is None
+    # the single-origin live artifacts sit well under the bar and must not gain a table
+    assert _conditional_coverage(rng.uniform(5, 200, 929), rng.random(929) < 0.8) is None

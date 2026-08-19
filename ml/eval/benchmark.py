@@ -114,14 +114,20 @@ def _slice_metrics(y, preds: dict[str, np.ndarray], mask: np.ndarray) -> dict:
     return out
 
 
+MIN_ROWS_PER_COVERAGE_BIN = 400
+
+
 def _conditional_coverage(level: np.ndarray, inside: np.ndarray, bins: int = 5) -> list[dict] | None:
     """Coverage within each quintile of the PREDICTED level.
 
-    Returns None rather than a misleading table when there is too little to split; a quintile of
-    forty rows estimates 0.80 to about +/-0.13 and would invite conclusions it cannot support.
+    Returns None rather than a misleading table when there is too little to split. At 400 rows a
+    bin, 0.80 carries a standard error of about 0.02 — tight enough that a 0.67 means something.
+    Below that the table would invite exactly the over-reading that the single-origin live
+    benchmark already caused once: a few hundred rows swing on regime luck, and splitting them
+    five ways makes each cell noisier still.
     """
     n = len(level)
-    if n < bins * 100:
+    if n < bins * MIN_ROWS_PER_COVERAGE_BIN:
         return None
     edges = np.quantile(level, np.linspace(0, 1, bins + 1))
     out = []
@@ -476,6 +482,31 @@ def to_markdown(res: dict) -> str:
         L.append(f"- **+{h['horizon_h']}h**: 80% PI empirical coverage {c.get('pi80_coverage')} (mean width {c.get('pi80_mean_width')} µg/m³); "
                  + "; ".join(f"P(>{int(c[b]['threshold'])}) Brier {c[b]['brier_model']} vs climatology {c[b]['brier_climatology']} (skill {_pct(c[b]['brier_skill'])})"
                              for b in THRESHOLDS if b in c))
+    # The marginal number is the one that hides the failure, so the breakdown goes next to it —
+    # a reader who only opens the .md must see both or neither. The quintile edges are computed per
+    # horizon and differ by a few ug/m3 between them, so they are listed per row rather than used
+    # as shared column headers, which would silently mislabel every row but the first.
+    if any(h["calibration"].get("pi80_coverage_by_predicted_quintile") for h in res["horizons"]):
+        L += ["", "### Coverage by predicted level", "",
+              "Grouped by *predicted* PM2.5, not observed — at forecast time the outcome is exactly",
+              "what we do not have, so this is the only breakdown a served band can be held to.",
+              "Every cell should read ~0.80; the worst in each row is bolded.", "",
+              "| horizon | Q1 lowest | Q2 | Q3 | Q4 | Q5 highest | overall |",
+              "|---|---|---|---|---|---|---|"]
+        edges_note = []
+        for h in res["horizons"]:
+            c = h["calibration"]
+            rows = c.get("pi80_coverage_by_predicted_quintile")
+            if not rows:
+                continue
+            worst = min(r["coverage"] for r in rows)
+            cells = " | ".join(f"**{r['coverage']}**" if r["coverage"] == worst else f"{r['coverage']}"
+                               for r in rows)
+            L.append(f"| +{h['horizon_h']}h | {cells} | {c.get('pi80_coverage')} |")
+            bounds = [rows[0]["predicted_range"][0]] + [r["predicted_range"][1] for r in rows]
+            edges_note.append(f"- +{h['horizon_h']}h quintile edges (µg/m³): "
+                              + " · ".join(str(b) for b in bounds))
+        L += [""] + edges_note
     L += ["", "## Meteorology ablation", ""]
     for h in res["horizons"]:
         a = h.get("ablation_no_meteorology")
