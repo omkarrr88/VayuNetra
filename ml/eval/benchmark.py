@@ -98,19 +98,53 @@ def _r(x, nd: int = 3):
     return round(f, nd) if math.isfinite(f) else None
 
 
+SKILL_BOOTSTRAP = 600          # resamples; enough for a stable 95% interval, cheap enough to always run
+MIN_ROWS_FOR_SKILL_CI = 100
+
+
+def _skill_ci(yv: np.ndarray, pred: np.ndarray, pers: np.ndarray,
+              seed: int = 0) -> list[float] | None:
+    """Percentile bootstrap 95% interval for skill = 1 − RMSE_model / RMSE_persistence.
+
+    A point skill on a few hundred rows carries roughly ±0.10, which is wider than several of the
+    per-city numbers we report. Without the interval, "Jaipur is −4%" reads as a finding when it is
+    indistinguishable from zero, and it invites tuning against noise — which it did.
+    """
+    n = len(yv)
+    if n < MIN_ROWS_FOR_SKILL_CI:
+        return None
+    rng = np.random.default_rng(seed)
+    out = []
+    for _ in range(SKILL_BOOTSTRAP):
+        i = rng.integers(0, n, n)
+        rp = rmse(yv[i], pers[i])
+        if rp:
+            out.append(1.0 - rmse(yv[i], pred[i]) / rp)
+    if not out:
+        return None
+    lo, hi = np.percentile(out, [2.5, 97.5])
+    return [_r(float(lo)), _r(float(hi))]
+
+
 def _slice_metrics(y, preds: dict[str, np.ndarray], mask: np.ndarray) -> dict:
     n = int(mask.sum())
     if n == 0:
         return {"n": 0}
     out = {"n": n}
     yv = y[mask]
-    rp = rmse(yv, preds["persistence"][mask])
+    pers = preds["persistence"][mask]
+    rp = rmse(yv, pers)
     for name, arr in preds.items():
         rm = rmse(yv, arr[mask])
         out[f"rmse_{name}"] = _r(rm, 2)
         out[f"mae_{name}"] = _r(np.mean(np.abs(yv - arr[mask])), 2)
         if name != "persistence":
             out[f"skill_{name}_vs_persistence"] = _r(1 - rm / rp) if rp else None
+            ci = _skill_ci(yv, arr[mask], pers) if rp else None
+            if ci is not None:
+                out[f"skill_{name}_vs_persistence_ci95"] = ci
+                # the one thing a reader most needs to know about a per-city skill number
+                out[f"skill_{name}_beats_persistence"] = bool(ci[0] > 0)
     return out
 
 

@@ -110,3 +110,47 @@ def test_conditional_coverage_refuses_to_split_thin_data():
     assert _conditional_coverage(rng.uniform(5, 200, thin), rng.random(thin) < 0.8) is None
     # the single-origin live artifacts sit well under the bar and must not gain a table
     assert _conditional_coverage(rng.uniform(5, 200, 929), rng.random(929) < 0.8) is None
+
+
+# ---------------------------------------------------------------- skill uncertainty
+# Per-city skill is reported on a few hundred single-origin rows, where the interval is roughly
+# ±0.10 — wider than several of the numbers themselves. Jaipur's "−4% / −14%" was read as a finding
+# and nearly tuned against; bootstrapping shows every Jaipur horizon spans zero.
+
+def test_skill_ci_brackets_the_point_estimate():
+    import numpy as np
+    from ml.eval.benchmark import _skill_ci, rmse
+
+    rng = np.random.default_rng(0)
+    n = 800
+    y = rng.normal(60, 25, n)
+    pers = y + rng.normal(0, 20, n)
+    pred = y + rng.normal(0, 14, n)          # genuinely better than persistence
+    point = 1 - rmse(y, pred) / rmse(y, pers)
+    lo, hi = _skill_ci(y, pred, pers)
+    assert lo < point < hi
+    assert lo > 0, "a model this much better should be distinguishable from persistence"
+
+
+def test_a_model_no_better_than_persistence_spans_zero():
+    """The Jaipur case: the interval must be allowed to say 'we cannot tell'."""
+    import numpy as np
+    from ml.eval.benchmark import _skill_ci
+
+    rng = np.random.default_rng(1)
+    n = 400
+    y = rng.normal(60, 25, n)
+    pers = y + rng.normal(0, 18, n)
+    pred = y + rng.normal(0, 18, n)          # same accuracy, different draws
+    lo, hi = _skill_ci(y, pred, pers)
+    assert lo < 0 < hi, f"expected to span zero, got [{lo}, {hi}]"
+
+
+def test_no_interval_is_offered_for_a_sample_too_small_to_support_one():
+    import numpy as np
+    from ml.eval.benchmark import MIN_ROWS_FOR_SKILL_CI, _skill_ci
+
+    rng = np.random.default_rng(2)
+    n = MIN_ROWS_FOR_SKILL_CI - 1
+    y = rng.normal(60, 25, n)
+    assert _skill_ci(y, y + rng.normal(0, 5, n), y + rng.normal(0, 9, n)) is None

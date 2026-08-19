@@ -82,9 +82,12 @@ what anyone does. Seven conformity scores were compared and none closed it (best
 quintile 0.615 → 0.646), because what fails is *conditional* coverage and split conformal only ever
 promised *marginal*. Delhi has no such gap (worst quintile 0.704), so it is one city's model rather
 than the method — and the breakdown is what makes those two cases distinguishable. Calibrated
-P(>120) on every forecast (Brier skill +51% vs climatology at 24 h). Live 90-day benchmarks exist
-for all 10 cities, but their PI coverage is computed over a few hundred single-origin rows and
-swings on regime luck — read the rolling artifacts for calibration.
+P(>120) on every forecast (Brier skill +51% vs climatology at 24 h). A recent-window benchmark exists for all
+10 cities, but read it carefully: it is **not** 90 days everywhere — live ingestion started at
+different dates, so the window is 90 days for Bengaluru, 60 for Delhi and about 38 for the other
+seven, and every artifact carries its own `window` rather than a shared label. Its PI coverage is
+computed over a few hundred single-origin rows and swings on regime luck; the rolling multi-season
+artifacts are the ones to read for calibration.
 
 *skill = 1 − RMSE_model / RMSE_baseline. Negative numbers are kept — the Delhi 24 h and Severe-tail weak spots ship too.*
 

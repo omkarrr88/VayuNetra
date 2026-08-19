@@ -191,7 +191,10 @@ change. That contrast is the strongest forecasting line we have.
 
 **Recent window** (`*_live.json`, monsoon, Jun–Aug 2026) — all ten cities. The column is
 `n_support`, the rows coverage is actually computed over, not the larger `n_test`. Regenerated in
-full on 19 Aug. **The PI80 column here is unstable by construction** — see problem 2 below:
+full on 19 Aug. Two cautions before reading it: **the PI80 column is unstable by construction** (see
+problem 2), and **this is not a 90-day window for most cities** — live ingestion started on different
+dates, giving Bengaluru 90 days, Delhi 60 and the other seven about 38, so each artifact carries its
+own `window` instead of a shared label:
 
 | city | n_support | +24h | +48h | +72h | PI80 coverage |
 |---|---|---|---|---|---|
@@ -207,11 +210,30 @@ full on 19 Aug. **The PI80 column here is unstable by construction** — see pro
 | hyderabad | 494 | **-5%** | +5% | +24% | 0.719 |
 
 Four honest problems, all of which we ship rather than hide:
-1. **Two cities are negative against persistence in this window.** Jaipur at +48/+72 h (−4%, −14%)
-   and, as of the 19 Aug regeneration, **Hyderabad at +24 h (−5%)** — it was +11% on 17 Aug. In a
-   monsoon window PM2.5 is low and strongly autocorrelated, which is the regime persistence is
-   hardest to beat in; the multi-season benchmark does not show this. It is still a loss and we
-   report it as one.
+1. **Jaipur loses to persistence, and now we can prove it is not noise.** *(19 Aug)* Per-city skill
+   is measured on a few hundred rows, where the sampling interval is roughly ±0.10 — wider than
+   several of the numbers we print. So every skill figure now ships with a percentile-bootstrap 95%
+   interval and a `beats_persistence` boolean. Jaipur:
+
+   | horizon | skill | 95% CI | beats persistence? |
+   |---|---|---|---|
+   | +24 h | −0.160 | [−0.250, −0.058] | no |
+   | +48 h | −0.100 | [−0.189, −0.002] | no |
+   | +72 h | −0.314 | [−0.442, −0.188] | no |
+
+   All three intervals lie entirely below zero, so this is a real deficit rather than a small
+   sample. Hyderabad is negative at +24 h and clearly positive at +72 h (+0.213, [+0.116, +0.313]);
+   Delhi is positive at every horizon with intervals well clear of zero.
+
+   **A likely cause, not yet a fix.** The served value is `w·model + (1−w)·persistence` with `w`
+   chosen to minimise RMSE on one recent calibration tail. Five of the ten cities land at or near
+   `w = 1.0` — the pure-model corner, where the persistence baseline contributes nothing — and
+   Jaipur does so at exactly the horizons it loses, while Delhi sits at 0.65–0.9 and wins. Capping
+   `w` looked like it rescued Jaipur in a first experiment, but that experiment was confounded:
+   live ingestion backfilled underneath it (Jaipur's support rows went 299 → 597 between runs) and
+   one reported weight was inconsistent with the cap being applied at all. **The benchmark itself is
+   deterministic on fixed data — verified by running it twice — so this is worth re-running cleanly
+   against a frozen snapshot before anything ships.** Recorded here rather than quietly shipped.
 2. **PI80 in this column is not a calibration measurement — do not read it as one.** *(revised
    19 Aug after chasing it)* The live protocol is a single split at one forecast origin, and its PI
    coverage is computed over `n_support` rows only: **282** for Delhi +24 h, against an `n_test` of

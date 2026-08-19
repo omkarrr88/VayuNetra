@@ -60,6 +60,9 @@ type ChartPoint = { h: string; avg: number; band: [number, number]; pers: number
 type BenchSummary = {
   source: "hist" | "live";
   generated_at: string;
+  // the artifact's own window — live ingestion started on different dates per city, so a shared
+  // "90-day" label was wrong for eight of the ten
+  window?: { start?: string; end?: string; split?: string };
   headline: { horizon_h: number; n_test: number; skill_vs_persistence: number | null; skill_vs_seasonal_naive: number | null; pi80_coverage: number | null }[];
 };
 
@@ -154,7 +157,7 @@ export default function ForecastPanel({ city }: { city: string }) {
       {bh ? (
         <div
           className="mt-2 rounded-md bg-indigo-50 px-2 py-1 text-[11px] leading-4 text-indigo-800"
-          title={`Temporal-split benchmark (${bench?.source === "hist" ? "multi-season history" : "live 90-day window"}, n=${bh.n_test} test hours) recomputed ${bench?.generated_at.slice(0, 10)}. skill = 1 − RMSE_model/RMSE_baseline`}
+          title={`Temporal-split benchmark (${bench?.source === "hist" ? "multi-season history" : `live window ${bench?.window?.start?.slice(0, 10) ?? "?"} → ${bench?.window?.end?.slice(0, 10) ?? "?"}`}, n=${bh.n_test} test hours) recomputed ${bench?.generated_at.slice(0, 10)}. skill = 1 − RMSE_model/RMSE_baseline`}
         >
           measured skill @{horizon}h: <b>{pct(bh.skill_vs_persistence ?? undefined)}</b> vs persistence ·{" "}
           <b>{pct(bh.skill_vs_seasonal_naive ?? undefined)}</b> vs seasonal-naive

@@ -1,28 +1,28 @@
 # Forecast benchmark — lucknow (live)
 
-Window 2026-07-12 → 2026-08-19, test from **2026-08-09** (single temporal split; train strictly before each test origin). 5 station cells, 4,123 hourly rows. Model: LightGBM quantile (median) — same class/params as production (ml.forecast.train). Generated 2026-08-19T11:51Z by `python -m ml.eval.benchmark`.
+Window 2026-07-12 → 2026-08-19, test from **2026-08-09** (single temporal split; train strictly before each test origin). 5 station cells, 4,134 hourly rows. Model: LightGBM quantile (median) — same class/params as production (ml.forecast.train). Generated 2026-08-19T14:52Z by `python -m ml.eval.benchmark`.
 
 ## RMSE (µg/m³) on the shared support mask
 
 | regime | h | n | persistence | seasonal-naive | climatology | **model (served: blended)** | skill vs persistence | raw LightGBM | raw skill |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| full_test | 24 | 354 | 21.93 | 24.85 | 16.79 | **16.15** | +26.4% | 16.15 | +26.4% |
-| non_winter | 24 | 354 | 21.93 | 24.85 | 16.79 | **16.15** | +26.4% | 16.15 | +26.4% |
-| full_test | 48 | 300 | 19.57 | 26.04 | 16.99 | **16.87** | +13.8% | 17.03 | +13.0% |
-| non_winter | 48 | 300 | 19.57 | 26.04 | 16.99 | **16.87** | +13.8% | 17.03 | +13.0% |
-| full_test | 72 | 220 | 21.91 | 19.87 | 15.21 | **14.55** | +33.6% | 14.31 | +34.7% |
-| non_winter | 72 | 220 | 21.91 | 19.87 | 15.21 | **14.55** | +33.6% | 14.31 | +34.7% |
+| full_test | 24 | 523 | 20.5 | 24.5 | 16.27 | **15.19** | +25.9% | 15.3 | +25.4% |
+| non_winter | 24 | 523 | 20.5 | 24.5 | 16.27 | **15.19** | +25.9% | 15.3 | +25.4% |
+| full_test | 48 | 476 | 20.44 | 25.29 | 16.63 | **16.74** | +18.1% | 16.77 | +18.0% |
+| non_winter | 48 | 476 | 20.44 | 25.29 | 16.63 | **16.74** | +18.1% | 16.77 | +18.0% |
+| full_test | 72 | 374 | 22.9 | 20.68 | 15.2 | **15.58** | +32.0% | 15.45 | +32.5% |
+| non_winter | 72 | 374 | 22.9 | 20.68 | 15.2 | **15.58** | +32.0% | 15.45 | +32.5% |
 
-Blend weights (w on model, chosen per training origin on its calibration tail): +24h [1.0]; +48h [0.9]; +72h [0.9]
+Blend weights (w on model, chosen per training origin on its calibration tail): +24h [0.95]; +48h [0.85]; +72h [0.95]
 
 ## High-pollution hours only (observed PM2.5 above band)
 
 | band | h | n | persistence | seasonal-naive | **model** | skill vs persistence |
 |---|---:|---:|---:|---:|---:|---:|
-| observed_over_90 | 24 | 1 | 160.0 | 158.75 | **156.58** | +2.1% |
-| observed_over_120 | 24 | 1 | 160.0 | 158.75 | **156.58** | +2.1% |
-| observed_over_90 | 48 | 1 | 140.2 | 158.75 | **150.64** | -7.4% |
-| observed_over_120 | 48 | 1 | 140.2 | 158.75 | **150.64** | -7.4% |
+| observed_over_90 | 24 | 1 | 160.0 | 158.75 | **154.49** | +3.4% |
+| observed_over_120 | 24 | 1 | 160.0 | 158.75 | **154.49** | +3.4% |
+| observed_over_90 | 48 | 1 | 140.2 | 158.75 | **150.68** | -7.5% |
+| observed_over_120 | 48 | 1 | 140.2 | 158.75 | **150.68** | -7.5% |
 
 ## Probability alarms — alarm = P(> band) ≥ τ (operating points on the calibrated probability)
 
@@ -81,9 +81,9 @@ Blend weights (w on model, chosen per training origin on its calibration tail): 
 
 ## Calibration
 
-- **+24h**: 80% PI empirical coverage 0.766 (mean width 31.2 µg/m³); P(>90) Brier 0.0029 vs climatology 0.0028 (skill -1.2%); P(>120) Brier 0.0028 vs climatology 0.0028 (skill -0.5%); P(>250) Brier 0.0 vs climatology 0.0 (skill –)
-- **+48h**: 80% PI empirical coverage 0.803 (mean width 33.8 µg/m³); P(>90) Brier 0.0033 vs climatology 0.0033 (skill -0.1%); P(>120) Brier 0.0033 vs climatology 0.0033 (skill -0.0%); P(>250) Brier 0.0 vs climatology 0.0 (skill –)
-- **+72h**: 80% PI empirical coverage 0.836 (mean width 39.6 µg/m³); P(>90) Brier 0.0 vs climatology 0.0 (skill –); P(>120) Brier 0.0 vs climatology 0.0 (skill –); P(>250) Brier 0.0 vs climatology 0.0 (skill –)
+- **+24h**: 80% PI empirical coverage 0.746 (mean width 31.2 µg/m³); P(>90) Brier 0.002 vs climatology 0.0019 (skill -2.6%); P(>120) Brier 0.0019 vs climatology 0.0019 (skill -1.1%); P(>250) Brier 0.0 vs climatology 0.0 (skill –)
+- **+48h**: 80% PI empirical coverage 0.691 (mean width 29.9 µg/m³); P(>90) Brier 0.0021 vs climatology 0.0021 (skill -0.5%); P(>120) Brier 0.0021 vs climatology 0.0021 (skill -0.0%); P(>250) Brier 0.0 vs climatology 0.0 (skill –)
+- **+72h**: 80% PI empirical coverage 0.783 (mean width 34.4 µg/m³); P(>90) Brier 0.0 vs climatology 0.0 (skill –); P(>120) Brier 0.0 vs climatology 0.0 (skill –); P(>250) Brier 0.0 vs climatology 0.0 (skill –)
 
 ## Meteorology ablation
 
