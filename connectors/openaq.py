@@ -231,6 +231,8 @@ def fetch_city(
                     out.append(buckets[k].pop(0))
         return out
 
+    reserves: dict[tuple[str, tuple[int, int]], list[dict]] = {}
+
     by_var: dict[str, list[dict]] = {}
     for s in sensors:
         by_var.setdefault(s["variable"], []).append(s)
@@ -238,6 +240,11 @@ def fetch_city(
     picked: list[dict] = []
     for var in sorted(by_var):
         take = _spread(by_var[var], quota)
+        # whatever the spread did not take, kept by (pollutant, sector) so a sensor that turns out
+        # to return nothing can be replaced by another one covering the same part of the city
+        for cand in by_var[var]:
+            if cand not in take:
+                reserves.setdefault((var, _sector(cand)), []).append(cand)
         picked.extend(take)
         if len(by_var[var]) > len(take):
             print(f"  {var:5s}: {len(by_var[var])} sensors available, taking {len(take)}")
@@ -252,8 +259,28 @@ def fetch_city(
     records: list[dict] = []
     for i, sensor in enumerate(sensors, 1):
         recs = fetch_sensor_hourly(sensor, since, date_to)
+        # A sensor can advertise a recent `last` and still return nothing for the window — OpenAQ
+        # keeps entries whose history is not retrievable. Selecting purely on recency therefore
+        # spent a sector's whole slot on a dud: western Delhi was picked correctly and still landed
+        # no rows, while another sensor at the SAME site returned 68 points and was never tried.
+        # So an empty result falls through to the next candidate covering that part of the city.
+        tries = 0
+        while not recs and tries < 3:
+            pool = reserves.get((sensor["variable"], _sector(sensor)), [])
+            if not pool:
+                break
+            alt = pool.pop(0)
+            tries += 1
+            recs = fetch_sensor_hourly(alt, since, date_to)
+            if recs:
+                print(f"    [{i}/{len(sensors)}] {sensor['variable']:5s} sensor {sensor['sensor_id']}: "
+                      f"0 pts -> fell through to {alt['sensor_id']}: {len(recs)} pts")
+                sensor = alt
         records.extend(recs)
-        print(f"    [{i}/{len(sensors)}] {sensor['variable']:5s} sensor {sensor['sensor_id']}: {len(recs)} pts")
+        if recs and tries == 0:
+            print(f"    [{i}/{len(sensors)}] {sensor['variable']:5s} sensor {sensor['sensor_id']}: {len(recs)} pts")
+        elif not recs:
+            print(f"    [{i}/{len(sensors)}] {sensor['variable']:5s} sensor {sensor['sensor_id']}: no data in window")
     return rows_from_records(city_id, records, cfg.get("h3_res", 8))
 
 
