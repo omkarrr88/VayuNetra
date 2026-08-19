@@ -19,6 +19,12 @@ type Tracked = {
 
 type Data = { tracked: Tracked[]; note?: string };
 
+const STATUS_LABEL: Record<Tracked["status"], string> = {
+  measuring: "Measuring",
+  provisional: "Provisional",
+  measured: "Measured",
+};
+
 export default function InterventionsPanel({ city }: { city: string }) {
   const [d, setD] = useState<Data | null>(null);
   const [tick, setTick] = useState(0);
@@ -75,7 +81,7 @@ export default function InterventionsPanel({ city }: { city: string }) {
                       : "bg-amber-100 text-amber-800"
                   }`}
                 >
-                  {t.status}
+                  {STATUS_LABEL[t.status]}
                 </span>
               </div>
               <div className="mt-1 text-slate-600">

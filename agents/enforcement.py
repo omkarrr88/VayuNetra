@@ -13,6 +13,7 @@ Each recommendation is written to the ``enforcement_recs`` table (or DEMO fixtur
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 from dataclasses import dataclass, field
@@ -21,6 +22,8 @@ from pathlib import Path
 from typing import Optional
 
 import core.env  # noqa: F401
+
+logger = logging.getLogger(__name__)
 
 DEMO_MODE = os.getenv("DEMO_MODE", "true").lower() == "true"
 FIXTURES = Path(__file__).resolve().parent.parent / "demo" / "fixtures"
@@ -153,6 +156,139 @@ _ACTIONABILITY = {
     "transported": 0.20,          # largely unactionable locally
     "other": 0.40,
 }
+
+
+# ---------------------------------------------------------------------------- value per inspector-hour
+#
+# The priority score answers "how big is this source". It does not answer the question an officer
+# with four site visits in a day actually has: "where is my next hour best spent?" That needs three
+# things the priority score leaves out — what an inspection COSTS, whether the cell is even heading
+# for trouble, and how much of the estimate we are willing to bet on.
+#
+# ASSUMPTION, stated because it is not measured: inspector-hours per source category. These are the
+# team's estimates of what each action actually requires, not observed figures from any board. They
+# are surfaced on the card and in the API so a reviewer can disagree with the number rather than
+# with a hidden constant, and an officer can replace them with their own.
+INSPECTOR_HOURS: dict[str, float] = {
+    "biomass_burning": 1.0,     # visit, order cessation, done
+    "construction_dust": 2.0,   # site visit; visual check against the dust-suppression norms
+    "other": 4.0,
+    "traffic": 6.0,             # corridor survey, and needs traffic-police coordination
+    "industrial": 8.0,          # stack test, consent-to-operate check, a follow-up visit
+    "transported": 12.0,        # largely outside local jurisdiction — inter-state coordination
+}
+
+# The pessimistic share is simply the share the model is confident in: share x confidence. No tuning
+# constant, and one sentence explains it — "we count only the part of the estimate we would bet on".
+# That makes the ranking RISK-AVERSE: at confidence 0.4 a 60% share counts for 24%, so a 30% share we
+# are 95% sure of outranks it. Spending a calibrated confidence this way is the point of having one.
+
+# The band the urgency weight is about: P(PM2.5 > 120 µg/m³) is the calibrated exceedance probability
+# stored on every cell forecast (split-conformal, held-out residuals).
+EXCEEDANCE_HORIZONS = (24, 48)
+
+# Urgency is a MULTIPLIER on baseline benefit, not the whole of it.
+#
+# Multiplying benefit by P(exceed) outright would say pollution matters only above 120 µg/m³ — which
+# contradicts the health science this product quotes everywhere else (WHO 2021: no threshold below
+# which PM2.5 is known to be safe), and in the monsoon, when P(>120) is ~0.001 across Delhi, it
+# collapses every score to nearly zero and the ranking stops discriminating at all.
+#
+# So: reducing exposure always has value, linear in µg/m³ x people, and a cell heading for Very Poor
+# is worth up to four times as much — because that is where the acute health risk and the officer's
+# statutory obligation both spike.
+URGENCY_WEIGHT = 3.0
+
+
+def _compute_value(
+    share: float,
+    confidence: float,
+    pop_exposed: int,
+    source_category: str,
+    pm25_low: float | None,
+    p_exceed: float | None,
+) -> dict:
+    """Conservative exposure reduction per inspector-hour, with every term exposed.
+
+    benefit = (share x confidence) x pm25_low x people x (1 + 3 x P(exceed))
+    value   = benefit / inspector_hours          [person-µg/m³ avoided per inspector-hour]
+
+    `pm25_low` is the conformal LOWER bound of the cell's +24 h forecast — a calibrated bound, not a
+    guess — so the benefit is what acting is worth even if the forecast lands at the bottom of its
+    interval. `p_exceed` is the calibrated probability the cell crosses Very Poor within two days:
+    a big source in a cell that will be fine anyway is not where the hour should go.
+
+    Returns None-valued fields rather than substituting numbers when the forecast is missing, so the
+    card can say the ranking fell back instead of showing a figure with nothing behind it.
+    """
+    hours = INSPECTOR_HOURS.get(source_category, 4.0)
+    share_low = max(0.0, share * min(max(confidence, 0.0), 1.0))
+    if pm25_low is None or p_exceed is None:
+        return {
+            "value_per_hour": None,
+            "share_low": round(share_low, 4),
+            "inspector_hours": hours,
+            "basis": "no cell forecast — ranked by priority score",
+            "assumption": "inspector-hours are the team's estimate, not a measured figure",
+        }
+    delta_low = share_low * float(pm25_low)                  # µg/m³ this source is conservatively due
+    urgency = 1.0 + URGENCY_WEIGHT * min(max(float(p_exceed), 0.0), 1.0)
+    benefit = delta_low * max(pop_exposed, 0) * urgency
+    return {
+        "value_per_hour": round(benefit / hours, 2),
+        "urgency_x": round(urgency, 2),
+        "benefit_person_ugm3": round(benefit, 1),
+        "delta_pm25_low": round(delta_low, 2),
+        "share_low": round(share_low, 4),
+        "pm25_low": round(float(pm25_low), 1),
+        "p_exceed": round(float(p_exceed), 3),
+        "inspector_hours": hours,
+        "basis": "conformal lower bound of the +24 h forecast, scaled by 1 + 3 x calibrated P(>120 µg/m³)",
+        "assumption": "inspector-hours are the team's estimate, not a measured figure",
+    }
+
+
+def _cell_forecast_index(rows: list[dict]) -> dict[str, dict]:
+    """Newest forecast per (cell, horizon): the +24 h conformal lower bound, and the worst
+    exceedance probability across the horizons we act on.
+
+    Keyed per HORIZON, not per cell. The forecast writer stamps each horizon's batch a few seconds
+    apart, so a cell's three horizons carry three different `issued_at` values — taking "the newest
+    issue for this cell" selected only the +72 h batch and then discarded it for being the wrong
+    horizon, which silently left every recommendation without a value. Per-horizon is also the
+    correct semantic: the latest forecast for this cell at this horizon.
+    """
+    newest: dict[tuple[str, int], tuple[str, dict]] = {}
+    for r in rows:
+        cell = r.get("h3_cell")
+        if not cell:
+            continue
+        try:
+            h = int(r.get("horizon_h") or 0)
+        except (TypeError, ValueError):
+            continue
+        if h not in EXCEEDANCE_HORIZONS:
+            continue
+        issued = str(r.get("issued_at") or "")
+        key = (cell, h)
+        if key not in newest or issued > newest[key][0]:
+            newest[key] = (issued, r)
+
+    out: dict[str, dict] = {}
+    for (cell, h), (_issued, r) in newest.items():
+        slot = out.setdefault(cell, {"pm25_low": None, "p_exceed": None})
+        if h == 24 and r.get("pi_low") is not None:
+            try:
+                slot["pm25_low"] = max(0.0, float(r["pi_low"]))
+            except (TypeError, ValueError):
+                pass
+        if r.get("p_over_120") is not None:
+            try:
+                p = float(r["p_over_120"])
+                slot["p_exceed"] = p if slot["p_exceed"] is None else max(slot["p_exceed"], p)
+            except (TypeError, ValueError):
+                pass
+    return out
 
 
 def _compute_priority(
@@ -325,6 +461,23 @@ def run_enforcement(
             )
             attribution_data = rows
 
+    # Cell forecasts feed the value-per-inspector-hour ranking: the conformal lower bound of the
+    # +24 h prediction, and the calibrated probability the cell crosses Very Poor. Absent (demo
+    # fixtures, a city with no forecast yet) the ranking falls back to the priority score and says so.
+    forecast_index: dict[str, dict] = {}
+    if not DEMO_MODE:
+        try:
+            from core.supa import client as _fc_client
+            fc_rows = (
+                _fc_client().table("forecasts")
+                .select("h3_cell,horizon_h,value,pi_low,p_over_120,issued_at")
+                .eq("city_id", city_id).eq("target_var", "pm25")
+                .order("issued_at", desc=True).limit(4000).execute().data
+            ) or []
+            forecast_index = _cell_forecast_index(fc_rows)
+        except Exception as e:  # noqa: BLE001 — the worklist must render without forecasts
+            logger.warning("enforcement: no cell forecasts for %s (%s); value ranking falls back", city_id, e)
+
     if emission_sources is None:
         if DEMO_MODE:
             emission_sources = _load_demo_emission_sources(city_id)
@@ -439,6 +592,9 @@ def run_enforcement(
         # Priority + rubric
         priority = _compute_priority(best_share, pop_exposed, source_category, confidence)
         rubric = _compute_rubric(best_share, pop_exposed, source_category, confidence, len(citations))
+        fc = forecast_index.get(h3_cell) or {}
+        value = _compute_value(best_share, confidence, pop_exposed, source_category,
+                               fc.get("pm25_low"), fc.get("p_exceed"))
 
         rationale = _generate_rationale(source, best_share, pop_exposed, source_category, citations)
 
@@ -450,7 +606,7 @@ def run_enforcement(
             contribution=best_share,
             pop_exposed=pop_exposed,
             rationale=rationale,
-            evidence={**evidence, "source_name": source.get("name", ""), "source_type": source_type},
+            evidence={**evidence, "source_name": source.get("name", ""), "source_type": source_type, "value": value},
             rag_citations=citations,
             rubric_score=rubric,
             ts=datetime.now(timezone.utc).isoformat(),

@@ -98,19 +98,79 @@ def _r(x, nd: int = 3):
     return round(f, nd) if math.isfinite(f) else None
 
 
+SKILL_BOOTSTRAP = 600          # resamples; enough for a stable 95% interval, cheap enough to always run
+MIN_ROWS_FOR_SKILL_CI = 100
+
+
+def _skill_ci(yv: np.ndarray, pred: np.ndarray, pers: np.ndarray,
+              seed: int = 0) -> list[float] | None:
+    """Percentile bootstrap 95% interval for skill = 1 − RMSE_model / RMSE_persistence.
+
+    A point skill on a few hundred rows carries roughly ±0.10, which is wider than several of the
+    per-city numbers we report. Without the interval, "Jaipur is −4%" reads as a finding when it is
+    indistinguishable from zero, and it invites tuning against noise — which it did.
+    """
+    n = len(yv)
+    if n < MIN_ROWS_FOR_SKILL_CI:
+        return None
+    rng = np.random.default_rng(seed)
+    out = []
+    for _ in range(SKILL_BOOTSTRAP):
+        i = rng.integers(0, n, n)
+        rp = rmse(yv[i], pers[i])
+        if rp:
+            out.append(1.0 - rmse(yv[i], pred[i]) / rp)
+    if not out:
+        return None
+    lo, hi = np.percentile(out, [2.5, 97.5])
+    return [_r(float(lo)), _r(float(hi))]
+
+
 def _slice_metrics(y, preds: dict[str, np.ndarray], mask: np.ndarray) -> dict:
     n = int(mask.sum())
     if n == 0:
         return {"n": 0}
     out = {"n": n}
     yv = y[mask]
-    rp = rmse(yv, preds["persistence"][mask])
+    pers = preds["persistence"][mask]
+    rp = rmse(yv, pers)
     for name, arr in preds.items():
         rm = rmse(yv, arr[mask])
         out[f"rmse_{name}"] = _r(rm, 2)
         out[f"mae_{name}"] = _r(np.mean(np.abs(yv - arr[mask])), 2)
         if name != "persistence":
             out[f"skill_{name}_vs_persistence"] = _r(1 - rm / rp) if rp else None
+            ci = _skill_ci(yv, arr[mask], pers) if rp else None
+            if ci is not None:
+                out[f"skill_{name}_vs_persistence_ci95"] = ci
+                # the one thing a reader most needs to know about a per-city skill number
+                out[f"skill_{name}_beats_persistence"] = bool(ci[0] > 0)
+    return out
+
+
+MIN_ROWS_PER_COVERAGE_BIN = 400
+
+
+def _conditional_coverage(level: np.ndarray, inside: np.ndarray, bins: int = 5) -> list[dict] | None:
+    """Coverage within each quintile of the PREDICTED level.
+
+    Returns None rather than a misleading table when there is too little to split. At 400 rows a
+    bin, 0.80 carries a standard error of about 0.02 — tight enough that a 0.67 means something.
+    Below that the table would invite exactly the over-reading that the single-origin live
+    benchmark already caused once: a few hundred rows swing on regime luck, and splitting them
+    five ways makes each cell noisier still.
+    """
+    n = len(level)
+    if n < bins * MIN_ROWS_PER_COVERAGE_BIN:
+        return None
+    edges = np.quantile(level, np.linspace(0, 1, bins + 1))
+    out = []
+    for i in range(bins):
+        m = (level >= edges[i]) & ((level <= edges[i + 1]) if i == bins - 1 else (level < edges[i + 1]))
+        if not m.sum():
+            continue
+        out.append({"predicted_range": [_r(float(edges[i]), 1), _r(float(edges[i + 1]), 1)],
+                    "n": int(m.sum()), "coverage": _r(float(inside[m].mean()))})
     return out
 
 
@@ -349,8 +409,20 @@ def evaluate_horizon(wide: pd.DataFrame, horizon_h: int, split_ts: pd.Timestamp,
         lo = np.asarray(lo_m.predict(Xte)) - q
         hi = np.asarray(hi_m.predict(Xte)) + q
     lo, hi = np.minimum(lo, hi), np.maximum(lo, hi)
-    calib["pi80_coverage"] = _r(float(((yv >= lo) & (yv <= hi))[support].mean()))
+    inside = (yv >= lo) & (yv <= hi)
+    calib["pi80_coverage"] = _r(float(inside[support].mean()))
     calib["pi80_mean_width"] = _r(float((hi - lo)[support].mean()), 1)
+    # Conditional coverage, because the marginal number hides the failure that matters.
+    #
+    # Split conformal only ever promises MARGINAL coverage — 80% of all rows, pooled. A band can
+    # hit that while being badly wrong in every regime separately, and Kolkata is exactly that
+    # case: 0.80 overall, but 0.62 on the fifth of rows where the model predicts the highest
+    # concentrations. That is the operationally important fifth, the one an officer acts on.
+    #
+    # Grouped by PREDICTED level, not observed. Grouping by the outcome would be a diagnosis we
+    # could never act on — at serve time the outcome is the thing we do not have.
+    calib["pi80_coverage_by_predicted_quintile"] = _conditional_coverage(
+        (lo + hi)[support] / 2.0, inside[support])
     out["calibration"] = calib
 
     # --- meteorology ablation: same model without ERA5 met + derived met features ---
@@ -444,6 +516,31 @@ def to_markdown(res: dict) -> str:
         L.append(f"- **+{h['horizon_h']}h**: 80% PI empirical coverage {c.get('pi80_coverage')} (mean width {c.get('pi80_mean_width')} µg/m³); "
                  + "; ".join(f"P(>{int(c[b]['threshold'])}) Brier {c[b]['brier_model']} vs climatology {c[b]['brier_climatology']} (skill {_pct(c[b]['brier_skill'])})"
                              for b in THRESHOLDS if b in c))
+    # The marginal number is the one that hides the failure, so the breakdown goes next to it —
+    # a reader who only opens the .md must see both or neither. The quintile edges are computed per
+    # horizon and differ by a few ug/m3 between them, so they are listed per row rather than used
+    # as shared column headers, which would silently mislabel every row but the first.
+    if any(h["calibration"].get("pi80_coverage_by_predicted_quintile") for h in res["horizons"]):
+        L += ["", "### Coverage by predicted level", "",
+              "Grouped by *predicted* PM2.5, not observed — at forecast time the outcome is exactly",
+              "what we do not have, so this is the only breakdown a served band can be held to.",
+              "Every cell should read ~0.80; the worst in each row is bolded.", "",
+              "| horizon | Q1 lowest | Q2 | Q3 | Q4 | Q5 highest | overall |",
+              "|---|---|---|---|---|---|---|"]
+        edges_note = []
+        for h in res["horizons"]:
+            c = h["calibration"]
+            rows = c.get("pi80_coverage_by_predicted_quintile")
+            if not rows:
+                continue
+            worst = min(r["coverage"] for r in rows)
+            cells = " | ".join(f"**{r['coverage']}**" if r["coverage"] == worst else f"{r['coverage']}"
+                               for r in rows)
+            L.append(f"| +{h['horizon_h']}h | {cells} | {c.get('pi80_coverage')} |")
+            bounds = [rows[0]["predicted_range"][0]] + [r["predicted_range"][1] for r in rows]
+            edges_note.append(f"- +{h['horizon_h']}h quintile edges (µg/m³): "
+                              + " · ".join(str(b) for b in bounds))
+        L += [""] + edges_note
     L += ["", "## Meteorology ablation", ""]
     for h in res["horizons"]:
         a = h.get("ablation_no_meteorology")

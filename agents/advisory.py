@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+from core.wards import place_for_cell
+
 RISK_ORDER = ["good", "satisfactory", "moderate", "poor", "very_poor", "severe"]
 CHANNELS = ("pwa", "telegram", "ivr", "display")
 
@@ -198,7 +200,13 @@ def script_ok(text: str, lang: str) -> bool:
     return has_target and not foreign_script_chars(text, lang)
 
 
-def render_message(city_name: str, ward_id: str, tier: str, horizon_h: int, lang: str) -> str:
+def render_message(city_name: str, place: str, tier: str, horizon_h: int, lang: str) -> str:
+    """`place` is the locality this advisory is for — "Karol Bagh", or "zone-0e3d" as a last resort.
+
+    It used to be the zone id unconditionally, which is a truncation of an H3 index. On screen that
+    told a reader nothing; read aloud down an IVR line it became "zone zero-e-three-d", which is
+    worse than saying nothing at all.
+    """
     labels = LANG_LABEL.get(lang, LANG_LABEL["en"])
     tier_label = labels.get(tier, tier.replace("_", " "))
     # advice matches the tier: clean air gets reassurance, moderate protects sensitive
@@ -210,22 +218,22 @@ def render_message(city_name: str, ward_id: str, tier: str, horizon_h: int, lang
     else:
         action = labels["action"]
     if lang == "en":
-        return f"{city_name} {ward_id}: air is forecast {tier_label} in +{horizon_h}h. {action}"
+        return f"{city_name}, {place}: air is forecast {tier_label} in +{horizon_h}h. {action}"
     if lang == "hi":
-        return f"{city_name} {ward_id}: अगले {horizon_h} घंटों में हवा {tier_label} रहने का अनुमान है. {action}"
+        return f"{city_name}, {place}: अगले {horizon_h} घंटों में हवा {tier_label} रहने का अनुमान है. {action}"
     if lang == "kn":
-        return f"{city_name} {ward_id}: ಮುಂದಿನ {horizon_h} ಗಂಟೆಗಳಲ್ಲಿ ಗಾಳಿಯ ಗುಣಮಟ್ಟ {tier_label} ಇರಲಿದೆ ಎಂದು ಅಂದಾಜಿಸಲಾಗಿದೆ. {action}"
+        return f"{city_name}, {place}: ಮುಂದಿನ {horizon_h} ಗಂಟೆಗಳಲ್ಲಿ ಗಾಳಿಯ ಗುಣಮಟ್ಟ {tier_label} ಇರಲಿದೆ ಎಂದು ಅಂದಾಜಿಸಲಾಗಿದೆ. {action}"
     if lang == "mr":
-        return f"{city_name} {ward_id}: पुढील {horizon_h} तासांत हवा {tier_label} राहण्याचा अंदाज आहे. {action}"
+        return f"{city_name}, {place}: पुढील {horizon_h} तासांत हवा {tier_label} राहण्याचा अंदाज आहे. {action}"
     if lang == "ta":
-        return f"{city_name} {ward_id}: அடுத்த {horizon_h} மணி நேரத்தில் காற்றின் தரம் {tier_label} இருக்கும் என எதிர்பார்க்கப்படுகிறது. {action}"
+        return f"{city_name}, {place}: அடுத்த {horizon_h} மணி நேரத்தில் காற்றின் தரம் {tier_label} இருக்கும் என எதிர்பார்க்கப்படுகிறது. {action}"
     if lang == "te":
-        return f"{city_name} {ward_id}: రాబోయే {horizon_h} గంటల్లో గాలి నాణ్యత {tier_label}గా ఉండవచ్చు. {action}"
+        return f"{city_name}, {place}: రాబోయే {horizon_h} గంటల్లో గాలి నాణ్యత {tier_label}గా ఉండవచ్చు. {action}"
     if lang == "bn":
-        return f"{city_name} {ward_id}: আগামী {horizon_h} ঘণ্টায় বাতাস {tier_label} থাকার পূর্বাভাস। {action}"
+        return f"{city_name}, {place}: আগামী {horizon_h} ঘণ্টায় বাতাস {tier_label} থাকার পূর্বাভাস। {action}"
     if lang == "gu":
-        return f"{city_name} {ward_id}: આગામી {horizon_h} કલાકમાં હવા {tier_label} રહેવાની આગાહી છે. {action}"
-    return f"{city_name} {ward_id}: air is forecast {tier_label} in +{horizon_h}h. {action}"
+        return f"{city_name}, {place}: આગામી {horizon_h} કલાકમાં હવા {tier_label} રહેવાની આગાહી છે. {action}"
+    return f"{city_name}, {place}: air is forecast {tier_label} in +{horizon_h}h. {action}"
 
 
 def build_advisories(
@@ -243,6 +251,14 @@ def build_advisories(
 
     advisories: list[dict] = []
     for vuln in vulnerability_rows:
+        # Name the place, not the hash. Falls back to the zone id when no ward polygon ships for
+        # this city or the cell sits outside every one of them — an opaque id beats a wrong name.
+        cell = vuln.get("h3_cell")
+        place = vuln["ward_id"]
+        if cell:
+            hit = place_for_cell(city_id, cell)
+            if hit and hit.get("label"):
+                place = hit["label"]
         base = risk_tier(city_pm25)
         tier = vulnerability_adjusted_tier(base, float(vuln.get("vulnerability_index", 0)))
         segment = audience_segment(vuln)
@@ -251,12 +267,14 @@ def build_advisories(
                 advisories.append({
                     "city_id": city_id,
                     "ward_id": vuln["ward_id"],
+                    # carried so every channel can name the place without re-deriving it
+                    "h3_cell": cell,
                     "issued_at": issued_at,
                     "horizon_h": horizon_h,
                     "risk_tier": tier,
                     "audience_segment": segment,
                     "language": lang,
                     "channel": channel,
-                    "message": render_message(city_name, vuln["ward_id"], tier, horizon_h, lang),
+                    "message": render_message(city_name, place, tier, horizon_h, lang),
                 })
     return advisories

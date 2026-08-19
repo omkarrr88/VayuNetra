@@ -1,16 +1,21 @@
-ok   landing loads
+ok   front page
+ok   public overview page
+ok   public app: scale toggle
+ok   public app: live map
+ok   public app: forecast + causes
+ok   public app: rankings + how it works
 ok   first-run tour
-ok   shell + status strip
+ok   console shell
 ok   presentation mode
 ok   keyboard sections 1–7
 ok   layers chip and modes
 ok   time scrub play
-     share card → vayunetra-delhi-ndmc-charge-3.png
+     share card → vayunetra-delhi-ward-pusa.png
 ok   cell story
      brief PDF → brief_delhi.pdf
 ok   morning brief
 ok   worklist filters + search
-     notice PDF → notice_12901.pdf
+     notice PDF → notice_13771.pdf
 ok   dossier + notice
 ok   approve → dispatch → close → history
      PRANA export → ncap_evidence_delhi.csv
@@ -21,10 +26,12 @@ ok   cities section
 ok   simulator section
 ok   impact section
 ok   pipeline section
-ok   mobile viewport
-     reset 1 walkthrough record(s)
-ok   reset walkthrough action
+FAIL dark theme: TimeoutError: page.goto: Timeout 30000ms exceeded.
+ok   phone viewport
+FAIL reset walkthrough action: Error: SUPABASE_ANON_KEY not set — cannot reset the walkthrough record; reset it by hand
 
 ERRORS:
 
 PROBLEMS:
+dark theme: TimeoutError: page.goto: Timeout 30000ms exceeded.
+reset walkthrough action: Error: SUPABASE_ANON_KEY not set — cannot reset the walkthrough record; reset it by hand

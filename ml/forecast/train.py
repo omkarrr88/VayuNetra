@@ -9,6 +9,8 @@ connector lands and the target is real PM2.5.
 """
 from __future__ import annotations
 
+import math
+
 import argparse
 import statistics
 from datetime import datetime, timezone
@@ -77,24 +79,87 @@ def backtest(wide: pd.DataFrame, horizon_h: int, n_folds: int = 3) -> dict:
 NOMINAL_COVERAGE = 0.8   # we serve q0.1–q0.9 bands
 
 
-def _cqr_models_and_q(Xtr: pd.DataFrame, ytr: pd.Series):
+# Fraction of the training window held out to calibrate the conformal band.
+#
+# 0.25 survived an attempt to raise it, and the attempt is worth recording because the evidence that
+# motivated it was bad evidence.
+#
+# The live 90-day benchmark reported 80% bands covering only 0.72-0.74, which looks like a clear
+# calibration defect. It is not. That protocol is a SINGLE split at one forecast origin, and PI
+# coverage there is computed over `n_support` rows only — 282 of them for Delhi +24h. A few hundred
+# rows from one origin land in whatever regime that fortnight happened to be in, so the number
+# swings between roughly 0.6 and 0.86 on nothing but luck.
+#
+# The rolling multi-season benchmark is the measurement that carries weight: 10 origins, 53k-208k
+# support rows. On it, 0.25 already covers close to nominal (delhi 0.783/0.781/0.774, mumbai
+# 0.816/0.817/0.794) and raising the fraction to 0.40 made the one genuinely weak city worse at
+# every horizon:
+#
+#     kolkata          +24h     +48h     +72h
+#     0.25 cal        0.748    0.725    0.698
+#     0.40 cal        0.696    0.672    0.668
+#
+# Two further variants were tried and REJECTED on the same evidence:
+#   * recency-weighted conformity scores — narrows the band toward the most recent (calm) regime,
+#     which is precisely backwards; it took Delhi to 0.666.
+#   * choosing the fraction per city on a held-out half — it selects on the same short, single-regime
+#     window that produced the bogus signal, so it chases noise: Delhi +48h fell to 0.596.
+#
+# Kolkata's decline with horizon (0.748 -> 0.698) is real, and it was chased properly before being
+# left alone. The marginal number hides where the misses are. Grouped by PREDICTED level on the
+# rolling protocol (10 origins, 53k rows/horizon), coverage reads:
+#
+#     predicted ug/m3     8-25   25-38   38-56   56-76   76-245   overall
+#     +24h               0.803   0.778   0.761   0.668    0.733     0.749
+#     +48h               0.799   0.793   0.725   0.620    0.687     0.725
+#     +72h               0.812   0.785   0.649   0.547    0.699     0.699
+#
+# The band is fine in clean air and fails in the upper-middle — the CPCB Satisfactory/Moderate/Poor
+# transition, which is the range where the number changes what anyone does.
+#
+# Seven conformity scores were compared over four forward folds to close it (see
+# scripts/tune_conformal_tails.py): asymmetric per-edge, normalized by band width, normalized by
+# predicted level, Mondrian by predicted bin, and the combinations. The worst predicted quintile
+# moved from 0.615 to 0.646 at best, paid for with coverage in the lower quintiles. Three points on
+# an eighteen-point shortfall, so the score function is not the lever.
+#
+# Split conformal promises MARGINAL coverage and delivers it. What fails is CONDITIONAL coverage,
+# and that is the quantile models under-dispersing in the mid-to-upper range — a model problem. We
+# keep the simple two-sided score and REPORT the shortfall instead: the benchmark now emits
+# pi80_coverage_by_predicted_quintile, so the 0.67 sits next to the 0.75 rather than being averaged
+# into it. Making the limit measurable was the honest fix available.
+CAL_FRACTION = 0.25
+
+
+def _conformal_level(n: int, coverage: float = NOMINAL_COVERAGE) -> float:
+    """The finite-sample level split conformal actually requires: ⌈(n+1)(1−α)⌉ / n.
+
+    Using the plain 1−α under-covers by about 1/n. Small next to the regime-shift gap above, but
+    free to get right.
+    """
+    if n <= 0:
+        return coverage
+    return min(1.0, math.ceil((n + 1) * coverage) / n)
+
+
+def _cqr_models_and_q(Xtr: pd.DataFrame, ytr: pd.Series, cal_fraction: float | None = None):
     """Conformalized Quantile Regression (Romano et al. 2019).
 
-    Fit the quantile models on the first 75% of the training window, compute
-    conformity scores E = max(lo−y, y−hi) on the last 25% (calibration split),
-    and return the models plus the coverage-restoring band adjustment Q =
-    quantile(E, nominal). Serving [lo−Q, hi+Q] gives ~nominal coverage —
-    raw q0.1/q0.9 LightGBM bands measured only 48–63% real coverage.
+    Fit the quantile models on the first (1 − cal_fraction) of the training window, compute
+    conformity scores E = max(lo−y, y−hi) on the rest, and return the models plus the
+    coverage-restoring adjustment Q. Serving [lo−Q, hi+Q] gives ~nominal coverage — raw q0.1/q0.9
+    LightGBM bands measured only 48–63% real coverage.
     """
     import numpy as np
 
-    fit_n = int(len(Xtr) * 0.75)
+    frac = CAL_FRACTION if cal_fraction is None else cal_fraction
+    fit_n = int(len(Xtr) * (1.0 - frac))
     Xfit, yfit = Xtr.iloc[:fit_n], ytr.iloc[:fit_n]
     Xcal, ycal = Xtr.iloc[fit_n:], ytr.iloc[fit_n:]
     lo_model, lo_cal = _fit_predict(Xfit, yfit, Xcal, QUANTILES["pi_low"])
     hi_model, hi_cal = _fit_predict(Xfit, yfit, Xcal, QUANTILES["pi_high"])
     scores = np.maximum(lo_cal - ycal.to_numpy(), ycal.to_numpy() - hi_cal)
-    q = float(np.quantile(scores, NOMINAL_COVERAGE)) if len(scores) else 0.0
+    q = float(np.quantile(scores, _conformal_level(len(scores)))) if len(scores) else 0.0
     return lo_model, hi_model, max(0.0, q)
 
 
@@ -247,6 +312,11 @@ def write_forecasts(wide: pd.DataFrame, horizon_h: int) -> int:
         # enforce pi_low <= value <= pi_high (independent quantile models can cross on small data)
         bounds = sorted(v for v in (_finite(preds["pi_low"][i]), mid, _finite(preds["pi_high"][i])) if v is not None)
         lo, hi = bounds[0], bounds[-1]
+        # A mass concentration cannot be negative, and on clean cells the conformal widening pushed
+        # the lower edge below zero on 8 of 303 served rows — "PM2.5 between -1.3 and 13.8" is not a
+        # forecast anyone can read. Truncating at the physical support costs nothing: every
+        # achievable outcome is >= 0, so [max(0, lo), hi] contains exactly the values [lo, hi] did.
+        lo = max(0.0, lo)
         hour = r.get("hour")
         clim_val = _finite(clim.get(int(hour), y_mean)) if pd.notna(hour) else y_mean
         rows.append({

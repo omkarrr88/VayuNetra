@@ -1,7 +1,7 @@
 {
  "city_id": "kolkata",
  "source": "hist",
- "generated_at": "2026-08-17T17:34:06.505055+00:00",
+ "generated_at": "2026-08-19T13:17:49.615458+00:00",
  "window": {
   "start": "2025-02-18T19:00:00+00:00",
   "end": "2026-08-15T23:00:00+00:00",
@@ -571,24 +571,50 @@
       }
      ]
     },
-    "pi80_coverage": 0.748,
-    "pi80_mean_width": 51.3
-   },
-   "ablation_no_meteorology": {
-    "dropped": [
-     "blh",
-     "precip",
-     "rh",
-     "temp",
-     "wind_u",
-     "wind_v",
-     "wind_speed",
-     "ventilation",
-     "advected_pm25"
-    ],
-    "rmse_with_met": 29.52,
-    "rmse_without_met": 31.79,
-    "met_gain_pct": 7.1
+    "pi80_coverage": 0.749,
+    "pi80_mean_width": 51.3,
+    "pi80_coverage_by_predicted_quintile": [
+     {
+      "predicted_range": [
+       8.5,
+       24.8
+      ],
+      "n": 10613,
+      "coverage": 0.803
+     },
+     {
+      "predicted_range": [
+       24.8,
+       37.9
+      ],
+      "n": 10613,
+      "coverage": 0.778
+     },
+     {
+      "predicted_range": [
+       37.9,
+       56.4
+      ],
+      "n": 10614,
+      "coverage": 0.761
+     },
+     {
+      "predicted_range": [
+       56.4,
+       75.8
+      ],
+      "n": 10612,
+      "coverage": 0.668
+     },
+     {
+      "predicted_range": [
+       75.8,
+       244.7
+      ],
+      "n": 10614,
+      "coverage": 0.733
+     }
+    ]
    }
   },
   {
@@ -1140,23 +1166,49 @@
      ]
     },
     "pi80_coverage": 0.725,
-    "pi80_mean_width": 58.3
-   },
-   "ablation_no_meteorology": {
-    "dropped": [
-     "blh",
-     "precip",
-     "rh",
-     "temp",
-     "wind_u",
-     "wind_v",
-     "wind_speed",
-     "ventilation",
-     "advected_pm25"
-    ],
-    "rmse_with_met": 34.9,
-    "rmse_without_met": 37.72,
-    "met_gain_pct": 7.5
+    "pi80_mean_width": 58.4,
+    "pi80_coverage_by_predicted_quintile": [
+     {
+      "predicted_range": [
+       10.5,
+       25.8
+      ],
+      "n": 10679,
+      "coverage": 0.799
+     },
+     {
+      "predicted_range": [
+       25.8,
+       36.9
+      ],
+      "n": 10679,
+      "coverage": 0.793
+     },
+     {
+      "predicted_range": [
+       36.9,
+       53.5
+      ],
+      "n": 10679,
+      "coverage": 0.725
+     },
+     {
+      "predicted_range": [
+       53.5,
+       69.5
+      ],
+      "n": 10679,
+      "coverage": 0.62
+     },
+     {
+      "predicted_range": [
+       69.5,
+       270.8
+      ],
+      "n": 10680,
+      "coverage": 0.687
+     }
+    ]
    }
   },
   {
@@ -1707,24 +1759,50 @@
       }
      ]
     },
-    "pi80_coverage": 0.698,
-    "pi80_mean_width": 60.8
-   },
-   "ablation_no_meteorology": {
-    "dropped": [
-     "blh",
-     "precip",
-     "rh",
-     "temp",
-     "wind_u",
-     "wind_v",
-     "wind_speed",
-     "ventilation",
-     "advected_pm25"
-    ],
-    "rmse_with_met": 38.9,
-    "rmse_without_met": 41.05,
-    "met_gain_pct": 5.2
+    "pi80_coverage": 0.699,
+    "pi80_mean_width": 60.8,
+    "pi80_coverage_by_predicted_quintile": [
+     {
+      "predicted_range": [
+       11.7,
+       25.9
+      ],
+      "n": 10684,
+      "coverage": 0.812
+     },
+     {
+      "predicted_range": [
+       25.9,
+       36.5
+      ],
+      "n": 10684,
+      "coverage": 0.785
+     },
+     {
+      "predicted_range": [
+       36.5,
+       55.9
+      ],
+      "n": 10684,
+      "coverage": 0.649
+     },
+     {
+      "predicted_range": [
+       55.9,
+       72.5
+      ],
+      "n": 10684,
+      "coverage": 0.547
+     },
+     {
+      "predicted_range": [
+       72.5,
+       232.2
+      ],
+      "n": 10684,
+      "coverage": 0.699
+     }
+    ]
    }
   }
  ]

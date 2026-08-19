@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import math
 from functools import lru_cache
+import re
 from pathlib import Path
 
 WARDS_DIR = Path(__file__).resolve().parent.parent / "web" / "public" / "wards"
@@ -57,15 +58,81 @@ def _inside(x: float, y: float, ring: list[tuple[float, float]]) -> bool:
     return inside
 
 
-def _label(name: str) -> str:
-    # "48 RAMOL HATHIJAN" -> "Ramol Hathijan"; "Ward 76 HAWA MAHAL" -> "Hawa Mahal"; keep short ids
-    words = [w for w in name.replace("_", " ").split() if w]
-    if len(words) > 1 and words[0].isdigit():
-        words = words[1:]
-    if len(words) > 2 and words[0].lower() == "ward" and words[1].isdigit():
-        words = words[2:]
-    all_caps = all(w.isupper() for w in words if w.isalpha())
-    return " ".join(w if (w.isupper() and len(w) <= 3 and not all_caps) else w.capitalize() for w in words)
+# Mumbai's file ships BMC ward LETTERS and nothing else, so a cell there resolved to "near T",
+# which is not a place any resident would recognise. Chennai's names every ward "Ward N" with no
+# locality at all. Both mappings are the ones already vetted in web/src/placeName.ts — this module
+# is that file's server-side twin, and the two drifted: the browser has been naming Mumbai wards
+# properly while every advisory, IVR call and Telegram message said "near T".
+BMC_WARD_AREAS = {
+    "A": "Colaba & Fort", "B": "Dongri & Sandhurst Road", "C": "Kalbadevi & Marine Lines",
+    "D": "Malabar Hill & Grant Road", "E": "Byculla",
+    "F/S": "Parel & Sewri", "F/N": "Matunga & Sion",
+    "G/S": "Worli & Prabhadevi", "G/N": "Dadar & Mahim",
+    "H/E": "Bandra East & Khar", "H/W": "Bandra West & Santacruz West",
+    "K/E": "Andheri East & Vile Parle East", "K/W": "Andheri West & Juhu",
+    "P/S": "Goregaon", "P/N": "Malad",
+    "R/S": "Kandivali", "R/C": "Borivali", "R/N": "Dahisar",
+    "L": "Kurla", "M/E": "Govandi & Mankhurd", "M/W": "Chembur",
+    "N": "Ghatkopar", "S": "Bhandup & Vikhroli", "T": "Mulund",
+}
+
+# The GCC's fifteen zones are named places, each covering a documented contiguous block of ward
+# numbers, so a ward number resolves to the zone it sits in.
+CHENNAI_ZONES = [
+    (1, 14, "Thiruvottiyur"), (15, 21, "Manali"), (22, 33, "Madhavaram"), (34, 48, "Tondiarpet"),
+    (49, 63, "Royapuram"), (64, 78, "Thiru-Vi-Ka Nagar"), (79, 93, "Ambattur"), (94, 108, "Anna Nagar"),
+    (109, 126, "Teynampet"), (127, 142, "Kodambakkam"), (143, 155, "Valasaravakkam"), (156, 167, "Alandur"),
+    (168, 182, "Adyar"), (183, 191, "Perungudi"), (192, 200, "Sholinganallur"),
+]
+
+
+def _title(n: str) -> str:
+    return re.sub(r"(^|[\s.\-/(])([a-z])", lambda m: m.group(1) + m.group(2).upper(), n.lower())
+
+
+def _label(name: str, city_id: str | None = None) -> str:
+    """A ward's display name — the LOCALITY first, in every city.
+
+    The boundary files disagree about where the name lives. Eight of the ten carry a real locality
+    buried behind a ward number ("Ward 91 Khairatabad", "48 RAMOL HATHIJAN") or trailing
+    boilerplate ("Kempegowda Ward"); digging it out is cleaning, not invention. Mumbai and Chennai
+    carry no locality at all and use the mappings above. Kolkata's file carries nothing but a
+    number, and a number is what it keeps — a confident wrong name on something a citizen acts on
+    is worse than an honest ward id.
+    """
+    n = name.strip()
+
+    if city_id == "mumbai":
+        area = BMC_WARD_AREAS.get(n.upper())
+        if area:
+            return f"{area} (Ward {n})"
+
+    if city_id == "chennai":
+        m = re.search(r"(\d+)", n)
+        if m:
+            num = int(m.group(1))
+            for lo, hi, zone in CHENNAI_ZONES:
+                if lo <= num <= hi:
+                    return f"{zone} (Ward {num})"
+
+    m = re.match(r"^Ward\s+(\d+)\s+(.+)$", n, re.I)
+    if m:
+        return f"{_title(m.group(2))} (Ward {m.group(1)})"
+
+    m = re.match(r"^(\d+)\s+(.+)$", n)
+    if m:
+        return f"{_title(m.group(2))} (Ward {int(m.group(1))})"
+
+    m = re.match(r"^(.+?)\s+Ward$", n, re.I)
+    if m:
+        return _title(m.group(1))
+
+    if re.match(r"^Ward\s+\d+$", n, re.I):
+        return n
+    if len(n) <= 4:
+        return f"Ward {n}"
+
+    return _title(n) if n == n.upper() else n
 
 
 def place_for_latlng(city_id: str, lat: float, lng: float) -> dict | None:
@@ -76,7 +143,7 @@ def place_for_latlng(city_id: str, lat: float, lng: float) -> dict | None:
         return None
     for name, rings, _ in wards:
         if any(_inside(lng, lat, r) for r in rings):
-            return {"label": _label(name), "approx": False}
+            return {"label": _label(name, city_id), "approx": False}
     best = None
     for name, _, (cx, cy) in wards:
         dx = (cx - lng) * math.cos(math.radians(lat))
@@ -85,7 +152,7 @@ def place_for_latlng(city_id: str, lat: float, lng: float) -> dict | None:
         if best is None or d < best[1]:
             best = (name, d)
     if best and best[1] <= 15:
-        return {"label": f"near {_label(best[0])}", "approx": True}
+        return {"label": f"near {_label(best[0], city_id)}", "approx": True}
     return None
 
 

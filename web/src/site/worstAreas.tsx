@@ -3,7 +3,7 @@
 // map can never disagree; the button hands you to the map with this city loaded.
 import { useEffect, useState } from "react";
 import { api } from "../api";
-import { categoryForIndex, formatIndex, pm25Index, POLLUTANT_LABEL, type AqiScale } from "../aqi";
+import { categoryForIndex, formatIndex, pm25Index, POLLUTANT_LABEL, type AqiScale, bandInk } from "../aqi";
 import { placeForCell } from "../placeName";
 import { navigate } from "../router";
 import { Button, Empty, Loading, Surface, Text } from "../design/ui";
@@ -70,14 +70,19 @@ export function WorstAreas({ city, scale, limit = 6 }: { city: string; scale: Aq
               <li key={c.h3_cell} style={{ display: "flex", alignItems: "center", gap: "var(--s-3)", padding: "var(--s-3) var(--s-4)", borderTop: i ? "1px solid var(--line)" : undefined }}>
                 <span aria-hidden="true" style={{ width: 4, alignSelf: "stretch", borderRadius: 2, background: cat.color, flex: "none" }} />
                 <Text size="xs" tone="faint" weight={700} style={{ width: 18, flex: "none" }}>{i + 1}</Text>
-                <span style={{ minWidth: 0, flex: 1 }}>
+                {/* The place is the label, and the H3 id is no longer anywhere on screen — not in
+                    the row, not on hover. It stays in the evidence dossier and the notice PDF,
+                    where an auditor has to identify the exact cell. */}
+                <span style={{ minWidth: 0, flex: 1 }} title={names[c.h3_cell] ?? "About 1 km² of this city"}>
                   <Text as="div" size="sm" weight={700} tone="ink" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {names[c.h3_cell] ?? "1 km cell"}
+                    {names[c.h3_cell] ?? "Unnamed area"}
                   </Text>
-                  <Text as="div" size="2xs" tone="faint" style={{ fontFamily: "ui-monospace, monospace" }}>{c.h3_cell}</Text>
+                  <Text as="div" size="2xs" tone="faint">
+                    {c.pm25 !== null && c.pm25 !== undefined ? `${c.pm25} µg/m³ PM2.5` : "\u00a0"}
+                  </Text>
                 </span>
                 <span style={{ textAlign: "right", flex: "none" }}>
-                  <Text as="div" size="lg" weight={800} tight style={{ color: cat.color }}>{formatIndex(idx, scale)}</Text>
+                  <Text as="div" size="lg" weight={800} tight style={{ color: bandInk(cat.color) }}>{formatIndex(idx, scale)}</Text>
                   <Text as="div" size="2xs" tone="muted">
                     {c.pm25 !== null && c.pm25 !== undefined ? `PM2.5 ${c.pm25}` : cat.label}
                     {prominent && scale !== "who" ? ` · ${POLLUTANT_LABEL[prominent] ?? prominent}` : ""}

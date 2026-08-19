@@ -27,11 +27,13 @@ DISCLAIMER = ("General public-health guidance for the current air quality, not m
 
 # CPCB bands by National AQI value
 BANDS = [(50, "good"), (100, "satisfactory"), (200, "moderate"), (300, "poor"), (400, "very_poor"), (10_000, "severe")]
-BAND_LABEL = {"good": "Good", "satisfactory": "Satisfactory", "moderate": "Moderate",
+BAND_LABEL = {"unknown": "not measured", "good": "Good", "satisfactory": "Satisfactory", "moderate": "Moderate",
               "poor": "Poor", "very_poor": "Very Poor", "severe": "Severe"}
 
 # CPCB's own advisory sentence per band (paraphrased faithfully, one line each)
 BAND_ADVICE = {
+    "unknown": ("We have no current reading for this city, so there is no advice to give. "
+                "This is a gap in coverage, not clean air — check back once its stations report."),
     "good": "Air quality is good — minimal impact. Outdoor activity is fine for everyone.",
     "satisfactory": "Minor breathing discomfort is possible for sensitive people; everyone else is unaffected.",
     "moderate": "Breathing discomfort for people with asthma, and for those with heart or lung disease; the general public is largely unaffected.",
@@ -42,6 +44,8 @@ BAND_ADVICE = {
 
 # Protective actions per band: (key, label, prescription)
 ACTIONS = {
+    # Nothing to prescribe without a measurement. An empty list is the honest answer.
+    "unknown": [],
     "good":         [("outdoor", "Outdoor activity", "Go ahead"), ("windows", "Windows", "Open"), ("mask", "N95 mask", "Not needed"), ("purifier", "Air purifier", "Off")],
     "satisfactory": [("outdoor", "Outdoor activity", "Fine"), ("windows", "Windows", "Open"), ("mask", "N95 mask", "Not needed"), ("purifier", "Air purifier", "Off")],
     "moderate":     [("outdoor", "Heavy exertion", "Reduce if sensitive"), ("windows", "Windows", "Open away from traffic"), ("mask", "N95 mask", "If sensitive"), ("purifier", "Air purifier", "Optional")],
@@ -112,13 +116,20 @@ CONDITIONS: list[dict] = [
     },
 ]
 
-RISK_BY_BAND = {"good": "minimal", "satisfactory": "low", "moderate": "mild", "poor": "moderate",
+RISK_BY_BAND = {"unknown": "not measured", "good": "minimal", "satisfactory": "low", "moderate": "mild", "poor": "moderate",
                 "very_poor": "high", "severe": "very high"}
 
 
 def band_for_index(index: float | int | None) -> str:
+    """CPCB band for an index, or "unknown" when there is no reading.
+
+    This used to return "moderate" for a null index, which made /city/overview render "What to do
+    now — air is Moderate" with a full set of prescriptions for a city we had measured nothing in.
+    Everywhere else this product shows a gap as a gap; inventing a band here was the one place it
+    did not.
+    """
     if index is None:
-        return "moderate"
+        return "unknown"
     for hi, name in BANDS:
         if index <= hi:
             return name

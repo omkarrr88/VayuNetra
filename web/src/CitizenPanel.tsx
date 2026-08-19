@@ -6,9 +6,11 @@ import { categoryForPm25, formatIndex, pm25Index } from "./aqi";
 import { useAqiScale } from "./aqiScale";
 import { Panel, SegBtn, Step } from "./ui";
 import { Cols } from "./console/Cols";
+import { placeForCell } from "./placeName";
 
 type Advisory = {
   ward_id: string;
+  h3_cell?: string | null;
   risk_tier: string;
   audience_segment: string;
   language: string;
@@ -22,7 +24,11 @@ const LABELS: Record<string, string> = { en: "English", hi: "Hindi", kn: "Kannad
 type BroadcastResult = {
   telegram?: { status: string; detail?: string; message_id?: number };
   ivr?: { status: string; detail?: string; sid?: string };
+  language?: { requested: string; delivered: string; note?: string; spoken_as?: string; voice_note?: string };
+  ward?: { sent: string; chosen_by: string };
 };
+
+type WardChoice = { ward_id: string; risk_tier?: string; h3_cell?: string | null };
 
 type CleanZone = {
   h3_cell: string;
@@ -68,17 +74,64 @@ export default function CitizenPanel({ city, languages, center }: { city: string
     api<Advisory[]>(`/advisory?city=${city}&lang=${lang}`).then(setRows).catch(() => setRows([]));
   }, [city, lang]);
 
+  // Which ward a broadcast targets. "" means let the server pick the worst-air one — it used to
+  // pick an arbitrary one, and there was no way to say otherwise.
+  const [wards, setWards] = useState<WardChoice[]>([]);
+  const [ward, setWard] = useState("");
+  useEffect(() => {
+    setWard("");
+    api<WardChoice[]>(`/advisory/wards?city=${city}&lang=${lang}`).then(setWards).catch(() => setWards([]));
+  }, [city, lang]);
+
+  // "zone-0e3d" is the last four characters of an H3 index. It is a database key; nobody reading
+  // an advisory can act on it. Every ward shown on screen resolves to the locality name the rest of
+  // the product uses, from the same ward polygons the map uses.
+  const [wardNames, setWardNames] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let live = true;
+    const seen = new Map<string, string>();
+    for (const w of wards) if (w.h3_cell) seen.set(w.ward_id, w.h3_cell);
+    for (const a of rows ?? []) if (a.h3_cell) seen.set(a.ward_id, a.h3_cell);
+    Promise.all(
+      [...seen].map(async ([id, cell]) => [id, (await placeForCell(city, cell))?.label] as const),
+    ).then((pairs) => {
+      if (!live) return;
+      setWardNames((prev) => ({ ...prev, ...Object.fromEntries(pairs.filter(([, n]) => n) as [string, string][]) }));
+    });
+    return () => { live = false; };
+  }, [city, wards, rows]);
+
+  /** The place an advisory is for, in words. Falls back to a neutral phrase, never to the id. */
+  const placeOf = (a: Advisory) => wardNames[a.ward_id] ?? "This area";
+
+  // the cleanest-air cards name their locality too — a reader is choosing where to walk
+  const [zoneNames, setZoneNames] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let live = true;
+    const zs = cleanZones?.zones ?? [];
+    Promise.all(zs.map(async (z) => [z.h3_cell, (await placeForCell(city, z.h3_cell))?.label] as const))
+      .then((pairs) => { if (live) setZoneNames(Object.fromEntries(pairs.filter(([, n]) => n) as [string, string][])); });
+    return () => { live = false; };
+  }, [city, cleanZones]);
+
   async function broadcast() {
     setBcast("sending");
     try {
       const r = await api<BroadcastResult>("/advisory/broadcast", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ city, ivr: true }),
+        // send the language the operator picked; without it the server took the English row
+        body: JSON.stringify({ city, ivr: true, language: lang, ward: ward || undefined }),
       });
       const parts: string[] = [];
       if (r.telegram) parts.push(`Telegram: ${r.telegram.status}`);
       if (r.ivr) parts.push(`IVR: ${r.ivr.status}`);
+      // A silent fallback is the thing that made this look fine while it was broken, so both
+      // fallbacks — no advisory in that language, and no voice for it — are said out loud.
+      if (r.ward?.sent) parts.push(`ward ${wardNames[r.ward.sent] ?? "selected"} (${r.ward.chosen_by})`);
+      if (r.language?.note) parts.push(r.language.note);
+      if (r.language?.voice_note) parts.push(r.language.voice_note);
+      else if (r.language?.delivered) parts.push(`spoken in ${r.language.delivered}`);
       setBcastMsg(parts.join(" · ") || "sent");
       setBcast("done");
     } catch (e) {
@@ -146,7 +199,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
           {items.map((a) => (
             <div key={a.ward_id} className="rounded-md border border-slate-200 p-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-medium">{a.ward_id}</span>
+                <span className="font-medium">{placeOf(a)}</span>
                 <span className="rounded bg-amber-100 px-1.5 py-0.5 text-amber-800">{a.risk_tier.replace("_", " ")}</span>
               </div>
               <div className="mt-1 text-xs leading-5 text-slate-700">{a.message}</div>
@@ -163,7 +216,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
             </div>
             {items.slice(0, 3).map((a) => (
               <div key={a.ward_id} className="mb-1.5 max-w-[95%] rounded-xl rounded-tl-sm bg-white p-2 text-xs leading-5 text-slate-800 shadow-sm">
-                <b>⚠ {a.ward_id}</b> · {a.risk_tier.replace("_", " ")}
+                <b>⚠ {placeOf(a)}</b> · {a.risk_tier.replace("_", " ")}
                 <br />
                 {a.message}
               </div>
@@ -191,7 +244,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
             reads that city's latest advisory in a clear Indian-English voice.
           </div>
           <div className="text-[10px] leading-4 text-slate-500">
-            Live calls are spoken in Hindi (Polly Kajal) for Hindi-first cities and in English elsewhere — Polly has no voice yet for the other Indian scripts.
+            Live calls are spoken in the advisory's own language — Polly for English and Hindi, Google's Indian-language voices for Marathi, Kannada, Tamil, Telugu, Bengali and Gujarati. The framing around the advisory is translated too, but only English and Hindi have been checked by a native speaker.
           </div>
         </div>
       ) : (
@@ -205,7 +258,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
                   {a.risk_tier.replace("_", " ").toUpperCase()}
                 </span>
               </div>
-              <div className="mt-1 text-[15px] font-extrabold leading-6">{a.ward_id.toUpperCase()}</div>
+              <div className="mt-1 text-[15px] font-extrabold leading-6">{placeOf(a).toUpperCase()}</div>
               <div className="mt-0.5 text-[13px] leading-5 text-slate-200">{a.message}</div>
             </div>
           ))}
@@ -230,6 +283,22 @@ export default function CitizenPanel({ city, languages, center }: { city: string
           {bcast === "confirm" && (
             <div className="rounded border border-amber-300 bg-amber-50 p-2 text-xs">
               <div className="text-amber-800">Send a real Telegram message and place a real phone call?</div>
+              <label className="mt-2 block text-[11px] font-medium text-amber-900">
+                Ward
+                <select
+                  aria-label="Ward to broadcast"
+                  className="mt-0.5 block w-full rounded border border-amber-300 bg-white px-2 py-1 text-xs font-medium text-slate-700"
+                  value={ward}
+                  onChange={(e) => setWard(e.target.value)}
+                >
+                  <option value="">Worst air right now (choose for me)</option>
+                  {wards.map((w) => (
+                    <option key={w.ward_id} value={w.ward_id}>
+                      {wardNames[w.ward_id] ?? "This area"}{w.risk_tier ? ` — ${w.risk_tier.replace("_", " ")}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <div className="mt-1.5 flex gap-2">
                 <button onClick={broadcast} className="cursor-pointer rounded bg-emerald-700 px-2 py-1 text-white">
                   Yes, broadcast
@@ -269,7 +338,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
                   target="_blank"
                   rel="noreferrer"
                   className="rounded-lg border border-slate-200 p-2 transition-colors hover:border-emerald-300 hover:bg-emerald-50/50"
-                  aria-label={`Open ${z.zone_id} in Google Maps — ${formatIndex(zIndex, scale)}, ${cat.label}`}
+                  aria-label={`Open ${zoneNames[z.h3_cell] ?? "this area"} in Google Maps — ${formatIndex(zIndex, scale)}, ${cat.label}`}
                 >
                   <div className="flex items-center justify-between gap-1">
                     <span
@@ -280,7 +349,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
                     </span>
                     <span className="text-[11px] text-slate-500">{cat.label}</span>
                   </div>
-                  <div className="mt-1 font-mono text-xs font-semibold text-slate-700">{z.zone_id}</div>
+                  <div className="mt-1 text-xs font-semibold text-slate-700">{zoneNames[z.h3_cell] ?? "Nearby"}</div>
                   <div className="text-[11px] text-emerald-700">Directions ↗</div>
                 </a>
               );

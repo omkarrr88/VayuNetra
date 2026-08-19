@@ -19,6 +19,30 @@ export const SCALES: Record<AqiScale, { short: string; name: string; note: strin
 
 export type AqiCategory = { label: string; color: string; text: string };
 
+// A band colour is a FILL. Used as text on a page background the greens and yellows collapse to
+// 1.9-3.3:1, which fails WCAG AA and is genuinely hard to read on a projector. Every band therefore
+// carries an ink: darkened for the light theme, lightened for dark, each at least 4.5:1 against
+// that theme's surfaces. Use `bandInk(cat.color)` wherever a band colour is the TEXT colour;
+// `cat.color` stays the fill and `cat.text` stays the ink that reads on top of that fill.
+const BAND_INK: Record<string, [light: string, dark: string]> = {
+  "#16a34a": ["#15803d", "#4ade80"],   // Good
+  "#84cc16": ["#4d7c0f", "#a3e635"],   // Satisfactory / <= IT-4
+  "#eab308": ["#a16207", "#fbbf24"],   // Moderate / <= IT-3
+  "#f97316": ["#c2410c", "#fb923c"],   // Poor / USG / <= IT-2
+  "#dc2626": ["#b91c1c", "#f87171"],   // Very Poor / Unhealthy / <= IT-1
+  "#7f1d1d": ["#7f1d1d", "#fca5a5"],   // Severe / Hazardous
+  "#7e22ce": ["#6b21a8", "#c084fc"],   // Very Unhealthy
+};
+
+/** The readable ink for a band colour, in whichever theme is showing. */
+export function bandInk(color?: string | null): string {
+  if (!color) return "var(--muted)";
+  const pair = BAND_INK[color.toLowerCase()];
+  if (!pair) return color;
+  const dark = typeof document !== "undefined" && document.documentElement.dataset.theme === "dark";
+  return pair[dark ? 1 : 0];
+}
+
 // [C_lo, C_hi, I_lo, I_hi] — PM2.5 µg/m³ → sub-index
 const CPCB_PM25: [number, number, number, number][] = [
   [0, 30, 0, 50], [31, 60, 51, 100], [61, 90, 101, 200], [91, 120, 201, 300], [121, 250, 301, 400], [251, 500, 401, 500],
@@ -27,17 +51,17 @@ const EPA_PM25: [number, number, number, number][] = [
   [0, 9.0, 0, 50], [9.1, 35.4, 51, 100], [35.5, 55.4, 101, 150], [55.5, 125.4, 151, 200], [125.5, 225.4, 201, 300], [225.5, 325.4, 301, 500],
 ];
 const CPCB_CATS: [number, AqiCategory][] = [
-  [50, { label: "Good", color: "#16a34a", text: "#ffffff" }],
+  [50, { label: "Good", color: "#16a34a", text: "#04220f" }],
   [100, { label: "Satisfactory", color: "#84cc16", text: "#1a2e05" }],
   [200, { label: "Moderate", color: "#eab308", text: "#422006" }],
-  [300, { label: "Poor", color: "#f97316", text: "#ffffff" }],
+  [300, { label: "Poor", color: "#f97316", text: "#3b1206" }],
   [400, { label: "Very Poor", color: "#dc2626", text: "#ffffff" }],
   [500, { label: "Severe", color: "#7f1d1d", text: "#ffffff" }],
 ];
 const EPA_CATS: [number, AqiCategory][] = [
-  [50, { label: "Good", color: "#16a34a", text: "#ffffff" }],
+  [50, { label: "Good", color: "#16a34a", text: "#04220f" }],
   [100, { label: "Moderate", color: "#eab308", text: "#422006" }],
-  [150, { label: "Unhealthy for Sensitive Groups", color: "#f97316", text: "#ffffff" }],
+  [150, { label: "Unhealthy for Sensitive Groups", color: "#f97316", text: "#3b1206" }],
   [200, { label: "Unhealthy", color: "#dc2626", text: "#ffffff" }],
   [300, { label: "Very Unhealthy", color: "#7e22ce", text: "#ffffff" }],
   [500, { label: "Hazardous", color: "#7f1d1d", text: "#ffffff" }],
@@ -45,10 +69,10 @@ const EPA_CATS: [number, AqiCategory][] = [
 // WHO 2021: 24-h guideline 15 µg/m³; interim targets IT-4 25, IT-3 37.5, IT-2 50, IT-1 75
 const WHO_GUIDELINE = 15;
 const WHO_BANDS: [number, AqiCategory][] = [
-  [15, { label: "Within guideline", color: "#16a34a", text: "#ffffff" }],
+  [15, { label: "Within guideline", color: "#16a34a", text: "#04220f" }],
   [25, { label: "Above guideline (≤ IT-4)", color: "#84cc16", text: "#1a2e05" }],
   [37.5, { label: "Above IT-4 (≤ IT-3)", color: "#eab308", text: "#422006" }],
-  [50, { label: "Above IT-3 (≤ IT-2)", color: "#f97316", text: "#ffffff" }],
+  [50, { label: "Above IT-3 (≤ IT-2)", color: "#f97316", text: "#3b1206" }],
   [75, { label: "Above IT-2 (≤ IT-1)", color: "#dc2626", text: "#ffffff" }],
   [Infinity, { label: "Above IT-1", color: "#7f1d1d", text: "#ffffff" }],
 ];

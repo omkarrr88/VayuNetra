@@ -634,8 +634,12 @@ export default function BlameMap({
   return (
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
+      {/* Top-centre, not bottom-centre: the time scrub now sits bottom-centre of the map frame at the
+          same z-index and later in the DOM, so this readout was rendering underneath it and the wind
+          direction looked as though it had been removed. Top-centre is clear of the live-index strip
+          (top-left) and the layer control (top-right). */}
       {showPlumes && plume?.wind && (
-        <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-md border border-slate-200 bg-white/95 px-2.5 py-1.5 text-[11px] font-medium text-slate-700 shadow">
+        <div className="absolute left-1/2 top-2 z-20 flex max-w-[min(92%,26rem)] -translate-x-1/2 items-center gap-1.5 overflow-hidden whitespace-nowrap rounded-md border border-slate-200 bg-white/95 px-2.5 py-1.5 text-[11px] font-medium text-slate-700 shadow backdrop-blur">
           <span aria-hidden="true" className="inline-block text-orange-600" style={{ transform: `rotate(${plume.wind.bearing_deg}deg)` }}>
             ↑
           </span>

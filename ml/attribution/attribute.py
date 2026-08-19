@@ -132,7 +132,17 @@ def run(city_id: str, write: bool = False, signature_only: bool = False) -> None
         try:
             rows, method = _apply_hybrid(rows, long_df, per_cell, refs)
         except Exception as e:  # noqa: BLE001 — thin data / SHAP issues -> honest fallback
-            print(f"  hybrid unavailable ({e}); using signature priors")
+            # Record WHY on every row, not just on stdout. The abstain is one of the more defensible
+            # things this system does — a model with no out-of-sample skill declining to assign ML
+            # blame — but until now the reason lived only in a log line, so a reader seeing
+            # "signature-v1" could not tell whether the hybrid was unavailable, untrustworthy, or
+            # simply never attempted.
+            reason = str(e)
+            print(f"  hybrid unavailable ({reason}); using signature priors")
+            for r in rows:
+                ev = r.get("evidence")
+                if isinstance(ev, dict):
+                    ev["fallback_reason"] = reason
 
     print(f"{city_id}: {len(per_cell)} cells -> {len(rows)} attribution rows (method={method})")
     by_cell: dict[str, list[dict]] = {}

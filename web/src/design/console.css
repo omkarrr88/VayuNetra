@@ -20,52 +20,52 @@
 }
 
 /* ---- ink ------------------------------------------------------------------ */
-.vn-console .text-slate-900 { color: var(--ink); }
-.vn-console .text-slate-800 { color: var(--ink); }
-.vn-console .text-slate-700 { color: var(--ink-2); }
-.vn-console .text-slate-600 { color: var(--ink-2); }
-.vn-console .text-slate-500 { color: var(--muted); }
-.vn-console .text-slate-400 { color: var(--faint); }
-.vn-console .text-slate-300 { color: var(--faint); }
-.vn-console .hover\:text-slate-900:hover { color: var(--ink); }
-.vn-console .hover\:text-slate-700:hover { color: var(--ink-2); }
+.vn .text-slate-900, .vn-console .text-slate-900 { color: var(--ink); }
+.vn .text-slate-800, .vn-console .text-slate-800 { color: var(--ink); }
+.vn .text-slate-700, .vn-console .text-slate-700 { color: var(--ink-2); }
+.vn .text-slate-600, .vn-console .text-slate-600 { color: var(--ink-2); }
+.vn .text-slate-500, .vn-console .text-slate-500 { color: var(--muted); }
+.vn .text-slate-400, .vn-console .text-slate-400 { color: var(--faint); }
+.vn .text-slate-300, .vn-console .text-slate-300 { color: var(--faint); }
+.vn .hover\:text-slate-900:hover, .vn-console .hover\:text-slate-900:hover { color: var(--ink); }
+.vn .hover\:text-slate-700:hover, .vn-console .hover\:text-slate-700:hover { color: var(--ink-2); }
 
 /* ---- one accent ----------------------------------------------------------- */
-.vn-console .text-sky-700,
-.vn-console .text-blue-600,
-.vn-console .text-blue-700 { color: var(--primary); }
-.vn-console .bg-blue-600,
-.vn-console .bg-blue-700,
-.vn-console .bg-sky-700 { background-color: var(--primary); color: var(--primary-ink); }
-.vn-console .hover\:bg-blue-700:hover { background-color: color-mix(in srgb, var(--primary) 86%, #000); }
-.vn-console .ring-blue-500 { --tw-ring-color: var(--primary); }
+.vn .text-sky-700, .vn-console .text-sky-700,
+.vn .text-blue-600, .vn-console .text-blue-600,
+.vn .text-blue-700, .vn-console .text-blue-700 { color: var(--primary); }
+.vn .bg-blue-600, .vn-console .bg-blue-600,
+.vn .bg-blue-700, .vn-console .bg-blue-700,
+.vn .bg-sky-700, .vn-console .bg-sky-700 { background-color: var(--primary); color: var(--primary-ink); }
+.vn .hover\:bg-blue-700:hover, .vn-console .hover\:bg-blue-700:hover { background-color: color-mix(in srgb, var(--primary) 86%, #000); }
+.vn .ring-blue-500, .vn-console .ring-blue-500 { --tw-ring-color: var(--primary); }
 
 /* ---- status colours ------------------------------------------------------- */
-.vn-console .text-emerald-700, .vn-console .text-emerald-600, .vn-console .text-green-700 { color: var(--accent); }
-.vn-console .bg-emerald-700, .vn-console .bg-emerald-600 { background-color: var(--accent); color: #fff; }
-.vn-console .text-amber-800, .vn-console .text-amber-700 { color: var(--warn); }
-.vn-console .text-rose-600, .vn-console .text-red-700, .vn-console .text-red-600 { color: var(--danger); }
+.vn .text-emerald-700, .vn .text-emerald-600, .vn .text-green-700, .vn-console .text-emerald-700, .vn-console .text-emerald-600, .vn-console .text-green-700 { color: var(--accent); }
+.vn .bg-emerald-700, .vn .bg-emerald-600, .vn-console .bg-emerald-700, .vn-console .bg-emerald-600 { background-color: var(--accent); color: var(--accent-ink); }
+.vn .text-amber-800, .vn .text-amber-700, .vn-console .text-amber-800, .vn-console .text-amber-700 { color: var(--warn); }
+.vn .text-rose-600, .vn .text-red-700, .vn .text-red-600, .vn-console .text-rose-600, .vn-console .text-red-700, .vn-console .text-red-600 { color: var(--danger); }
 
 /* ---- surfaces and rules --------------------------------------------------- */
-.vn-console .bg-white, .vn-console .bg-white\/95, .vn-console .bg-white\/90 { background-color: var(--surface); }
-.vn-console .bg-slate-50 { background-color: var(--surface-2); }
-.vn-console .bg-slate-100 { background-color: var(--surface-3); }
-.vn-console .hover\:bg-slate-100:hover { background-color: var(--surface-3); }
-.vn-console .hover\:bg-slate-50:hover { background-color: var(--surface-2); }
-.vn-console .bg-slate-800, .vn-console .bg-slate-900 { background-color: var(--nav); color: var(--nav-ink-strong); }
-.vn-console .border-slate-100 { border-color: var(--line); }
-.vn-console .border-slate-200 { border-color: var(--line); }
-.vn-console .border-slate-300 { border-color: var(--line-strong); }
-.vn-console .ring-slate-200 { --tw-ring-color: var(--line); }
+.vn .bg-white, .vn .bg-white\/95, .vn .bg-white\/90, .vn-console .bg-white, .vn-console .bg-white\/95, .vn-console .bg-white\/90 { background-color: var(--surface); }
+.vn .bg-slate-50, .vn-console .bg-slate-50 { background-color: var(--surface-2); }
+.vn .bg-slate-100, .vn-console .bg-slate-100 { background-color: var(--surface-3); }
+.vn .hover\:bg-slate-100:hover, .vn-console .hover\:bg-slate-100:hover { background-color: var(--surface-3); }
+.vn .hover\:bg-slate-50:hover, .vn-console .hover\:bg-slate-50:hover { background-color: var(--surface-2); }
+.vn .bg-slate-800, .vn .bg-slate-900, .vn-console .bg-slate-800, .vn-console .bg-slate-900 { background-color: var(--nav); color: var(--nav-ink-strong); }
+.vn .border-slate-100, .vn-console .border-slate-100 { border-color: var(--line); }
+.vn .border-slate-200, .vn-console .border-slate-200 { border-color: var(--line); }
+.vn .border-slate-300, .vn-console .border-slate-300 { border-color: var(--line-strong); }
+.vn .ring-slate-200, .vn-console .ring-slate-200 { --tw-ring-color: var(--line); }
 
 /* ---- shape ---------------------------------------------------------------- */
-.vn-console .rounded-sm { border-radius: 5px; }
-.vn-console .rounded-md { border-radius: var(--r-sm); }
-.vn-console .rounded-lg { border-radius: var(--r-md); }
-.vn-console .rounded-xl { border-radius: var(--r-lg); }
+.vn .rounded-sm, .vn-console .rounded-sm { border-radius: 5px; }
+.vn .rounded-md, .vn-console .rounded-md { border-radius: var(--r-sm); }
+.vn .rounded-lg, .vn-console .rounded-lg { border-radius: var(--r-md); }
+.vn .rounded-xl, .vn-console .rounded-xl { border-radius: var(--r-lg); }
 
 /* The old card class still appears inside a few panels; give it the new frame. */
-.vn-console .vn-card {
+.vn .vn-card, .vn-console .vn-card {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
@@ -77,11 +77,11 @@
 .vn-console .text-\[11px\], .vn-console .text-xs { font-size: var(--t-xs); }
 .vn-console .text-\[12px\], .vn-console .text-\[12\.5px\], .vn-console .text-\[13px\], .vn-console .text-\[13\.5px\], .vn-console .text-sm { font-size: var(--t-sm); }
 .vn-console .text-\[14px\], .vn-console .text-\[15px\], .vn-console .text-base { font-size: var(--t-md); }
-.vn-console .text-lg { font-size: var(--t-lg); }
-.vn-console .text-xl { font-size: var(--t-xl); }
-.vn-console .text-2xl { font-size: 26px; letter-spacing: var(--tracking-tight); }
-.vn-console .text-3xl { font-size: var(--t-display); letter-spacing: var(--tracking-tight); }
-.vn-console .text-4xl, .vn-console .text-5xl { font-size: var(--t-metric); letter-spacing: var(--tracking-tight); line-height: var(--lh-tight); }
+.vn .text-lg, .vn-console .text-lg { font-size: var(--t-lg); }
+.vn .text-xl, .vn-console .text-xl { font-size: var(--t-xl); }
+.vn .text-2xl, .vn-console .text-2xl { font-size: 26px; letter-spacing: var(--tracking-tight); }
+.vn .text-3xl, .vn-console .text-3xl { font-size: var(--t-display); letter-spacing: var(--tracking-tight); }
+.vn .text-4xl, .vn .text-5xl, .vn-console .text-4xl, .vn-console .text-5xl { font-size: var(--t-metric); letter-spacing: var(--tracking-tight); line-height: var(--lh-tight); }
 
 /* ---- interaction ---------------------------------------------------------- */
 .vn-console button:not(:disabled), .vn-console a[href], .vn-console [role="tab"] { cursor: pointer; }
@@ -96,7 +96,7 @@
 }
 
 /* Panels enter as a page rather than a rail, so they rise in together. */
-.vn-console .vn-panel { animation: vn-rise var(--base) var(--ease) both; }
+.vn .vn-panel, .vn-console .vn-panel { animation: vn-rise var(--base) var(--ease) both; }
 @media (prefers-reduced-motion: reduce) { .vn-console .vn-panel { animation: none; } }
 
 /* A console page is wide; keep long prose readable inside its cards. */
@@ -106,18 +106,18 @@
    A few panels use Tailwind's -50/-100 tints for callouts. They are legible in
    light, but in dark they stay pale while the ink around them turns light. Map
    the whole family onto the token soft-tints so both themes are correct. */
-.vn-console .bg-teal-50\/60, .vn-console .bg-teal-50, .vn-console .bg-emerald-50, .vn-console .bg-green-50 { background-color: var(--accent-soft); }
-.vn-console .bg-blue-50, .vn-console .bg-sky-50, .vn-console .bg-indigo-50 { background-color: var(--primary-soft); }
-.vn-console .bg-amber-50, .vn-console .bg-yellow-50, .vn-console .bg-orange-50 { background-color: var(--warn-soft); }
-.vn-console .bg-rose-50, .vn-console .bg-red-50 { background-color: var(--danger-soft); }
-.vn-console .border-teal-100, .vn-console .border-teal-200 { border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
-.vn-console .border-blue-100, .vn-console .border-blue-200, .vn-console .border-sky-200 { border-color: color-mix(in srgb, var(--primary) 35%, transparent); }
-.vn-console .border-amber-200, .vn-console .border-amber-100 { border-color: color-mix(in srgb, var(--warn) 35%, transparent); }
-.vn-console .border-rose-200, .vn-console .border-red-200 { border-color: color-mix(in srgb, var(--danger) 35%, transparent); }
-.vn-console .text-teal-800, .vn-console .text-teal-700 { color: var(--accent); }
+.vn .bg-teal-50\/60, .vn .bg-teal-50, .vn .bg-emerald-50, .vn .bg-green-50, .vn-console .bg-teal-50\/60, .vn-console .bg-teal-50, .vn-console .bg-emerald-50, .vn-console .bg-green-50 { background-color: var(--accent-soft); }
+.vn .bg-blue-50, .vn .bg-sky-50, .vn .bg-indigo-50, .vn-console .bg-blue-50, .vn-console .bg-sky-50, .vn-console .bg-indigo-50 { background-color: var(--primary-soft); }
+.vn .bg-amber-50, .vn .bg-yellow-50, .vn .bg-orange-50, .vn-console .bg-amber-50, .vn-console .bg-yellow-50, .vn-console .bg-orange-50 { background-color: var(--warn-soft); }
+.vn .bg-rose-50, .vn .bg-red-50, .vn-console .bg-rose-50, .vn-console .bg-red-50 { background-color: var(--danger-soft); }
+.vn .border-teal-100, .vn .border-teal-200, .vn-console .border-teal-100, .vn-console .border-teal-200 { border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+.vn .border-blue-100, .vn .border-blue-200, .vn .border-sky-200, .vn-console .border-blue-100, .vn-console .border-blue-200, .vn-console .border-sky-200 { border-color: color-mix(in srgb, var(--primary) 35%, transparent); }
+.vn .border-amber-200, .vn .border-amber-100, .vn-console .border-amber-200, .vn-console .border-amber-100 { border-color: color-mix(in srgb, var(--warn) 35%, transparent); }
+.vn .border-rose-200, .vn .border-red-200, .vn-console .border-rose-200, .vn-console .border-red-200 { border-color: color-mix(in srgb, var(--danger) 35%, transparent); }
+.vn .text-teal-800, .vn .text-teal-700, .vn-console .text-teal-800, .vn-console .text-teal-700 { color: var(--accent); }
 
 /* Inputs and selects inside those callouts must follow the theme too. */
-.vn-console :where(input, select, textarea) { background-color: var(--surface); color: var(--ink); border-color: var(--line); }
+.vn-console :is(input, select, textarea) { background-color: var(--surface); color: var(--ink); border-color: var(--line); }
 
 /* ---- reading measure ------------------------------------------------------
    A console page is much wider than the old rail. Prose that filled a 26rem
@@ -125,3 +125,93 @@
    without touching tables, charts or grids. */
 .vn-console .vn-panel > p,
 .vn-console .vn-panel > div > p { max-width: 82ch; }
+
+/* ---- the whole tint family, alpha variants included -----------------------
+   Panels reach for Tailwind's -50 and -100 tints (and their /50, /60, /70
+   alpha forms) for callouts, chips and selected rows. Mapping only the plain
+   -50 left `bg-blue-100` and `bg-blue-50/50` pale in dark mode, with light ink
+   on top — invisible. Substring selectors catch every alpha variant; the
+   saturated -500 shades below re-assert themselves afterwards. */
+.vn :is([class*="bg-blue-50"], [class*="bg-sky-50"], [class*="bg-indigo-50"],
+           [class*="bg-blue-100"], [class*="bg-sky-100"], [class*="bg-indigo-100"]),
+.vn-console :is([class*="bg-blue-50"], [class*="bg-sky-50"], [class*="bg-indigo-50"],
+                   [class*="bg-blue-100"], [class*="bg-sky-100"], [class*="bg-indigo-100"]) {
+  background-color: var(--primary-soft);
+}
+.vn :is([class*="bg-emerald-50"], [class*="bg-green-50"], [class*="bg-teal-50"],
+           [class*="bg-emerald-100"], [class*="bg-green-100"], [class*="bg-teal-100"]),
+.vn-console :is([class*="bg-emerald-50"], [class*="bg-green-50"], [class*="bg-teal-50"],
+                   [class*="bg-emerald-100"], [class*="bg-green-100"], [class*="bg-teal-100"]) {
+  background-color: var(--accent-soft);
+}
+.vn :is([class*="bg-amber-50"], [class*="bg-yellow-50"], [class*="bg-orange-50"],
+           [class*="bg-amber-100"], [class*="bg-yellow-100"], [class*="bg-orange-100"]),
+.vn-console :is([class*="bg-amber-50"], [class*="bg-yellow-50"], [class*="bg-orange-50"],
+                   [class*="bg-amber-100"], [class*="bg-yellow-100"], [class*="bg-orange-100"]) {
+  background-color: var(--warn-soft);
+}
+.vn :is([class*="bg-rose-50"], [class*="bg-red-50"], [class*="bg-rose-100"], [class*="bg-red-100"]),
+.vn-console :is([class*="bg-rose-50"], [class*="bg-red-50"], [class*="bg-rose-100"], [class*="bg-red-100"]) {
+  background-color: var(--danger-soft);
+}
+.vn :is([class*="bg-violet-50"], [class*="bg-purple-50"], [class*="bg-violet-100"], [class*="bg-purple-100"]),
+.vn-console :is([class*="bg-violet-50"], [class*="bg-purple-50"], [class*="bg-violet-100"], [class*="bg-purple-100"]) {
+  background-color: color-mix(in srgb, #8b5cf6 16%, var(--surface));
+}
+.vn :is([class*="bg-slate-50"], [class*="bg-gray-50"]),
+.vn-console :is([class*="bg-slate-50"], [class*="bg-gray-50"]) { background-color: var(--surface-2); }
+.vn :is([class*="bg-slate-100"], [class*="bg-gray-100"]),
+.vn-console :is([class*="bg-slate-100"], [class*="bg-gray-100"]) { background-color: var(--surface-3); }
+
+/* Saturated shades are deliberate fills, not tints — restore them. */
+.vn .bg-blue-500, .vn-console .bg-blue-500 { background-color: #3b82f6; }
+.vn .bg-blue-600, .vn .bg-blue-600, .vn-console .bg-blue-600,
+.vn .bg-blue-700, .vn-console .bg-blue-700 { background-color: var(--primary); }
+.vn .bg-slate-500, .vn-console .bg-slate-500 { background-color: #64748b; }
+
+/* Ink that was written for a light tint must follow the tint into dark. */
+.vn-console :is([class*="bg-blue-50"], [class*="bg-blue-100"]) .text-blue-900,
+.vn-console :is([class*="bg-amber-50"], [class*="bg-amber-100"]) .text-amber-900,
+.vn-console :is([class*="bg-emerald-50"], [class*="bg-emerald-100"]) .text-emerald-900,
+.vn-console :is([class*="bg-rose-50"], [class*="bg-rose-100"]) .text-rose-900 { color: var(--ink); }
+.vn .text-blue-800, .vn .text-blue-900, .vn-console .text-blue-800, .vn-console .text-blue-900 { color: var(--primary); }
+.vn .text-amber-900, .vn-console .text-amber-900 { color: var(--warn); }
+.vn .text-emerald-800, .vn .text-emerald-900, .vn-console .text-emerald-800, .vn-console .text-emerald-900 { color: var(--accent); }
+.vn .text-rose-800, .vn .text-rose-900, .vn-console .text-rose-800, .vn-console .text-rose-900 { color: var(--danger); }
+
+/* A solid fill sets its own ink, but a child carrying `text-white` overrides the inherited value —
+   and in dark mode those fills are LIGHT, so the white child becomes unreadable (the latency widget
+   measured 1.86:1). Inside a mapped fill, `text-white` defers to whatever the fill chose. */
+.vn :is(.bg-emerald-700, .bg-emerald-600, .bg-blue-600, .bg-blue-700, .bg-sky-700, .bg-slate-800, .bg-slate-900) :is(.text-white, .text-slate-100, .text-slate-200),
+.vn-console :is(.bg-emerald-700, .bg-emerald-600, .bg-blue-600, .bg-blue-700, .bg-sky-700, .bg-slate-800, .bg-slate-900) :is(.text-white, .text-slate-100, .text-slate-200) {
+  color: inherit;
+}
+
+/* ---- light inks inside a solid fill ---------------------------------------
+   The earlier rule only covered `text-white`. Tailwind's -50/-100 inks are just as light, and in
+   dark mode the mapped fills are light too, so `text-emerald-50` on the latency widget measured
+   1.77:1. Any near-white ink inside a mapped fill defers to whatever the fill chose. */
+.vn :is(.bg-emerald-700, .bg-emerald-600, .bg-blue-600, .bg-blue-700, .bg-sky-700, .bg-slate-800, .bg-slate-900)
+  :is([class*="text-emerald-5"], [class*="text-emerald-1"], [class*="text-blue-5"], [class*="text-blue-1"],
+      [class*="text-slate-1"], [class*="text-slate-2"], [class*="text-green-1"]),
+.vn-console :is(.bg-emerald-700, .bg-emerald-600, .bg-blue-600, .bg-blue-700, .bg-sky-700, .bg-slate-800, .bg-slate-900)
+  :is([class*="text-emerald-5"], [class*="text-emerald-1"], [class*="text-blue-5"], [class*="text-blue-1"],
+      [class*="text-slate-1"], [class*="text-slate-2"], [class*="text-green-1"]) {
+  color: inherit;
+}
+
+/* A -950/40 chip sits on an accent-coloured card, so its text uses the body ink colour for high contrast and visual distinction. */
+.vn-console [class*="bg-emerald-950"] { background-color: var(--accent-soft); color: var(--ink); }
+.vn-console [class*="bg-emerald-950"] * { color: inherit; }
+/* Override the parent's inherited colour for text-white inside emerald-950, since the parent card is too similar in colour. */
+.vn-console :is(.bg-emerald-700, .bg-emerald-600) [class*="bg-emerald-950"].text-white { color: var(--ink) !important; }
+
+/* Recharts paints its legend and axis text with its own fill, which was chosen for a white chart
+   background and drops to 3.2:1 on a dark card. */
+.vn-console .recharts-legend-item-text,
+.vn-console .recharts-cartesian-axis-tick-value,
+.vn .recharts-legend-item-text,
+.vn .recharts-cartesian-axis-tick-value { fill: var(--muted) !important; }
+
+/* text-amber-600 sits on a mid tint in the cell story, where --warn alone is not enough. */
+.vn-console .text-amber-600 { color: var(--ink); }

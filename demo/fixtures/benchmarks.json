@@ -10,7 +10,7 @@
     "split": "2025-11-01T00:00:00+00:00"
    },
    "stations_cells": 39,
-   "generated_at": "2026-08-17T17:28:41.303590+00:00",
+   "generated_at": "2026-08-19T13:19:31.603113+00:00",
    "headline": [
     {
      "horizon_h": 24,
@@ -60,7 +60,7 @@
      "precision_p30": 0.636,
      "skill_raw_vs_persistence": 0.094,
      "onsets": 19117,
-     "pi80_coverage": 0.774,
+     "pi80_coverage": 0.775,
      "brier_skill_very_poor": 0.379
     }
    ]
@@ -70,17 +70,17 @@
    "source": "live",
    "window": {
     "start": "2026-06-20T10:00:00+00:00",
-    "end": "2026-08-17T16:00:00+00:00",
-    "split": "2026-08-03T02:30:00+00:00"
+    "end": "2026-08-19T13:00:00+00:00",
+    "split": "2026-08-04T12:15:00+00:00"
    },
    "stations_cells": 22,
-   "generated_at": "2026-08-17T17:48:44.953369+00:00",
+   "generated_at": "2026-08-19T14:50:54.558228+00:00",
    "headline": [
     {
      "horizon_h": 24,
-     "n_test": 2235,
-     "skill_vs_persistence": 0.157,
-     "skill_vs_seasonal_naive": 0.268,
+     "n_test": 2272,
+     "skill_vs_persistence": 0.124,
+     "skill_vs_seasonal_naive": 0.302,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -88,16 +88,16 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.127,
+     "skill_raw_vs_persistence": 0.102,
      "onsets": 0,
-     "pi80_coverage": 0.74,
+     "pi80_coverage": 0.794,
      "brier_skill_very_poor": null
     },
     {
      "horizon_h": 48,
-     "n_test": 1992,
-     "skill_vs_persistence": 0.186,
-     "skill_vs_seasonal_naive": 0.224,
+     "n_test": 2036,
+     "skill_vs_persistence": 0.197,
+     "skill_vs_seasonal_naive": 0.273,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -105,16 +105,16 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.158,
+     "skill_raw_vs_persistence": 0.174,
      "onsets": 0,
-     "pi80_coverage": 0.74,
+     "pi80_coverage": 0.769,
      "brier_skill_very_poor": null
     },
     {
      "horizon_h": 72,
-     "n_test": 1776,
-     "skill_vs_persistence": 0.121,
-     "skill_vs_seasonal_naive": 0.187,
+     "n_test": 1822,
+     "skill_vs_persistence": 0.171,
+     "skill_vs_seasonal_naive": 0.217,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -122,9 +122,9 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.112,
+     "skill_raw_vs_persistence": 0.176,
      "onsets": 0,
-     "pi80_coverage": 0.718,
+     "pi80_coverage": 0.727,
      "brier_skill_very_poor": null
     }
    ]
@@ -137,17 +137,17 @@
    "city_id": "bengaluru",
    "source": "live",
    "window": {
-    "start": "2026-05-21T03:00:00+00:00",
-    "end": "2026-08-17T16:00:00+00:00",
-    "split": "2026-07-26T12:45:00+00:00"
+    "start": "2026-05-22T23:00:00+00:00",
+    "end": "2026-08-19T13:00:00+00:00",
+    "split": "2026-07-28T09:30:00+00:00"
    },
    "stations_cells": 13,
-   "generated_at": "2026-08-17T17:49:17.660932+00:00",
+   "generated_at": "2026-08-19T14:52:17.454250+00:00",
    "headline": [
     {
      "horizon_h": 24,
-     "n_test": 1127,
-     "skill_vs_persistence": 0.142,
+     "n_test": 1209,
+     "skill_vs_persistence": 0.119,
      "skill_vs_seasonal_naive": 0.112,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
@@ -156,33 +156,33 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.159,
+     "skill_raw_vs_persistence": 0.143,
      "onsets": 0,
-     "pi80_coverage": 0.827,
+     "pi80_coverage": 0.842,
      "brier_skill_very_poor": null
     },
     {
      "horizon_h": 48,
-     "n_test": 1046,
-     "skill_vs_persistence": 0.417,
-     "skill_vs_seasonal_naive": -0.085,
+     "n_test": 1088,
+     "skill_vs_persistence": 0.341,
+     "skill_vs_seasonal_naive": -0.127,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
      "onset_recall_model": null,
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
-     "precision_p30": null,
-     "skill_raw_vs_persistence": 0.496,
+     "precision_p30": 0.0,
+     "skill_raw_vs_persistence": 0.443,
      "onsets": 0,
-     "pi80_coverage": 0.83,
+     "pi80_coverage": 0.826,
      "brier_skill_very_poor": null
     },
     {
      "horizon_h": 72,
-     "n_test": 975,
-     "skill_vs_persistence": 0.466,
-     "skill_vs_seasonal_naive": 0.028,
+     "n_test": 1043,
+     "skill_vs_persistence": 0.415,
+     "skill_vs_seasonal_naive": 0.014,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -190,9 +190,9 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.518,
+     "skill_raw_vs_persistence": 0.475,
      "onsets": 0,
-     "pi80_coverage": 0.873,
+     "pi80_coverage": 0.804,
      "brier_skill_very_poor": null
     }
    ]
@@ -268,18 +268,18 @@
    "city_id": "mumbai",
    "source": "live",
    "window": {
-    "start": "2026-05-21T03:00:00+00:00",
-    "end": "2026-08-17T15:00:00+00:00",
-    "split": "2026-07-26T12:00:00+00:00"
+    "start": "2026-05-22T23:00:00+00:00",
+    "end": "2026-08-19T12:00:00+00:00",
+    "split": "2026-07-28T08:45:00+00:00"
    },
-   "stations_cells": 19,
-   "generated_at": "2026-08-17T17:49:49.974169+00:00",
+   "stations_cells": 20,
+   "generated_at": "2026-08-19T14:51:54.811773+00:00",
    "headline": [
     {
      "horizon_h": 24,
-     "n_test": 1877,
-     "skill_vs_persistence": 0.104,
-     "skill_vs_seasonal_naive": 0.507,
+     "n_test": 0,
+     "skill_vs_persistence": null,
+     "skill_vs_seasonal_naive": null,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -287,16 +287,16 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.07,
+     "skill_raw_vs_persistence": null,
      "onsets": 0,
-     "pi80_coverage": 0.723,
+     "pi80_coverage": null,
      "brier_skill_very_poor": null
     },
     {
      "horizon_h": 48,
-     "n_test": 1671,
-     "skill_vs_persistence": 0.144,
-     "skill_vs_seasonal_naive": 0.511,
+     "n_test": 0,
+     "skill_vs_persistence": null,
+     "skill_vs_seasonal_naive": null,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -304,27 +304,27 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.118,
+     "skill_raw_vs_persistence": null,
      "onsets": 0,
-     "pi80_coverage": 0.697,
+     "pi80_coverage": null,
      "brier_skill_very_poor": null
     },
     {
      "horizon_h": 72,
-     "n_test": 1468,
-     "skill_vs_persistence": 0.055,
-     "skill_vs_seasonal_naive": 0.301,
+     "n_test": 0,
+     "skill_vs_persistence": null,
+     "skill_vs_seasonal_naive": null,
      "winter_skill_vs_persistence": null,
-     "very_poor_hours_skill": -0.0,
-     "very_poor_hours_n": 2,
-     "onset_recall_model": 0.0,
-     "onset_recall_persistence": 0.0,
-     "onset_recall_p30": 0.0,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.053,
-     "onsets": 2,
-     "pi80_coverage": 0.795,
-     "brier_skill_very_poor": -0.003
+     "skill_raw_vs_persistence": null,
+     "onsets": 0,
+     "pi80_coverage": null,
+     "brier_skill_very_poor": null
     }
    ]
   }
@@ -337,33 +337,16 @@
    "source": "live",
    "window": {
     "start": "2026-07-12T10:00:00+00:00",
-    "end": "2026-08-16T10:00:00+00:00",
-    "split": "2026-08-07T16:00:00+00:00"
+    "end": "2026-08-19T13:00:00+00:00",
+    "split": "2026-08-10T00:15:00+00:00"
    },
-   "stations_cells": 6,
-   "generated_at": "2026-08-17T17:50:56.270241+00:00",
+   "stations_cells": 8,
+   "generated_at": "2026-08-19T14:53:11.975907+00:00",
    "headline": [
     {
      "horizon_h": 24,
-     "n_test": 745,
-     "skill_vs_persistence": 0.143,
-     "skill_vs_seasonal_naive": 0.185,
-     "winter_skill_vs_persistence": null,
-     "very_poor_hours_skill": null,
-     "very_poor_hours_n": 0,
-     "onset_recall_model": null,
-     "onset_recall_persistence": null,
-     "onset_recall_p30": null,
-     "precision_p30": null,
-     "skill_raw_vs_persistence": 0.106,
-     "onsets": 0,
-     "pi80_coverage": 0.79,
-     "brier_skill_very_poor": null
-    },
-    {
-     "horizon_h": 48,
-     "n_test": 619,
-     "skill_vs_persistence": 0.133,
+     "n_test": 689,
+     "skill_vs_persistence": 0.121,
      "skill_vs_seasonal_naive": 0.13,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
@@ -372,16 +355,16 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.044,
+     "skill_raw_vs_persistence": 0.082,
      "onsets": 0,
-     "pi80_coverage": 0.847,
+     "pi80_coverage": 0.712,
      "brier_skill_very_poor": null
     },
     {
-     "horizon_h": 72,
-     "n_test": 532,
-     "skill_vs_persistence": 0.031,
-     "skill_vs_seasonal_naive": 0.012,
+     "horizon_h": 48,
+     "n_test": 549,
+     "skill_vs_persistence": 0.125,
+     "skill_vs_seasonal_naive": 0.16,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -389,9 +372,26 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": -0.009,
+     "skill_raw_vs_persistence": 0.056,
      "onsets": 0,
-     "pi80_coverage": 0.744,
+     "pi80_coverage": 0.776,
+     "brier_skill_very_poor": null
+    },
+    {
+     "horizon_h": 72,
+     "n_test": 423,
+     "skill_vs_persistence": 0.142,
+     "skill_vs_seasonal_naive": 0.145,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.059,
+     "onsets": 0,
+     "pi80_coverage": 0.801,
      "brier_skill_very_poor": null
     }
    ]
@@ -405,17 +405,17 @@
    "source": "live",
    "window": {
     "start": "2026-07-12T10:00:00+00:00",
-    "end": "2026-08-16T10:00:00+00:00",
-    "split": "2026-08-07T16:00:00+00:00"
+    "end": "2026-08-19T13:00:00+00:00",
+    "split": "2026-08-10T00:15:00+00:00"
    },
    "stations_cells": 6,
-   "generated_at": "2026-08-17T17:50:13.415818+00:00",
+   "generated_at": "2026-08-19T14:52:31.383720+00:00",
    "headline": [
     {
      "horizon_h": 24,
-     "n_test": 884,
-     "skill_vs_persistence": 0.055,
-     "skill_vs_seasonal_naive": 0.224,
+     "n_test": 732,
+     "skill_vs_persistence": 0.05,
+     "skill_vs_seasonal_naive": 0.219,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": 0.003,
      "very_poor_hours_n": 1,
@@ -423,33 +423,33 @@
      "onset_recall_persistence": 0.0,
      "onset_recall_p30": 0.0,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.053,
+     "skill_raw_vs_persistence": 0.048,
      "onsets": 1,
-     "pi80_coverage": 0.788,
+     "pi80_coverage": 0.823,
      "brier_skill_very_poor": -0.0
     },
     {
      "horizon_h": 48,
-     "n_test": 764,
-     "skill_vs_persistence": 0.052,
-     "skill_vs_seasonal_naive": 0.218,
+     "n_test": 624,
+     "skill_vs_persistence": 0.048,
+     "skill_vs_seasonal_naive": 0.036,
      "winter_skill_vs_persistence": null,
-     "very_poor_hours_skill": -0.02,
+     "very_poor_hours_skill": -0.023,
      "very_poor_hours_n": 1,
      "onset_recall_model": 0.0,
      "onset_recall_persistence": 0.0,
      "onset_recall_p30": 0.0,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.052,
+     "skill_raw_vs_persistence": 0.048,
      "onsets": 1,
-     "pi80_coverage": 0.749,
-     "brier_skill_very_poor": -0.0
+     "pi80_coverage": 0.822,
+     "brier_skill_very_poor": -0.002
     },
     {
      "horizon_h": 72,
-     "n_test": 647,
-     "skill_vs_persistence": 0.055,
-     "skill_vs_seasonal_naive": 0.216,
+     "n_test": 506,
+     "skill_vs_persistence": 0.062,
+     "skill_vs_seasonal_naive": 0.024,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": 0.009,
      "very_poor_hours_n": 1,
@@ -457,10 +457,10 @@
      "onset_recall_persistence": 0.0,
      "onset_recall_p30": 0.0,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.055,
+     "skill_raw_vs_persistence": 0.062,
      "onsets": 1,
-     "pi80_coverage": 0.75,
-     "brier_skill_very_poor": -0.0
+     "pi80_coverage": 0.802,
+     "brier_skill_very_poor": -0.002
     }
    ]
   }
@@ -473,17 +473,17 @@
    "source": "live",
    "window": {
     "start": "2026-07-12T10:00:00+00:00",
-    "end": "2026-08-16T07:00:00+00:00",
-    "split": "2026-08-07T13:45:00+00:00"
+    "end": "2026-08-19T12:00:00+00:00",
+    "split": "2026-08-09T23:30:00+00:00"
    },
-   "stations_cells": 6,
-   "generated_at": "2026-08-17T17:50:00.680823+00:00",
+   "stations_cells": 9,
+   "generated_at": "2026-08-19T14:50:41.133609+00:00",
    "headline": [
     {
      "horizon_h": 24,
-     "n_test": 760,
-     "skill_vs_persistence": 0.11,
-     "skill_vs_seasonal_naive": 0.316,
+     "n_test": 595,
+     "skill_vs_persistence": -0.051,
+     "skill_vs_seasonal_naive": 0.357,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -491,16 +491,16 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.069,
+     "skill_raw_vs_persistence": -0.084,
      "onsets": 0,
-     "pi80_coverage": 0.775,
+     "pi80_coverage": 0.753,
      "brier_skill_very_poor": null
     },
     {
      "horizon_h": 48,
-     "n_test": 656,
-     "skill_vs_persistence": 0.25,
-     "skill_vs_seasonal_naive": 0.312,
+     "n_test": 482,
+     "skill_vs_persistence": -0.007,
+     "skill_vs_seasonal_naive": 0.208,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -508,16 +508,16 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.243,
+     "skill_raw_vs_persistence": -0.007,
      "onsets": 0,
-     "pi80_coverage": 0.806,
+     "pi80_coverage": 0.724,
      "brier_skill_very_poor": null
     },
     {
      "horizon_h": 72,
-     "n_test": 540,
-     "skill_vs_persistence": 0.366,
-     "skill_vs_seasonal_naive": 0.274,
+     "n_test": 364,
+     "skill_vs_persistence": 0.213,
+     "skill_vs_seasonal_naive": 0.292,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -525,9 +525,9 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.38,
+     "skill_raw_vs_persistence": 0.213,
      "onsets": 0,
-     "pi80_coverage": 0.732,
+     "pi80_coverage": 0.716,
      "brier_skill_very_poor": null
     }
    ]
@@ -541,17 +541,17 @@
    "source": "live",
    "window": {
     "start": "2026-07-12T10:00:00+00:00",
-    "end": "2026-08-16T09:00:00+00:00",
-    "split": "2026-08-07T15:15:00+00:00"
+    "end": "2026-08-19T11:00:00+00:00",
+    "split": "2026-08-09T22:45:00+00:00"
    },
    "stations_cells": 6,
-   "generated_at": "2026-08-17T17:51:11.339389+00:00",
+   "generated_at": "2026-08-19T14:50:26.443977+00:00",
    "headline": [
     {
      "horizon_h": 24,
-     "n_test": 941,
-     "skill_vs_persistence": 0.06,
-     "skill_vs_seasonal_naive": 0.255,
+     "n_test": 428,
+     "skill_vs_persistence": -0.16,
+     "skill_vs_seasonal_naive": 0.23,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -559,16 +559,16 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": -0.019,
+     "skill_raw_vs_persistence": -0.288,
      "onsets": 0,
-     "pi80_coverage": 0.849,
+     "pi80_coverage": 0.749,
      "brier_skill_very_poor": null
     },
     {
      "horizon_h": 48,
-     "n_test": 808,
-     "skill_vs_persistence": -0.037,
-     "skill_vs_seasonal_naive": 0.075,
+     "n_test": 336,
+     "skill_vs_persistence": -0.1,
+     "skill_vs_seasonal_naive": -0.023,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -576,16 +576,16 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": -0.037,
+     "skill_raw_vs_persistence": -0.1,
      "onsets": 0,
-     "pi80_coverage": 0.815,
+     "pi80_coverage": 0.743,
      "brier_skill_very_poor": null
     },
     {
      "horizon_h": 72,
-     "n_test": 664,
-     "skill_vs_persistence": -0.064,
-     "skill_vs_seasonal_naive": 0.031,
+     "n_test": 244,
+     "skill_vs_persistence": -0.314,
+     "skill_vs_seasonal_naive": -0.087,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -593,9 +593,9 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": -0.108,
+     "skill_raw_vs_persistence": -0.349,
      "onsets": 0,
-     "pi80_coverage": 0.7,
+     "pi80_coverage": 0.466,
      "brier_skill_very_poor": null
     }
    ]
@@ -612,7 +612,7 @@
     "split": "2025-11-01T00:00:00+00:00"
    },
    "stations_cells": 10,
-   "generated_at": "2026-08-17T17:34:06.505055+00:00",
+   "generated_at": "2026-08-19T13:17:49.615458+00:00",
    "headline": [
     {
      "horizon_h": 24,
@@ -628,7 +628,7 @@
      "precision_p30": 0.57,
      "skill_raw_vs_persistence": 0.125,
      "onsets": 1607,
-     "pi80_coverage": 0.748,
+     "pi80_coverage": 0.749,
      "brier_skill_very_poor": 0.393
     },
     {
@@ -662,7 +662,7 @@
      "precision_p30": 0.518,
      "skill_raw_vs_persistence": -0.007,
      "onsets": 2134,
-     "pi80_coverage": 0.698,
+     "pi80_coverage": 0.699,
      "brier_skill_very_poor": 0.238
     }
    ]
@@ -672,17 +672,17 @@
    "source": "live",
    "window": {
     "start": "2026-07-12T10:00:00+00:00",
-    "end": "2026-08-16T09:00:00+00:00",
-    "split": "2026-08-07T15:15:00+00:00"
+    "end": "2026-08-19T11:00:00+00:00",
+    "split": "2026-08-09T22:45:00+00:00"
    },
-   "stations_cells": 3,
-   "generated_at": "2026-08-17T17:50:27.538972+00:00",
+   "stations_cells": 7,
+   "generated_at": "2026-08-19T14:52:42.601650+00:00",
    "headline": [
     {
      "horizon_h": 24,
-     "n_test": 354,
-     "skill_vs_persistence": 0.117,
-     "skill_vs_seasonal_naive": 0.278,
+     "n_test": 303,
+     "skill_vs_persistence": 0.146,
+     "skill_vs_seasonal_naive": 0.088,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -690,16 +690,16 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.168,
+     "skill_raw_vs_persistence": 0.218,
      "onsets": 0,
-     "pi80_coverage": 0.822,
+     "pi80_coverage": 0.802,
      "brier_skill_very_poor": null
     },
     {
      "horizon_h": 48,
-     "n_test": 306,
-     "skill_vs_persistence": 0.118,
-     "skill_vs_seasonal_naive": 0.361,
+     "n_test": 248,
+     "skill_vs_persistence": 0.155,
+     "skill_vs_seasonal_naive": 0.112,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -707,16 +707,16 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.068,
+     "skill_raw_vs_persistence": 0.126,
      "onsets": 0,
-     "pi80_coverage": 0.783,
+     "pi80_coverage": 0.769,
      "brier_skill_very_poor": null
     },
     {
      "horizon_h": 72,
-     "n_test": 258,
-     "skill_vs_persistence": 0.295,
-     "skill_vs_seasonal_naive": 0.283,
+     "n_test": 200,
+     "skill_vs_persistence": 0.242,
+     "skill_vs_seasonal_naive": 0.205,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -724,9 +724,9 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.295,
+     "skill_raw_vs_persistence": 0.242,
      "onsets": 0,
-     "pi80_coverage": 0.74,
+     "pi80_coverage": 0.874,
      "brier_skill_very_poor": null
     }
    ]
@@ -740,62 +740,62 @@
    "source": "live",
    "window": {
     "start": "2026-07-12T10:00:00+00:00",
-    "end": "2026-08-16T09:00:00+00:00",
-    "split": "2026-08-07T15:15:00+00:00"
+    "end": "2026-08-19T11:00:00+00:00",
+    "split": "2026-08-09T22:45:00+00:00"
    },
    "stations_cells": 5,
-   "generated_at": "2026-08-17T17:51:21.738963+00:00",
+   "generated_at": "2026-08-19T14:52:53.650843+00:00",
    "headline": [
     {
      "horizon_h": 24,
-     "n_test": 810,
-     "skill_vs_persistence": 0.264,
-     "skill_vs_seasonal_naive": 0.728,
+     "n_test": 615,
+     "skill_vs_persistence": 0.259,
+     "skill_vs_seasonal_naive": 0.38,
      "winter_skill_vs_persistence": null,
-     "very_poor_hours_skill": 0.038,
+     "very_poor_hours_skill": 0.034,
      "very_poor_hours_n": 1,
      "onset_recall_model": 0.0,
      "onset_recall_persistence": 0.0,
      "onset_recall_p30": 0.0,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.264,
+     "skill_raw_vs_persistence": 0.254,
      "onsets": 1,
-     "pi80_coverage": 0.809,
-     "brier_skill_very_poor": -0.212
+     "pi80_coverage": 0.746,
+     "brier_skill_very_poor": -0.011
     },
     {
      "horizon_h": 48,
-     "n_test": 700,
-     "skill_vs_persistence": 0.241,
-     "skill_vs_seasonal_naive": 0.33,
+     "n_test": 544,
+     "skill_vs_persistence": 0.181,
+     "skill_vs_seasonal_naive": 0.338,
      "winter_skill_vs_persistence": null,
-     "very_poor_hours_skill": -0.078,
+     "very_poor_hours_skill": -0.075,
      "very_poor_hours_n": 1,
      "onset_recall_model": 0.0,
      "onset_recall_persistence": 0.0,
      "onset_recall_p30": 0.0,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.241,
+     "skill_raw_vs_persistence": 0.18,
      "onsets": 1,
-     "pi80_coverage": 0.792,
-     "brier_skill_very_poor": -0.013
+     "pi80_coverage": 0.691,
+     "brier_skill_very_poor": -0.0
     },
     {
      "horizon_h": 72,
-     "n_test": 589,
-     "skill_vs_persistence": 0.229,
-     "skill_vs_seasonal_naive": 0.32,
+     "n_test": 427,
+     "skill_vs_persistence": 0.32,
+     "skill_vs_seasonal_naive": 0.247,
      "winter_skill_vs_persistence": null,
-     "very_poor_hours_skill": -0.028,
-     "very_poor_hours_n": 1,
-     "onset_recall_model": 0.0,
-     "onset_recall_persistence": 0.0,
-     "onset_recall_p30": 0.0,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.229,
-     "onsets": 1,
-     "pi80_coverage": 0.752,
-     "brier_skill_very_poor": -0.012
+     "skill_raw_vs_persistence": 0.325,
+     "onsets": 0,
+     "pi80_coverage": 0.783,
+     "brier_skill_very_poor": null
     }
    ]
   }
@@ -808,34 +808,17 @@
    "source": "live",
    "window": {
     "start": "2026-07-12T10:00:00+00:00",
-    "end": "2026-08-16T09:00:00+00:00",
-    "split": "2026-08-07T15:15:00+00:00"
+    "end": "2026-08-19T11:00:00+00:00",
+    "split": "2026-08-09T22:45:00+00:00"
    },
-   "stations_cells": 9,
-   "generated_at": "2026-08-17T17:50:43.930823+00:00",
+   "stations_cells": 10,
+   "generated_at": "2026-08-19T14:52:01.766737+00:00",
    "headline": [
     {
      "horizon_h": 24,
-     "n_test": 1297,
-     "skill_vs_persistence": 0.197,
-     "skill_vs_seasonal_naive": 0.25,
-     "winter_skill_vs_persistence": null,
-     "very_poor_hours_skill": null,
-     "very_poor_hours_n": 0,
-     "onset_recall_model": null,
-     "onset_recall_persistence": null,
-     "onset_recall_p30": null,
-     "precision_p30": null,
-     "skill_raw_vs_persistence": 0.17,
-     "onsets": 0,
-     "pi80_coverage": 0.728,
-     "brier_skill_very_poor": null
-    },
-    {
-     "horizon_h": 48,
-     "n_test": 1101,
-     "skill_vs_persistence": 0.207,
-     "skill_vs_seasonal_naive": 0.236,
+     "n_test": 1180,
+     "skill_vs_persistence": 0.173,
+     "skill_vs_seasonal_naive": 0.243,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -845,14 +828,14 @@
      "precision_p30": null,
      "skill_raw_vs_persistence": 0.188,
      "onsets": 0,
-     "pi80_coverage": 0.781,
+     "pi80_coverage": 0.774,
      "brier_skill_very_poor": null
     },
     {
-     "horizon_h": 72,
-     "n_test": 893,
-     "skill_vs_persistence": 0.322,
-     "skill_vs_seasonal_naive": 0.277,
+     "horizon_h": 48,
+     "n_test": 978,
+     "skill_vs_persistence": 0.154,
+     "skill_vs_seasonal_naive": 0.262,
      "winter_skill_vs_persistence": null,
      "very_poor_hours_skill": null,
      "very_poor_hours_n": 0,
@@ -860,9 +843,26 @@
      "onset_recall_persistence": null,
      "onset_recall_p30": null,
      "precision_p30": null,
-     "skill_raw_vs_persistence": 0.321,
+     "skill_raw_vs_persistence": 0.148,
      "onsets": 0,
-     "pi80_coverage": 0.835,
+     "pi80_coverage": 0.795,
+     "brier_skill_very_poor": null
+    },
+    {
+     "horizon_h": 72,
+     "n_test": 775,
+     "skill_vs_persistence": 0.25,
+     "skill_vs_seasonal_naive": 0.286,
+     "winter_skill_vs_persistence": null,
+     "very_poor_hours_skill": null,
+     "very_poor_hours_n": 0,
+     "onset_recall_model": null,
+     "onset_recall_persistence": null,
+     "onset_recall_p30": null,
+     "precision_p30": null,
+     "skill_raw_vs_persistence": 0.268,
+     "onsets": 0,
+     "pi80_coverage": 0.75,
      "brier_skill_very_poor": null
     }
    ]

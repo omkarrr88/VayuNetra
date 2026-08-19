@@ -67,9 +67,10 @@ svg text{font-family:inherit}
 .overlay{position:fixed;inset:0;background:#000;z-index:70;display:none}
 .overlay.on{display:block}
 .overlay iframe{width:100%;height:100%;border:0;background:#fff}
-.overlay .bar{position:absolute;top:0;left:0;right:0;height:26px;background:rgba(2,6,23,.85);color:#cbd5e1;font-size:12px;display:flex;align-items:center;gap:14px;padding:0 12px;z-index:2}
-.overlay .bar b{color:var(--teal)}
-.overlay img{position:absolute;inset:26px 0 0 0;width:100%;height:calc(100% - 26px);object-fit:contain;background:#f1f5f9}
+/* Nothing sits over the live app: no chrome, no label, no hint strip. D comes back. */
+.overlay img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#f1f5f9}
+/* The presenter's own hints belong on screen, never in the exported PDF/PPTX. */
+html.static .help, html.static .counter, html.static .hud{display:none}
 .presenter{position:fixed;inset:0;background:#0b1220;color:#e6edf7;padding:24px;display:none;z-index:80;font-size:18px}
 .presenter.on{display:grid;grid-template-rows:auto 1fr auto;gap:12px}
 .presenter .top{display:flex;justify-content:space-between;align-items:baseline}
@@ -115,14 +116,17 @@ svg text{font-family:inherit}
 <!-- 1 · TITLE -->
 <section class="slide" data-init="title" data-notes="[A · 0:00] Good morning. Every Indian metro measures its air; several forecast it. Nothing acts on it. VayuNetra is the operations layer: it traces who is polluting each square kilometre, predicts the next 72 hours with honest probabilities, ranks where to send an inspector with cited evidence, and tells citizens in their own script — live in ten cities, at zero infrastructure cost. The map behind me is live.">
   <div class="haze" id="haze"></div>
-  <svg id="indiaTitle" viewBox="0 0 1000 1000" style="position:absolute;right:2%;top:2%;height:96%;opacity:1"></svg>
-  <div style="position:relative;z-index:2;max-width:56%;margin-top:auto;margin-bottom:auto">
+  <!-- the map is a square viewBox: sizing it by HEIGHT made it 54% of the stage wide, which ran
+       under the headline. Sizing by WIDTH keeps the two columns apart at every aspect ratio. -->
+  <svg id="indiaTitle" viewBox="0 0 1000 1000" style="position:absolute;right:1.5%;top:50%;transform:translateY(-50%);width:43%;height:auto;opacity:1"></svg>
+  <div style="position:relative;z-index:2;max-width:51%;margin-top:auto;margin-bottom:auto">
     <div class="a a1 kicker">ET AI Hackathon 2.0 · Finale · Problem Statement 5</div>
     <h1 class="a a2" style="margin-top:.35em">VayuNetra</h1>
     <p class="a a3" style="font-size:1.45em;color:#0f172a;margin-top:.5em">The operations layer for urban air quality.</p>
     <p class="a a4" style="margin-top:.9em;max-width:34em">We don't just measure the air. We <b>trace</b> it, <b>predict</b> it, and <b>act</b> on it — live in ten Indian cities, on ₹0 infrastructure.</p>
-    <p class="a a5 sub" style="margin-top:1.4em">Team DaGoats · Omkar Kadam · Sejal Kumbhar · Abhinav Prasad</p>
-    <p class="a a6 sub" style="font-size:.8em;margin-top:.5em">Live: vayunetra-aqi.vercel.app · dots = live PM2.5, <span id="asOfTitle"></span></p>
+    <div class="a a5" id="decBoard" style="margin-top:1.2em"></div>
+    <p class="a a6 sub" style="margin-top:1.1em">Team DaGoats · Omkar Kadam · Sejal Kumbhar · Abhinav Prasad</p>
+    <p class="a a6 sub" style="font-size:.78em;margin-top:.45em">Live: vayunetra-aqi.vercel.app · <span id="asOfTitle"></span></p>
   </div>
 </section>
 
@@ -144,7 +148,7 @@ svg text{font-family:inherit}
 </section>
 
 <!-- 3 · WHAT IT DOES -->
-<section class="slide" data-init="loop" data-notes="[A · 0:55] One loop, four verbs. Trace: who is to blame in each square kilometre — and it says so where it lacks skill. Predict: the next 72 hours, with each cell's chance of turning Very Poor. Act: sites ranked by contribution, people exposed and confidence — real satellite image, the regulation, a draft notice; the officer approves, dispatches, closes the case on an audit trail. Protect: advisories in eight scripts. Six agents, one graph, seconds of compute — every human step timestamped.">
+<section class="slide" data-init="loop" data-notes="[A · 0:55] One loop, four verbs. Trace: who is to blame in each square kilometre — and it says so where it lacks skill. Predict: the next 72 hours, with each cell's chance of turning Very Poor. Act: sites ranked by contribution, people exposed and confidence — real satellite image, the regulation, a draft notice; the officer approves, dispatches, closes the case on an audit trail. Protect: advisories in eight scripts. Five agents on one graph, seconds of compute — every human step timestamped.">
   <div class="kicker a a1">What VayuNetra does</div>
   <h2 class="a a2">One loop: trace → predict → act → protect</h2>
   <div class="loop a a3" style="margin-top:1.4em;font-size:1.06em">
@@ -154,7 +158,7 @@ svg text{font-family:inherit}
     <div class="card"><h3 style="color:var(--lime)">PROTECT</h3><p style="font-size:.92em;margin-top:.3em">Templated advisories (no LLM) in eight scripts — app, Telegram, IVR line, public displays.</p><div id="miniLang" style="margin-top:.6em;font-size:1.05em;min-height:4.4em;line-height:1.35"></div><div class="src" id="miniLangLbl"></div></div>
   </div>
   <div class="card a a4" style="margin-top:1.2em;background:rgba(15,118,110,.06);border-color:rgba(15,118,110,.3);font-size:1.08em">
-    <p><b>Six AI agents on one graph</b> — signal → cited recommendation in <b id="latencyLine">seconds</b> of compute, measured live; approval, dispatch and closure timestamped per action. The spatial unit is the same ~1 km cell everywhere, so every claim traces from a raw reading to an action.</p>
+    <p><b>Five AI agents on one graph</b> — signal → cited recommendation in <b id="latencyLine">seconds</b> of compute, measured live; approval, dispatch and closure timestamped per action. The spatial unit is the same ~1 km cell everywhere, so every claim traces from a raw reading to an action.</p>
   </div>
   <div class="foot"><span class="brand"><span class="logo"></span>VayuNetra · ET AI Hackathon 2.0 Finale</span><span>3</span></div>
 </section>
@@ -162,13 +166,14 @@ svg text{font-family:inherit}
 <!-- 4 · DELHI'S WINTER, REPLAYED -->
 <section class="slide" data-init="winter" data-notes="[A · 1:35 — say the first sentence, then silence for the 9-second replay, then continue] This is Delhi's last winter, day by day, on 39 station cells — real CPCB data. The markers are the government's actual GRAP orders. Under each: what our forecast said 24 hours before the order was signed. Stage III on 11 November and Stage IV on 13 December — flagged a full day ahead across essentially the whole network, probability above 80 percent, when persistence said 225 and the city measured 407. The two October orders we did not foresee — and it says so on the slide.">
   <div class="kicker a a1">Early warning, in hindsight</div>
-  <h2 class="a a2">Delhi's winter 2025-26, replayed — with the government's real orders</h2>
-  <div class="row a a3" style="margin-top:.8em;flex:1;min-height:0">
-    <div class="col" style="flex:1.05"><svg id="winterMap" viewBox="0 0 600 560" style="width:100%;height:100%"></svg></div>
-    <div class="col" style="flex:1.5;display:flex;flex-direction:column;gap:.7em">
-      <div class="card" style="padding:.7em .9em"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="sub" style="font-size:.85em">city-mean PM2.5 (µg/m³) · daily</span><span id="winterDate" class="num" style="font-weight:800;font-size:1.3em">—</span></div><svg id="winterLine" viewBox="0 0 700 220" style="width:100%;height:auto"></svg></div>
-      <div id="orders" class="grid3" style="gap:.6em"></div>
-      <p class="sub" style="font-size:.8em">Served forecast replayed with the production recipe (rolling monthly refit, persistence blend, calibrated P). Green = P(&gt;120) ≥ 30 % a day before the order. ⚠ = the public feed carried a single Delhi station that week. Sources: CAQM / PIB releases, linked in docs/OUTCOMES.md.</p>
+  <h2 class="a a2">Delhi's winter, replayed — against the government's real orders</h2>
+  <div id="winterMonths" class="a a2" style="display:flex;gap:1.3em;margin-top:.45em;flex-wrap:wrap;font-size:.95em"></div>
+  <div class="row a a3" style="margin-top:.7em;flex:1;min-height:0">
+    <div class="col" style="flex:1;display:flex;align-items:center;min-height:0"><svg id="winterMap" viewBox="0 0 600 560" style="width:100%;height:100%;max-height:100%"></svg></div>
+    <div class="col" style="flex:1.55;display:flex;flex-direction:column;gap:.6em;min-height:0">
+      <div class="card fill" style="padding:.6em .85em;flex:1;min-height:0"><div style="display:flex;justify-content:space-between;align-items:baseline;flex:0 0 auto"><span class="sub" style="font-size:.85em">city-mean PM2.5 (µg/m³) · daily</span><span id="winterDate" class="num" style="font-weight:800;font-size:1.3em">—</span></div><svg id="winterLine" viewBox="0 0 700 200" preserveAspectRatio="none" style="width:100%;flex:1;min-height:0"></svg></div>
+      <div id="orders" class="grid3" style="gap:.55em;flex:0 0 auto"></div>
+      <p class="sub" style="font-size:.74em;line-height:1.35">Served forecast replayed with the production recipe (rolling monthly refit, persistence blend, calibrated P). Green = P(&gt;120) ≥ 30 % a day before the order. ⚠ = the public feed carried a single Delhi station that week. Sources: CAQM / PIB releases, linked in docs/OUTCOMES.md.</p>
     </div>
   </div>
   <div class="foot"><span class="brand"><span class="logo"></span>VayuNetra · ET AI Hackathon 2.0 Finale</span><span>4 · press R to replay</span></div>
@@ -192,7 +197,7 @@ svg text{font-family:inherit}
 </section>
 
 <!-- 6 · LIVE DEMO -->
-<section class="slide" data-init="demo" data-notes="[B · 3:00 → 7:00 — press D] STOP 1: This is Delhi, right now. The Morning brief is the one page a commissioner reads: the city mean against yesterday, where the air is about to turn — with the probability, not a guess — the top three actions with their notice links, and yesterday's dispatches. One click gives the PDF; one click sends it to every Telegram subscriber. Nothing on this page is written by a language model — every line is a template over stored numbers. STOP 2: Every hexagon is a square kilometre. This one: who is to blame — the sources, the SHAP drivers that moved the number, and the model's own out-of-sample R². Where it lacks skill it says so and falls back to cited chemical-signature priors, in amber. Below: the 72-hour forecast for this cell with the calibrated probability of Very Poor. Click any other cell — same story, its own numbers. STOP 3: The worklist ranks sources by contribution, people exposed, actionability and confidence — nothing under two percent gets in. Open the dossier: the real Sentinel-2 image of this site, the regulation retrieved verbatim — GRAP only where it legally binds, CPCB norms and NCAP elsewhere — and a draft notice with the projected effect of compliance. Stamped pending officer authorisation. Never auto-sent. STOP 4: The officer approves — it lands in the ward's field queue. Dispatches — the cell's seven-day baseline freezes and the before/after measurement is armed automatically. Closes the case with the field finding. And History: who did what, when, from what to what. That trail survives the nightly run and even the deletion of the record. This is the audit trail a court asks for. STOP 5: The same advisory in the reader's own script — Hindi, then Tamil — templated by design, so it cannot hallucinate medical advice. It goes out over the app, a live Telegram bot, an IVR line with a Hindi voice, and public display boards, targeted at five and a half thousand vulnerability-scored zones: hospitals, schools, elder care, outdoor work. STOP 6: The benchmark you saw on the slide lives here, per city, recomputed from the artifact — negatives included. And the winter replay: every GRAP order links to its government release, with what we carried a day before, and a weather-normalised check of whether the air changed. Where the honest answer is 'no detectable change', it says no. STOP 7: Ten cities on one scoreboard, one engine, one configuration file each — click Mumbai and the whole console follows: its own sources, its own forecast, its own worklist, its own languages. (Esc → slide 7)">
+<section class="slide" data-init="demo" data-notes="[B · 3:00 → 7:00 — press D] STOP 1: This is Delhi, right now. The Morning brief is the one page a commissioner reads: the city mean against yesterday, where the air is about to turn — with the probability, not a guess — the top three actions with their notice links, and yesterday's dispatches. One click gives the PDF; one click sends it to every Telegram subscriber. Nothing on this page is written by a language model — every line is a template over stored numbers. STOP 2: Every hexagon is a square kilometre. This one: who is to blame — the sources, the SHAP drivers that moved the number, and the model's own out-of-sample R². Where it lacks skill it says so and falls back to cited chemical-signature priors, in amber. Below: the 72-hour forecast for this cell with the calibrated probability of Very Poor. Click any other cell — same story, its own numbers. STOP 3: The worklist ranks sources by contribution, people exposed, actionability and confidence — nothing under two percent gets in. Open the dossier: the real Sentinel-2 image of this site, the regulation retrieved verbatim — GRAP only where it legally binds, CPCB norms and NCAP elsewhere — and a draft notice with the projected effect of compliance. Stamped pending officer authorisation. Never auto-sent. STOP 4: The officer approves — it lands in the ward's field queue. Dispatches — the cell's seven-day baseline freezes and the before/after measurement is armed automatically. Closes the case with the field finding. And History: who did what, when, from what to what. That trail survives the nightly run and even the deletion of the record. This is the audit trail a court asks for. STOP 5: The same advisory in the reader's own script — Hindi, then Tamil — templated by design, so it cannot hallucinate medical advice. It goes out over the app, a live Telegram bot, an IVR line with a Hindi voice, and public display boards, targeted at five and a half thousand vulnerability-scored zones: hospitals, schools, elder care, outdoor work. STOP 6: The benchmark you saw on the slide lives here, per city, recomputed from the artifact — negatives included. And the winter replay: every GRAP order links to its government release, with what we carried a day before, and a weather-normalised check of whether the air changed. Where the honest answer is 'no detectable change', it says no. STOP 7: Ten cities on one scoreboard, one engine, one configuration file each — click Mumbai and the whole console follows: its own sources, its own forecast, its own worklist, its own languages. (D → back to the deck)">
   <img class="shot" src="{{IMG:action}}" alt="VayuNetra console — Delhi enforcement" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.28;border:0;border-radius:0" /><div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,.97) 0%,rgba(255,255,255,.9) 55%,rgba(255,255,255,.4) 100%)"></div>
   <div style="position:relative;z-index:2;display:flex;flex-direction:column;height:100%">
     <div class="kicker a a1">Live demo</div>
@@ -203,7 +208,7 @@ svg text{font-family:inherit}
       <div class="card step"><span class="n">3</span><div><b>Advisories in eight scripts</b><p style="font-size:.9em">Hindi → Tamil; live Telegram bot; IVR line</p></div></div>
       <div class="card step"><span class="n">4</span><div><b>Proof, then ten cities</b><p style="font-size:.9em">validation card · real orders in hindsight · scoreboard → Mumbai</p></div></div>
     </div>
-    <p class="a a4" style="margin-top:auto;font-size:1.05em"><span class="tag">press D</span> &nbsp;opens the live console inside this deck · <span class="tag grey">Esc</span> returns · offline: the last screenshot is shown, labelled</p>
+    <p class="a a4" style="margin-top:auto;font-size:1.05em"><span class="tag">press D</span> &nbsp;opens the live console inside this deck · <span class="tag grey">D</span> returns · offline: the last screenshot is shown, labelled</p>
   </div>
   <div class="foot"><span class="brand"><span class="logo"></span>VayuNetra · ET AI Hackathon 2.0 Finale</span><span>6 · vayunetra-aqi.vercel.app</span></div>
 </section>
@@ -224,8 +229,10 @@ svg text{font-family:inherit}
 
 <!-- 8 · CLOSE -->
 <section class="slide" data-init="close" data-notes="[B · 7:30] India measures. India forecasts. VayuNetra operates — traced, predicted, cited, delivered, closed. In seconds, in eight scripts, for zero rupees today and 2,700 a month for every NCAP city. It is live now — the QR takes you there. We are ready to run it for the first city that says yes. Thank you.">
-  <svg id="indiaClose" viewBox="0 0 1000 1000" style="position:absolute;right:0;top:8%;height:84%;opacity:.7"></svg>
-  <div style="position:relative;z-index:2;margin:auto 0;max-width:56%">
+  <!-- sized by WIDTH: a square viewBox at height:84% is 47% of the stage wide and ran under the
+       headline. -->
+  <svg id="indiaClose" viewBox="0 0 1000 1000" style="position:absolute;right:0;top:50%;transform:translateY(-50%);width:40%;height:auto;opacity:.7"></svg>
+  <div style="position:relative;z-index:2;margin:auto 0;max-width:54%">
     <p class="a a1 sub" style="font-size:1.4em">India measures. India forecasts.</p>
     <h1 class="a a2" style="font-size:4.2em">VayuNetra operates.</h1>
     <p class="a a3" style="font-size:1.35em;margin-top:.7em">Traced, predicted, cited, delivered, <b>closed</b>. In seconds. In eight scripts. For ₹0.</p>
@@ -242,7 +249,7 @@ svg text{font-family:inherit}
   <div class="kicker a a1">Appendix</div>
   <h1 class="a a2" style="font-size:3em">For the Q&amp;A</h1>
   <div class="grid3 a a3" style="margin-top:1.4em;font-size:.95em">
-    <div class="card"><b>A1</b> Architecture<br><b>A2</b> Six agents live<br><b>A3</b> Evidence dossier<br><b>A4</b> Citizen reach — eight scripts<br><b>A5</b> Models &amp; validation, all ten cities</div>
+    <div class="card"><b>A1</b> Architecture<br><b>A2</b> Five agents live<br><b>A3</b> Evidence dossier<br><b>A4</b> Citizen reach — eight scripts<br><b>A5</b> Models &amp; validation, all ten cities</div>
     <div class="card"><b>A6</b> Honesty &amp; fairness<br><b>A7</b> Cost, security &amp; roadmap<br><b>A8</b> Ten cities<br><b>A9</b> Past air<br><b>A10</b> Positioning vs SAFAR / DSS / PRANA</div>
     <div class="card"><b>A11</b> Early warning &amp; calibration<br><b>A12</b> Attribution validation &amp; exposure<br><b>A13</b> Real orders in hindsight — did the air change?<br><b>A14</b> The officer loop closes — audit trail</div>
   </div>
@@ -250,7 +257,7 @@ svg text{font-family:inherit}
 </section>
 
 <!-- A1 ARCHITECTURE -->
-<section class="slide" data-notes="A1. Two seams — the Supabase schema and the API contract — decouple every layer: models write rows, the API reads rows, the console reads the API. LangGraph orchestrates six agents; GitHub Actions run ingest, forecast, attribution, enforcement, brief and retention nightly.">
+<section class="slide" data-notes="A1. Two seams — the Supabase schema and the API contract — decouple every layer: models write rows, the API reads rows, the console reads the API. LangGraph orchestrates five agents; GitHub Actions run ingest, forecast, attribution, enforcement, brief and retention nightly.">
   <div class="kicker a a1">A1 · Architecture</div>
   <h2 class="a a2">Signal to cited action — two seams, one envelope</h2>
   <img class="shot a a3" src="{{IMG:arch}}" alt="architecture" style="margin-top:.6em;max-height:74%;object-fit:contain;background:#ffffff" />
@@ -261,7 +268,7 @@ svg text{font-family:inherit}
 <!-- A2 AGENTS -->
 <section class="slide" data-init="agents" data-notes="A2. The pipeline view: each node's inputs, outputs and wall-clock, stamped per run in action_traces. The button really runs the graph against the live database; the latency widget on the console reads the same rows.">
   <div class="kicker a a1">A2 · The agents</div>
-  <h2 class="a a2">Six agents on one graph, traced per node</h2>
+  <h2 class="a a2">Five agents on one graph, traced per node</h2>
   <div class="row a a3" style="margin-top:.8em;flex:1;min-height:0"><img class="shot" src="{{IMG:pipeline}}" alt="pipeline" style="flex:1.6;min-width:0;object-fit:contain;max-height:100%;align-self:flex-start" /><div class="col card" style="flex:1;align-self:flex-start"><h3>Latest trace, Delhi</h3><div id="traceList" style="margin-top:.5em;font-size:.92em"></div><div class="src">action_traces · signal → cited recommendation is compute time; approval / dispatch / closure are separate timestamped steps</div></div></div>
   <div class="foot"><span class="brand"><span class="logo"></span>VayuNetra</span><span>A2</span></div>
 </section>
@@ -284,7 +291,7 @@ svg text{font-family:inherit}
 </section>
 
 <!-- A5 MODELS -->
-<section class="slide" data-init="allcities" data-notes="A5. The full table: served-forecast skill versus persistence and seasonal-naive at 24/48/72 hours for every city, from the live 90-day benchmark, plus the multi-season Delhi/Mumbai/Kolkata runs. Negative numbers stay on the slide.">
+<section class="slide" data-init="allcities" data-notes="A5. The full table: served-forecast skill versus persistence and seasonal-naive at 24/48/72 hours for every city, from the live recent-window benchmark, plus the multi-season Delhi/Mumbai/Kolkata runs. Negative numbers stay on the slide.">
   <div class="kicker a a1">A5 · Models &amp; validation detail</div>
   <h2 class="a a2">All ten cities, both baselines — negatives kept</h2>
   <div class="card a a3" style="margin-top:.8em;flex:1;min-height:0;overflow:auto"><table id="cityTable"></table></div>
@@ -385,16 +392,30 @@ svg text{font-family:inherit}
 
 <div class="hud"><i id="prog"></i></div>
 <div class="counter" id="ctr"></div>
-<div class="help">← → navigate · F fullscreen · N notes · P presenter · D live console · R replay · Esc</div>
+<div class="help">← → navigate · F fullscreen · N notes · P presenter · D live app (D again returns) · R replay</div>
 <div class="notes" id="notes"></div>
-<div class="overlay" id="overlay"><div class="bar"><b>LIVE</b><span id="ovUrl">vayunetra-aqi.vercel.app/console</span><span style="margin-left:auto">Esc → back to slides</span></div><iframe id="ovFrame" title="VayuNetra live console" allow="fullscreen"></iframe><img id="ovFallback" alt="console screenshot" style="display:none" /></div>
+<div class="overlay" id="overlay"><iframe id="ovFrame" title="VayuNetra, live" allow="fullscreen"></iframe><img id="ovFallback" alt="VayuNetra screenshot" style="display:none" /></div>
 <div class="presenter" id="presenter"><div class="top"><div><span class="kicker">presenter</span> &nbsp;<span id="pSlide"></span></div><div class="clock" id="pClock">00:00</div></div><div class="n" id="pNotes"></div><div class="next" id="pNext"></div></div>
 
 <script id="data" type="application/json">{{DATA}}</script>
 <script>
 const D = JSON.parse(document.getElementById('data').textContent);
 const SHOTS = {{SHOTS}};
-const LIVE_URL = 'https://vayunetra-aqi.vercel.app/console?city=delhi&section=action';
+// The demo opens the FRONT PAGE — the same door a judge would walk through.
+const LIVE_REMOTE = 'https://vayunetra-aqi.vercel.app/';
+const LIVE_LOCAL  = 'http://localhost:5173/';
+// Prefer a dev server on this machine when one is running: it is faster and works with no network.
+// Probed with an image load, which is not subject to CORS, so it works from a file:// deck.
+let LIVE_URL = LIVE_REMOTE;
+(function pickLiveTarget(){
+  const probe = new Image();
+  let settled = false;
+  const done = (url) => { if (!settled) { settled = true; LIVE_URL = url; } };
+  probe.onload = () => done(LIVE_LOCAL);
+  probe.onerror = () => done(LIVE_REMOTE);
+  setTimeout(() => done(LIVE_REMOTE), 1200);          // never block on a dead port
+  probe.src = LIVE_LOCAL + 'icon-192.png?probe=' + Math.floor(performance.now());
+})();
 const slides = [...document.querySelectorAll('.slide')];
 const q = new URLSearchParams(location.search);
 const STATIC = q.get('static') === '1'; if(STATIC) document.documentElement.classList.add('static');
@@ -411,7 +432,10 @@ function later(fn, ms){ if(STATIC){ fn(); return; } timers.push(setTimeout(fn, m
 function killTimers(){ timers.forEach(t=>clearTimeout(t)); timers=[]; if(window._winterRAF) cancelAnimationFrame(window._winterRAF); }
 
 // ---------- India map ----------
-function india(svg, {dots=true, labels=false, pulse=true, dim=false}={}){
+// `month:'2025-12'` draws the December-2025 board instead of live readings: each city's worst day
+// that month, with the four cities onboarded afterwards drawn as hollow rings — the deck says what
+// it does not have rather than filling it in.
+function india(svg, {dots=true, labels=false, pulse=true, dim=false, month=null}={}){
   clear(svg);
   const [x0,y0,x1,y1] = D.india.bounds;
   const W=1000, H=1000, pad=60;
@@ -424,13 +448,22 @@ function india(svg, {dots=true, labels=false, pulse=true, dim=false}={}){
     svgEl('path',{d, fill: dim?'rgba(13,148,136,.06)':'rgba(13,148,136,.10)', stroke:'rgba(13,148,136,.75)', 'stroke-width':1.6},g);
   }
   if(!dots) return P;
-  const cities = D.cities.filter(c=>c.center);
-  cities.forEach((c,i)=>{
+  const dated = month && D.december_2025 && D.december_2025.month === month;
+  const rows = dated
+    ? D.december_2025.cities.filter(c=>c.center).map(c=>({name:c.name, center:c.center, pm25:c.worst?c.worst.pm25:null, sub:c.worst?`${fmt(c.worst.pm25)} µg/m³ · AQI ${c.worst.aqi_in} ${c.worst.category}`:'no December 2025 record'}))
+    : D.cities.filter(c=>c.center).map(c=>({name:c.name, center:c.center, pm25:c.pm25, sub:`${fmt(c.pm25)} µg/m³ · ${(c.dominant_source||'').replace('_',' ')}`}));
+  rows.forEach((c,i)=>{
     const [lng,lat] = c.center; const [x,y]=P(lng,lat);
-    const col = band(c.pm25); const r = 7 + Math.min(18, (c.pm25||0)/4);
+    if(c.pm25 == null){   // onboarded later: a deliberate grey ring with a slash, never a coloured dot
+      svgEl('circle',{cx:x,cy:y,r:10,fill:'#ffffff',stroke:'#94a3b8','stroke-width':2.5},g);
+      svgEl('line',{x1:x-5,y1:y+5,x2:x+5,y2:y-5,stroke:'#94a3b8','stroke-width':2.5,'stroke-linecap':'round'},g);
+      if(labels){ const t=svgEl('text',{x:x+14,y:y+5,fill:'#64748b','font-size':20,'font-weight':700},g); t.textContent=c.name; const t2=svgEl('text',{x:x+14,y:y+26,fill:'#94a3b8','font-size':16},g); t2.textContent=c.sub; }
+      return;
+    }
+    const col = band(c.pm25); const r = 7 + Math.min(22, (c.pm25||0)/(dated?12:4));
     if(pulse && !STATIC){ const p=svgEl('circle',{cx:x,cy:y,r:r,fill:col,opacity:.6,class:'pulse'},g); p.style.animationDelay = (i*0.3)+'s'; p.style.transformOrigin = `${x}px ${y}px`; }
     svgEl('circle',{cx:x,cy:y,r:r,fill:col,stroke:'#ffffff','stroke-width':2.5},g);
-    if(labels){ const t=svgEl('text',{x:x+r+6,y:y+5,fill:'#0f172a','font-size':22,'font-weight':700},g); t.textContent=`${c.name}`; const t2=svgEl('text',{x:x+r+6,y:y+26,fill:'#64748b','font-size':17},g); t2.textContent = `${fmt(c.pm25)} µg/m³ · ${(c.dominant_source||'').replace('_',' ')}`; }
+    if(labels){ const t=svgEl('text',{x:x+r+6,y:y+5,fill:'#0f172a','font-size':22,'font-weight':700},g); t.textContent=c.name; const t2=svgEl('text',{x:x+r+6,y:y+26,fill:'#64748b','font-size':17},g); t2.textContent=c.sub; }
   });
   return P;
 }
@@ -477,8 +510,29 @@ const inits = {
   title(){
     const hz=document.getElementById('haze'); clear(hz);
     for(let i=0;i<14;i++){ const e=document.createElement('i'); const s=140+Math.random()*260; e.style.width=e.style.height=s+'px'; e.style.left=(Math.random()*90)+'%'; e.style.top=(Math.random()*80)+'%'; e.style.animationDelay=(-Math.random()*10)+'s'; hz.appendChild(e); }
-    india(document.getElementById('indiaTitle'),{dots:true,pulse:true});
-    document.getElementById('asOfTitle').textContent = 'as of ' + new Date(D.snapshot.generated_at||D.built_at).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    india(document.getElementById('indiaTitle'),{dots:true,pulse:true,month:'2025-12'});
+    const dec = D.december_2025;
+    const board = document.getElementById('decBoard');
+    if(board && dec){
+      const top = dec.cities.filter(c=>c.worst).slice(0,4);
+      const miss = dec.cities.filter(c=>!c.worst);
+      board.innerHTML =
+        `<div class="kicker" style="color:var(--rose)">December 2025 · worst day of the month</div>` +
+        `<div style="display:flex;gap:1.1em;margin-top:.55em;flex-wrap:wrap">` +
+        top.map(c=>`<div style="min-width:5.6em">
+             <div class="num" style="font-size:1.9em;font-weight:800;line-height:1;color:${band(c.worst.pm25)}">${c.worst.aqi_in}</div>
+             <div style="font-size:.82em;font-weight:700;margin-top:.15em">${c.name}</div>
+             <div class="sub" style="font-size:.7em">${c.worst.category}</div>
+           </div>`).join('') +
+        `</div>` +
+        `<div class="sub" style="font-size:.7em;margin-top:.6em;max-width:32em;line-height:1.4">` +
+          `Indian National AQI from each city's own CPCB stations. ${dec.n_covered} of ${dec.n_total} cities have a December 2025 record.` +
+          (miss.length ? ` <b style="color:#475569">No December 2025 data:</b> ${miss.map(c=>c.name).join(' · ')} — onboarded later, so they carry no colour rather than a borrowed one ` +
+            `<span style="display:inline-flex;align-items:center;vertical-align:middle;margin-left:.2em">` +
+            `<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5.5" fill="#fff" stroke="#94a3b8" stroke-width="1.8"/><line x1="4.5" y1="9.5" x2="9.5" y2="4.5" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round"/></svg></span>.` : '') +
+        `</div>`;
+    }
+    document.getElementById('asOfTitle').textContent = 'dots = worst day in December 2025 · built ' + new Date(D.built_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
     const sl=slides[0]; sl.classList.remove('cleared'); later(()=>sl.classList.add('cleared'), 1800);
   },
   counters(){
@@ -596,10 +650,18 @@ function startWinter(){
   const la0=Math.min(...lats), la1=Math.max(...lats), lo0=Math.min(...lngs), lo1=Math.max(...lngs);
   const W=600,H=560,pad=24; const s=Math.min((W-2*pad)/(lo1-lo0),(H-2*pad)/(la1-la0)); const ox=pad+((W-2*pad)-(lo1-lo0)*s)/2, oy=pad+((H-2*pad)-(la1-la0)*s)/2;
   const P=(lat,lng)=>[ox+(lng-lo0)*s, oy+(la1-lat)*s];
-  outline.forEach(ring=>{ const d=ring.map((p,i)=>(i?'L':'M')+P(p[0],p[1]).map(v=>v.toFixed(1)).join(',')).join(' ')+'Z'; svgEl('path',{d,fill:'rgba(15,23,42,.03)',stroke:'rgba(15,23,42,.35)','stroke-width':1.2},map); });
+  outline.forEach(ring=>{ const d=ring.map((p,i)=>(i?'L':'M')+P(p[0],p[1]).map(v=>v.toFixed(1)).join(',')).join(' ')+'Z'; svgEl('path',{d,fill:'rgba(13,148,136,.07)',stroke:'rgba(15,23,42,.30)','stroke-width':1.4},map); });
   // station hexes are ~1 km across; drawn 3× larger around their centroid so they read from the back of a hall (caption says so)
-  const hexes = Wd.cells.map(c=>{ const cx=c.ring.reduce((a,p)=>a+p[0],0)/c.ring.length, cy=c.ring.reduce((a,p)=>a+p[1],0)/c.ring.length; const d=c.ring.map((p,i)=>(i?'L':'M')+P(cy? cx+(p[0]-cx)*3 : p[0], cy+(p[1]-cy)*3).map(v=>v.toFixed(1)).join(',')).join(' ')+'Z'; return svgEl('path',{d,fill:'#cbd5e1',stroke:'#ffffff','stroke-width':1.2,opacity:.97},map); });
-  const cap=svgEl('text',{x:W/2,y:H-8,fill:'#64748b','font-size':13,'text-anchor':'middle'},map); cap.textContent='39 station cells (drawn 3× for legibility) · daily mean PM2.5 · CPCB via OpenAQ';
+  const GROW = 2.2;   // 1 km is 3 px here; enough to read from the back of a hall without merging
+  const hexes = Wd.cells.map(c=>{
+    const cLat=c.ring.reduce((a,p)=>a+p[0],0)/c.ring.length, cLng=c.ring.reduce((a,p)=>a+p[1],0)/c.ring.length;
+    const d=c.ring.map((p,i)=>(i?'L':'M')+P(cLat+(p[0]-cLat)*GROW, cLng+(p[1]-cLng)*GROW).map(v=>v.toFixed(1)).join(',')).join(' ')+'Z';
+    return svgEl('path',{d,fill:'#cbd5e1',stroke:'#ffffff','stroke-width':1.1,opacity:.97},map);
+  });
+  const cap=svgEl('text',{x:W/2,y:H-22,fill:'#64748b','font-size':12.5,'text-anchor':'middle'},map);
+  cap.textContent=`${Wd.cells.length} station cells (drawn ${GROW}× for legibility) · daily mean PM2.5 · CPCB via OpenAQ`;
+  const cap2=svgEl('text',{x:W/2,y:H-6,fill:'#94a3b8','font-size':11.5,'text-anchor':'middle'},map);
+  cap2.textContent='outline = Delhi municipal wards; some CPCB stations sit outside it, in the wider NCR';
   // line chart
   const days=Wd.days, N=days.length; const cityDaily = Wd.daily.map(row=>{ const v=row.filter(x=>x!=null); return v.length? v.reduce((a,b)=>a+b,0)/v.length : null; });
   const lw=700,lh=220,pl=44,pr=16,pt=12,pb=44; const ymax=450; const X=i=>pl+i/(N-1)*(lw-pl-pr); const Y=v=>pt+(1-Math.min(v,ymax)/ymax)*(lh-pt-pb);
@@ -611,6 +673,15 @@ function startWinter(){
   // orders
   const EV=D.interventions.early_warning.events; const ordersEl=document.getElementById('orders'); ordersEl.innerHTML='';
   const markers=EV.map(e=>{ const day=e.order_at.slice(0,10); const i=days.indexOf(day); const g=svgEl('g',{opacity:0},line); svgEl('line',{x1:X(i),x2:X(i),y1:pt,y2:lh-pb,stroke:'#e11d48','stroke-width':1.5},g); const t=svgEl('text',{x:X(i)+3,y:pt+10+(EV.indexOf(e)%2)*12,fill:'#be123c','font-size':10,'font-weight':700},g); t.textContent=e.label.replace('GRAP Stage ','').replace(' invoked','').replace(' re-invoked','↺').replace(' (construction / demolition ban)',''); const l24=e.lead['24']||{}; const ok=(l24.p_over_120_mean||0)>=0.3; const card=document.createElement('div'); card.className='card'; card.style.cssText='padding:.55em .7em;opacity:0;transition:opacity .5s'; card.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5em"><b style="font-size:.85em;white-space:nowrap">${e.label.replace('GRAP ','').replace(' invoked','').replace(' re-invoked',' ↺').replace(' (construction / demolition ban)','')}</b><span class="sub" style="font-size:.7em;white-space:nowrap">${day}</span></div><div style="margin-top:.2em;font-size:.86em">24 h before: <span class="${ok?'pos':'neg'}">P(&gt;120) ${Math.round((l24.p_over_120_mean||0)*100)}%</span> · ${Math.round((l24.share_cells_alarm_120||0)*100)}% of ${l24.n_cells||'–'} cells${l24.low_coverage?' ⚠':''}<br><span class="sub" style="font-size:.85em">persistence said ${fmt(l24.persistence_city_mean)} · at order ${fmt(e.observed_at_order)}</span></div>`; ordersEl.appendChild(card); return {i,g,card}; });
+  // the three months as a single readable arc: Dec worst, Feb clearing
+  const mEl = document.getElementById('winterMonths');
+  if (mEl) {
+    const ms = D.delhi_winter_months || [];
+    mEl.innerHTML = ms.map(m=>`<div style="display:flex;align-items:baseline;gap:.4em">
+        <span class="num" style="font-size:1.5em;font-weight:800;color:${band(m.pm25_mean)}">${m.pm25_mean}</span>
+        <span style="font-size:.82em"><b>${m.label}</b><span class="sub"> mean µg/m³ · AQI ${m.aqi_mean} ${m.category_mean}</span></span>
+      </div>`).join('') || '';
+  }
   const dateEl=document.getElementById('winterDate');
   let frame=0; const dur=STATIC?0:9000; const t0=performance.now(); let dpath='';
   const paint=(i)=>{ const row=Wd.daily[i]; hexes.forEach((h,k)=>h.setAttribute('fill', band(row[k]))); dateEl.textContent=new Date(days[i]).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}); const v=cityDaily[i]; if(v!=null){ dpath += (dpath?'L':'M')+X(i).toFixed(1)+','+Y(v).toFixed(1)+' '; path.setAttribute('d',dpath); } cursor.setAttribute('x1',X(i)); cursor.setAttribute('x2',X(i)); markers.forEach(m=>{ if(m.i>=0&&i>=m.i){ m.g.setAttribute('opacity',1); m.card.style.opacity=1; } }); };
@@ -631,19 +702,46 @@ function show(n, push=true){
   if(bc) bc.postMessage({slide:n});
   updatePresenter();
 }
-function openLive(){ const ov=document.getElementById('overlay'); const fr=document.getElementById('ovFrame'); const fb=document.getElementById('ovFallback'); ov.classList.add('on'); fb.style.display='none'; fr.style.display='block'; fr.src=LIVE_URL; if(navigator.onLine===false){ fr.style.display='none'; fb.src=SHOTS.action; fb.style.display='block'; document.getElementById('ovUrl').textContent='offline — last screenshot (labelled)'; } }
+function openLive(){
+  const ov=document.getElementById('overlay'), fr=document.getElementById('ovFrame'), fb=document.getElementById('ovFallback');
+  ov.classList.add('on');
+  fb.style.display='none'; fr.style.display='block';
+  // offline and no local server: fall back to the last captured screenshot rather than a blank frame
+  if(navigator.onLine===false && LIVE_URL===LIVE_REMOTE){ fr.style.display='none'; fb.src=SHOTS.action; fb.style.display='block'; return; }
+  fr.src=LIVE_URL;
+}
 function closeLive(){ const ov=document.getElementById('overlay'); ov.classList.remove('on'); document.getElementById('ovFrame').src='about:blank'; }
+// A pitch should never show browser chrome. The API needs a user gesture, so we take the first one
+// — any key or click — and go fullscreen then. F still toggles it by hand.
+let wentFull = false;
+function goFullscreenOnce(){
+  if(wentFull || PRES || STATIC || document.fullscreenElement) return;
+  wentFull = true;
+  document.documentElement.requestFullscreen?.().catch(()=>{});
+}
+document.addEventListener('keydown', goFullscreenOnce, {once:false});
+document.addEventListener('click', goFullscreenOnce);
+
+// The embedded app forwards D once it owns the keyboard, so the presenter can step back out
+// without reaching for the mouse or dropping the deck out of full screen.
+window.addEventListener('message', (e) => {
+  if (e.data === 'vn-exit-demo' && document.getElementById('overlay').classList.contains('on')) closeLive();
+});
+
 document.addEventListener('keydown',e=>{
   if(PRES) return;
   const ov=document.getElementById('overlay').classList.contains('on');
-  if(e.key==='Escape'){ if(ov) closeLive(); else document.getElementById('notes').classList.remove('on'); return; }
+  // D is the only way in and the only way out. Escape is left entirely to the browser, because it
+  // also exits full screen — one press used to do both, dropping the deck out of full screen at the
+  // exact moment the presenter wanted to step back into it.
+  if(e.key==='d'||e.key==='D'){ e.preventDefault(); ov ? closeLive() : openLive(); return; }
+  if(e.key==='Escape'){ if(!ov) document.getElementById('notes').classList.remove('on'); return; }
   if(ov) return;
   if(['ArrowRight','PageDown',' '].includes(e.key)){ e.preventDefault(); show(cur+1); }
   else if(['ArrowLeft','PageUp'].includes(e.key)){ e.preventDefault(); show(cur-1); }
   else if(e.key==='Home') show(0); else if(e.key==='End') show(slides.length-1);
-  else if(e.key==='f'||e.key==='F'){ document.fullscreenElement? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
+  else if(e.key==='f'||e.key==='F'){ wentFull=true; document.fullscreenElement? document.exitFullscreen() : document.documentElement.requestFullscreen?.().catch(()=>{}); }
   else if(e.key==='n'||e.key==='N'){ document.getElementById('notes').classList.toggle('on'); }
-  else if(e.key==='d'||e.key==='D'){ openLive(); }
   else if(e.key==='r'||e.key==='R'){ show(cur,false); }
   else if(e.key==='p'||e.key==='P'){ window.open(location.pathname+'?presenter=1'+location.hash,'vn-presenter','width=900,height=650'); }
 });

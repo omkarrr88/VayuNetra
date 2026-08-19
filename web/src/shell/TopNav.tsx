@@ -110,14 +110,14 @@ export function TopNav({
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "var(--s-2)", flex: "none" }}>
           <span className="vn-nav-wide"><CityPicker city={city} cities={cities} onCity={onCity} /></span>
           <span className="vn-nav-wide"><AqiScaleToggle dark={false} /></span>
-          {extras}
+          <span className="vn-nav-wide" style={{ display: "flex", alignItems: "center", gap: "var(--s-2)" }}>{extras}</span>
           <ThemeToggle dark={false} />
           <button
             onClick={action.onClick}
             title={action.title}
             className="vn-nav-action"
             style={{
-              display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px", minHeight: 34,
+              display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 16px", minHeight: 44,
               borderRadius: "var(--r-sm)", border: "1px solid transparent",
               background: "var(--nav)", color: "var(--nav-ink-strong)",
               fontSize: "var(--t-sm)", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
@@ -131,7 +131,7 @@ export function TopNav({
             onClick={() => setOpen((o) => !o)}
             aria-label="Menu"
             aria-expanded={open}
-            style={{ width: 34, height: 34, display: "none", placeItems: "center", borderRadius: "var(--r-sm)", border: "1px solid var(--line)", background: "var(--surface-2)", color: "var(--ink-2)", cursor: "pointer" }}
+            style={{ width: 44, height: 44, display: "none", placeItems: "center", borderRadius: "var(--r-sm)", border: "1px solid var(--line)", background: "var(--surface-2)", color: "var(--ink-2)", cursor: "pointer" }}
           >
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
           </button>
@@ -156,10 +156,23 @@ export function TopNav({
               </button>
             ))}
           </nav>
-          <div style={{ marginTop: "var(--s-4)", display: "flex", flexWrap: "wrap", gap: "var(--s-3)" }}>
+          <div style={{ marginTop: "var(--s-4)", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "var(--s-3)" }}>
             <CityPicker city={city} cities={cities} onCity={onCity} />
             <AqiScaleToggle dark={false} />
+            {extras}
           </div>
+          <button
+            onClick={() => { setOpen(false); action.onClick(); }}
+            title={action.title}
+            style={{
+              marginTop: "var(--s-4)", width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
+              padding: "10px 14px", minHeight: 40, borderRadius: "var(--r-sm)", border: 0,
+              background: "var(--nav)", color: "var(--nav-ink-strong)",
+              fontSize: "var(--t-sm)", fontWeight: 700, cursor: "pointer",
+            }}
+          >
+            {action.label} <span aria-hidden="true">→</span>
+          </button>
         </div>
       )}
     </header>

@@ -29,12 +29,17 @@ jobs:
         # --push is what actually persists rows — without it this job fetches
         # summaries and discards them (measurements went stale for 3 days).
         run: |
-          # --days 1 --max-sensors 15: OpenAQ rate-limits shared Actions IPs; keep
-          # each run small. ::warning:: makes failures visible in the run summary
-          # instead of being swallowed (openaq sat silently stale for a week).
+          # --per-var 4: the budget is allocated PER POLLUTANT, not as a global top-N by recency.
+          # Delhi has ~740 sensors within 25 km (~95 active per pollutant); the old
+          # `--max-sensors 15` gave PM2.5 five stations and every gas exactly one, so a single
+          # sensor decided the city's headline index whenever PM10 or NO2 was prominent. Four per
+          # pollutant is ~24 sensors per city — still small enough for OpenAQ's rate limit on
+          # shared Actions IPs, and it makes every "city mean" a mean over several stations.
+          # ::warning:: makes failures visible in the run summary instead of being swallowed
+          # (openaq sat silently stale for a week).
           CITIES=$(python -c "from core.cities import list_city_ids; print(' '.join(list_city_ids()))")
           for c in $CITIES; do
-            python -m connectors.openaq --city $c --days 1 --max-sensors 15 --push || echo "::warning::openaq $c failed"
+            python -m connectors.openaq --city $c --days 1 --per-var 4 --push || echo "::warning::openaq $c failed"
             sleep 20
           done
           # Direct CAAQMS path: data.gov.in is unreachable from some ISP routes but
@@ -92,6 +97,33 @@ jobs:
             python -m connectors.osm_sources --city $c --push || true
             sleep 20
           done
+      - name: Ingest satellite features (Sentinel-5P NO2 + MODIS/VIIRS fire)
+        env:
+          DEMO_MODE: "false"
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GEE_SERVICE_ACCOUNT: ${{ secrets.GEE_SERVICE_ACCOUNT }}
+          GEE_PROJECT: ${{ secrets.GEE_PROJECT }}
+          GEE_KEY_JSON_B64: ${{ secrets.GEE_KEY_JSON_B64 }}
+        # Daily, not hourly: Sentinel-5P revisits about once a day, so an hourly call would
+        # re-sample the same image. This step was MISSING entirely — the connector existed and had
+        # been run once by hand, but nothing re-ingested on a schedule, so `no2_sat` and `fire` read
+        # 0.0 in every live attribution row while the docs listed both as inputs.
+        # Skips cleanly (not fails) when the GEE secrets are absent, so a fork without Earth Engine
+        # credentials still gets a green run.
+        run: |
+          if [ -z "$GEE_SERVICE_ACCOUNT" ] || [ -z "$GEE_PROJECT" ] || [ -z "$GEE_KEY_JSON_B64" ]; then
+            echo "::warning::GEE secrets absent — skipping satellite ingest (no2_sat/fire will stay stale)"
+            exit 0
+          fi
+          echo "$GEE_KEY_JSON_B64" | base64 -d > /tmp/gee-key.json
+          export GEE_KEY_JSON=/tmp/gee-key.json
+          CITIES=$(python -c "from core.cities import list_city_ids; print(' '.join(list_city_ids()))")
+          for c in $CITIES; do
+            python -m connectors.earth_engine --city $c --days 30 --push || echo "::warning::earth_engine $c failed"
+            sleep 10
+          done
+          rm -f /tmp/gee-key.json
       - name: Refresh forecasts + attribution (model outputs must track the data)
         env:
           DEMO_MODE: "false"

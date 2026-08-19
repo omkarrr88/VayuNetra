@@ -2,13 +2,27 @@ import { useEffect, useMemo, useState } from "react";
 import { cellToLatLng } from "h3-js";
 import { api, downloadFile } from "./api";
 import { cleanRationale, prettyRule } from "./format";
-import { Panel, notifyEnforcementChanged } from "./ui";
+import { Panel, SegBtn, notifyEnforcementChanged } from "./ui";
 import { placeForCell } from "./placeName";
 
 type Rec = {
   id: number;
   h3_cell?: string;
   priority_score: number;
+  /** Value per inspector-hour, computed by the enforcement agent (agents/enforcement.py). */
+  evidence?: {
+    value?: {
+      value_per_hour: number | null;
+      inspector_hours: number;
+      share_low?: number;
+      pm25_low?: number;
+      p_exceed?: number;
+      delta_pm25_low?: number;
+      benefit_person_ugm3?: number;
+      basis: string;
+      assumption: string;
+    };
+  } & Record<string, unknown>;
   contribution: number;
   pop_exposed: number;
   rationale: string;
@@ -123,6 +137,11 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
   const [dossier, setDossier] = useState<Dossier | null>(null);
   const [busy, setBusy] = useState<number | null>(null);
   const [filter, setFilter] = useState<(typeof CATEGORY_FILTERS)[number]["id"]>("all");
+  // "Where is my next hour best spent" is the officer's real question, so value-per-hour leads.
+  // Selecting a cell on the map used to override the order silently; it is now an explicit third
+  // option that defaults on, so the officer can always see and change what the list is sorted by.
+  const [order, setOrder] = useState<"value" | "priority" | "nearest">("value");
+  useEffect(() => { if (focusCell) setOrder("nearest"); }, [focusCell]);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
@@ -152,13 +171,20 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
       else seen.set(key, { ...r });
     }
     const collapsed = [...seen.values()];
-    const sorted = focusCell
-      ? collapsed
-          .map((r) => ({ ...r, km: r.h3_cell ? cellKm(focusCell, r.h3_cell) : null }))
-          .sort((a, b) => (a.km ?? 1e9) - (b.km ?? 1e9))
+    const withKm = focusCell
+      ? collapsed.map((r) => ({ ...r, km: r.h3_cell ? cellKm(focusCell, r.h3_cell) : null }))
       : collapsed;
-    return sorted.slice(0, 10); // keep the list scannable
-  }, [rows, focusCell, filter, query]);
+    if (order === "nearest" && focusCell) {
+      return [...withKm].sort((a, b) => (a.km ?? 1e9) - (b.km ?? 1e9)).slice(0, 10);
+    }
+    if (order === "value") {
+      // items without a computed value fall to the bottom rather than being dropped
+      return [...withKm]
+        .sort((a, b) => (b.evidence?.value?.value_per_hour ?? -1) - (a.evidence?.value?.value_per_hour ?? -1))
+        .slice(0, 10);
+    }
+    return withKm.slice(0, 10); // keep the list scannable
+  }, [rows, focusCell, filter, query, order]);
 
   // Place names for the visible items — an officer thinks in wards, not H3 ids.
   const [places, setPlaces] = useState<Record<string, string>>({});
@@ -243,11 +269,22 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
     <Panel
       title="Enforcement Worklist"
       right={
-        focusCell ? (
-          <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[11px] font-medium text-blue-700">
-            nearest to selected cell first
-          </span>
-        ) : undefined
+        <span role="group" aria-label="Order the worklist" className="flex items-center gap-1">
+          <SegBtn active={order === "value"} onClick={() => setOrder("value")}
+            title="Conservative exposure reduction per inspector-hour: (share × confidence) × the conformal lower bound of the +24 h forecast × residents exposed × (1 + 3 × P(>120 µg/m³)), divided by the hours the inspection is assumed to take.">
+            per hour
+          </SegBtn>
+          <SegBtn active={order === "priority"} onClick={() => setOrder("priority")}
+            title="Contribution × exposure × actionability × confidence — how big the source is, regardless of what acting on it costs.">
+            by size
+          </SegBtn>
+          {focusCell && (
+            <SegBtn active={order === "nearest"} onClick={() => setOrder("nearest")}
+              title="Nearest to the cell selected on the map">
+              nearest
+            </SegBtn>
+          )}
+        </span>
       }
     >
       <div className="flex flex-wrap items-center gap-1.5">
@@ -300,7 +337,7 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
               }`}
             >
               <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
-                <span className="min-w-0 truncate font-semibold text-slate-800" title={r.h3_cell}>
+                <span className="min-w-0 truncate font-semibold text-slate-800" title={(r.h3_cell && places[r.h3_cell]) || "About 1 km² of this city"}>
                   {CATEGORY_LABEL[recCategory(r.rationale)] ?? "Source"}
                   {r.h3_cell && places[r.h3_cell] ? <span className="font-normal text-slate-500"> · {places[r.h3_cell]}</span> : null}
                 </span>
@@ -311,6 +348,34 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
                   {focusCell && r.h3_cell !== focusCell && typeof r.km === "number" && (
                     <span className="text-[11px] text-slate-500">~{r.km < 1 ? "<1" : Math.round(r.km)} km</span>
                   )}
+                  {(() => {
+                    const v = r.evidence?.value;
+                    if (!v || v.value_per_hour === null || v.value_per_hour === undefined) return null;
+                    return (
+                      <>
+                        <span
+                          className="rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] font-bold text-emerald-700"
+                          title={[
+                            `Conservative exposure reduction per inspector-hour.`,
+                            `share × confidence = ${((v.share_low ?? 0) * 100).toFixed(1)}%`,
+                            `× forecast lower bound ${v.pm25_low} µg/m³ = ${v.delta_pm25_low} µg/m³ attributable`,
+                            `× ${r.pop_exposed.toLocaleString("en-IN")} residents × P(>120) ${((v.p_exceed ?? 0) * 100).toFixed(0)}%`,
+                            `÷ ${v.inspector_hours} inspector-hours (assumed)`,
+                            ``,
+                            v.basis,
+                            v.assumption,
+                          ].join("\n")}
+                        >
+                          {v.value_per_hour >= 1000 ? `${Math.round(v.value_per_hour / 1000)}k` : Math.round(v.value_per_hour)}/hr
+                        </span>
+                        <span className="text-slate-400">·</span>
+                        <span className="text-[11px] text-slate-500" title="Hours this inspection is assumed to take — the team's estimate, not a measured figure">
+                          {v.inspector_hours}h
+                        </span>
+                        <span className="text-slate-400">·</span>
+                      </>
+                    );
+                  })()}
                   <span title="Priority = contribution × exposure × actionability × confidence">priority {Math.round(r.priority_score * 100)}</span>
                   <span className="text-slate-400">·</span>
                   <span title="Evidence rubric out of 10">rubric {r.rubric_score?.total ?? "--"}/10</span>

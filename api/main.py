@@ -26,6 +26,7 @@ from urllib.parse import parse_qsl
 
 from fastapi import FastAPI, Header, HTTPException, Query, Depends, Request, WebSocket, WebSocketDisconnect, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 
@@ -68,9 +69,61 @@ ALLOWED_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", _DEFAULT_ORIG
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
+    # Any localhost port, because pinning 5173 and 4173 made every OTHER local port fail silently:
+    # the browser blocks the response, the client falls back to bundled fixtures, and the app looks
+    # like it is working. A `vite preview` on 4180 measured as "fast" purely because nothing real was
+    # being fetched. Localhost only — the deployed origin stays explicit in ALLOWED_ORIGINS.
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# Every payload here is JSON, which compresses by roughly nine tenths. /coverage alone is 278 KB
+# uncompressed and is fetched on every console page load; on a free tier that transfer IS the
+# latency. 1 KB floor so tiny envelopes are not paid for twice.
+app.add_middleware(GZipMiddleware, minimum_size=1024)
+
+
+# Responses a browser may reuse, and for how long. An allowlist, not a denylist: anything not named
+# here is left uncached, so a new endpoint can never start serving stale air by accident.
+#
+# Deliberately absent: /enforcement, /brief, /interventions and /agent/* — an officer's own actions
+# must always read back live. The browser's HTTP cache cannot be cleared from JavaScript, so the
+# app's own 10-second in-memory cache (web/src/api.ts) is what covers those.
+_CACHE_SECONDS: tuple[tuple[str, int], ...] = (
+    ("/cities", 300),                 # city configs; change only on a deploy
+    ("/static-layers", 600),          # roads, land use, industrial sites
+    ("/metrics/benchmark", 300),      # a published artifact, rewritten on refit
+    ("/metrics/attribution", 300),
+    ("/metrics/interventions", 300),
+    ("/history/trend", 120),          # closed days
+    ("/history/cells", 120),
+    ("/coverage", 120),               # the dense field, recomputed hourly
+    ("/city/overview", 60),           # hourly means
+    ("/city/now", 45),
+    ("/aqi/current", 45),
+    ("/comparison", 60),
+    ("/forecast", 60),                # issued hourly
+    ("/attribution", 60),
+    ("/exposure", 120),
+    ("/roi", 300),
+    ("/latency", 60),
+)
+
+
+@app.middleware("http")
+async def _cache_reads(request, call_next):
+    response = await call_next(request)
+    if request.method != "GET" or response.status_code != 200:
+        return response
+    path = request.url.path
+    for prefix, seconds in _CACHE_SECONDS:
+        if path == prefix or path.startswith(prefix + "/"):
+            # stale-while-revalidate lets a repeat view paint instantly while the refresh happens
+            response.headers["Cache-Control"] = f"public, max-age={seconds}, stale-while-revalidate={seconds * 4}"
+            break
+    else:
+        response.headers.setdefault("Cache-Control", "no-store")
+    return response
 
 
 @app.on_event("startup")
@@ -248,7 +301,11 @@ def aqi_current(
         readings = [{"pollutant": "pm25", "value": e["pm25"], "unit": "µg/m³"}] + [
             {"pollutant": k, "value": v["value"], "unit": v.get("unit")} for k, v in e["pollutants"].items()
         ]
-        e.update(composite(readings))
+        idx = composite(readings)
+        for p_name, eff in (idx.pop("units", None) or {}).items():   # publish the indexed unit
+            if p_name in e["pollutants"] and eff:
+                e["pollutants"][p_name]["unit"] = eff
+        e.update(idx)
         out.append(e)
     return ok(out)
 
@@ -544,7 +601,11 @@ def attribution(
 
     q = (
         db.table("attribution")
-        .select("h3_cell,source_category,share,confidence,evidence,ts_window")
+        # `method_version` says whether this row came from the hybrid GBM+SHAP model or from the
+        # cited chemical-signature priors it falls back to when the model has no out-of-sample
+        # skill. Without it in the response a reader cannot tell which they are looking at, and the
+        # abstain behaviour — one of the more defensible things this system does — is invisible.
+        .select("h3_cell,source_category,share,confidence,evidence,ts_window,method_version")
         .eq("city_id", city)
     )
     if cell:
@@ -560,6 +621,11 @@ def attribution(
             "shares": {},
             "confidence": r.get("confidence"),
             "evidence": r.get("evidence"),
+            # Which model produced this cell: "hybrid-gbm-shap-v2" when the GBM had out-of-sample
+            # skill, "signature-v1" when it did not and we fell back to cited chemical-signature
+            # priors. The reshape used to drop this, so a reader could not tell the two apart —
+            # which hid the abstain behaviour rather than showing it.
+            "method_version": r.get("method_version"),
         })
         c["shares"][r["source_category"]] = r["share"]
     return ok(list(cells.values()))
@@ -619,8 +685,10 @@ def enforcement_list(
     q = (
         db.table("enforcement_recs")
         .select(
+            # `evidence` carries the value-per-inspector-hour block the worklist ranks by; without
+            # it the UI can only sort by source size and cannot show the arithmetic behind a rank.
             "id,city_id,h3_cell,ts,source_id,priority_score,contribution,pop_exposed,"
-            "rationale,rag_citations,rubric_score,status,closed_at,closure_finding,closure_note"
+            "rationale,rag_citations,rubric_score,evidence,status,closed_at,closure_finding,closure_note"
         )
         .eq("city_id", city)
         .order("priority_score", desc=True)
@@ -1083,8 +1151,41 @@ def update_report_status(report_id: int, payload: dict, db=Depends(get_db)) -> d
         return _server_error("report_status_failed", e, "Could not update the report.")
 
 
-def _latest_advisory(city: str, language: str = "en") -> Optional[dict]:
-    """Freshest advisory for a city in `language` (fixture rows in DEMO_MODE), English fallback."""
+# Worst first. Every advisory in a batch shares one issued_at, so ordering by it alone left the
+# tie to whatever Postgres returned — the broadcast picked an arbitrary ward, and an arbitrary
+# CHANNEL row too, so an IVR call could go out carrying the row written for a display board.
+TIER_SEVERITY = {"severe": 5, "very_poor": 4, "poor": 3, "moderate": 2, "satisfactory": 1, "good": 0}
+
+
+def _advisory_sort_key(row: dict) -> tuple:
+    """Most severe first, then a stable tie-break so the same input always picks the same row."""
+    return (-TIER_SEVERITY.get(str(row.get("risk_tier") or ""), 0), str(row.get("ward_id") or ""))
+
+
+def list_advisory_wards(city: str, language: str = "en") -> list[dict]:
+    """The wards an operator can choose between, worst air first."""
+    if DEMO_MODE:
+        rows = [r for r in fixture_rows("advisory", city)
+                if (r.get("language") or "en") == language and r.get("city_id") == city]
+    else:
+        rows = (_db().table("advisories").select("ward_id,risk_tier,h3_cell,message")
+                .eq("city_id", city).eq("language", language).limit(500).execute().data) or []
+    seen: dict[str, dict] = {}
+    for r in rows:
+        w = str(r.get("ward_id") or "")
+        if w and w not in seen:
+            seen[w] = {"ward_id": w, "risk_tier": r.get("risk_tier"), "h3_cell": r.get("h3_cell")}
+    return sorted(seen.values(), key=_advisory_sort_key)
+
+
+def _latest_advisory(city: str, language: str = "en", ward: str | None = None,
+                     channel: str | None = None) -> Optional[dict]:
+    """The advisory a broadcast should send: this city, this language, this ward, this channel.
+
+    `ward` None means "choose for me", and the choice is the worst-air ward rather than whichever
+    row the database happened to hand back first. `channel` narrows to the row written for that
+    delivery path — the same advisory is stored once per channel.
+    """
     def _pick(lang: str) -> Optional[dict]:
         if DEMO_MODE:
             # strict city match — fixture_rows falls back to ALL rows for unknown
@@ -1094,17 +1195,26 @@ def _latest_advisory(city: str, language: str = "en") -> Optional[dict]:
                 if (r.get("language") or "en") == lang and r.get("city_id") == city
             ]
         else:
-            rows = (
-                _db().table("advisories").select("*").eq("city_id", city)
-                .eq("language", lang).order("issued_at", desc=True).limit(1).execute().data
-            ) or []
-        return rows[0] if rows else None
+            q = (_db().table("advisories").select("*").eq("city_id", city).eq("language", lang))
+            if ward:
+                q = q.eq("ward_id", ward)
+            if channel:
+                q = q.eq("channel", channel)
+            rows = (q.order("issued_at", desc=True).limit(200).execute().data) or []
+        if ward:
+            rows = [r for r in rows if str(r.get("ward_id") or "") == ward]
+        if channel:
+            rows = [r for r in rows if str(r.get("channel") or "") == channel]
+        return sorted(rows, key=_advisory_sort_key)[0] if rows else None
     return _pick(language) or (_pick("en") if language != "en" else None)
 
 
 def _ivr_language(city: str) -> str:
-    """The language a call should be spoken in: the city's first showcase language if Polly
-    can voice it (Hindi), else English."""
+    """The language a call should be spoken in: the city's first configured language.
+
+    The "if we have a voice for it" guard used to exclude six of the eight, because it only
+    considered Polly. It stays as a guard — a language could be added to the advisory templates
+    before a voice exists — but today nothing is excluded by it."""
     try:
         from channels.ivr import IVR_SPOKEN_LANGS
         from core.cities import load_city
@@ -1119,6 +1229,24 @@ def _ivr_language(city: str) -> str:
 class BroadcastBody(BaseModel):
     city: str = _CITY
     ivr: bool = False
+    # The language the operator picked on screen. It used to be absent, so the broadcast always
+    # took the English advisory and every call went out in English however the dropdown was set.
+    language: str | None = None
+    # Which ward to send. None means the worst-air ward; it used to mean "whichever row came back".
+    ward: str | None = None
+
+
+@app.get("/advisory/wards", tags=["advisory"])
+def advisory_wards(
+    city: str = Query(..., description="City ID"),
+    lang: str = Query("en", description="Language code"),
+) -> dict:
+    """The wards a broadcast can target, worst air first.
+
+    Exists because the console had no way to say which ward to send to, and the server had no way
+    to be asked — so it picked one and no one could tell which, or why.
+    """
+    return ok(list_advisory_wards(city, lang))
 
 
 @app.post("/advisory/broadcast", tags=["advisory"])
@@ -1135,11 +1263,26 @@ def advisory_broadcast(body: BroadcastBody, db=Depends(get_db)) -> dict:
         return err("rate_limited", f"Broadcast already sent recently — retry in {wait}s")
     _last_broadcast[city] = now
 
-    adv = _latest_advisory(city)
+    requested = (body.language or "en").strip() or "en"
+    ward = (body.ward or "").strip() or None
+    # the IVR row, not whichever channel's row sorted first — they carry the same text today, but
+    # picking the display-board row to read down a phone line is an accident waiting to happen
+    adv = _latest_advisory(city, requested, ward=ward, channel="ivr") or _latest_advisory(city, requested, ward=ward)
     if not adv:
         return err("no_advisory", f"No advisory available for {city}")
 
-    results: dict[str, Any] = {"advisory": {"ward_id": adv.get("ward_id"), "message": adv.get("message")}}
+    delivered = str(adv.get("language") or "en")
+    results: dict[str, Any] = {
+        "advisory": {"ward_id": adv.get("ward_id"), "message": adv.get("message"), "language": delivered},
+        # say which ward went out and whether the operator chose it, so "why that ward?" has an answer
+        "ward": {"sent": adv.get("ward_id"), "chosen_by": "operator" if ward else "worst air"},
+        # Say what actually happened to the language, rather than letting a silent fallback look
+        # like success: _latest_advisory falls back to English when the city has no row in the
+        # requested language, and Polly has no voice for six of the eight we write.
+        "language": {"requested": requested, "delivered": delivered},
+    }
+    if delivered != requested:
+        results["language"]["note"] = f"no {requested} advisory stored for {city}; sent {delivered}"
 
     # Telegram
     if os.getenv("TELEGRAM_BOT_TOKEN"):
@@ -1160,7 +1303,12 @@ def advisory_broadcast(body: BroadcastBody, db=Depends(get_db)) -> dict:
             os.getenv("TWILIO_TO_NUMBERS") or os.getenv("TWILIO_TO_NUMBER")
         ):
             try:
-                from channels.ivr import broadcast_ivr_calls
+                from channels.ivr import IVR_SPOKEN_LANGS, broadcast_ivr_calls
+                if delivered not in IVR_SPOKEN_LANGS:
+                    results["language"]["spoken_as"] = "en"
+                    results["language"]["voice_note"] = (
+                        f"text-to-speech has no {delivered} voice; the call is read in English"
+                    )
                 calls = broadcast_ivr_calls(adv)
                 sent = sum(1 for c in calls if c["status"] != "error")
                 results["ivr"] = {"status": f"calling {sent}/{len(calls)} numbers", "calls": calls}
@@ -1437,8 +1585,6 @@ def comparison() -> dict:
         rec_statuses = (
             sdb.table("enforcement_recs").select("city_id,status").limit(5000).execute().data
         ) or []
-        data = build_comparison(cities, aqi_rows, forecast_rows, rec_statuses)
-
         # Every city number in the product comes from one computation: the index of that city's
         # mean (see _city_now_from_hourly). Without this the scoreboard would derive an index from
         # PM2.5 alone and disagree with the city's own page whenever PM10 or a gas is prominent.
@@ -1454,6 +1600,14 @@ def comparison() -> dict:
         ids = [c["city_id"] for c in cities]
         with ThreadPoolExecutor(max_workers=min(10, max(1, len(ids)))) as pool:
             indices = dict(zip(ids, pool.map(_idx, ids)))
+
+        # The index is fetched BEFORE the comparison is built, because the scoreboard has to rank
+        # and label with the same PM2.5 the badge is derived from. It used to rank on a separate
+        # number — the mean of each cell's most recent reading — and the two disagreed by up to
+        # 2.25x (Bengaluru read 56.2 against a 24 h mean of 25.0, because one of its six cells was
+        # sitting at 256 ug/m3 and a sixth of that lands straight on the city average). That put
+        # cities in the wrong order and printed a green badge next to an inflated number.
+        data = build_comparison(cities, aqi_rows, forecast_rows, rec_statuses, indices)
         for c in data.get("cities", []):
             c.update(indices.get(c.get("city_id"), {}))
 
@@ -1707,6 +1861,13 @@ def _city_now_from_hourly(hourly_rows: list[dict]) -> dict:
     for r in sorted(hourly_rows, key=lambda x: str(x["hour"])):
         now_by[r["pollutant"]] = {"value": round(float(r["value"]), 1), "unit": r.get("unit"), "hour": r["hour"], "n": r.get("n")}
     idx = composite([{"pollutant": p, "value": v["value"], "unit": v.get("unit")} for p, v in now_by.items()])
+    # Some aggregators re-label a CPCB µg/m³ feed as ppb (see core.aqi.units_are_trustworthy). The
+    # index is computed from the corrected interpretation, so the reading we publish must carry the
+    # same unit — otherwise the card would read "38 ppb" beside a sub-index derived from 38 µg/m³.
+    for p_name, eff in (idx.get("units") or {}).items():
+        if p_name in now_by and eff:
+            now_by[p_name]["unit"] = eff
+    idx.pop("units", None)
     pm25_hours = [float(r["value"]) for r in hourly_rows if r["pollutant"] == "pm25"]
     pm25_24h = round(sum(pm25_hours) / len(pm25_hours), 1) if pm25_hours else None
     return {"pollutants": now_by, "pm25_24h": pm25_24h, **idx}
@@ -2229,9 +2390,19 @@ def plume_layer(
         return ok(hit[1])
     try:
         sdb = _db()
+        # The most recent wind AT OR BEFORE NOW — not simply the newest row.
+        #
+        # Open-Meteo supplies forecast hours as well as history, so `order(ts desc).limit(1)` was
+        # returning a timestamp up to about thirty hours ahead and drawing tomorrow's wind on a map
+        # labelled "now". It showed up as Delhi losing its wind arrows entirely: at the future hour
+        # the city was calm at 0.18 m/s, below the speed at which a Gaussian plume is defined, while
+        # the wind actually blowing was 1.66 m/s. Windier cities happened to be windy in both hours,
+        # so only Delhi looked broken.
+        now_iso = datetime.now(timezone.utc).isoformat()
         ts_rows = (
             sdb.table("measurements").select("ts").eq("city_id", city)
-            .eq("variable", "wind_u").order("ts", desc=True).limit(1).execute().data
+            .eq("variable", "wind_u").lte("ts", now_iso)
+            .order("ts", desc=True).limit(1).execute().data
         ) or []
         if not ts_rows:
             return err("no_wind", f"No wind data available for {city}")

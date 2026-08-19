@@ -1,7 +1,7 @@
 // Public landing page — light theme only. Console lives at /console.
 import { useEffect, useState } from "react";
 import { api } from "./api";
-import { aqiCategory, categoryForIndex, formatIndex, pm25ToAqi, POLLUTANT_LABEL, SCALES } from "./aqi";
+import { aqiCategory, categoryForIndex, formatIndex, pm25ToAqi, POLLUTANT_LABEL, SCALES, bandInk } from "./aqi";
 import { linkClick } from "./router";
 
 type AqiRow = { pm25?: number; value?: number };
@@ -67,7 +67,7 @@ const FEATURES = [
   { icon: IC.leaf, title: "Clean-air zones", body: "The flip side of the blame map: the cleanest ~1 km cells right now, computed from the dense coverage field, with one-tap directions." },
   { icon: IC.globe, title: "Multi-city, config-driven", body: "10 cities live today — Delhi, Bengaluru, Mumbai, Hyderabad, Chennai, Kolkata, Pune, Ahmedabad, Jaipur, Lucknow — with cross-city playbooks. Seven were onboarded from config in one week; every layer is city-agnostic." },
   { icon: IC.megaphone, title: "Citizen channels", body: "Eight languages in their own scripts — Hindi, Kannada, Marathi, Tamil, Telugu, Bengali, Gujarati, English — over PWA, a Telegram bot judges can subscribe to live (/start), IVR voice calls and a public-display mode." },
-  { icon: IC.chip, title: "Visible multi-agent pipeline", body: "Six agents on one LangGraph with per-node latency stamps. A 'Run agents live' button replays the whole detect → decide → issue chain on stage." },
+  { icon: IC.chip, title: "Visible multi-agent pipeline", body: "Five agents on one LangGraph with per-node latency stamps, plus a spike gate that decides whether enforcement should run at all. A 'Run agents live' button replays the whole detect → decide → issue chain on stage — including the gate skipping enforcement when the air is clean." },
   { icon: IC.doc, title: "Honest by construction", body: "Attribution abstains without out-of-sample skill; intervals are calibrated; fairness is audited on live data; demo fixtures are labeled as fixtures. Nothing fabricated." },
 ];
 
@@ -76,10 +76,10 @@ const VALIDATION: Array<[string, string, string]> = [
   ["Attribution behaves physically", "2.30× traffic signal in rush hours", "IST rush vs off-peak SHAP, weather controlled"],
   ["Forecast beats real baselines", "Delhi +9 / +13 / +12% · Mumbai +17 / +19 / +21% at 24/48/72 h", "multi-season temporal split (2025-26 winter + summer 2026), monthly refit on the trailing 90 d; served forecast = LightGBM blended with persistence; vs persistence and weekly seasonal-naive — the raw model's weaker numbers ship too"],
   ["It warns before the air turns", "51–54% of Very-Poor onsets flagged 1–3 days ahead", "alarm on the calibrated probability P ≥ 0.3 (precision 0.64–0.68); persistence catches 0% by construction; the Severe tail stays weak — stated, not hidden"],
-  ["Uncertainty is calibrated", "80% band → 78% measured · P(>120) Brier skill +51%", "conformal calibration; exceedance probabilities on every cell forecast drive the alarms"],
+  ["Uncertainty is calibrated, and where it is not we say so", "80% band → 0.783 Delhi · 0.749 Kolkata, published by predicted level", "conformal calibration; we report coverage per predicted band rather than one marginal number, because Kolkata drops to 0.55 where it matters most"],
   ["Enforcement is equitable", "no socio-economic inputs, by construction", "fairness audit on every live recommendation (n=390 at the July audit)"],
   ["Model choice was earned", "TFT trained on GPU — and rejected", "LightGBM won every launch city on held-out skill"],
-  ["The loop is fast", "seconds from signal to cited recommendation", "live per-node agent traces; approval, dispatch and closure timestamped per action"],
+  ["The loop is fast", "seconds from signal to cited recommendation", "measured pipeline latency with live per-node agent traces — the time to PRODUCE the recommendation, not a municipality's response time; approval, dispatch and closure are timestamped per action"],
 ];
 
 const DATA_SOURCES = ["CPCB / CAAQMS", "Sentinel-5P", "Sentinel-2", "Open-Meteo · ERA5", "NASA FIRMS", "OpenStreetMap", "GPW v4.11"];
@@ -87,7 +87,7 @@ const DATA_SOURCES = ["CPCB / CAAQMS", "Sentinel-5P", "Sentinel-2", "Open-Meteo 
 // Fallback snapshot (production, 18 August 2026) — used only until GET /landing/snapshot
 // answers; the live payload replaces every number below. Colors match the console.
 const MIX_COLOR: Record<string, string> = { traffic: "#ef4444", transported: "#3b82f6", industrial: "#9333ea", construction_dust: "#ca8a04", biomass_burning: "#16a34a", other: "#6b7280" };
-const MIX_LABEL: Record<string, string> = { construction_dust: "construction dust", biomass_burning: "biomass burning" };
+const MIX_LABEL: Record<string, string> = { construction_dust: "construction dust", biomass_burning: "biomass burning", industrial: "industry", transported: "regional transport" };
 /** One row of the live city board — the index is the server composite (index of the city mean),
  *  the same number that city's own page shows. */
 type CityBoardRow = {
@@ -191,15 +191,15 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-4">
             <a href="https://github.com/omkarrr88/VayuNetra" target="_blank" rel="noreferrer"
-              className="flex h-6 w-6 items-center justify-center text-slate-500 transition-colors hover:text-slate-900" title="Source on GitHub" aria-label="Source on GitHub">
+              className="flex h-11 w-11 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900" title="Source on GitHub" aria-label="Source on GitHub">
               <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true"><path d={IC.github} /></svg>
             </a>
             <a href="/city/delhi" onClick={(e) => linkClick(e, "/city/delhi")}
-              className="hidden rounded-md border border-slate-300 px-3.5 py-1.5 text-[13px] font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900 sm:block">
+              className="hidden rounded-md border border-slate-300 px-4 py-2.5 text-[13px] font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900 sm:block min-h-11 flex items-center">
               Check your city
             </a>
             <a href="/console" onClick={(e) => linkClick(e, "/console")}
-              className="rounded-md bg-slate-900 px-3.5 py-1.5 text-[13px] font-semibold text-white transition-colors hover:bg-slate-700">
+              className="rounded-md bg-slate-900 px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-slate-700 min-h-11 flex items-center">
               Open console
             </a>
           </div>
@@ -223,16 +223,16 @@ export default function Landing() {
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <a href="/city/delhi" onClick={(e) => linkClick(e, "/city/delhi")}
-            className="flex items-center gap-2 rounded-md bg-sky-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-800">
+            className="flex items-center gap-2 rounded-md bg-sky-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-800 min-h-11">
             Check your city's air
             <Icon d={IC.arrow} className="h-4 w-4" />
           </a>
           <a href="/console" onClick={(e) => linkClick(e, "/console")}
-            className="rounded-md border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900">
+            className="rounded-md border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900 min-h-11 flex items-center">
             Open the console
           </a>
           <a href="#how"
-            className="rounded-md border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900">
+            className="rounded-md border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900 min-h-11 flex items-center">
             How it works
           </a>
         </div>
@@ -316,8 +316,8 @@ export default function Landing() {
                         <span className="text-[10px] text-slate-400 group-hover:text-sky-700">open →</span>
                       </div>
                       <div className="mt-1 flex items-end gap-2">
-                        <span className="text-3xl font-extrabold leading-none tracking-tight" style={{ color: cat?.color }}>{formatIndex(idx, "in")}</span>
-                        <span className="pb-0.5 text-[11px] font-semibold" style={{ color: cat?.color }}>{cat?.label}</span>
+                        <span className="text-3xl font-extrabold leading-none tracking-tight" style={{ color: bandInk(cat?.color) }}>{formatIndex(idx, "in")}</span>
+                        <span className="pb-0.5 text-[11px] font-semibold" style={{ color: bandInk(cat?.color) }}>{cat?.label}</span>
                       </div>
                       <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
                         <div className="h-full rounded-full" style={{ width: `${Math.min(100, ((idx ?? 0) / 500) * 100)}%`, background: cat?.color }} />
@@ -437,7 +437,7 @@ export default function Landing() {
         <div className="mx-auto max-w-6xl px-6 py-16">
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-sky-700">Architecture</p>
           <h2 className="mt-3 max-w-2xl text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-            Two seams. Six agents. Zero blocking.
+            Two seams. Five agents and a gate. Zero blocking.
           </h2>
           <p className="mt-3 max-w-2xl text-[15px] text-slate-600">
             Everything decouples through the Supabase schema and the API contract: models write rows, the API
@@ -517,7 +517,7 @@ export default function Landing() {
             <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">See it running on live data.</h2>
             <p className="mt-1 text-[14px] text-slate-600">Ten cities, real measurements, no sign-up.</p>
             <a href="/console" onClick={(e) => linkClick(e, "/console")}
-              className="mt-5 inline-flex items-center gap-2 rounded-md bg-sky-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-700">
+              className="mt-5 inline-flex items-center gap-2 rounded-md bg-sky-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-700 min-h-11">
               Open the console
               <Icon d={IC.arrow} className="h-4 w-4" />
             </a>
@@ -552,19 +552,19 @@ export default function Landing() {
           <div className="grid grid-cols-2 gap-10 text-[13px] sm:grid-cols-3">
             <div>
               <p className="font-mono text-[10px] uppercase tracking-wider text-slate-500">Product</p>
-              <div className="mt-2 space-y-1.5 text-slate-600">
-                <a href="/console" onClick={(e) => linkClick(e, "/console")} className="block py-0.5 transition-colors hover:text-slate-900">Console</a>
-                <a href="#how" className="block py-0.5 transition-colors hover:text-slate-900">How it works</a>
-                <a href="#architecture" className="block py-0.5 transition-colors hover:text-slate-900">Architecture</a>
-                <a href="#validation" className="block py-0.5 transition-colors hover:text-slate-900">Validation</a>
+              <div className="mt-2 space-y-1 text-slate-600">
+                <a href="/console" onClick={(e) => linkClick(e, "/console")} className="block py-2 transition-colors hover:text-slate-900 min-h-10 flex items-center">Console</a>
+                <a href="#how" className="block py-2 transition-colors hover:text-slate-900 min-h-10 flex items-center">How it works</a>
+                <a href="#architecture" className="block py-2 transition-colors hover:text-slate-900 min-h-10 flex items-center">Architecture</a>
+                <a href="#validation" className="block py-2 transition-colors hover:text-slate-900 min-h-10 flex items-center">Validation</a>
               </div>
             </div>
             <div>
               <p className="font-mono text-[10px] uppercase tracking-wider text-slate-500">Resources</p>
-              <div className="mt-2 space-y-1.5 text-slate-600">
-                <a href="https://github.com/omkarrr88/VayuNetra" target="_blank" rel="noreferrer" className="block py-0.5 transition-colors hover:text-slate-900">GitHub</a>
-                <a href="https://vayunetra-c8i8.onrender.com/docs" target="_blank" rel="noreferrer" className="block py-0.5 transition-colors hover:text-slate-900">API reference</a>
-                <a href="https://vayunetra-c8i8.onrender.com/health" target="_blank" rel="noreferrer" className="block py-0.5 transition-colors hover:text-slate-900">API status</a>
+              <div className="mt-2 space-y-1 text-slate-600">
+                <a href="https://github.com/omkarrr88/VayuNetra" target="_blank" rel="noreferrer" className="block py-2 transition-colors hover:text-slate-900 min-h-10 flex items-center">GitHub</a>
+                <a href="https://vayunetra-c8i8.onrender.com/docs" target="_blank" rel="noreferrer" className="block py-2 transition-colors hover:text-slate-900 min-h-10 flex items-center">API reference</a>
+                <a href="https://vayunetra-c8i8.onrender.com/health" target="_blank" rel="noreferrer" className="block py-2 transition-colors hover:text-slate-900 min-h-10 flex items-center">API status</a>
               </div>
             </div>
             <div>

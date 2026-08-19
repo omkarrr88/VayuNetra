@@ -1,6 +1,6 @@
 # Forecast benchmark — delhi (hist)
 
-Window 2025-02-17 → 2026-08-15, test from **2025-11-01** (rolling-origin monthly refit, 90-day training window; train strictly before each test origin). 39 station cells, 449,526 hourly rows. Model: LightGBM quantile (median) — same class/params as production (ml.forecast.train). Generated 2026-08-17T17:28Z by `python -m ml.eval.benchmark`.
+Window 2025-02-17 → 2026-08-15, test from **2025-11-01** (rolling-origin monthly refit, 90-day training window; train strictly before each test origin). 39 station cells, 449,526 hourly rows. Model: LightGBM quantile (median) — same class/params as production (ml.forecast.train). Generated 2026-08-19T13:19Z by `python -m ml.eval.benchmark`.
 
 ## RMSE (µg/m³) on the shared support mask
 
@@ -91,12 +91,25 @@ Blend weights (w on model, chosen per training origin on its calibration tail): 
 
 - **+24h**: 80% PI empirical coverage 0.783 (mean width 145.1 µg/m³); P(>90) Brier 0.1153 vs climatology 0.2415 (skill +52.3%); P(>120) Brier 0.1029 vs climatology 0.2113 (skill +51.3%); P(>250) Brier 0.0541 vs climatology 0.0781 (skill +30.7%)
 - **+48h**: 80% PI empirical coverage 0.781 (mean width 162.8 µg/m³); P(>90) Brier 0.1265 vs climatology 0.2416 (skill +47.7%); P(>120) Brier 0.1151 vs climatology 0.2116 (skill +45.6%); P(>250) Brier 0.0642 vs climatology 0.0778 (skill +17.5%)
-- **+72h**: 80% PI empirical coverage 0.774 (mean width 170.9 µg/m³); P(>90) Brier 0.1415 vs climatology 0.242 (skill +41.5%); P(>120) Brier 0.1319 vs climatology 0.2125 (skill +37.9%); P(>250) Brier 0.0701 vs climatology 0.0781 (skill +10.3%)
+- **+72h**: 80% PI empirical coverage 0.775 (mean width 170.9 µg/m³); P(>90) Brier 0.1415 vs climatology 0.242 (skill +41.5%); P(>120) Brier 0.1319 vs climatology 0.2125 (skill +37.9%); P(>250) Brier 0.0701 vs climatology 0.0781 (skill +10.3%)
+
+### Coverage by predicted level
+
+Grouped by *predicted* PM2.5, not observed — at forecast time the outcome is exactly
+what we do not have, so this is the only breakdown a served band can be held to.
+Every cell should read ~0.80; the worst in each row is bolded.
+
+| horizon | Q1 lowest | Q2 | Q3 | Q4 | Q5 highest | overall |
+|---|---|---|---|---|---|---|
+| +24h | 0.827 | 0.768 | **0.704** | 0.8 | 0.816 | 0.783 |
+| +48h | 0.799 | 0.736 | **0.731** | 0.831 | 0.81 | 0.781 |
+| +72h | 0.784 | 0.769 | **0.705** | 0.821 | 0.793 | 0.775 |
+
+- +24h quintile edges (µg/m³): 16.1 · 50.3 · 68.0 · 89.7 · 152.8 · 361.4
+- +48h quintile edges (µg/m³): 16.9 · 51.8 · 68.0 · 99.6 · 159.9 · 338.5
+- +72h quintile edges (µg/m³): 21.7 · 52.8 · 70.3 · 99.7 · 173.1 · 351.4
 
 ## Meteorology ablation
 
-- +24h: RMSE with ERA5 met 65.92 vs without 67.33 → met contributes 2.1%
-- +48h: RMSE with ERA5 met 70.2 vs without 69.68 → met contributes -0.8%
-- +72h: RMSE with ERA5 met 74.39 vs without 75.09 → met contributes 0.9%
 
 _Read honestly: persistence is the hard baseline for PM2.5; a positive skill on high-pollution hours and a non-zero onset recall are the numbers that matter for intervention. Negative numbers are kept, not hidden._

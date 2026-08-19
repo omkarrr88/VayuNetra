@@ -58,7 +58,7 @@ export default function Site({ path }: { path: string }) {
       <div className="vn" style={{ minHeight: "100dvh", background: "var(--canvas)", display: "flex", flexDirection: "column" }}>
         <SiteNav />
         <FallbackNotice />
-        <main key={key} className="vn-fade" style={{ flex: 1, minWidth: 0 }}>
+        <main key={key} className="vn-fade" style={{ flex: 1, minWidth: 0, overflowX: "clip" }}>
           <Page path={path} />
         </main>
         <SiteFooter />

@@ -24,6 +24,7 @@ import { CommandPalette } from "./console/CommandPalette";
 import { FLOWS } from "./console/flows";
 import MapFrame from "./console/MapFrame";
 import { Cols } from "./console/Cols";
+import { Deferred } from "./console/nearView";
 import { PollutantsNowPanel, AirGraphPanel, AirRecordCols, HealthPanel } from "./console/cityAir";
 import { SectionIntro } from "./console/SectionIntro";
 import { TopNav, FallbackNotice, type NavItem } from "./shell/TopNav";
@@ -119,6 +120,13 @@ export default function App() {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement | null)?.tagName;
       if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA" || e.metaKey || e.ctrlKey || e.altKey) return;
+      // The pitch deck embeds this app in an iframe and uses D to step in and back out. Once the
+      // presenter clicks inside the app the iframe owns the keyboard, so the deck never sees the
+      // keypress — the app forwards it. Only when actually embedded, so D stays free otherwise.
+      if ((e.key === "d" || e.key === "D") && window.parent !== window) {
+        window.parent.postMessage("vn-exit-demo", "*");
+        return;
+      }
       if (e.key === "p" || e.key === "P") { setPresent((v) => !v); return; }
       const n = Number(e.key);
       if (n >= 1 && n <= SECTION_IDS.length) { setSection(SECTION_IDS[n - 1]); return; }
@@ -316,10 +324,10 @@ export default function App() {
               <Step {...S("action", 1)}><BriefCard city={active} /></Step>
               <Step {...S("action", 2)}><EnforcementPanel city={active} focusCell={cell?.h3_cell ?? null} /></Step>
               <Cols>
-                <Step {...S("action", 4)}><DispatchQueues city={active} /></Step>
-                <Step {...S("action", 5)}><InterventionsPanel city={active} /></Step>
+                <Step {...S("action", 4)}><Deferred minHeight={200}><DispatchQueues city={active} /></Deferred></Step>
+                <Step {...S("action", 5)}><Deferred minHeight={260}><InterventionsPanel city={active} /></Deferred></Step>
               </Cols>
-              <CityIntelPanel city={active} />
+              <Deferred minHeight={200}><CityIntelPanel city={active} /></Deferred>
             </>
           )}
           {section === "forecast" && (
@@ -329,19 +337,24 @@ export default function App() {
                 <Step {...S("forecast", 2)}><ValidationPanel city={active} /></Step>
                 <Step {...S("forecast", 3)}><InterventionsHindsight city={active} /></Step>
               </Cols>
-              <CityStatsPanel city={active} cells={attrCells} coverageCells={coverage?.cells ?? []} />
-              <Step {...S("forecast", 6)}><PollutantsNowPanel city={active} /></Step>
-              <Step {...S("forecast", 7)}><AirGraphPanel city={active} /></Step>
-              <AirRecordCols city={active} />
+              <Deferred minHeight={420}><CityStatsPanel city={active} cells={attrCells} coverageCells={coverage?.cells ?? []} /></Deferred>
+              <Step {...S("forecast", 6)}><Deferred minHeight={220}><PollutantsNowPanel city={active} /></Deferred></Step>
+              <Step {...S("forecast", 7)}><Deferred minHeight={320}><AirGraphPanel city={active} /></Deferred></Step>
+              <Deferred minHeight={320}><AirRecordCols city={active} /></Deferred>
             </>
           )}
           {section === "citizen" && (
             <>
               <CitizenPanel city={active} languages={city?.languages} center={center} />
-              <Step {...S("citizen", 5)}><HealthPanel city={active} /></Step>
+              <Step {...S("citizen", 5)}><Deferred minHeight={340}><HealthPanel city={active} /></Deferred></Step>
             </>
           )}
-          {section === "compare" && <ComparativePanel onSelectCity={setActive} />}
+          {section === "compare" && (
+            <ComparativePanel
+              onSelectCity={setActive}
+              onOpenEnforcement={(id) => { setActive(id); setSection("action"); }}
+            />
+          )}
           {section === "whatif" && <WhatIfPanel city={active} />}
           {section === "impact" && (
             <>

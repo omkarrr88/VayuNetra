@@ -69,7 +69,9 @@ export default function MapFrame(p: MapFrameProps) {
         <LatencyWidget city={p.city} />
       </div>
 
-      <div style={{ position: "absolute", right: "var(--s-3)", top: "var(--s-3)", zIndex: 10 }}>
+      {/* Above the cell story, not merely equal to it: both used zIndex 10, so paint order fell
+          to DOM order and the story — which comes later — covered the layer menu when open. */}
+      <div style={{ position: "absolute", right: "var(--s-3)", top: "var(--s-3)", zIndex: 20 }}>
         <LayersControl
           mode={p.mode} onMode={p.onMode}
           showSources={p.showSources} onShowSources={p.onShowSources}
@@ -82,8 +84,10 @@ export default function MapFrame(p: MapFrameProps) {
         />
       </div>
 
+      {/* The panel ends above the basemap attribution: OpenStreetMap and CARTO require it to
+          stay visible, and moving this to the right put it directly on top. */}
       {p.cell && (
-        <div className="vn-sheet vn-scroll-thin" style={{ position: "absolute", left: "var(--s-3)", top: "4.75rem", bottom: "var(--s-3)", zIndex: 10, width: "min(19rem, calc(100% - 24px))", overflowY: "auto", borderRadius: "var(--r-lg)" }}>
+        <div className="vn-sheet vn-scroll-thin" style={{ position: "absolute", right: "var(--s-3)", top: "4.75rem", bottom: "calc(var(--s-3) + 1.75rem)", zIndex: 10, width: "min(19rem, calc(100% - 24px))", overflowY: "auto", borderRadius: "var(--r-lg)" }}>
           <CellStoryPanel city={p.city} cell={p.cell} onClose={() => p.onSelect(null)} onAct={p.onAct} />
         </div>
       )}

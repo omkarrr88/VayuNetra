@@ -13,6 +13,7 @@ import { categoryForPm25 } from "./aqi";
 import { useAqiScale } from "./aqiScale";
 import { FORECAST_SKILL, SKILL_ASOF, pct } from "./metrics";
 import { EmptyState, Panel, SegBtn } from "./ui";
+import { placeForCell } from "./placeName";
 
 type FC = {
   h3_cell: string;
@@ -26,9 +27,27 @@ type FC = {
 const HORIZONS = [24, 48, 72];
 const SPIKE = 90; // µg/m³ PM2.5 — "very poor" threshold for a spike alert
 
-/** Short human label for an H3 id — the shared prefix says nothing, the tail does. */
-export function cellLabel(h3: string): string {
-  return `#${h3.replace(/f+$/, "").slice(-4)}`;
+/** Ward names for a list of cells. An officer reads "Khairatabad". The H3 index is no longer shown
+ *  anywhere on screen — not in the row, not on hover — because it is a database key. It survives on
+ *  the evidence dossier and the legal notice, where an auditor has to identify the exact cell. */
+function usePlaceNames(city: string, cells: string[]): Record<string, string> {
+  const [names, setNames] = useState<Record<string, string>>({});
+  const key = cells.join(",");
+  useEffect(() => {
+    let live = true;
+    setNames({});
+    Promise.all(cells.map(async (c) => [c, (await placeForCell(city, c))?.label] as const))
+      .then((pairs) => {
+        if (!live) return;
+        const out: Record<string, string> = {};
+        for (const [c, label] of pairs) if (label) out[c] = label;
+        setNames(out);
+      })
+      .catch(() => { /* the short id is a fine fallback */ });
+    return () => { live = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [city, key]);
+  return names;
 }
 
 type ChartPoint = { h: string; avg: number; band: [number, number]; pers: number };
@@ -36,6 +55,9 @@ type ChartPoint = { h: string; avg: number; band: [number, number]; pers: number
 type BenchSummary = {
   source: "hist" | "live";
   generated_at: string;
+  // the artifact's own window — live ingestion started on different dates per city, so a shared
+  // "90-day" label was wrong for eight of the ten
+  window?: { start?: string; end?: string; split?: string };
   headline: { horizon_h: number; n_test: number; skill_vs_persistence: number | null; skill_vs_seasonal_naive: number | null; pi80_coverage: number | null }[];
 };
 
@@ -83,6 +105,8 @@ export default function ForecastPanel({ city }: { city: string }) {
 
   const spikes = rows.filter((r) => r.value >= SPIKE);
   const sorted = [...rows].sort((a, b) => b.value - a.value);
+  // only the rows that are actually listed need a name
+  const places = usePlaceNames(city, sorted.slice(0, 40).map((r) => r.h3_cell));
 
   return (
     <Panel
@@ -128,7 +152,7 @@ export default function ForecastPanel({ city }: { city: string }) {
       {bh ? (
         <div
           className="mt-2 rounded-md bg-indigo-50 px-2 py-1 text-[11px] leading-4 text-indigo-800"
-          title={`Temporal-split benchmark (${bench?.source === "hist" ? "multi-season history" : "live 90-day window"}, n=${bh.n_test} test hours) recomputed ${bench?.generated_at.slice(0, 10)}. skill = 1 − RMSE_model/RMSE_baseline`}
+          title={`Temporal-split benchmark (${bench?.source === "hist" ? "multi-season history" : `live window ${bench?.window?.start?.slice(0, 10) ?? "?"} → ${bench?.window?.end?.slice(0, 10) ?? "?"}`}, n=${bh.n_test} test hours) recomputed ${bench?.generated_at.slice(0, 10)}. skill = 1 − RMSE_model/RMSE_baseline`}
         >
           measured skill @{horizon}h: <b>{pct(bh.skill_vs_persistence ?? undefined)}</b> vs persistence ·{" "}
           <b>{pct(bh.skill_vs_seasonal_naive ?? undefined)}</b> vs seasonal-naive
@@ -158,9 +182,11 @@ export default function ForecastPanel({ city }: { city: string }) {
               const cat = categoryForPm25(r.value, scale);
               return (
                 <div key={r.h3_cell} className="flex items-center justify-between gap-2">
-                  <span className="font-mono text-[11px] text-slate-500" title={r.h3_cell}>
+                  {/* Named, never keyed: the H3 index lives on the dossier and the notice, not on a
+                      list an officer reads down. */}
+                  <span className="min-w-0 truncate text-[11px] text-slate-600" title={places[r.h3_cell] ?? "About 1 km² of this city"}>
                     {r.value >= SPIKE ? "⚠ " : ""}
-                    cell {cellLabel(r.h3_cell)}
+                    {places[r.h3_cell] ?? "Unnamed area"}
                   </span>
                   <span className="flex items-center gap-1.5">
                     <span className="font-mono text-[11px] text-slate-500">

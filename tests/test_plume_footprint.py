@@ -120,3 +120,23 @@ def test_history_unknown_city_empty_not_error():
 
 def test_history_validates_hours():
     assert client.get("/history", params={"city": "delhi", "hours": 9999}).status_code == 422
+
+
+def test_plume_uses_current_wind_not_a_forecast_hour():
+    """Open-Meteo supplies forecast hours alongside history, so `newest row` is up to ~30 hours
+    ahead. The plume was drawing tomorrow's wind on a map labelled "now".
+
+    It showed as Delhi losing its wind arrows: 0.18 m/s at the future hour (below the speed at
+    which a Gaussian plume is defined, so flagged calm and hidden) against 1.66 m/s actually
+    blowing. Windier cities were windy in both hours, so only Delhi looked broken.
+    """
+    import inspect
+
+    import api.main as m
+
+    src = inspect.getsource(m)
+    i = src.index('return err("no_wind"')
+    window = src[max(0, i - 1200):i]
+    assert '.lte("ts", now_iso)' in window, (
+        "the plume must select the most recent wind AT OR BEFORE NOW, not the newest row"
+    )

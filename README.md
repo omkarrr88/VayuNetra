@@ -5,7 +5,8 @@
 
 India measures its air (900+ CAAQMS stations) and forecasts it, but almost no city can turn a bad
 reading into a specific, attributed, delivered intervention. **VayuNetra is that missing operate
-layer**: a six-agent AI platform that fuses ground sensors, Sentinel satellite data, weather,
+layer**: a multi-agent AI platform (orchestrator + attribution + forecast + enforcement + advisory
+agents, plus a spike gate and multi-city comparator) that fuses ground sensors, Sentinel satellite data, weather,
 mobility and land use into one loop — *who is to blame for PM2.5 in each ~1 km² cell, what the air
 will be in 72 hours, which enforcement action to take, and how to warn the people breathing it.*
 
@@ -41,7 +42,7 @@ switch the language to Hindi → *IVR call* tab.
 Plus a Swachh-Vayu-style **10-city ranking**, a cited what-if **simulator** with an inspector-hour
 optimizer, a health-₹ **impact** view with attribution-weighted NCAP fund guidance and a fairness
 audit, a **citizen complaint loop** (photo → verified → enforcement candidate, public SLA clock),
-PRANA-ready **NCAP evidence export**, a live **pipeline** trace of all six agents (typical
+PRANA-ready **NCAP evidence export**, a live **pipeline** trace of every agent that ran (typical
 signal→cited-recommendation: **0.8–9.7 s** compute, measured; the officer's review and the field dispatch are tracked separately), and map layers for wind plumes, wards, freight
 corridors and FIRMS fire events.
 
@@ -74,15 +75,28 @@ stated. `python -m ml.eval.interventions` · `GET /metrics/interventions`.
 
 The served forecast is the LightGBM median blended with persistence (weight chosen on the calibration
 tail; the raw model alone is +2 / +10 / +9% in Delhi — both columns are in the artifact).
-80% interval → 78% measured coverage; calibrated P(>120) on every forecast (Brier skill +51% vs
-climatology at 24 h). Live 90-day benchmarks exist for all 10 cities.
+The 80% interval measures **0.783 on Delhi** and **0.749 on Kolkata** (rolling, 10 origins). We
+publish coverage **by predicted level**, not just that marginal number, because the marginal number
+hides where a band fails: Kolkata is fine in clean air and drops to **0.547 in the 56–76 µg/m³
+range at +72 h** — the CPCB Satisfactory→Moderate→Poor transition, which is the range that changes
+what anyone does. Seven conformity scores were compared and none closed it (best moved the worst
+quintile 0.615 → 0.646), because what fails is *conditional* coverage and split conformal only ever
+promised *marginal*. Delhi has no such gap (worst quintile 0.704), so it is one city's model rather
+than the method — and the breakdown is what makes those two cases distinguishable. Calibrated
+P(>120) on every forecast (Brier skill +51% vs climatology at 24 h). A recent-window benchmark exists for all
+10 cities, but read it carefully: it is **not** 90 days everywhere — live ingestion started at
+different dates, so the window is 90 days for Bengaluru, 60 for Delhi and about 38 for the other
+seven, and every artifact carries its own `window` rather than a shared label. Its PI coverage is
+computed over a few hundred single-origin rows and swings on regime luck; the rolling multi-season
+artifacts are the ones to read for calibration.
 
 *skill = 1 − RMSE_model / RMSE_baseline. Negative numbers are kept — the Delhi 24 h and Severe-tail weak spots ship too.*
 
 **Attribution cross-checked against published apportionment** (`docs/ATTRIBUTION_VALIDATION.md`,
-`evaluate.ipynb §10`): cosine similarity **0.88 vs SAFAR-Delhi (2018)** · **0.90 vs CSTEP-Bengaluru
-(2022, verified against the primary report)** · 0.93 vs NEERI/Urban-Emissions Mumbai (run of
-18 Aug 2026) — and, bucket by bucket, against TERI-ARAI 2018 (Delhi) and Guttikunda et al. 2019
+`evaluate.ipynb §10`), run of 19 Aug 2026 — **read the mean absolute Δ, not the cosine**, which
+over four renormalised buckets is dominated by the largest component: Δ **0.042 vs SAFAR-Delhi
+(2018)** · Δ **0.099 vs CSTEP-Bengaluru (2022, verified against the primary report)** · Δ 0.097 vs
+NEERI/Urban-Emissions Mumbai (cosine 0.991 / 0.928 / 0.939) — and, bucket by bucket, against TERI-ARAI 2018 (Delhi) and Guttikunda et al. 2019
 (Bengaluru), agreements and disagreements both stated (biomass ≈ 0 in monsoon is seasonally
 correct; kerbside traffic over-read; small waste fires invisible to FIRMS). What-if intervention magnitudes are
 literature-grounded (Delhi odd-even trials, CAQM GRAP schedules); every `/simulate` figure
@@ -101,9 +115,9 @@ claimed — nothing fabricated ever reaches production, and impact figures retur
 
 Everything decouples through **two seams**: the Supabase schema (models **write** rows, the API
 **reads** rows) and the API contract (one `{success, data, error, meta}` envelope). The spatial
-unit everywhere is an **Uber H3 res-8 cell (~1 km²)**. Six LangGraph agents run the loop —
-orchestrator → attribution → forecast → *spike gate* → enforcement → advisory, plus a multi-city
-comparator — each run traced per node. Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+unit everywhere is an **Uber H3 res-8 cell (~1 km²)**. Five LangGraph agents run the main loop —
+orchestrator → attribution → forecast → *spike gate* → enforcement → advisory — each run traced per node,
+plus a multi-city comparator for cross-city analytics. Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 **Stack:** FastAPI (Render) · React + MapLibre + Deck.gl (Vercel) · Supabase Postgres + PostGIS +
 pgvector (RLS) · LangGraph · GitHub Actions crons — all free tier for the ten cities running today; the
@@ -121,10 +135,10 @@ make dev                               # FastAPI :8000 + Vite :5173 in one termi
 
 # Going live (optional): fill .env, then
 npx supabase login && npx supabase link --project-ref <your-project-ref>
-npx supabase db push                   # schema + RLS + city seed (20 migrations)
+npx supabase db push                   # schema + RLS + city seed (21 migrations)
 make live-bootstrap                    # kb_chunks + enforcement_recs + action_traces
 
-make test                              # 204 backend tests (64% line coverage, CI gate 55%)
+make test                              # 341 backend tests (64% line coverage, CI gate 55%)
 cd web && npx playwright test          # 7 e2e smoke + 9 live journey flows (VN_LIVE=1)
 ```
 
@@ -134,8 +148,8 @@ cd web && npx playwright test          # 7 e2e smoke + 9 live journey flows (VN_
 connectors/   ingest: CPCB/OpenAQ, Open-Meteo, Earth Engine, OSM, population, traffic
 core/         H3 utils, canonical schemas, impact & intervention math, city configs
 ml/           attribution, forecast, dispersion, coverage, simulator, vision
-agents/       the 6 LangGraph agents + the notice-PDF writer      rag/  retrieval corpus
-api/          FastAPI (44 routes + WebSocket)                     web/  React console + landing
+agents/       orchestrator + 5 agents + notice-PDF writer         rag/  retrieval corpus
+api/          FastAPI (52 endpoints + WebSocket)                  web/  React console + landing
 demo/         19 offline fixtures    supabase/migrations/  schema+RLS    eval/  validation notebook
 ```
 

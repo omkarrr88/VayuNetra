@@ -1,14 +1,14 @@
 {
  "city_id": "bengaluru",
  "source": "live",
- "generated_at": "2026-08-17T17:49:17.660932+00:00",
+ "generated_at": "2026-08-19T14:52:17.454250+00:00",
  "window": {
-  "start": "2026-05-21T03:00:00+00:00",
-  "end": "2026-08-17T16:00:00+00:00",
-  "split": "2026-07-26T12:45:00+00:00"
+  "start": "2026-05-22T23:00:00+00:00",
+  "end": "2026-08-19T13:00:00+00:00",
+  "split": "2026-07-28T09:30:00+00:00"
  },
  "stations_cells": 13,
- "rows_wide": 9100,
+ "rows_wide": 9218,
  "model": "LightGBM quantile (median) \u2014 same class/params as production (ml.forecast.train)",
  "baselines": [
   "persistence",
@@ -25,9 +25,9 @@
  "horizons": [
   {
    "horizon_h": 24,
-   "n_train": 4415,
-   "n_test": 1127,
-   "n_support": 709,
+   "n_train": 4434,
+   "n_test": 1209,
+   "n_support": 809,
    "protocol": "single",
    "window_days": null,
    "origins": 1,
@@ -56,45 +56,85 @@
     "pm25_lag24"
    ],
    "blend_weights": [
-    0.6
+    0.5
    ],
    "regimes": {
     "full_test": {
-     "n": 709,
-     "rmse_model": 6.73,
-     "mae_model": 4.84,
-     "skill_model_vs_persistence": 0.142,
-     "rmse_model_raw": 6.6,
-     "mae_model_raw": 4.85,
-     "skill_model_raw_vs_persistence": 0.159,
-     "rmse_persistence": 7.84,
-     "mae_persistence": 5.46,
-     "rmse_seasonal_naive": 7.58,
-     "mae_seasonal_naive": 5.6,
-     "skill_seasonal_naive_vs_persistence": 0.033,
-     "rmse_climatology": 7.72,
-     "mae_climatology": 6.26,
-     "skill_climatology_vs_persistence": 0.016
+     "n": 809,
+     "rmse_model": 6.81,
+     "mae_model": 4.73,
+     "skill_model_vs_persistence": 0.119,
+     "skill_model_vs_persistence_ci95": [
+      0.082,
+      0.157
+     ],
+     "skill_model_beats_persistence": true,
+     "rmse_model_raw": 6.62,
+     "mae_model_raw": 4.73,
+     "skill_model_raw_vs_persistence": 0.143,
+     "skill_model_raw_vs_persistence_ci95": [
+      0.087,
+      0.202
+     ],
+     "skill_model_raw_beats_persistence": true,
+     "rmse_persistence": 7.73,
+     "mae_persistence": 5.22,
+     "rmse_seasonal_naive": 7.67,
+     "mae_seasonal_naive": 5.46,
+     "skill_seasonal_naive_vs_persistence": 0.007,
+     "skill_seasonal_naive_vs_persistence_ci95": [
+      -0.085,
+      0.093
+     ],
+     "skill_seasonal_naive_beats_persistence": false,
+     "rmse_climatology": 8.27,
+     "mae_climatology": 6.72,
+     "skill_climatology_vs_persistence": -0.07,
+     "skill_climatology_vs_persistence_ci95": [
+      -0.161,
+      0.006
+     ],
+     "skill_climatology_beats_persistence": false
     },
     "winter_nov_feb": {
      "n": 0
     },
     "non_winter": {
-     "n": 709,
-     "rmse_model": 6.73,
-     "mae_model": 4.84,
-     "skill_model_vs_persistence": 0.142,
-     "rmse_model_raw": 6.6,
-     "mae_model_raw": 4.85,
-     "skill_model_raw_vs_persistence": 0.159,
-     "rmse_persistence": 7.84,
-     "mae_persistence": 5.46,
-     "rmse_seasonal_naive": 7.58,
-     "mae_seasonal_naive": 5.6,
-     "skill_seasonal_naive_vs_persistence": 0.033,
-     "rmse_climatology": 7.72,
-     "mae_climatology": 6.26,
-     "skill_climatology_vs_persistence": 0.016
+     "n": 809,
+     "rmse_model": 6.81,
+     "mae_model": 4.73,
+     "skill_model_vs_persistence": 0.119,
+     "skill_model_vs_persistence_ci95": [
+      0.082,
+      0.157
+     ],
+     "skill_model_beats_persistence": true,
+     "rmse_model_raw": 6.62,
+     "mae_model_raw": 4.73,
+     "skill_model_raw_vs_persistence": 0.143,
+     "skill_model_raw_vs_persistence_ci95": [
+      0.087,
+      0.202
+     ],
+     "skill_model_raw_beats_persistence": true,
+     "rmse_persistence": 7.73,
+     "mae_persistence": 5.22,
+     "rmse_seasonal_naive": 7.67,
+     "mae_seasonal_naive": 5.46,
+     "skill_seasonal_naive_vs_persistence": 0.007,
+     "skill_seasonal_naive_vs_persistence_ci95": [
+      -0.085,
+      0.093
+     ],
+     "skill_seasonal_naive_beats_persistence": false,
+     "rmse_climatology": 8.27,
+     "mae_climatology": 6.72,
+     "skill_climatology_vs_persistence": -0.07,
+     "skill_climatology_vs_persistence_ci95": [
+      -0.161,
+      0.006
+     ],
+     "skill_climatology_beats_persistence": false
     }
    },
    "episodes": {
@@ -306,7 +346,7 @@
     }
    },
    "calibration": {
-    "n_calibration": 1104,
+    "n_calibration": 1109,
     "poor": {
      "threshold": 90.0,
      "brier_model": 0.0,
@@ -315,8 +355,8 @@
      "reliability": [
       {
        "bin": "0.0-0.1",
-       "n": 709,
-       "mean_forecast_p": 0.0,
+       "n": 809,
+       "mean_forecast_p": 0.002,
        "observed_freq": 0.0
       }
      ]
@@ -329,8 +369,8 @@
      "reliability": [
       {
        "bin": "0.0-0.1",
-       "n": 709,
-       "mean_forecast_p": 0.0,
+       "n": 809,
+       "mean_forecast_p": 0.002,
        "observed_freq": 0.0
       }
      ]
@@ -343,21 +383,22 @@
      "reliability": [
       {
        "bin": "0.0-0.1",
-       "n": 709,
+       "n": 809,
        "mean_forecast_p": 0.0,
        "observed_freq": 0.0
       }
      ]
     },
-    "pi80_coverage": 0.827,
-    "pi80_mean_width": 16.7
+    "pi80_coverage": 0.842,
+    "pi80_mean_width": 17.2,
+    "pi80_coverage_by_predicted_quintile": null
    }
   },
   {
    "horizon_h": 48,
-   "n_train": 4337,
-   "n_test": 1046,
-   "n_support": 672,
+   "n_train": 4352,
+   "n_test": 1088,
+   "n_support": 753,
    "protocol": "single",
    "window_days": null,
    "origins": 1,
@@ -386,45 +427,85 @@
     "pm25_lag24"
    ],
    "blend_weights": [
-    0.6
+    0.5
    ],
    "regimes": {
     "full_test": {
-     "n": 672,
-     "rmse_model": 8.06,
-     "mae_model": 5.58,
-     "skill_model_vs_persistence": 0.417,
-     "rmse_model_raw": 6.97,
-     "mae_model_raw": 5.41,
-     "skill_model_raw_vs_persistence": 0.496,
-     "rmse_persistence": 13.82,
-     "mae_persistence": 6.78,
-     "rmse_seasonal_naive": 7.43,
-     "mae_seasonal_naive": 5.54,
-     "skill_seasonal_naive_vs_persistence": 0.462,
-     "rmse_climatology": 7.65,
-     "mae_climatology": 6.17,
-     "skill_climatology_vs_persistence": 0.447
+     "n": 753,
+     "rmse_model": 8.86,
+     "mae_model": 5.87,
+     "skill_model_vs_persistence": 0.341,
+     "skill_model_vs_persistence_ci95": [
+      0.124,
+      0.428
+     ],
+     "skill_model_beats_persistence": true,
+     "rmse_model_raw": 7.49,
+     "mae_model_raw": 5.82,
+     "skill_model_raw_vs_persistence": 0.443,
+     "skill_model_raw_vs_persistence_ci95": [
+      0.103,
+      0.619
+     ],
+     "skill_model_raw_beats_persistence": true,
+     "rmse_persistence": 13.44,
+     "mae_persistence": 6.61,
+     "rmse_seasonal_naive": 7.86,
+     "mae_seasonal_naive": 5.67,
+     "skill_seasonal_naive_vs_persistence": 0.415,
+     "skill_seasonal_naive_vs_persistence_ci95": [
+      0.06,
+      0.605
+     ],
+     "skill_seasonal_naive_beats_persistence": true,
+     "rmse_climatology": 8.37,
+     "mae_climatology": 6.83,
+     "skill_climatology_vs_persistence": 0.377,
+     "skill_climatology_vs_persistence_ci95": [
+      -0.007,
+      0.573
+     ],
+     "skill_climatology_beats_persistence": false
     },
     "winter_nov_feb": {
      "n": 0
     },
     "non_winter": {
-     "n": 672,
-     "rmse_model": 8.06,
-     "mae_model": 5.58,
-     "skill_model_vs_persistence": 0.417,
-     "rmse_model_raw": 6.97,
-     "mae_model_raw": 5.41,
-     "skill_model_raw_vs_persistence": 0.496,
-     "rmse_persistence": 13.82,
-     "mae_persistence": 6.78,
-     "rmse_seasonal_naive": 7.43,
-     "mae_seasonal_naive": 5.54,
-     "skill_seasonal_naive_vs_persistence": 0.462,
-     "rmse_climatology": 7.65,
-     "mae_climatology": 6.17,
-     "skill_climatology_vs_persistence": 0.447
+     "n": 753,
+     "rmse_model": 8.86,
+     "mae_model": 5.87,
+     "skill_model_vs_persistence": 0.341,
+     "skill_model_vs_persistence_ci95": [
+      0.124,
+      0.428
+     ],
+     "skill_model_beats_persistence": true,
+     "rmse_model_raw": 7.49,
+     "mae_model_raw": 5.82,
+     "skill_model_raw_vs_persistence": 0.443,
+     "skill_model_raw_vs_persistence_ci95": [
+      0.103,
+      0.619
+     ],
+     "skill_model_raw_beats_persistence": true,
+     "rmse_persistence": 13.44,
+     "mae_persistence": 6.61,
+     "rmse_seasonal_naive": 7.86,
+     "mae_seasonal_naive": 5.67,
+     "skill_seasonal_naive_vs_persistence": 0.415,
+     "skill_seasonal_naive_vs_persistence_ci95": [
+      0.06,
+      0.605
+     ],
+     "skill_seasonal_naive_beats_persistence": true,
+     "rmse_climatology": 8.37,
+     "mae_climatology": 6.83,
+     "skill_climatology_vs_persistence": 0.377,
+     "skill_climatology_vs_persistence_ci95": [
+      -0.007,
+      0.573
+     ],
+     "skill_climatology_beats_persistence": false
     }
    },
    "episodes": {
@@ -508,11 +589,11 @@
      "threshold": 120.0,
      "events": 0,
      "model": {
-      "precision": null,
+      "precision": 0.0,
       "recall": null,
       "f1": null,
       "tp": 0,
-      "fp": 0,
+      "fp": 1,
       "fn": 0
      },
      "persistence": {
@@ -529,41 +610,41 @@
      "probability_alarms": [
       {
        "tau": 0.2,
-       "precision": null,
+       "precision": 0.0,
        "recall": null,
        "f1": null,
        "tp": 0,
-       "fp": 0,
+       "fp": 1,
        "fn": 0,
        "onset_recall": null
       },
       {
        "tau": 0.3,
-       "precision": null,
+       "precision": 0.0,
        "recall": null,
        "f1": null,
        "tp": 0,
-       "fp": 0,
+       "fp": 1,
        "fn": 0,
        "onset_recall": null
       },
       {
        "tau": 0.4,
-       "precision": null,
+       "precision": 0.0,
        "recall": null,
        "f1": null,
        "tp": 0,
-       "fp": 0,
+       "fp": 1,
        "fn": 0,
        "onset_recall": null
       },
       {
        "tau": 0.5,
-       "precision": null,
+       "precision": 0.0,
        "recall": null,
        "f1": null,
        "tp": 0,
-       "fp": 0,
+       "fp": 1,
        "fn": 0,
        "onset_recall": null
       }
@@ -636,17 +717,17 @@
     }
    },
    "calibration": {
-    "n_calibration": 1085,
+    "n_calibration": 1088,
     "poor": {
      "threshold": 90.0,
-     "brier_model": 0.0015,
+     "brier_model": 0.0013,
      "brier_climatology": 0.0,
      "brier_skill": null,
      "reliability": [
       {
        "bin": "0.0-0.1",
-       "n": 671,
-       "mean_forecast_p": 0.0,
+       "n": 752,
+       "mean_forecast_p": 0.002,
        "observed_freq": 0.0
       },
       {
@@ -659,20 +740,20 @@
     },
     "very_poor": {
      "threshold": 120.0,
-     "brier_model": 0.0,
+     "brier_model": 0.0013,
      "brier_climatology": 0.0,
      "brier_skill": null,
      "reliability": [
       {
        "bin": "0.0-0.1",
-       "n": 671,
-       "mean_forecast_p": 0.0,
+       "n": 752,
+       "mean_forecast_p": 0.002,
        "observed_freq": 0.0
       },
       {
-       "bin": "0.1-0.2",
+       "bin": "0.9-1.0",
        "n": 1,
-       "mean_forecast_p": 0.131,
+       "mean_forecast_p": 0.997,
        "observed_freq": 0.0
       }
      ]
@@ -685,21 +766,22 @@
      "reliability": [
       {
        "bin": "0.0-0.1",
-       "n": 672,
+       "n": 753,
        "mean_forecast_p": 0.0,
        "observed_freq": 0.0
       }
      ]
     },
-    "pi80_coverage": 0.83,
-    "pi80_mean_width": 17.6
+    "pi80_coverage": 0.826,
+    "pi80_mean_width": 17.8,
+    "pi80_coverage_by_predicted_quintile": null
    }
   },
   {
    "horizon_h": 72,
-   "n_train": 4266,
-   "n_test": 975,
-   "n_support": 703,
+   "n_train": 4269,
+   "n_test": 1043,
+   "n_support": 786,
    "protocol": "single",
    "window_days": null,
    "origins": 1,
@@ -728,45 +810,85 @@
     "pm25_lag24"
    ],
    "blend_weights": [
-    0.7
+    0.65
    ],
    "regimes": {
     "full_test": {
-     "n": 703,
-     "rmse_model": 7.35,
-     "mae_model": 5.2,
-     "skill_model_vs_persistence": 0.466,
-     "rmse_model_raw": 6.63,
-     "mae_model_raw": 5.02,
-     "skill_model_raw_vs_persistence": 0.518,
-     "rmse_persistence": 13.76,
-     "mae_persistence": 6.71,
-     "rmse_seasonal_naive": 7.56,
-     "mae_seasonal_naive": 5.58,
-     "skill_seasonal_naive_vs_persistence": 0.451,
-     "rmse_climatology": 7.81,
-     "mae_climatology": 6.29,
-     "skill_climatology_vs_persistence": 0.433
+     "n": 786,
+     "rmse_model": 7.93,
+     "mae_model": 5.5,
+     "skill_model_vs_persistence": 0.415,
+     "skill_model_vs_persistence_ci95": [
+      0.221,
+      0.521
+     ],
+     "skill_model_beats_persistence": true,
+     "rmse_model_raw": 7.11,
+     "mae_model_raw": 5.38,
+     "skill_model_raw_vs_persistence": 0.475,
+     "skill_model_raw_vs_persistence_ci95": [
+      0.227,
+      0.622
+     ],
+     "skill_model_raw_beats_persistence": true,
+     "rmse_persistence": 13.56,
+     "mae_persistence": 6.72,
+     "rmse_seasonal_naive": 8.04,
+     "mae_seasonal_naive": 5.78,
+     "skill_seasonal_naive_vs_persistence": 0.407,
+     "skill_seasonal_naive_vs_persistence_ci95": [
+      0.129,
+      0.56
+     ],
+     "skill_seasonal_naive_beats_persistence": true,
+     "rmse_climatology": 8.45,
+     "mae_climatology": 6.88,
+     "skill_climatology_vs_persistence": 0.377,
+     "skill_climatology_vs_persistence_ci95": [
+      0.07,
+      0.542
+     ],
+     "skill_climatology_beats_persistence": true
     },
     "winter_nov_feb": {
      "n": 0
     },
     "non_winter": {
-     "n": 703,
-     "rmse_model": 7.35,
-     "mae_model": 5.2,
-     "skill_model_vs_persistence": 0.466,
-     "rmse_model_raw": 6.63,
-     "mae_model_raw": 5.02,
-     "skill_model_raw_vs_persistence": 0.518,
-     "rmse_persistence": 13.76,
-     "mae_persistence": 6.71,
-     "rmse_seasonal_naive": 7.56,
-     "mae_seasonal_naive": 5.58,
-     "skill_seasonal_naive_vs_persistence": 0.451,
-     "rmse_climatology": 7.81,
-     "mae_climatology": 6.29,
-     "skill_climatology_vs_persistence": 0.433
+     "n": 786,
+     "rmse_model": 7.93,
+     "mae_model": 5.5,
+     "skill_model_vs_persistence": 0.415,
+     "skill_model_vs_persistence_ci95": [
+      0.221,
+      0.521
+     ],
+     "skill_model_beats_persistence": true,
+     "rmse_model_raw": 7.11,
+     "mae_model_raw": 5.38,
+     "skill_model_raw_vs_persistence": 0.475,
+     "skill_model_raw_vs_persistence_ci95": [
+      0.227,
+      0.622
+     ],
+     "skill_model_raw_beats_persistence": true,
+     "rmse_persistence": 13.56,
+     "mae_persistence": 6.72,
+     "rmse_seasonal_naive": 8.04,
+     "mae_seasonal_naive": 5.78,
+     "skill_seasonal_naive_vs_persistence": 0.407,
+     "skill_seasonal_naive_vs_persistence_ci95": [
+      0.129,
+      0.56
+     ],
+     "skill_seasonal_naive_beats_persistence": true,
+     "rmse_climatology": 8.45,
+     "mae_climatology": 6.88,
+     "skill_climatology_vs_persistence": 0.377,
+     "skill_climatology_vs_persistence_ci95": [
+      0.07,
+      0.542
+     ],
+     "skill_climatology_beats_persistence": true
     }
    },
    "episodes": {
@@ -785,11 +907,11 @@
      "threshold": 90.0,
      "events": 0,
      "model": {
-      "precision": null,
+      "precision": 0.0,
       "recall": null,
       "f1": null,
       "tp": 0,
-      "fp": 0,
+      "fp": 1,
       "fn": 0
      },
      "persistence": {
@@ -836,11 +958,11 @@
       },
       {
        "tau": 0.5,
-       "precision": null,
+       "precision": 0.0,
        "recall": null,
        "f1": null,
        "tp": 0,
-       "fp": 0,
+       "fp": 1,
        "fn": 0,
        "onset_recall": null
       }
@@ -978,23 +1100,23 @@
     }
    },
    "calibration": {
-    "n_calibration": 1067,
+    "n_calibration": 1068,
     "poor": {
      "threshold": 90.0,
-     "brier_model": 0.0003,
+     "brier_model": 0.0012,
      "brier_climatology": 0.0,
      "brier_skill": null,
      "reliability": [
       {
        "bin": "0.0-0.1",
-       "n": 702,
+       "n": 785,
        "mean_forecast_p": 0.002,
        "observed_freq": 0.0
       },
       {
-       "bin": "0.4-0.5",
+       "bin": "0.9-1.0",
        "n": 1,
-       "mean_forecast_p": 0.485,
+       "mean_forecast_p": 0.981,
        "observed_freq": 0.0
       }
      ]
@@ -1007,7 +1129,7 @@
      "reliability": [
       {
        "bin": "0.0-0.1",
-       "n": 703,
+       "n": 786,
        "mean_forecast_p": 0.002,
        "observed_freq": 0.0
       }
@@ -1021,14 +1143,15 @@
      "reliability": [
       {
        "bin": "0.0-0.1",
-       "n": 703,
+       "n": 786,
        "mean_forecast_p": 0.0,
        "observed_freq": 0.0
       }
      ]
     },
-    "pi80_coverage": 0.873,
-    "pi80_mean_width": 20.1
+    "pi80_coverage": 0.804,
+    "pi80_mean_width": 18.1,
+    "pi80_coverage_by_predicted_quintile": null
    }
   }
  ]

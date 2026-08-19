@@ -58,13 +58,23 @@ def md_to_html(md_text: str, footer_label: str) -> str:
     # relative image paths in the markdown (guide/*.jpg, *.svg, *.png) resolve against docs/
     import re as _re
     body = _re.sub(r'src="(?!https?://|file://|data:)([^"]+)"', lambda m: f'src="file://{DOCS}/{m.group(1)}"', body)
-    # portrait screenshots (rail clips, cell story, phone) print at reduced width so they don't eat a page
+    # Screenshots print at a width that suits their shape. This used to key on number ranges, which
+    # silently pointed at the wrong images the moment the walkthrough was renumbered — names are
+    # stable, so it keys on those.
+    NARROW = {                       # fragment -> printed width
+        "phone-overview": "34%", "phone-console": "34%", "phone-menu": "34%",
+        "cell-story": "46%",         # the cell drawer is a tall, narrow column
+    }
+    HALF = ("forecast-validation", "hindsight-warn", "hindsight-effect",
+            "fund-guidance", "fairness", "app-calendar", "app-trend")   # cards that sit two-up
+
     def _size(m):
         tag = m.group(0)
-        if _re.search(r"guide/(1[2-9]|2[0-2]|2[4-7]|29|3[0-3]|37|38|40|41|43)-", tag):
-            return tag.replace("<img ", '<img style="max-width:58%;display:block;margin:1.5mm auto" ')
-        if "44-mobile" in tag:
-            return tag.replace("<img ", '<img style="max-width:34%;display:block;margin:1.5mm auto" ')
+        for frag, width in NARROW.items():
+            if frag in tag:
+                return tag.replace("<img ", f'<img style="max-width:{width};display:block;margin:1.5mm auto" ')
+        if any(frag in tag for frag in HALF):
+            return tag.replace("<img ", '<img style="max-width:74%;display:block;margin:1.5mm auto" ')
         return tag
     body = _re.sub(r"<img [^>]+>", _size, body)
     return f"<!doctype html><html><head><meta charset='utf-8'><style>{CSS}</style></head><body>{body}</body></html>"

@@ -90,9 +90,32 @@ def _get(path: str, params: dict, retries: int = 5) -> dict:
     raise RuntimeError(f"OpenAQ still rate-limiting after {retries} retries: {path}")
 
 
-def find_sensors(lat: float, lng: float, radius_m: int = 25000) -> list[dict]:
-    """Sensors for our pollutants at stations within `radius_m` of the city centre."""
-    data = _get("/locations", {"coordinates": f"{lat},{lng}", "radius": radius_m, "limit": 100})
+def find_sensors(bbox: list[float] | None = None, lat: float | None = None,
+                 lng: float | None = None, radius_m: int = 25000) -> list[dict]:
+    """Sensors for our pollutants at every station inside the city.
+
+    Queried by BBOX, not by a circle around the city centre, which is what this used to do.
+
+    `center` in the city config is where the MAP opens — a recognisable downtown point, not the
+    middle of the city's extent — so a circle around it skews the station set. Delhi was the worst
+    case: its display centre sits 11.7 km east of the bbox centre, so a 25 km circle stopped 11 km
+    short of western Delhi (which has stations we were therefore never ingesting) while reaching
+    11 km past the eastern edge into the NCR (whose stations we were ingesting as Delhi). On the
+    winter map that reads exactly as it is: an empty west, and hexagons outside the boundary east.
+    Six of the ten cities were not fully covered by a fixed 25 km radius.
+
+    Widening the circle is not an option — OpenAQ rejects a radius above 25 km — but /locations
+    accepts a bbox, which is both exact and simpler. For Delhi it returns 98 stations against the
+    circle's 69, including four in the west that the circle could not reach, and none outside the
+    city at all.
+
+    The lat/lng/radius form is kept for callers that genuinely want a circle.
+    """
+    if bbox is not None:
+        params = {"bbox": ",".join(str(v) for v in bbox), "limit": 100}
+    else:
+        params = {"coordinates": f"{lat},{lng}", "radius": radius_m, "limit": 100}
+    data = _get("/locations", params)
     sensors: list[dict] = []
     for loc in data.get("results", []):
         coords = loc.get("coordinates") or {}
@@ -141,27 +164,123 @@ def fetch_sensor_hourly(
 def fetch_city(
     city_id: str, days: int = 14, max_sensors: int = 40,
     date_from: str | None = None, date_to: str | None = None,
+    only_vars: list[str] | None = None, per_var: int | None = None,
 ) -> list[dict]:
     from datetime import datetime, timedelta, timezone
 
     cfg = load_city(city_id)
-    lng, lat = cfg["center"]
     since = date_from or (datetime.now(timezone.utc) - timedelta(days=days)).replace(microsecond=0).isoformat()
 
-    sensors = find_sensors(lat, lng)
+    sensors = find_sensors(bbox=cfg["bbox"])
+    print(f"  discovery: every station inside {cfg['bbox']}")
+    # A backfill usually wants one pollutant across the whole window, not the fullest station.
+    # Without this filter the sensor cap is spent on whichever pollutants happen to sort first.
+    if only_vars:
+        want = {v.lower() for v in only_vars}
+        sensors = [s for s in sensors if s["variable"] in want]
+        print(f"  filtered to {sorted(want)}: {len(sensors)} sensors")
     # most-recently-active stations first -> active stations bring their full pollutant set
     sensors.sort(key=lambda s: s.get("last") or "", reverse=True)
-    if len(sensors) > max_sensors:
-        print(f"  found {len(sensors)} sensors; capping to {max_sensors} (raise with --max-sensors)")
-        sensors = sensors[:max_sensors]
+
+    # Allocate the budget PER POLLUTANT, not as a global top-N.
+    #
+    # Delhi has ~740 sensors within 25 km, ~95 of them active per pollutant. Taking the 15
+    # most-recent overall gave PM2.5 five stations and every gas exactly one — so a single sensor
+    # decided the city's headline index whenever PM10 or NO2 was the prominent pollutant. An even
+    # split guarantees each pollutant is a mean over several stations, which is what "city mean"
+    # is supposed to mean.
+    # ...and SPREAD the quota over the city, instead of spending it on whichever sensors happen to
+    # have reported most recently.
+    #
+    # Recency correlates with nothing spatial. In Delhi it put all six PM2.5 slots inside a narrow
+    # central band — two of them at the same station — while 34 actively-reporting sensors in the
+    # west sat unused, the most recent of them ranked 43rd. A "city mean" drawn from one part of the
+    # city is not a city mean, and on the map it showed as an empty western third.
+    #
+    # So: one sensor per station first (a second sensor at the same site adds no coverage), then
+    # fill the quota round-robin across a coarse 3x3 grid of the bbox, taking the most recent
+    # unused sensor from each sector in turn. Where a sector has no station the others absorb its
+    # share, so a city with genuinely one-sided monitoring still fills its budget.
+    def _sector(sn: dict) -> tuple[int, int]:
+        lng0, lat0, lng1, lat1 = cfg["bbox"]
+        la, lo = sn.get("lat"), sn.get("lng")
+        if la is None or lo is None:
+            return (-1, -1)
+        fx = min(2, max(0, int((lo - lng0) / max(1e-9, lng1 - lng0) * 3)))
+        fy = min(2, max(0, int((la - lat0) / max(1e-9, lat1 - lat0) * 3)))
+        return (fx, fy)
+
+    def _spread(cands: list[dict], n: int) -> list[dict]:
+        seen_station: set[str] = set()
+        uniq = []
+        for sn in cands:                       # cands already sorted most-recent-first
+            sid = str(sn.get("station_id"))
+            if sid in seen_station:
+                continue
+            seen_station.add(sid)
+            uniq.append(sn)
+        buckets: dict[tuple[int, int], list[dict]] = {}
+        for sn in uniq:
+            buckets.setdefault(_sector(sn), []).append(sn)
+        out: list[dict] = []
+        while len(out) < n and any(buckets.values()):
+            for k in sorted(buckets):
+                if len(out) >= n:
+                    break
+                if buckets[k]:
+                    out.append(buckets[k].pop(0))
+        return out
+
+    reserves: dict[tuple[str, tuple[int, int]], list[dict]] = {}
+
+    by_var: dict[str, list[dict]] = {}
+    for s in sensors:
+        by_var.setdefault(s["variable"], []).append(s)
+    quota = per_var or max(1, max_sensors // max(1, len(by_var)))
+    picked: list[dict] = []
+    for var in sorted(by_var):
+        take = _spread(by_var[var], quota)
+        # whatever the spread did not take, kept by (pollutant, sector) so a sensor that turns out
+        # to return nothing can be replaced by another one covering the same part of the city
+        for cand in by_var[var]:
+            if cand not in take:
+                reserves.setdefault((var, _sector(cand)), []).append(cand)
+        picked.extend(take)
+        if len(by_var[var]) > len(take):
+            print(f"  {var:5s}: {len(by_var[var])} sensors available, taking {len(take)}")
+        else:
+            print(f"  {var:5s}: {len(take)} sensors")
+    if len(sensors) > len(picked):
+        print(f"  found {len(sensors)} sensors; using {len(picked)} ({quota} per pollutant)")
+    sensors = picked
     window = f"{since[:10]}..{(date_to[:10] if date_to else 'now')}"
     print(f"  fetching {len(sensors)} sensors hourly {window} (throttled ~{MIN_INTERVAL_S}s/req)...")
 
     records: list[dict] = []
     for i, sensor in enumerate(sensors, 1):
         recs = fetch_sensor_hourly(sensor, since, date_to)
+        # A sensor can advertise a recent `last` and still return nothing for the window — OpenAQ
+        # keeps entries whose history is not retrievable. Selecting purely on recency therefore
+        # spent a sector's whole slot on a dud: western Delhi was picked correctly and still landed
+        # no rows, while another sensor at the SAME site returned 68 points and was never tried.
+        # So an empty result falls through to the next candidate covering that part of the city.
+        tries = 0
+        while not recs and tries < 3:
+            pool = reserves.get((sensor["variable"], _sector(sensor)), [])
+            if not pool:
+                break
+            alt = pool.pop(0)
+            tries += 1
+            recs = fetch_sensor_hourly(alt, since, date_to)
+            if recs:
+                print(f"    [{i}/{len(sensors)}] {sensor['variable']:5s} sensor {sensor['sensor_id']}: "
+                      f"0 pts -> fell through to {alt['sensor_id']}: {len(recs)} pts")
+                sensor = alt
         records.extend(recs)
-        print(f"    [{i}/{len(sensors)}] {sensor['variable']:5s} sensor {sensor['sensor_id']}: {len(recs)} pts")
+        if recs and tries == 0:
+            print(f"    [{i}/{len(sensors)}] {sensor['variable']:5s} sensor {sensor['sensor_id']}: {len(recs)} pts")
+        elif not recs:
+            print(f"    [{i}/{len(sensors)}] {sensor['variable']:5s} sensor {sensor['sensor_id']}: no data in window")
     return rows_from_records(city_id, records, cfg.get("h3_res", 8))
 
 
@@ -180,11 +299,16 @@ def main() -> None:
     ap.add_argument("--days", type=int, default=14)
     ap.add_argument("--max-sensors", type=int, default=40)
     ap.add_argument("--from", dest="date_from", help="ISO start, e.g. 2025-10-01")
+    ap.add_argument("--vars", dest="only_vars", help="comma-separated pollutants to fetch, e.g. pm25,pm10")
+    ap.add_argument("--per-var", dest="per_var", type=int,
+                    help="sensors per pollutant (default: max-sensors split evenly across pollutants)")
     ap.add_argument("--to", dest="date_to", help="ISO end, e.g. 2026-01-31")
     ap.add_argument("--push", action="store_true")
     args = ap.parse_args()
 
-    rows = fetch_city(args.city, args.days, args.max_sensors, args.date_from, args.date_to)
+    rows = fetch_city(args.city, args.days, args.max_sensors, args.date_from, args.date_to,
+                      [v.strip() for v in args.only_vars.split(",")] if args.only_vars else None,
+                      args.per_var)
     cells = {r["h3_cell"] for r in rows}
     variables = sorted({r["variable"] for r in rows})
     print(f"{args.city}: {len(rows)} rows · {len(cells)} cells · vars {variables}")

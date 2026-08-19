@@ -24,11 +24,27 @@ def dominant_source(rows: list[dict]) -> str:
     return counts.most_common(1)[0][0]
 
 
+# A fixed absolute threshold was wrong here. These ten cities differ five-fold in baseline: 15 µg/m³
+# is noise on a 200 µg/m³ Delhi winter day and a doubling on a 14 µg/m³ Mumbai monsoon day. With a
+# flat ±15 every city read "stable" through the whole monsoon, which made the badge decorative.
+#
+# So the band scales with the city's own level, with an absolute floor — below ~5 µg/m³ a move is
+# inside the spread between co-located reference monitors and should not be called a trend at all.
+TREND_RELATIVE = 0.15      # fraction of the current level that counts as a real move
+TREND_MIN_ABS = 5.0        # µg/m³ — floor, so clean cities do not flip on measurement noise
+
+
+def trend_band(current_pm25: float) -> float:
+    """How much this city has to move before the change means anything."""
+    return max(TREND_MIN_ABS, TREND_RELATIVE * max(0.0, current_pm25))
+
+
 def trend_label(forecast_pm25: float, current_pm25: float) -> str:
     delta = forecast_pm25 - current_pm25
-    if delta >= 15:
+    band = trend_band(current_pm25)
+    if delta >= band:
         return "deteriorating"
-    if delta <= -15:
+    if delta <= -band:
         return "improving"
     return "stable"
 
@@ -50,7 +66,15 @@ def build_comparison(
     aqi_rows: list[dict],
     forecast_rows: list[dict],
     rec_status_rows: list[dict] | None = None,
+    index_by_city: dict[str, dict] | None = None,
 ) -> dict:
+    """Rank and describe the cities.
+
+    ``index_by_city`` carries each city's canonical 24 h figures (see _city_now_from_hourly in the
+    API). Its ``pm25_24h`` is preferred over the cell aggregate below for the headline number,
+    because it is what the city's own page shows and because a 24 h mean cannot be dominated by one
+    spiking station the way a mean over a handful of cells can.
+    """
     cards = []
     status_by_city: dict[str, Counter] = {}
     for r in rec_status_rows or []:
@@ -59,7 +83,14 @@ def build_comparison(
         cid = city["city_id"]
         city_aqi = [r for r in aqi_rows if r.get("city_id") == cid]
         city_fc = [r for r in forecast_rows if r.get("city_id") == cid and int(r.get("horizon_h", 24)) == 24]
-        current_pm25 = average(city_aqi, "pm25")
+        # Mean of each cell's most recent reading. Kept only as the fallback: with six cells one
+        # faulty station at 256 ug/m3 moved Bengaluru's city figure from 25 to 56, and nothing here
+        # bounds how old a cell's "most recent" reading is — Delhi had cells three days stale.
+        cell_mean = average(city_aqi, "pm25")
+        idx = (index_by_city or {}).get(cid) or {}
+        canonical = idx.get("pm25_24h")
+        current_pm25 = float(canonical) if canonical is not None else cell_mean
+        pm25_basis = "city_24h_mean" if canonical is not None else "latest_per_cell"
         forecast_pm25 = average(city_fc, "value") or current_pm25
         source = dominant_source(city_aqi)
         trend = trend_label(forecast_pm25, current_pm25)
@@ -71,6 +102,9 @@ def build_comparison(
             "city_id": cid,
             "name": city["name"],
             "current_pm25": current_pm25,
+            # which of the two definitions this row actually used, so a disagreement with the
+            # city page is diagnosable instead of mysterious
+            "current_pm25_basis": pm25_basis,
             "forecast_24h_pm25": forecast_pm25,
             "trend": trend,
             "dominant_source": source,

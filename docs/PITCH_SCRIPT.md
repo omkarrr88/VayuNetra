@@ -1,14 +1,21 @@
-# VayuNetra — finale pitch script (verbatim), 7 min 45 s, two speakers
+# VayuNetra — finale pitch script (verbatim), 8 minutes, three speakers
 
-**Deck:** `docs/VayuNetra_Pitch.html` — open in Chrome, press **F** (full-screen). Self-contained; works
-offline. **D** on slide 6 embeds the live console; **Esc** returns. Backups: `docs/VayuNetra_Pitch.pptx`
-/ `.pdf` (same slides, static, notes included). Speaker notes = these lines; press **N** to see them
-on the laptop, or **P** for the presenter window (timer + notes).
+**Deck:** `docs/VayuNetra_Pitch.html` — open in Chrome. It goes full-screen on your first key press
+or click, so browser chrome never shows; **F** toggles it by hand. Self-contained, works offline.
+Backups: `docs/VayuNetra_Pitch.pptx` / `.pdf` — same slides, static, notes included.
 
-Keys: `← →` next/previous · `F` full-screen · `N` notes · `P` presenter window · `D` live console ·
-`R` replay the slide's animation · `Esc` close overlay / notes.
+**Keys:** `← →` next/previous · `F` full-screen · `N` notes · `P` presenter window · `D` live app
+(**press D again to come back**) · `R` replay the slide's animation.
 
-**Rebuild the morning of the finale** (fresh live numbers on the title map, slide 3, slide 7, A8):
+> **D is the only way in and out of the live app.** Escape is left alone deliberately — it also
+> exits full screen, and one press used to do both. D works even after you have clicked inside the
+> app: the app forwards the key back to the deck.
+
+**Which app the demo opens.** The deck looks for a dev server on the presenting laptop
+(`localhost:5173`) and uses it if it answers within about a second; otherwise it opens the deployed
+site, `vayunetra-aqi.vercel.app`. Local is faster and survives a dead network.
+
+**Rebuild the morning of the finale** (fresh numbers on the title map, slide 3, slide 7, A8):
 ```
 .venv/bin/python docs/pitch/build_pitch_data.py     # API on :8000, DEMO_MODE=false, warm cache
 .venv/bin/python docs/pitch/build_deck.py
@@ -16,228 +23,236 @@ cd web && node scripts/qa/deck-render.mjs && cd ..
 python3 docs/pitch/export_backup.py
 ```
 
-Every number below is the one in the artifacts (docs/benchmarks/*.json, docs/OUTCOMES.md,
-docs/SCALE.md, docs/ATTRIBUTION_VALIDATION.md). Say them as written; do not round up.
+Every number below is in the artifacts (`docs/benchmarks/*.json`, `docs/BENCHMARKS.md`,
+`docs/OUTCOMES.md`, `docs/ATTRIBUTION_VALIDATION.md`). **Say them as written. Do not round up.**
 
 ---
 
 ## Timing at a glance
 
-| clock | slide | who | what happens |
+| clock | slide / screen | who | what happens |
 |---|---|---|---|
 | 0:00 | 1 Title | **A** | hook; the map is live |
-| 0:25 | 2 Problem | A | three counters; "a reading turns red, then nothing happens" |
-| 0:55 | 3 The loop | A | trace → predict → act → protect |
-| 1:35 | 4 Winter replay | A | **let it play 9 s in silence**, then the two green orders and the two red ones |
-| 2:20 | 5 Proof | A | skill · onset recall · calibration · the SAFAR/DSS bridge line · hand over |
-| 3:00 | 6 Live demo | **B** | press **D**; seven stops on the console, 4 minutes |
-| 7:00 | 7 Built to deploy | B | cost curve, one YAML per city, closed loop, PRANA |
-| 7:30 | 8 Close | B | the line, the QR, the ask |
-| 7:45 | — | — | stop. Appendix A1–A14 stays for Q&A |
+| 0:25 | 2 Problem | A | the gap between measuring and acting |
+| 0:55 | 3 One loop | A | four verbs, named once |
+| 1:35 | 4 Delhi's winter | A | the replay runs 9 s — stay silent through it |
+| 2:20 | 5 Proof | A | the measured numbers, including the bad ones |
+| **3:00** | **live app** | **B** | press **D** — resident view, brief, cell story, worklist, the officer loop |
+| **5:45** | **live app** | **C** | advisories, validation, ten cities — then **D** back to the deck |
+| 7:15 | 7 Built to deploy | C | cost, one config per city, PRANA |
+| 7:40 | 8 Close | C | the ask |
+| 8:00 | — | — | stop talking |
 
-Speaker A: 396 words for 3:00 (≈150 wpm with the 9-second replay pause). Speaker B: ~430 words over
-4:00 of clicking, then 130 words for the close. Both speakers say "we", never "I built".
+**Word budgets, measured.** A speaks 439 words (≈2:56 at 150 wpm, plus the 9-second replay silence).
+B speaks 367 words over 2:27 of clicking. C speaks 344 words over 2:18, demo and close together.
+**Spoken total 7:49**, which leaves about ten seconds of headroom across the two handovers. If you
+are running fast, do not fill it — slow down on slide 8.
+
+All three say **"we"**, never "I built".
+
+**Handovers are spoken, not mimed.** Each speaker ends on a line that names what comes next, and
+the next speaker starts moving on that line. Practise the three handovers more than anything else —
+they are where a three-person pitch usually loses ten seconds.
 
 ---
 
-## SPEAKER A — slides 1–5
+# SPEAKER A — slides 1 to 5 (0:00 → 3:00)
 
 ### Slide 1 · Title (0:00 → 0:25)
 *(Stand still. Let the haze clear on screen before the first word.)*
 
-> Good morning. Every Indian metro measures its air; several forecast it. Nothing acts on it.
-> VayuNetra is the operations layer: it traces who is polluting each square kilometre, predicts
-> the next 72 hours with honest probabilities, ranks where to send an inspector with cited
+> Good morning. Every Indian metro measures its air. Several forecast it. Almost nothing acts on it.
+> VayuNetra is the operations layer: it traces who is polluting each square kilometre, predicts the
+> next seventy-two hours with honest probabilities, ranks where to send an inspector with cited
 > evidence, and tells citizens in their own script — live in ten cities, at zero infrastructure
 > cost. The map behind me is live.
 
 ### Slide 2 · The problem (0:25 → 0:55)
-*(Counters animate on entry — pause one beat, then speak.)*
+*(Counters animate on entry. Pause one beat, then speak.)*
 
-> The data exists — nine hundred CAAQMS stations, satellites overhead — and 1.67 million Indians
-> still die early each year. Why? A reading turns red and nothing happens: no system tells an
-> officer who is polluting this square kilometre now, what the air does tomorrow, where to send
-> inspectors first. The CAG found 31 percent of monitored cities have any response protocol at all.
-> Cities don't need another dashboard; they need the layer that turns a reading into an intervention.
+> The data already exists — nine hundred monitoring stations, satellites overhead — and 1.67 million
+> Indians still die early each year. The gap is not measurement. A reading turns red, and nothing
+> happens: nothing tells an officer who is polluting this square kilometre, what the air does
+> tomorrow, or where to send the first inspector. The national auditor found fewer than a third of
+> monitored cities have any response protocol at all. Cities do not need another dashboard.
 
 ### Slide 3 · One loop (0:55 → 1:35)
 *(Point at each card as you name it.)*
 
-> One loop, four verbs. **Trace**: who is to blame in each square kilometre — and it says so where it
-> lacks skill. **Predict**: the next 72 hours, with each cell's chance of turning Very Poor.
-> **Act**: sites ranked by contribution, people exposed and confidence — real satellite image, the
-> regulation, a draft notice; the officer approves, dispatches, closes the case on an audit trail.
-> **Protect**: advisories in eight scripts. Six agents, one graph, seconds of compute — every human
-> step timestamped.
+> One loop, four verbs. **Trace** — who is to blame in each square kilometre, and it says so where it
+> lacks the skill to know. **Predict** — the next seventy-two hours, with each cell's probability of
+> turning Very Poor. **Act** — sites ranked by contribution, people exposed and confidence; a real
+> satellite image, the regulation itself, a draft notice, approved and dispatched and closed on an
+> audit trail. **Protect** — advisories in eight scripts over four channels. Five agents on one
+> graph, and a gate that decides whether enforcement runs at all.
 
 ### Slide 4 · Delhi's winter, replayed (1:35 → 2:20)
-*(The replay starts on entry and runs 9 seconds. Say the first sentence, then STOP TALKING until the
-December marker drops. Then continue. Press R if you need it again.)*
+*(The replay starts on entry and runs 9 seconds. Say the first sentence, then **stop talking** until
+the December marker drops. Then continue. Press **R** if you need it again.)*
 
-> This is Delhi's last winter, day by day, on 39 station cells — real CPCB data.
+> This is Delhi's last winter, day by day, across thirty-nine station cells — real CPCB data.
 >
-> *(silence while it plays)*
+> *(silence while it plays — do not narrate over it)*
 >
-> The markers are the government's actual GRAP orders. Under each: what our forecast said 24 hours
-> before the order was signed. Stage III on 11 November and Stage IV on 13 December — flagged a full
-> day ahead across essentially the whole network, probability above 80 percent, when persistence
-> said 225 and the city measured 407. The two October orders we did not foresee — and it says so on
-> the slide.
+> The markers are the government's actual GRAP orders. Under each: what our forecast said twenty-four
+> hours before that order was signed. Stage Three in November and Stage Four in December — both
+> flagged a full day ahead across essentially the whole network, above eighty percent probability,
+> when persistence said 225 and the city measured 407. The two October orders we did not foresee.
+> That is on the slide too.
 
 ### Slide 5 · Proof (2:20 → 3:00)
-*(Left chart, middle chart, right chart — then the bridge line, then hand over.)*
+*(Left chart, middle chart, right chart. Then the bridge line — and B starts moving on it.)*
 
-> Every number is measured — including the ones that hurt. Skill over persistence on a strict
-> temporal split: Delhi plus 9, 13, 12 percent at one, two, three days. Of the clean-to-Very-Poor
-> onsets, our calibrated alarm catches about half, days ahead — persistence catches none. The
-> probabilities are honest: the reliability curve sits on the diagonal. Attribution is checked
-> against the published studies — disagreements on the record.
-> SAFAR and the DSS forecast the air; nothing turns a forecast into a traced, cited, delivered,
-> closed action. We do — here it is.
+> Every number here is measured, including the ones that do not flatter us. Skill over persistence on
+> a strict temporal split: Delhi plus nine, thirteen and twelve percent at one, two and three days.
+> Our calibrated alarm catches fifty-four percent of clean-to-Very-Poor transitions days ahead;
+> persistence catches none. The eighty percent band measures seventy-eight percent real coverage.
+> Attribution agrees with the published studies to four percentage points. In two of our ten cities
+> the forecast does not beat persistence — we publish that with its confidence interval.
+>
+> **Others forecast the air. Nothing turns a forecast into a traced, cited, delivered, closed
+> action. Here it is, live.**
 
-*(Speaker B steps forward. Speaker A presses → to slide 6.)*
+*(A presses **→** to slide 6 and steps back. **B is already at the laptop.**)*
 
 ---
 
-## SPEAKER B — live demo (3:00 → 7:00)
+# SPEAKER B — the live app, first half (3:00 → 5:45)
 
-**Before the session** (same laptop, same browser): open vayunetra-aqi.vercel.app/console once,
-dismiss the tour, `make prewarm`, click through Enforcement → Forecast → Advisories → Cities so
-nothing cold-starts. Leave Delhi selected. If the network dies, the deck shows the last screenshot,
-labelled — narrate the same words over it.
+**Before the session, on this laptop, in this browser.** If presenting from the local build, run
+`make dev` first — the deck detects the dev server and uses it, which is faster and survives a dead
+network. Otherwise open `vayunetra-aqi.vercel.app` once and run `make prewarm` so the API is awake.
+Either way: open the console once, dismiss the tour, click through Enforcement → Forecast →
+Advisories → Cities so nothing cold-starts, and leave **Delhi** selected.
 
-**Press D.** The console fills the screen. It opens on **Enforcement**, Delhi, with the Morning brief
-on top and the cell story already open on the map.
+If the network dies mid-demo, the deck falls back to the last screenshot, labelled. Narrate the same
+words over it and keep going.
 
-### Stop 1 · Morning brief (3:00 → 3:35)
-*(Point at the card. Click **PDF** — the file downloads. Do NOT click Send to Telegram unless the
-subscriber count is real; say it instead.)*
+**Press D.** The app fills the screen edge to edge with nothing of the deck over it. It opens on the
+front page — the same door a judge would walk through.
 
-> This is Delhi, right now. The Morning brief is the one page a commissioner reads: the city mean
-> against yesterday, where the air is about to turn — with the probability, not a guess — the top
-> three actions with their notice links, and yesterday's dispatches. One click gives the PDF; one
-> click sends it to every Telegram subscriber. Nothing on this page is written by a language model —
-> every line is a template over stored numbers.
+### Stop 0 · What a resident sees (3:00 → 3:20)
+*(Click **Check your city's air**. Let the index count up. Point at the prominent-pollutant line.)*
 
-### Stop 2 · Cell story on the map (3:35 → 4:15)
-*(The worst cell is already open. Point at the source bars, then the "Why" box, then the forecast tiles.
-Click one other hexagon to show it changes.)*
+> Before the officer, the citizen. Delhi's air right now on India's own National AQI — and the
+> pollutant setting it, which today is PM10, not PM2.5. Every reading here comes from that city's own
+> CPCB stations. No hardware of ours anywhere.
 
-> Every hexagon is a square kilometre. This one: who is to blame — the sources, the SHAP drivers
-> that moved the number, and the model's own out-of-sample R². Where it lacks skill it says so and
-> falls back to cited chemical-signature priors, in amber. Below: the 72-hour forecast for this cell
-> with the calibrated probability of Very Poor. Click any other cell — same story, its own numbers.
+### Stop 1 · The morning brief (3:20 → 3:55)
+*(Open the console. The brief is the first card.)*
 
-### Stop 3 · Worklist → evidence → notice (4:15 → 4:55)
-*(Scroll to Enforcement Worklist. On the top card click **Evidence dossier**; point at the satellite
-patch and the citations. Click **Notice PDF** — it downloads.)*
+> This is the one page a commissioner reads. The city mean against yesterday. Where the air is about
+> to turn — with the probability, not a guess. The three actions worth taking today, each linked to
+> its notice. And yesterday's dispatches. One click gives the PDF; one click sends it to every
+> Telegram subscriber. Nothing on this page is written by a language model — every line is a
+> template over stored numbers, so it cannot invent a health instruction.
 
-> The worklist ranks sources by contribution, people exposed, actionability and confidence — nothing
-> under two percent gets in. Open the dossier: the real Sentinel-2 image of this site, the regulation
-> retrieved verbatim — GRAP only where it legally binds, CPCB norms and NCAP elsewhere — and a draft
-> notice with the projected effect of compliance. Stamped pending officer authorisation. Never auto-sent.
+### Stop 2 · One square kilometre (3:55 → 4:30)
+*(Click a hexagon on the map.)*
 
-### Stop 4 · Approve → dispatch → close → history (4:55 → 5:35)
-*(Type a name in **acting as**. On the same card: **Approve** → **Dispatch team** → **Close case** →
-pick a finding → **Record & close** → **History**.)*
+> Every hexagon is a square kilometre. This one: who is to blame — the sources, and the drivers that
+> moved the number. Where the local model has not earned the right to explain itself, it says so and
+> falls back to cited chemical-signature priors, in amber. That amber is the feature. Below it, the
+> seventy-two hour forecast for this cell with its calibrated probability of Very Poor. Click any
+> other cell and you get the same story with its own numbers.
+
+### Stop 3 · Evidence, then a notice (4:30 → 5:10)
+*(Open the worklist, then the dossier, then the draft notice.)*
+
+> The worklist ranks sources by contribution, people exposed, how actionable it is, and confidence.
+> Nothing under two percent gets in. Open the dossier: the real satellite image of this site, the
+> regulation retrieved word for word — GRAP only where it legally binds, CPCB norms and the national
+> programme elsewhere — and a draft notice with the projected effect of compliance. It is stamped
+> pending officer authorisation. It is never sent automatically.
+
+### Stop 4 · The loop closes (5:10 → 5:45)
+*(Approve. Dispatch. Close with a finding. Then open History.)*
 
 > The officer approves — it lands in the ward's field queue. Dispatches — the cell's seven-day
-> baseline freezes and the before/after measurement is armed automatically. Closes the case with the
-> field finding. And History: who did what, when, from what to what. That trail survives the nightly
-> run and even the deletion of the record. This is the audit trail a court asks for.
+> baseline freezes and the before-and-after measurement arms itself. Closes the case with what the
+> team actually found. And History: who did what, when, and from what state to what state. That
+> trail survives the nightly run, and it survives the deletion of the record itself. This is the
+> audit trail a court would ask for.
+>
+> **That is the officer's loop. The other half of the job is telling three crore people what to do
+> about it today.**
 
-### Stop 5 · Advisories in eight scripts (5:35 → 6:05)
-*(Sidebar → **Advisories**. In the language dropdown pick Hindi, then Tamil. Click the **Telegram** tab.)*
+*(**C takes the laptop on that line.** B steps back.)*
 
-> The same advisory in the reader's own script — Hindi, then Tamil — templated by design, so it
-> cannot hallucinate medical advice. It goes out over the app, a live Telegram bot, an IVR line with a
-> Hindi voice, and public display boards, targeted at five and a half thousand vulnerability-scored
+---
+
+# SPEAKER C — the live app, second half, and the close (5:45 → 8:00)
+
+### Stop 5 · Eight scripts, four channels (5:45 → 6:20)
+*(Advisories. Switch the language to Hindi, then to Tamil. Then the channel tabs.)*
+
+> The same advisory in the reader's own script — Hindi, then Tamil. Templated by design, so it
+> cannot hallucinate medical advice, and script-validated in code so an untranslated string cannot
+> ship silently. It goes out over the app, a live Telegram bot, an interactive phone line that
+> speaks the advisory in that language, and public display boards — targeted at vulnerability-scored
 > zones: hospitals, schools, elder care, outdoor work.
 
-### Stop 6 · Proof, in the product (6:05 → 6:35)
-*(Sidebar → **Forecast**. Scroll to **Forecast validation**, then **Real interventions, in hindsight**;
-click "did the air change?" once.)*
+### Stop 6 · The numbers, in the product (6:20 → 6:50)
+*(Forecast → the validation panel. Then the winter replay.)*
 
-> The benchmark you saw on the slide lives here, per city, recomputed from the artifact — negatives
-> included. And the winter replay: every GRAP order links to its government release, with what we
-> carried a day before, and a weather-normalised check of whether the air changed. Where the honest
-> answer is "no detectable change", it says no.
+> The benchmark you saw on the slide lives inside the product, per city, recomputed from the
+> artifact — negatives included. And the winter replay: every GRAP order links to the government's
+> own release, with what we carried a day before, and a weather-normalised check of whether the air
+> actually changed. Where the honest answer is "no detectable change", it says no.
 
-### Stop 7 · Ten cities (6:35 → 6:55)
-*(Sidebar → **Cities**. Click **Mumbai** on the scoreboard; the whole console follows.)*
+### Stop 7 · Ten cities, one engine (6:50 → 7:15)
+*(Cities. Click Mumbai and let the whole console follow.)*
 
-> Ten cities on one scoreboard, one engine, one configuration file each — click Mumbai and the whole
-> console follows: its own sources, its own forecast, its own worklist, its own languages.
+> Ten cities on one scoreboard. One engine, one configuration file each. Click Mumbai and the entire
+> console follows it — its own sources, its own forecast, its own worklist, its own languages.
+>
+> **Now — what it takes to run this.**
 
-*(Press **Esc**. Back on slide 6. Press → to slide 7.)*
+*(**Press D.** The deck returns on slide 6. Press **→** to slide 7.)*
+
+### Slide 7 · Built to deploy (7:15 → 7:40)
+
+> Built to deploy, not to demo. Ten cities live, one config file per city, no per-city code — we
+> onboarded seven metros in a week. We measured what a city costs: about a fifth of a megabyte of
+> readings a day. The free tier carries this deployment, and all hundred and thirty-one national
+> programme cities would run for roughly two thousand seven hundred rupees a month. Every dispatched
+> action is tracked against its own cell and exports in the format the official reporting portal
+> takes — we feed that system, we do not compete with it.
+
+### Slide 8 · Close (7:40 → 8:00)
+*(Stand still. Say it slower than feels natural.)*
+
+> We did not build a prettier dashboard. We built the layer that turns a reading into a traced,
+> cited, delivered, closed action — and we measured it honestly enough to tell you where it is
+> weak. It is live in ten cities right now, on infrastructure that costs nothing. What it has never
+> had is one afternoon of a real pollution control board officer's time. That is the only thing
+> standing between this and a working pilot. Thank you.
 
 ---
 
-## SPEAKER B — slides 7–8
+## If something goes wrong
 
-### Slide 7 · Built to deploy (7:00 → 7:30)
-> Built to deploy, not to demo. Ten cities live, one YAML per city, no per-city code; seven metros
-> onboarded in a week. We measured what a city costs — 0.2 megabytes of readings a day, one row per
-> reading, 180-day retention with an archive: the free tier is sized for this deployment; all 131
-> NCAP cities would run for about ₹2,700 a month. Every dispatched action is tracked against its own
-> cell and exported PRANA-ready — we feed the official system, we don't compete with it.
+| what happens | what to say, without stopping |
+|---|---|
+| Amber "backend waking up" banner | "That is our demo insurance — the free-tier host sleeps, and the app falls back to a labelled snapshot rather than showing you a blank screen." Keep narrating; it clears on the first live call. |
+| A panel is empty | "That city has thin data in this window — here is one with more." Switch to Delhi. |
+| The map does not paint | Press **D** to return to the deck; the same screenshot is on the slide, labelled. Narrate the same words. |
+| A judge asks something mid-demo | Answer in one sentence and say "there is more on that in a moment" — do not lose the loop. |
+| You are running long | Cut **Stop 6** entirely. It is the only stop whose content is also on slide 5. |
 
-### Slide 8 · Close (7:30 → 7:45)
-> India measures. India forecasts. VayuNetra operates — traced, predicted, cited, delivered, closed.
-> In seconds, in eight scripts, for zero rupees today and 2,700 a month for every NCAP city. It is
-> live now — the QR takes you there. We are ready to run it for the first city that says yes.
-> Thank you.
+## The three questions most likely to come
 
-*(Stop. Do not add "any questions". Stay on slide 8; move to the appendix only when asked.)*
+**"Has a real officer used this?"** — No. Say it in one sentence, then say what exists instead: the
+audit trail that would record their actions, and the rating rubric we built for them. Do not pad. The
+worst version of this answer is a long one.
 
----
+**"Your forecast loses to persistence in a city — why trust it?"** — Because we can tell you *that*
+it loses, with a confidence interval, and most cannot. Then the diagnosis: the persistence blend
+lands at the pure-model corner in five of our ten cities, and that city does so at exactly the
+horizons it loses. It is a named lead with an experiment attached.
 
-## Q&A — verbatim answers (appendix slide in brackets)
-
-**"Who rated your enforcement recommendations?"** [A6, EXPERT_RATING_SHEET]
-> Nobody outside the team yet — n is zero, and we say so. The protocol is published, the ranking is a
-> transparent CPCB/GRAP-derived rubric, and the strongest external check we have is the winter
-> replay: Stage III and IV flagged a day ahead against the government's own orders.
-
-**"Has any intervention actually cleaned the air?"** [A13]
-> Not through VayuNetra yet — no city has dispatched through it. The measurement is live and armed at
-> every dispatch. On last winter's real GRAP windows, weather-normalised, we found no detectable
-> reduction — and the same method saw Diwali night at plus 182, so it can see a real signal. That is
-> exactly why we track each action against its own cell, not city-wide stages.
-
-**"₹0 forever?"** [7, A7]
-> No. Zero for the ten cities running today; measured at 0.2 megabytes per city per day, all 131 NCAP
-> cities cost about ₹2,700 a month. The curve is published.
-
-**"How accurate is the attribution?"** [A12]
-> Checked bucket by bucket against TERI-ARAI for Delhi and Guttikunda and CSTEP for Bengaluru — read
-> from the primary PDFs. Rankings agree; we over-read kerbside traffic and under-see small waste
-> fires, and where NO₂ coverage is thin the split moves between runs. All of that is written down.
-
-**"What about Severe episodes?"** [A11]
-> That is our weak spot and it is on the slide: above 250 the blended forecast only matches
-> persistence. The product speaks in calibrated probability — P(>250) Brier skill plus 31 percent at
-> 24 hours — rather than pretending to a point forecast it cannot make.
-
-**"Why not just use the IITM DSS / WRF-Chem?"** [A10]
-> We don't out-model WRF-Chem and don't claim to. The DSS is for government users, on a 2016
-> inventory, with no per-site attribution, no notice, no outcome tracking. We are the operational
-> layer on top of what India already measures — and we export to PRANA.
-
-**"Why LightGBM and not a deep model?"** [A5]
-> We trained a Temporal Fusion Transformer on GPU and rejected it: LightGBM won held-out skill in every
-> launch city at this data scale. The notebook is in the repo.
-
-**"What happens when the CPCB/OpenAQ feed dies?"** [A2]
-> The console says so instead of inventing: the brief shows the age of the last reading, the map
-> shows the demo snapshot with a banner, and nothing is written. Last January the public feed carried
-> one Delhi station for a week — our replay flags those rows as low coverage rather than hiding them.
-
-**"Liability — you 'blame' a site."**
-> The system never sends a notice; the officer does, and the notice carries the confidence, the
-> drivers and the skill gate so it can be defended. Every step is on an immutable trail. Where the
-> model lacks skill it abstains to cited priors.
-
-**"Which city is using it?"**
-> None yet. Ten cities run on it live from public data; the first pilot conversation is what we are
-> asking for today.
+**"Is this really AI, or a dashboard?"** — Two model families with measured skill, a conformal
+calibration layer, SHAP-based apportionment with a gate that makes it abstain, and a state machine
+that routes on a detected condition. Then volunteer the counterweight: no language model writes
+anything a citizen reads, and that is deliberate — a hallucinated medical instruction reaching a
+phone line in Marathi is not a risk we will take.

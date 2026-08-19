@@ -19,6 +19,14 @@ type Brief = {
   advisories: { worst_tier: string | null; wards_at_worst: number; languages: string[] };
 };
 
+const STATUS_LABEL: Record<string, string> = {
+  proposed: "Proposed",
+  approved: "Approved",
+  dispatched: "Dispatched",
+  dismissed: "Dismissed",
+  closed: "Closed",
+};
+
 /** The officer's morning brief — what changed overnight, where the air is about to turn,
  *  the top actions and yesterday's measured outcomes. Every line is a template over stored
  *  rows (no LLM). Download as PDF or push to the city's Telegram subscribers. */
@@ -110,7 +118,7 @@ export default function BriefCard({ city }: { city: string }) {
           {b.actions.map((x, i) => (
             <li key={x.rec_id} className="flex items-baseline gap-1.5">
               <span className="font-bold text-slate-500">{i + 1}.</span>
-              <span className="min-w-0 truncate"><b>{x.source}</b> · {x.place} — {x.contribution_pct}% of local PM2.5, ~{x.pop_exposed.toLocaleString()} exposed{x.status !== "proposed" ? ` (${x.status})` : ""}</span>
+              <span className="min-w-0 truncate"><b>{x.source}</b> · {x.place} — {x.contribution_pct}% of local PM2.5, ~{x.pop_exposed.toLocaleString()} exposed{x.status !== "proposed" ? ` (${STATUS_LABEL[x.status] ?? x.status})` : ""}</span>
             </li>
           ))}
         </ol>

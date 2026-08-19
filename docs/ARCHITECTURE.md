@@ -58,7 +58,11 @@ This spec turns the PRD into something the team can build against tomorrow.
 3. **Physics + ML hybrid** — dispersion + chemical priors keep ML explainable and legally defensible.
 4. **Everything is cited & traced** — attribution confidence, RAG citations, agent traces. Judges trust what they can audit.
 5. **Free, but not fragile** — cache aggressively, degrade gracefully, never let a flaky live API break the demo.
-6. **Model-agnostic LLM** — swap Gemini/Groq/Ollama via config; if the hackathon grants LLM credits, switch with one env var.
+6. **LLM-optional by design** — no language model runs in the default path at all; every citizen and
+   officer-facing string is a deterministic template. The one LLM pathway
+   (`scripts/llm_polish_advisories.py`, Gemini 2.0 Flash) is fluency-only, fact-gated and off by
+   default. `LLM_PROVIDER` selects Gemini; the Groq and Ollama keys in `.env.example` are reserved
+   and **not implemented**.
 
 ---
 

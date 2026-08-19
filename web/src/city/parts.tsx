@@ -2,7 +2,7 @@
 // computed from this city's own station readings — nothing here is city-specific in code, so all
 // ten cities (and the eleventh, whenever a YAML is added) render identically.
 import { type ReactNode } from "react";
-import { POLLUTANT_LABEL, SCALES, categoryForIndex, categoryForPm25, formatIndex, pm25Index, type AqiScale } from "../aqi";
+import { POLLUTANT_LABEL, SCALES, categoryForIndex, formatIndex, pm25Bands, pm25Index, type AqiScale, bandInk } from "../aqi";
 
 export type Overview = {
   city_id: string; name: string; languages: string[]; generated_at: string;
@@ -53,7 +53,7 @@ export function ago(iso?: string): string {
 export function PollutantChips({ available, value, onChange, compact = false }: { available: string[]; value: Pollutant; onChange: (p: Pollutant) => void; compact?: boolean }) {
   const chips: Pollutant[] = ["aqi", ...POLLUTANTS.filter((p) => available.includes(p))];
   return (
-    <div className={`flex flex-wrap ${compact ? "gap-1" : "gap-2"}`} role="tablist" aria-label="Pollutant">
+    <div className={`vn-chiprow flex flex-wrap ${compact ? "gap-1" : "gap-2"}`} role="tablist" aria-label="Pollutant">
       {chips.map((p) => {
         const on = p === value;
         return (
@@ -62,7 +62,7 @@ export function PollutantChips({ available, value, onChange, compact = false }: 
             role="tab"
             aria-selected={on}
             onClick={() => onChange(p)}
-            className={`rounded-full font-semibold transition-colors ${compact ? "px-2.5 py-1 text-[11px]" : "px-4 py-1.5 text-[13px]"} ${
+            className={`vn-chip rounded-full font-semibold transition-colors ${compact ? "px-2.5 py-1 text-[11px]" : "px-4 py-1.5 text-[13px]"} ${
               on ? "bg-blue-600 text-white shadow" : "border border-slate-300 text-slate-600 hover:border-slate-400 hover:text-slate-900"
             }`}
           >
@@ -122,10 +122,10 @@ export function CityHero({ d, scale }: { d: Overview; scale: AqiScale }) {
             <span className="text-[11px] font-bold uppercase tracking-widest text-rose-600">live</span>
           </div>
           <div className="mt-1 flex items-end gap-3">
-            <span className="text-6xl font-extrabold leading-none tracking-tight" style={{ color: cat?.color }}>{formatIndex(index, scale)}</span>
+            <span className="text-6xl font-extrabold leading-none tracking-tight" style={{ color: bandInk(cat?.color) }}>{formatIndex(index, scale)}</span>
             <span className="pb-1 text-[12px] font-semibold text-slate-500">{SCALES[scale].short}</span>
           </div>
-          <div className="mt-1 text-lg font-bold" style={{ color: cat?.color }}>{cat?.label ?? "no reading"}</div>
+          <div className="mt-1 text-lg font-bold" style={{ color: bandInk(cat?.color) }}>{cat?.label ?? "no reading"}</div>
           <ScaleBar index={index} scale={scale} />
           <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-[13px]">
             {pm25 && <span className="text-slate-600">PM2.5 <b className="text-slate-900">{pm25.value}</b> µg/m³</span>}
@@ -214,17 +214,17 @@ export function Section({ title, city, right, children, note }: { title: string;
 
 /** Colour swatch + label, used by the calendar and graph legends. */
 export function BandLegend({ scale }: { scale: AqiScale }) {
-  const stops = [10, 45, 75, 105, 180, 300];
+  // Derived from the scale's own bands, one entry each. It used to probe six fixed PM2.5 values and
+  // key on the resulting label — but on the US scale 75 and 105 µg/m³ are both "Unhealthy", and on
+  // the WHO scale three of the six land above IT-1, so the legend both repeated itself and handed
+  // React duplicate keys.
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-      {stops.map((pm) => {
-        const cat = categoryForPm25(pm, scale);
-        return (
-          <span key={cat.label} className="flex items-center gap-1 text-[11px] text-slate-600">
-            <span className="h-2.5 w-2.5 rounded-sm" style={{ background: cat.color }} />{cat.label}
-          </span>
-        );
-      })}
+      {pm25Bands(scale).map((b) => (
+        <span key={`${b.lo}-${b.hi}`} className="flex items-center gap-1 text-[11px] text-slate-600" title={`PM2.5 ${b.lo}–${b.hi} µg/m³`}>
+          <span className="h-2.5 w-2.5 rounded-sm" style={{ background: b.color }} />{b.label}
+        </span>
+      ))}
     </div>
   );
 }

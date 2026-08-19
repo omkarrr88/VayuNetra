@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
-import { Panel } from "./ui";
+import { EmptyState, Panel } from "./ui";
 
 type Lead = {
   n_cells: number; low_coverage?: boolean;
@@ -38,10 +38,10 @@ export default function InterventionsHindsight({ city }: { city: string }) {
   if (d === null) {
     return (
       <Panel title="Real interventions, in hindsight" tag="pending">
-        <div className="text-xs text-slate-500">
-          No retrospective for this city yet — it needs a season of station history with dated orders
-          (<code className="rounded bg-slate-100 px-1">python -m ml.eval.interventions --city {city}</code>). Delhi's winter 2025-26 is published.
-        </div>
+        {/* An empty state explains itself to the person reading it. Telling an officer to run a
+            Python module is developer text leaking into the product; the command belongs in the
+            card's provenance note, not in the message a user gets. */}
+        <EmptyState message="No retrospective for this city yet. Replaying real orders needs a full season of station history AND dated government orders to check the forecast against — so far only Delhi's winter 2025-26 has both." />
       </Panel>
     );
   }

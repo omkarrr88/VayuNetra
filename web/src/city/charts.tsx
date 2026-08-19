@@ -4,8 +4,10 @@
 // stretching the axis.
 import { useMemo, useState } from "react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { POLLUTANT_LABEL, SCALES, categoryForIndex, categoryForPm25, formatIndex, pm25Index, type AqiScale } from "../aqi";
+import { POLLUTANT_LABEL, SCALES, categoryForIndex, categoryForPm25, formatIndex, pm25Index, type AqiScale, bandInk } from "../aqi";
 import { BandLegend, Section, type Overview, type Pollutant } from "./parts";
+import { Monument, landmarkName } from "../site/monuments";
+import { ConditionArt } from "./conditionArt";
 
 const hourLabel = (iso: string) => new Date(iso).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
 const dayNum = (d: string) => Number(d.slice(8, 10));
@@ -40,7 +42,8 @@ export function SeriesGraph({ d, scale, pollutant }: { d: Overview; scale: AqiSc
 
   const label = (v: string) => (daily ? new Date(v).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : hourLabel(v));
   const unit = isIndex ? SCALES[scale].short : (d.now.pollutants[pollutant]?.unit ?? "");
-  const colour = (v: number) => (isIndex ? categoryForIndex(v, scale).color : categoryForPm25(pollutant === "pm25" ? v : (d.now.pollutants.pm25?.value ?? v), scale).color);
+  const cat = (v: number) => (isIndex ? categoryForIndex(v, scale) : categoryForPm25(pollutant === "pm25" ? v : (d.now.pollutants.pm25?.value ?? v), scale));
+  const colour = (v: number) => cat(v).color;
 
   const controls = (
     <div className="flex flex-wrap items-center gap-2">
@@ -81,11 +84,11 @@ export function SeriesGraph({ d, scale, pollutant }: { d: Overview; scale: AqiSc
     <div className="vn-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex gap-2">
-          <span className="rounded-lg px-2 py-1 text-[12px] font-bold text-white" style={{ background: colour(lo.value) }}>
-            {isIndex ? formatIndex(lo.value, scale) : lo.value} <span className="font-semibold opacity-90">↓ min · {label(lo.at)}</span>
+          <span className="rounded-lg px-2 py-1 text-[12px] font-bold" style={{ background: colour(lo.value), color: cat(lo.value).text }}>
+            {isIndex ? formatIndex(lo.value, scale) : lo.value} <span className="font-semibold">↓ min · {label(lo.at)}</span>
           </span>
-          <span className="rounded-lg px-2 py-1 text-[12px] font-bold text-white" style={{ background: colour(hi.value) }}>
-            {isIndex ? formatIndex(hi.value, scale) : hi.value} <span className="font-semibold opacity-90">↑ max · {label(hi.at)}</span>
+          <span className="rounded-lg px-2 py-1 text-[12px] font-bold" style={{ background: colour(hi.value), color: cat(hi.value).text }}>
+            {isIndex ? formatIndex(hi.value, scale) : hi.value} <span className="font-semibold">↑ max · {label(hi.at)}</span>
           </span>
         </div>
         {controls}
@@ -135,7 +138,9 @@ export function AqiCalendar({ d, scale }: { d: Overview; scale: AqiScale }) {
   }, [d, scale]);
   const [openMonth, setOpenMonth] = useState(0);
   if (!byMonth.length) return <div className="vn-card p-6 text-center text-[13px] text-slate-500">No daily history for {d.name} yet.</div>;
-  const shown = byMonth.slice(openMonth, openMonth + 2);
+  // Paged newest-first, but READ left-to-right in time: the earlier month sits on the left and the
+  // later one on the right, the way a calendar is read.
+  const shown = byMonth.slice(openMonth, openMonth + 2).slice().reverse();
   return (
     <div className="vn-card p-4">
       <div className="flex items-center justify-between">
@@ -214,7 +219,7 @@ export function MonthlyTrend({ d, scale }: { d: Overview; scale: AqiScale }) {
             <div className="text-[11px] font-semibold uppercase tracking-wide text-rose-600">most polluted</div>
             <div className="flex items-baseline justify-between">
               <span className="text-[15px] font-bold text-slate-900">{MONTH_NAMES[Number(d.months.most_polluted.month.slice(5, 7)) - 1]} {d.months.most_polluted.month.slice(0, 4)}</span>
-              <span className="rounded-md px-2 py-0.5 text-[13px] font-extrabold" style={{ background: categoryForPm25(d.months.most_polluted.pm25, scale).color, color: "#fff" }}>
+              <span className="rounded-md px-2 py-0.5 text-[13px] font-extrabold" style={{ background: categoryForPm25(d.months.most_polluted.pm25, scale).color, color: categoryForPm25(d.months.most_polluted.pm25, scale).text }}>
                 {formatIndex(pm25Index(d.months.most_polluted.pm25, scale), scale)}
               </span>
             </div>
@@ -226,7 +231,7 @@ export function MonthlyTrend({ d, scale }: { d: Overview; scale: AqiScale }) {
             <div className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700">least polluted</div>
             <div className="flex items-baseline justify-between">
               <span className="text-[15px] font-bold text-slate-900">{MONTH_NAMES[Number(d.months.least_polluted.month.slice(5, 7)) - 1]} {d.months.least_polluted.month.slice(0, 4)}</span>
-              <span className="rounded-md px-2 py-0.5 text-[13px] font-extrabold" style={{ background: categoryForPm25(d.months.least_polluted.pm25, scale).color, color: "#fff" }}>
+              <span className="rounded-md px-2 py-0.5 text-[13px] font-extrabold" style={{ background: categoryForPm25(d.months.least_polluted.pm25, scale).color, color: categoryForPm25(d.months.least_polluted.pm25, scale).text }}>
                 {formatIndex(pm25Index(d.months.least_polluted.pm25, scale), scale)}
               </span>
             </div>
@@ -313,14 +318,34 @@ export function CityCards({ rows, scale, onOpen, exclude }: { rows: CityRow[]; s
         const index = cityIndex(r, scale) ?? 0;
         const cat = categoryForIndex(index, scale);
         return (
-          <button key={r.city_id} onClick={() => onOpen(r.city_id)} className="vn-card p-4 text-left transition-shadow hover:shadow-md">
+          <button
+            key={r.city_id}
+            onClick={() => onOpen(r.city_id)}
+            title={landmarkName(r.city_id) ? `${r.name} — ${landmarkName(r.city_id)}` : r.name}
+            className="vn-card group p-4 text-left transition-shadow hover:shadow-md"
+          >
             <div className="flex items-start justify-between">
               <span className="text-[14px] font-bold text-slate-800">{r.name}</span>
               <span className="text-slate-400" aria-hidden="true">↗</span>
             </div>
-            <div className="mt-1 text-3xl font-extrabold" style={{ color: cat.color }}>{formatIndex(index, scale)}</div>
-            <div className="text-[12px] font-semibold" style={{ color: cat.color }}>{cat.label}</div>
-            <div className="mt-2 flex justify-between text-[11px] text-slate-500">
+            {/* The index and the landmark share this row: the number keeps the eye, and the drawing
+                fills the space beside it that was empty. It is tinted with the city's own band
+                colour, so a card is recognisable by shape AND by hue before a word is read. */}
+            <div className="mt-1 flex items-end justify-between gap-2">
+              <div className="min-w-0">
+                <div className="text-3xl font-extrabold leading-none" style={{ color: bandInk(cat.color) }}>
+                  {formatIndex(index, scale)}
+                </div>
+                <div className="mt-1 text-[12px] font-semibold" style={{ color: bandInk(cat.color) }}>{cat.label}</div>
+              </div>
+              <Monument
+                city={r.city_id}
+                width={92}
+                className="shrink-0 opacity-60 transition-opacity group-hover:opacity-90"
+                style={{ color: bandInk(cat.color) }}
+              />
+            </div>
+            <div className="mt-3 flex justify-between border-t border-slate-100 pt-2 text-[11px] text-slate-500">
               <span>PM2.5 <b className="text-slate-700">{r.current_pm25}</b></span>
               <span>+24 h <b className="text-slate-700">{r.forecast_24h_pm25 ?? "–"}</b></span>
             </div>
@@ -353,6 +378,19 @@ function CigaretteMark({ color = "#e11d48" }: { color?: string }) {
 }
 
 /** Health section: what to do now, the cigarette equivalent, and per-condition guidance. */
+// The illustration carries today's risk in its colour, so the drawing is not merely decorative —
+// it is the same signal as the words next to it. Keyed off the CPCB-derived risk vocabulary in
+// core/health_advice.py; anything unrecognised stays slate rather than guessing a severity.
+const RISK_TINT: Record<string, string> = {
+  "not measured": "text-slate-300",
+  minimal: "text-emerald-500",
+  low: "text-emerald-600",
+  mild: "text-amber-500",
+  moderate: "text-orange-500",
+  high: "text-rose-500",
+  "very high": "text-rose-700",
+};
+
 export function HealthAdvice({ d }: { d: Overview }) {
   const [cond, setCond] = useState(d.health.conditions[0]?.key ?? "asthma");
   const active = d.health.conditions.find((c) => c.key === cond) ?? d.health.conditions[0];
@@ -381,16 +419,21 @@ export function HealthAdvice({ d }: { d: Overview }) {
             </div>
           </div>
           <div>
-            <div className="text-[13px] font-bold text-slate-800">What to do now — air is {d.health.band_label}</div>
-            <p className="mt-1 text-[13px] text-slate-600">{d.health.headline}</p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              {d.health.actions.map((a) => (
-                <div key={a.key} className="rounded-lg border border-slate-200 px-3 py-2">
-                  <div className="text-[12px] font-bold text-slate-800">{a.label}</div>
-                  <div className="text-[12px] text-blue-700">{a.prescription}</div>
-                </div>
-              ))}
+            <div className="text-[13px] font-bold text-slate-800">
+              {d.health.actions.length ? `What to do now — air is ${d.health.band_label}` : "No advice to give"}
             </div>
+            <p className="mt-1 text-[13px] text-slate-600">{d.health.headline}</p>
+            {/* An empty grid would read as a broken card; the headline already says why it is empty. */}
+            {d.health.actions.length > 0 && (
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {d.health.actions.map((a) => (
+                  <div key={a.key} className="rounded-lg border border-slate-200 px-3 py-2">
+                    <div className="text-[12px] font-bold text-slate-800">{a.label}</div>
+                    <div className="text-[12px] text-blue-700">{a.prescription}</div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -407,11 +450,18 @@ export function HealthAdvice({ d }: { d: Overview }) {
         </div>
         {active && (
           <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_1fr]">
-            <div>
-              <div className="text-[14px] font-bold text-slate-900">{active.label}</div>
-              <p className="mt-1 text-[13px] text-slate-600">
-                Risk today is <b className="text-slate-900">{active.risk}</b> — the air is {d.health.band_label}. {active.symptoms}
-              </p>
+            <div className="flex items-start gap-3">
+              <ConditionArt
+                conditionKey={active.key}
+                width={76}
+                className={`mt-0.5 ${RISK_TINT[active.risk] ?? "text-slate-400"}`}
+              />
+              <div className="min-w-0">
+                <div className="text-[14px] font-bold text-slate-900">{active.label}</div>
+                <p className="mt-1 text-[13px] text-slate-600">
+                  Risk today is <b className="text-slate-900">{active.risk}</b> — the air is {d.health.band_label}. {active.symptoms}
+                </p>
+              </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>

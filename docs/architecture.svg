@@ -72,9 +72,9 @@
     <text x="620" y="325" text-anchor="middle" font-size="12">RAG-cited worklist</text>
     <rect x="700" y="286" width="140" height="52" rx="6" fill="#111827" stroke="#334155"/>
     <text x="770" y="307" text-anchor="middle" fill="#f9fafb" font-weight="700">A4 Advisory</text>
-    <text x="770" y="325" text-anchor="middle" font-size="12">4-lang · vuln-aware</text>
+    <text x="770" y="325" text-anchor="middle" font-size="12">8 languages · vuln-aware</text>
     <rect x="550" y="348" width="290" height="30" rx="6" fill="#111827" stroke="#334155"/>
-    <text x="695" y="368" text-anchor="middle" fill="#f9fafb" font-weight="700">A5 Multi-City — cross-city playbooks</text>
+    <text x="695" y="368" text-anchor="middle" fill="#f9fafb" font-weight="700">Multi-city compare (via /comparison, not a graph node)</text>
     <text x="695" y="404" text-anchor="middle" fill="#94a3b8" font-size="12" font-weight="700">SUPPORTING MODELS</text>
     <rect x="550" y="414" width="290" height="94" rx="6" fill="#111827" stroke="#334155"/>
     <text x="695" y="434" text-anchor="middle" font-size="12">E1 satellite CV (U-Net) · E2 dense 1 km field</text>
@@ -93,7 +93,7 @@
     <text x="965" y="200" text-anchor="middle">one envelope:</text>
     <text x="965" y="218" text-anchor="middle" fill="#f9fafb">{success, data,</text>
     <text x="965" y="236" text-anchor="middle" fill="#f9fafb">error, meta}</text>
-    <text x="965" y="272" text-anchor="middle">34 endpoints + WS</text>
+    <text x="965" y="272" text-anchor="middle">47 endpoints + WS</text>
     <text x="965" y="290" text-anchor="middle">WebSocket /live</text>
     <text x="965" y="308" text-anchor="middle">Notice PDF</text>
     <text x="965" y="326" text-anchor="middle">/simulate · /optimize · /plume</text>
@@ -122,7 +122,7 @@
     <text x="1160" y="312" text-anchor="middle">PWA · Telegram bot</text>
     <text x="1160" y="330" text-anchor="middle">IVR in+out calls</text>
     <text x="1160" y="348" text-anchor="middle">public display mode</text>
-    <text x="1160" y="366" text-anchor="middle">en · hi · kn · mr</text>
+    <text x="1160" y="366" text-anchor="middle">en hi mr kn ta te bn gu</text>
     <rect x="1084" y="392" width="152" height="86" rx="6" fill="#111827" stroke="#334155"/>
     <text x="1160" y="412" text-anchor="middle" fill="#f9fafb" font-size="13" font-weight="700">Officer artefacts</text>
     <text x="1160" y="432" text-anchor="middle">evidence dossier</text>

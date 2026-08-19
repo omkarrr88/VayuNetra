@@ -18,8 +18,8 @@ client = TestClient(m.app)
 
 
 def _fixture_message(city: str) -> str:
-    """The advisory a caller hears: the city's showcase language when Polly can voice it
-    (Hindi for Delhi/Mumbai/…), else English — mirrors api.main._ivr_language."""
+    """The advisory a caller hears: the city's first configured language, which every one of the
+    eight now has a voice for — mirrors api.main._ivr_language."""
     lang = m._ivr_language(city)
     rows = [r for r in m.fixture_rows("advisory", city) if (r.get("language") or "en") == lang and r.get("city_id") == city]
     if not rows:
@@ -35,11 +35,17 @@ def test_hindi_city_calls_are_spoken_in_hindi_by_kajal():
     assert "वायु गुणवत्ता" in r.text
 
 
-def test_non_hindi_city_calls_fall_back_to_english_voice():
+def test_a_city_is_answered_in_its_own_language_not_english():
+    """Chennai used to fall back to Polly.Raveena / en-IN because Polly has no Tamil voice.
+
+    Twilio also exposes Google's voices, which cover all eight languages we write, so the fallback
+    was never necessary — a Tamil caller was hearing an English speaker read Tamil script.
+    """
     digit = next(d for d, (cid, _) in IVR_CITY_MENU.items() if cid == "chennai")
     r = client.post("/ivr/advisory", data={"Digits": digit})
     assert r.status_code == 200
-    assert 'voice="Polly.Raveena" language="en-IN"' in r.text
+    assert 'language="ta-IN"' in r.text
+    assert 'voice="Google.ta-IN' in r.text
 
 
 # --- welcome menu -------------------------------------------------------------
