@@ -51,17 +51,17 @@ const EPA_PM25: [number, number, number, number][] = [
   [0, 9.0, 0, 50], [9.1, 35.4, 51, 100], [35.5, 55.4, 101, 150], [55.5, 125.4, 151, 200], [125.5, 225.4, 201, 300], [225.5, 325.4, 301, 500],
 ];
 const CPCB_CATS: [number, AqiCategory][] = [
-  [50, { label: "Good", color: "#16a34a", text: "#ffffff" }],
+  [50, { label: "Good", color: "#16a34a", text: "#04220f" }],
   [100, { label: "Satisfactory", color: "#84cc16", text: "#1a2e05" }],
   [200, { label: "Moderate", color: "#eab308", text: "#422006" }],
-  [300, { label: "Poor", color: "#f97316", text: "#ffffff" }],
+  [300, { label: "Poor", color: "#f97316", text: "#3b1206" }],
   [400, { label: "Very Poor", color: "#dc2626", text: "#ffffff" }],
   [500, { label: "Severe", color: "#7f1d1d", text: "#ffffff" }],
 ];
 const EPA_CATS: [number, AqiCategory][] = [
-  [50, { label: "Good", color: "#16a34a", text: "#ffffff" }],
+  [50, { label: "Good", color: "#16a34a", text: "#04220f" }],
   [100, { label: "Moderate", color: "#eab308", text: "#422006" }],
-  [150, { label: "Unhealthy for Sensitive Groups", color: "#f97316", text: "#ffffff" }],
+  [150, { label: "Unhealthy for Sensitive Groups", color: "#f97316", text: "#3b1206" }],
   [200, { label: "Unhealthy", color: "#dc2626", text: "#ffffff" }],
   [300, { label: "Very Unhealthy", color: "#7e22ce", text: "#ffffff" }],
   [500, { label: "Hazardous", color: "#7f1d1d", text: "#ffffff" }],
@@ -69,10 +69,10 @@ const EPA_CATS: [number, AqiCategory][] = [
 // WHO 2021: 24-h guideline 15 µg/m³; interim targets IT-4 25, IT-3 37.5, IT-2 50, IT-1 75
 const WHO_GUIDELINE = 15;
 const WHO_BANDS: [number, AqiCategory][] = [
-  [15, { label: "Within guideline", color: "#16a34a", text: "#ffffff" }],
+  [15, { label: "Within guideline", color: "#16a34a", text: "#04220f" }],
   [25, { label: "Above guideline (≤ IT-4)", color: "#84cc16", text: "#1a2e05" }],
   [37.5, { label: "Above IT-4 (≤ IT-3)", color: "#eab308", text: "#422006" }],
-  [50, { label: "Above IT-3 (≤ IT-2)", color: "#f97316", text: "#ffffff" }],
+  [50, { label: "Above IT-3 (≤ IT-2)", color: "#f97316", text: "#3b1206" }],
   [75, { label: "Above IT-2 (≤ IT-1)", color: "#dc2626", text: "#ffffff" }],
   [Infinity, { label: "Above IT-1", color: "#7f1d1d", text: "#ffffff" }],
 ];

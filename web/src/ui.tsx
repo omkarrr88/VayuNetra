@@ -135,7 +135,7 @@ export function Panel({
               </span>
             )}
           </div>
-          <div style={{ display: "flex", flex: "none", alignItems: "center", gap: "var(--s-2)" }}>
+          <div style={{ display: "flex", flex: "0 1 auto", minWidth: 0, alignItems: "center", gap: "var(--s-2)" }}>
             {right}
             {tip && <InfoTip>{tip}</InfoTip>}
           </div>

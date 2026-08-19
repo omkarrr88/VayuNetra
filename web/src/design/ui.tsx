@@ -240,7 +240,7 @@ export function Card({ title, tag, right, info, pad = 4, level = 1, glass = fals
             <Text size="md" weight={700} tone="ink" tight style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</Text>
             {tag && <Chip>{tag}</Chip>}
           </Stack>
-          <Stack row align="center" gap={2} style={{ flex: "none" }}>
+          <Stack row align="center" gap={2} style={{ flex: "0 1 auto", minWidth: 0 }}>
             {right}
             {tip && <InfoTip>{tip}</InfoTip>}
           </Stack>

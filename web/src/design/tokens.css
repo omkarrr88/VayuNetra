@@ -235,3 +235,15 @@
 /* Nothing inside a card may be wider than the card. */
 .vn-panel, .vn-panel * { max-width: 100%; }
 .vn-panel table { max-width: none; }
+
+/* ---- 320px: the narrowest screen anyone will hold ------------------------- */
+@media (max-width: 360px) {
+  /* the pollutant cards carry a long label, a value, a unit and a chevron — at 320px the chevron
+     and the generous gap are what push them over the edge */
+  .vn .vn-card.flex.items-center.gap-3, .vn-console .vn-card.flex.items-center.gap-3 { gap: var(--s-2); padding: var(--s-2); }
+  .vn .vn-card.flex.items-center.gap-3 > span:last-child,
+  .vn-console .vn-card.flex.items-center.gap-3 > span:last-child { display: none; }
+  .vn-page { padding-left: var(--s-3); padding-right: var(--s-3); }
+}
+/* Nothing anywhere may make the document itself scroll sideways. */
+.vn, .vn-console, .vn-landing { overflow-x: clip; }
