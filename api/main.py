@@ -671,8 +671,10 @@ def enforcement_list(
     q = (
         db.table("enforcement_recs")
         .select(
+            # `evidence` carries the value-per-inspector-hour block the worklist ranks by; without
+            # it the UI can only sort by source size and cannot show the arithmetic behind a rank.
             "id,city_id,h3_cell,ts,source_id,priority_score,contribution,pop_exposed,"
-            "rationale,rag_citations,rubric_score,status,closed_at,closure_finding,closure_note"
+            "rationale,rag_citations,rubric_score,evidence,status,closed_at,closure_finding,closure_note"
         )
         .eq("city_id", city)
         .order("priority_score", desc=True)

@@ -180,16 +180,20 @@ export function SegBtn({
   onClick,
   children,
   className = "",
+  title,
 }: {
   active: boolean;
   onClick: () => void;
   children: ReactNode;
   className?: string;
+  /** Hover explanation — a segmented control often needs to say what it actually does. */
+  title?: string;
 }) {
   return (
     <button
       onClick={onClick}
       aria-pressed={active}
+      title={title}
       className={className}
       style={{
         cursor: "pointer", borderRadius: "var(--r-full)", padding: "5px 11px", minHeight: 28,
