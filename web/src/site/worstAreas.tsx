@@ -70,11 +70,16 @@ export function WorstAreas({ city, scale, limit = 6 }: { city: string; scale: Aq
               <li key={c.h3_cell} style={{ display: "flex", alignItems: "center", gap: "var(--s-3)", padding: "var(--s-3) var(--s-4)", borderTop: i ? "1px solid var(--line)" : undefined }}>
                 <span aria-hidden="true" style={{ width: 4, alignSelf: "stretch", borderRadius: 2, background: cat.color, flex: "none" }} />
                 <Text size="xs" tone="faint" weight={700} style={{ width: 18, flex: "none" }}>{i + 1}</Text>
-                <span style={{ minWidth: 0, flex: 1 }}>
+                {/* The place is the label. The H3 id stays reachable on hover, and in the evidence
+                    dossier and the notice PDF, so a cell is still verifiable — but a reader should
+                    not have to parse a hex string to know where this is. */}
+                <span style={{ minWidth: 0, flex: 1 }} title={`1 km cell ${c.h3_cell}`}>
                   <Text as="div" size="sm" weight={700} tone="ink" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {names[c.h3_cell] ?? "1 km cell"}
                   </Text>
-                  <Text as="div" size="2xs" tone="faint" style={{ fontFamily: "ui-monospace, monospace" }}>{c.h3_cell}</Text>
+                  <Text as="div" size="2xs" tone="faint">
+                    {c.pm25 !== null && c.pm25 !== undefined ? `${c.pm25} µg/m³ PM2.5` : "\u00a0"}
+                  </Text>
                 </span>
                 <span style={{ textAlign: "right", flex: "none" }}>
                   <Text as="div" size="lg" weight={800} tight style={{ color: bandInk(cat.color) }}>{formatIndex(idx, scale)}</Text>

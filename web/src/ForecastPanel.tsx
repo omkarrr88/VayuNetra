@@ -13,6 +13,7 @@ import { categoryForPm25 } from "./aqi";
 import { useAqiScale } from "./aqiScale";
 import { FORECAST_SKILL, SKILL_ASOF, pct } from "./metrics";
 import { EmptyState, Panel, SegBtn } from "./ui";
+import { placeForCell } from "./placeName";
 
 type FC = {
   h3_cell: string;
@@ -26,9 +27,32 @@ type FC = {
 const HORIZONS = [24, 48, 72];
 const SPIKE = 90; // µg/m³ PM2.5 — "very poor" threshold for a spike alert
 
-/** Short human label for an H3 id — the shared prefix says nothing, the tail does. */
+/** Short human label for an H3 id — the shared prefix says nothing, the tail does. Used only until
+ *  the ward lookup resolves, and as the fallback where a city has no boundary data. */
 export function cellLabel(h3: string): string {
   return `#${h3.replace(/f+$/, "").slice(-4)}`;
+}
+
+/** Ward names for a list of cells. An officer reads "Khairatabad", not "#0b03"; the H3 id stays on
+ *  hover so the row is still traceable to an exact cell. */
+function usePlaceNames(city: string, cells: string[]): Record<string, string> {
+  const [names, setNames] = useState<Record<string, string>>({});
+  const key = cells.join(",");
+  useEffect(() => {
+    let live = true;
+    setNames({});
+    Promise.all(cells.map(async (c) => [c, (await placeForCell(city, c))?.label] as const))
+      .then((pairs) => {
+        if (!live) return;
+        const out: Record<string, string> = {};
+        for (const [c, label] of pairs) if (label) out[c] = label;
+        setNames(out);
+      })
+      .catch(() => { /* the short id is a fine fallback */ });
+    return () => { live = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [city, key]);
+  return names;
 }
 
 type ChartPoint = { h: string; avg: number; band: [number, number]; pers: number };
@@ -83,6 +107,8 @@ export default function ForecastPanel({ city }: { city: string }) {
 
   const spikes = rows.filter((r) => r.value >= SPIKE);
   const sorted = [...rows].sort((a, b) => b.value - a.value);
+  // only the rows that are actually listed need a name
+  const places = usePlaceNames(city, sorted.slice(0, 40).map((r) => r.h3_cell));
 
   return (
     <Panel
@@ -158,9 +184,9 @@ export default function ForecastPanel({ city }: { city: string }) {
               const cat = categoryForPm25(r.value, scale);
               return (
                 <div key={r.h3_cell} className="flex items-center justify-between gap-2">
-                  <span className="font-mono text-[11px] text-slate-500" title={r.h3_cell}>
+                  <span className="min-w-0 truncate text-[11px] text-slate-600" title={`1 km cell ${r.h3_cell}`}>
                     {r.value >= SPIKE ? "⚠ " : ""}
-                    cell {cellLabel(r.h3_cell)}
+                    {places[r.h3_cell] ?? `cell ${cellLabel(r.h3_cell)}`}
                   </span>
                   <span className="flex items-center gap-1.5">
                     <span className="font-mono text-[11px] text-slate-500">
