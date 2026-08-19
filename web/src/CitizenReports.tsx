@@ -3,6 +3,7 @@
 // are transparency machinery, so the list renders for everyone.
 import { useEffect, useRef, useState } from "react";
 import { api, API_BASE, API_TOKEN } from "./api";
+import { placeForCell } from "./placeName";
 
 type Report = {
   id: number;
@@ -25,6 +26,15 @@ const CATEGORIES: Array<[string, string]> = [
   ["other", "Other"],
 ];
 
+/** What a citizen who filed the report should read, rather than the database value. */
+const STATUS_LABEL: Record<Report["status"], string> = {
+  received: "Received",
+  verified: "Verified",
+  actioned: "Action taken",
+  resolved: "Resolved",
+  rejected: "Not actionable",
+};
+
 const STATUS_STYLE: Record<Report["status"], string> = {
   received: "bg-slate-100 text-slate-700",
   verified: "bg-sky-100 text-sky-800",
@@ -35,6 +45,16 @@ const STATUS_STYLE: Record<Report["status"], string> = {
 
 export default function CitizenReports({ city, center }: { city: string; center?: [number, number] }) {
   const [reports, setReports] = useState<Report[]>([]);
+  // A report says where it is in words. "cell 5433ff" is a database key, and the person who filed
+  // the report described a place, not a hash.
+  const [places, setPlaces] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let live = true;
+    const cells = [...new Set(reports.map((r) => r.h3_cell).filter(Boolean))];
+    Promise.all(cells.map(async (c) => [c, (await placeForCell(city, c))?.label] as const))
+      .then((pairs) => { if (live) setPlaces(Object.fromEntries(pairs.filter(([, n]) => n) as [string, string][])); });
+    return () => { live = false; };
+  }, [city, reports]);
   const [openForm, setOpenForm] = useState(false);
   const [category, setCategory] = useState("waste_burning");
   const [description, setDescription] = useState("");
@@ -160,9 +180,9 @@ export default function CitizenReports({ city, center }: { city: string; center?
               )}
               <div className="min-w-0 flex-1">
                 <span className="font-semibold text-slate-700">{r.category.replace(/_/g, " ")}</span>
-                <span className="ml-1 text-slate-500">· cell {r.h3_cell.slice(-6)}</span>
+                <span className="ml-1 text-slate-500">· {places[r.h3_cell] ?? "location pinned"}</span>
               </div>
-              <span className={`rounded px-1.5 py-0.5 font-semibold ${STATUS_STYLE[r.status]}`}>{r.status}</span>
+              <span className={`rounded px-1.5 py-0.5 font-semibold ${STATUS_STYLE[r.status]}`}>{STATUS_LABEL[r.status] ?? r.status}</span>
               {typeof r.sla_remaining_h === "number" && r.status !== "resolved" && r.status !== "rejected" && (
                 <span className={`rounded px-1.5 py-0.5 font-semibold ${r.sla_breached ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-600"}`}>
                   {r.sla_breached ? "SLA breached" : `${Math.max(0, Math.round(r.sla_remaining_h))}h left`}

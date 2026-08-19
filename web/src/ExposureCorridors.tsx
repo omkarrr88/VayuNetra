@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { cellToLatLng } from "h3-js";
 import { api } from "./api";
+import { placeForCell } from "./placeName";
 
 type CoverageCell = { h3_cell: string; pm25?: number };
 type Zone = { h3_cell: string; zone_id: string; pm25?: number };
@@ -44,6 +45,14 @@ export default function ExposureCorridors({
   city, center, zones,
 }: { city: string; center?: [number, number]; zones: Zone[] }) {
   const [cov, setCov] = useState<CoverageCell[]>([]);
+  // A commuter picks a destination by name. "zone-8dd5" is the tail of an H3 index.
+  const [zoneNames, setZoneNames] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let live = true;
+    Promise.all(zones.map(async (z) => [z.h3_cell, (await placeForCell(city, z.h3_cell))?.label] as const))
+      .then((pairs) => { if (live) setZoneNames(Object.fromEntries(pairs.filter(([, n]) => n) as [string, string][])); });
+    return () => { live = false; };
+  }, [city, zones]);
   const [dest, setDest] = useState<string>("");
 
   useEffect(() => {
@@ -94,7 +103,7 @@ export default function ExposureCorridors({
           className="flex-1 rounded border border-teal-200 bg-white px-1 py-0.5 text-xs"
         >
           {zones.map((z) => (
-            <option key={z.h3_cell} value={z.h3_cell}>{z.zone_id}</option>
+            <option key={z.h3_cell} value={z.h3_cell}>{zoneNames[z.h3_cell] ?? "Nearby area"}</option>
           ))}
         </select>
       </div>

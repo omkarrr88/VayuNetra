@@ -87,7 +87,7 @@ const DATA_SOURCES = ["CPCB / CAAQMS", "Sentinel-5P", "Sentinel-2", "Open-Meteo 
 // Fallback snapshot (production, 18 August 2026) — used only until GET /landing/snapshot
 // answers; the live payload replaces every number below. Colors match the console.
 const MIX_COLOR: Record<string, string> = { traffic: "#ef4444", transported: "#3b82f6", industrial: "#9333ea", construction_dust: "#ca8a04", biomass_burning: "#16a34a", other: "#6b7280" };
-const MIX_LABEL: Record<string, string> = { construction_dust: "construction dust", biomass_burning: "biomass burning" };
+const MIX_LABEL: Record<string, string> = { construction_dust: "construction dust", biomass_burning: "biomass burning", industrial: "industry", transported: "regional transport" };
 /** One row of the live city board — the index is the server composite (index of the city mean),
  *  the same number that city's own page shows. */
 type CityBoardRow = {
@@ -191,15 +191,15 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-4">
             <a href="https://github.com/omkarrr88/VayuNetra" target="_blank" rel="noreferrer"
-              className="flex h-6 w-6 items-center justify-center text-slate-500 transition-colors hover:text-slate-900" title="Source on GitHub" aria-label="Source on GitHub">
+              className="flex h-11 w-11 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900" title="Source on GitHub" aria-label="Source on GitHub">
               <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true"><path d={IC.github} /></svg>
             </a>
             <a href="/city/delhi" onClick={(e) => linkClick(e, "/city/delhi")}
-              className="hidden rounded-md border border-slate-300 px-3.5 py-1.5 text-[13px] font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900 sm:block">
+              className="hidden rounded-md border border-slate-300 px-4 py-2.5 text-[13px] font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900 sm:block min-h-11 flex items-center">
               Check your city
             </a>
             <a href="/console" onClick={(e) => linkClick(e, "/console")}
-              className="rounded-md bg-slate-900 px-3.5 py-1.5 text-[13px] font-semibold text-white transition-colors hover:bg-slate-700">
+              className="rounded-md bg-slate-900 px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-slate-700 min-h-11 flex items-center">
               Open console
             </a>
           </div>
@@ -223,16 +223,16 @@ export default function Landing() {
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <a href="/city/delhi" onClick={(e) => linkClick(e, "/city/delhi")}
-            className="flex items-center gap-2 rounded-md bg-sky-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-800">
+            className="flex items-center gap-2 rounded-md bg-sky-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-800 min-h-11">
             Check your city's air
             <Icon d={IC.arrow} className="h-4 w-4" />
           </a>
           <a href="/console" onClick={(e) => linkClick(e, "/console")}
-            className="rounded-md border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900">
+            className="rounded-md border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900 min-h-11 flex items-center">
             Open the console
           </a>
           <a href="#how"
-            className="rounded-md border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900">
+            className="rounded-md border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900 min-h-11 flex items-center">
             How it works
           </a>
         </div>
@@ -517,7 +517,7 @@ export default function Landing() {
             <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">See it running on live data.</h2>
             <p className="mt-1 text-[14px] text-slate-600">Ten cities, real measurements, no sign-up.</p>
             <a href="/console" onClick={(e) => linkClick(e, "/console")}
-              className="mt-5 inline-flex items-center gap-2 rounded-md bg-sky-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-700">
+              className="mt-5 inline-flex items-center gap-2 rounded-md bg-sky-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-700 min-h-11">
               Open the console
               <Icon d={IC.arrow} className="h-4 w-4" />
             </a>
@@ -552,19 +552,19 @@ export default function Landing() {
           <div className="grid grid-cols-2 gap-10 text-[13px] sm:grid-cols-3">
             <div>
               <p className="font-mono text-[10px] uppercase tracking-wider text-slate-500">Product</p>
-              <div className="mt-2 space-y-1.5 text-slate-600">
-                <a href="/console" onClick={(e) => linkClick(e, "/console")} className="block py-0.5 transition-colors hover:text-slate-900">Console</a>
-                <a href="#how" className="block py-0.5 transition-colors hover:text-slate-900">How it works</a>
-                <a href="#architecture" className="block py-0.5 transition-colors hover:text-slate-900">Architecture</a>
-                <a href="#validation" className="block py-0.5 transition-colors hover:text-slate-900">Validation</a>
+              <div className="mt-2 space-y-1 text-slate-600">
+                <a href="/console" onClick={(e) => linkClick(e, "/console")} className="block py-2 transition-colors hover:text-slate-900 min-h-10 flex items-center">Console</a>
+                <a href="#how" className="block py-2 transition-colors hover:text-slate-900 min-h-10 flex items-center">How it works</a>
+                <a href="#architecture" className="block py-2 transition-colors hover:text-slate-900 min-h-10 flex items-center">Architecture</a>
+                <a href="#validation" className="block py-2 transition-colors hover:text-slate-900 min-h-10 flex items-center">Validation</a>
               </div>
             </div>
             <div>
               <p className="font-mono text-[10px] uppercase tracking-wider text-slate-500">Resources</p>
-              <div className="mt-2 space-y-1.5 text-slate-600">
-                <a href="https://github.com/omkarrr88/VayuNetra" target="_blank" rel="noreferrer" className="block py-0.5 transition-colors hover:text-slate-900">GitHub</a>
-                <a href="https://vayunetra-c8i8.onrender.com/docs" target="_blank" rel="noreferrer" className="block py-0.5 transition-colors hover:text-slate-900">API reference</a>
-                <a href="https://vayunetra-c8i8.onrender.com/health" target="_blank" rel="noreferrer" className="block py-0.5 transition-colors hover:text-slate-900">API status</a>
+              <div className="mt-2 space-y-1 text-slate-600">
+                <a href="https://github.com/omkarrr88/VayuNetra" target="_blank" rel="noreferrer" className="block py-2 transition-colors hover:text-slate-900 min-h-10 flex items-center">GitHub</a>
+                <a href="https://vayunetra-c8i8.onrender.com/docs" target="_blank" rel="noreferrer" className="block py-2 transition-colors hover:text-slate-900 min-h-10 flex items-center">API reference</a>
+                <a href="https://vayunetra-c8i8.onrender.com/health" target="_blank" rel="noreferrer" className="block py-2 transition-colors hover:text-slate-900 min-h-10 flex items-center">API status</a>
               </div>
             </div>
             <div>

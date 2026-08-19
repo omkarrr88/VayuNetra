@@ -312,6 +312,11 @@ def write_forecasts(wide: pd.DataFrame, horizon_h: int) -> int:
         # enforce pi_low <= value <= pi_high (independent quantile models can cross on small data)
         bounds = sorted(v for v in (_finite(preds["pi_low"][i]), mid, _finite(preds["pi_high"][i])) if v is not None)
         lo, hi = bounds[0], bounds[-1]
+        # A mass concentration cannot be negative, and on clean cells the conformal widening pushed
+        # the lower edge below zero on 8 of 303 served rows — "PM2.5 between -1.3 and 13.8" is not a
+        # forecast anyone can read. Truncating at the physical support costs nothing: every
+        # achievable outcome is >= 0, so [max(0, lo), hi] contains exactly the values [lo, hi] did.
+        lo = max(0.0, lo)
         hour = r.get("hour")
         clim_val = _finite(clim.get(int(hour), y_mean)) if pd.notna(hour) else y_mean
         rows.append({

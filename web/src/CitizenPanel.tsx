@@ -10,6 +10,7 @@ import { placeForCell } from "./placeName";
 
 type Advisory = {
   ward_id: string;
+  h3_cell?: string | null;
   risk_tier: string;
   audience_segment: string;
   language: string;
@@ -82,18 +83,36 @@ export default function CitizenPanel({ city, languages, center }: { city: string
     api<WardChoice[]>(`/advisory/wards?city=${city}&lang=${lang}`).then(setWards).catch(() => setWards([]));
   }, [city, lang]);
 
-  // name each ward the way the rest of the product does, rather than by its hex-derived id
+  // "zone-0e3d" is the last four characters of an H3 index. It is a database key; nobody reading
+  // an advisory can act on it. Every ward shown on screen resolves to the locality name the rest of
+  // the product uses, from the same ward polygons the map uses.
   const [wardNames, setWardNames] = useState<Record<string, string>>({});
   useEffect(() => {
     let live = true;
+    const seen = new Map<string, string>();
+    for (const w of wards) if (w.h3_cell) seen.set(w.ward_id, w.h3_cell);
+    for (const a of rows ?? []) if (a.h3_cell) seen.set(a.ward_id, a.h3_cell);
     Promise.all(
-      wards.filter((w) => w.h3_cell).map(async (w) => [w.ward_id, (await placeForCell(city, w.h3_cell as string))?.label] as const),
+      [...seen].map(async ([id, cell]) => [id, (await placeForCell(city, cell))?.label] as const),
     ).then((pairs) => {
       if (!live) return;
-      setWardNames(Object.fromEntries(pairs.filter(([, n]) => n) as [string, string][]));
+      setWardNames((prev) => ({ ...prev, ...Object.fromEntries(pairs.filter(([, n]) => n) as [string, string][]) }));
     });
     return () => { live = false; };
-  }, [city, wards]);
+  }, [city, wards, rows]);
+
+  /** The place an advisory is for, in words. Falls back to a neutral phrase, never to the id. */
+  const placeOf = (a: Advisory) => wardNames[a.ward_id] ?? "This area";
+
+  // the cleanest-air cards name their locality too — a reader is choosing where to walk
+  const [zoneNames, setZoneNames] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let live = true;
+    const zs = cleanZones?.zones ?? [];
+    Promise.all(zs.map(async (z) => [z.h3_cell, (await placeForCell(city, z.h3_cell))?.label] as const))
+      .then((pairs) => { if (live) setZoneNames(Object.fromEntries(pairs.filter(([, n]) => n) as [string, string][])); });
+    return () => { live = false; };
+  }, [city, cleanZones]);
 
   async function broadcast() {
     setBcast("sending");
@@ -109,7 +128,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
       if (r.ivr) parts.push(`IVR: ${r.ivr.status}`);
       // A silent fallback is the thing that made this look fine while it was broken, so both
       // fallbacks — no advisory in that language, and no voice for it — are said out loud.
-      if (r.ward?.sent) parts.push(`ward ${wardNames[r.ward.sent] ?? r.ward.sent} (${r.ward.chosen_by})`);
+      if (r.ward?.sent) parts.push(`ward ${wardNames[r.ward.sent] ?? "selected"} (${r.ward.chosen_by})`);
       if (r.language?.note) parts.push(r.language.note);
       if (r.language?.voice_note) parts.push(r.language.voice_note);
       else if (r.language?.delivered) parts.push(`spoken in ${r.language.delivered}`);
@@ -180,7 +199,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
           {items.map((a) => (
             <div key={a.ward_id} className="rounded-md border border-slate-200 p-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-medium">{a.ward_id}</span>
+                <span className="font-medium">{placeOf(a)}</span>
                 <span className="rounded bg-amber-100 px-1.5 py-0.5 text-amber-800">{a.risk_tier.replace("_", " ")}</span>
               </div>
               <div className="mt-1 text-xs leading-5 text-slate-700">{a.message}</div>
@@ -197,7 +216,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
             </div>
             {items.slice(0, 3).map((a) => (
               <div key={a.ward_id} className="mb-1.5 max-w-[95%] rounded-xl rounded-tl-sm bg-white p-2 text-xs leading-5 text-slate-800 shadow-sm">
-                <b>⚠ {a.ward_id}</b> · {a.risk_tier.replace("_", " ")}
+                <b>⚠ {placeOf(a)}</b> · {a.risk_tier.replace("_", " ")}
                 <br />
                 {a.message}
               </div>
@@ -239,7 +258,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
                   {a.risk_tier.replace("_", " ").toUpperCase()}
                 </span>
               </div>
-              <div className="mt-1 text-[15px] font-extrabold leading-6">{a.ward_id.toUpperCase()}</div>
+              <div className="mt-1 text-[15px] font-extrabold leading-6">{placeOf(a).toUpperCase()}</div>
               <div className="mt-0.5 text-[13px] leading-5 text-slate-200">{a.message}</div>
             </div>
           ))}
@@ -275,7 +294,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
                   <option value="">Worst air right now (choose for me)</option>
                   {wards.map((w) => (
                     <option key={w.ward_id} value={w.ward_id}>
-                      {wardNames[w.ward_id] ?? w.ward_id}{w.risk_tier ? ` — ${w.risk_tier.replace("_", " ")}` : ""}
+                      {wardNames[w.ward_id] ?? "This area"}{w.risk_tier ? ` — ${w.risk_tier.replace("_", " ")}` : ""}
                     </option>
                   ))}
                 </select>
@@ -319,7 +338,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
                   target="_blank"
                   rel="noreferrer"
                   className="rounded-lg border border-slate-200 p-2 transition-colors hover:border-emerald-300 hover:bg-emerald-50/50"
-                  aria-label={`Open ${z.zone_id} in Google Maps — ${formatIndex(zIndex, scale)}, ${cat.label}`}
+                  aria-label={`Open ${zoneNames[z.h3_cell] ?? "this area"} in Google Maps — ${formatIndex(zIndex, scale)}, ${cat.label}`}
                 >
                   <div className="flex items-center justify-between gap-1">
                     <span
@@ -330,7 +349,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
                     </span>
                     <span className="text-[11px] text-slate-500">{cat.label}</span>
                   </div>
-                  <div className="mt-1 font-mono text-xs font-semibold text-slate-700">{z.zone_id}</div>
+                  <div className="mt-1 text-xs font-semibold text-slate-700">{zoneNames[z.h3_cell] ?? "Nearby"}</div>
                   <div className="text-[11px] text-emerald-700">Directions ↗</div>
                 </a>
               );

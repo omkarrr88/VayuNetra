@@ -154,3 +154,18 @@ def test_no_interval_is_offered_for_a_sample_too_small_to_support_one():
     n = MIN_ROWS_FOR_SKILL_CI - 1
     y = rng.normal(60, 25, n)
     assert _skill_ci(y, y + rng.normal(0, 5, n), y + rng.normal(0, 9, n)) is None
+
+
+# ---------------------------------------------------------------- physical bounds
+def test_the_served_lower_bound_is_never_negative():
+    """PM2.5 is a mass concentration. 8 of 303 served rows had a negative lower edge because the
+    conformal widening is symmetric while the physical support is [0, inf).
+
+    Truncating cannot lose coverage: every achievable outcome is >= 0, so [max(0,lo), hi] contains
+    exactly the achievable values that [lo, hi] did.
+    """
+    import inspect
+    from ml.forecast import train
+
+    src = inspect.getsource(train)
+    assert "lo = max(0.0, lo)" in src, "the served lower bound must be truncated at zero"

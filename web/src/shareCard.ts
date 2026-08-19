@@ -41,7 +41,9 @@ export function renderShareCard(opts: {
   // place
   ctx.fillStyle = "#0f172a"; ctx.font = "800 60px Inter, Segoe UI, Arial";
   ctx.fillText(opts.place.length > 26 ? opts.place.slice(0, 25) + "…" : opts.place, 56, 300);
-  ctx.fillStyle = "#64748b"; ctx.font = "500 24px ui-monospace, Menlo, monospace"; ctx.fillText(`~1 km² · ${opts.cellId}`, 58, 340);
+  // A shared image is read by whoever it is forwarded to, so it says the size of the area rather
+  // than the database key for it.
+  ctx.fillStyle = "#64748b"; ctx.font = "500 24px Inter, system-ui, sans-serif"; ctx.fillText("about 1 km² around this point", 58, 340);
 
   // blame bars
   let y = 410;

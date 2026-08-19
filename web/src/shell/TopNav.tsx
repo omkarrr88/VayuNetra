@@ -117,7 +117,7 @@ export function TopNav({
             title={action.title}
             className="vn-nav-action"
             style={{
-              display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px", minHeight: 34,
+              display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 16px", minHeight: 44,
               borderRadius: "var(--r-sm)", border: "1px solid transparent",
               background: "var(--nav)", color: "var(--nav-ink-strong)",
               fontSize: "var(--t-sm)", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
@@ -131,7 +131,7 @@ export function TopNav({
             onClick={() => setOpen((o) => !o)}
             aria-label="Menu"
             aria-expanded={open}
-            style={{ width: 34, height: 34, display: "none", placeItems: "center", borderRadius: "var(--r-sm)", border: "1px solid var(--line)", background: "var(--surface-2)", color: "var(--ink-2)", cursor: "pointer" }}
+            style={{ width: 44, height: 44, display: "none", placeItems: "center", borderRadius: "var(--r-sm)", border: "1px solid var(--line)", background: "var(--surface-2)", color: "var(--ink-2)", cursor: "pointer" }}
           >
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
           </button>

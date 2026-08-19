@@ -5,7 +5,8 @@
 
 India measures its air (900+ CAAQMS stations) and forecasts it, but almost no city can turn a bad
 reading into a specific, attributed, delivered intervention. **VayuNetra is that missing operate
-layer**: a five-agent AI platform that fuses ground sensors, Sentinel satellite data, weather,
+layer**: a multi-agent AI platform (orchestrator + attribution + forecast + enforcement + advisory
+agents, plus a spike gate and multi-city comparator) that fuses ground sensors, Sentinel satellite data, weather,
 mobility and land use into one loop — *who is to blame for PM2.5 in each ~1 km² cell, what the air
 will be in 72 hours, which enforcement action to take, and how to warn the people breathing it.*
 
@@ -114,9 +115,9 @@ claimed — nothing fabricated ever reaches production, and impact figures retur
 
 Everything decouples through **two seams**: the Supabase schema (models **write** rows, the API
 **reads** rows) and the API contract (one `{success, data, error, meta}` envelope). The spatial
-unit everywhere is an **Uber H3 res-8 cell (~1 km²)**. Six LangGraph agents run the loop —
-orchestrator → attribution → forecast → *spike gate* → enforcement → advisory, plus a multi-city
-comparator — each run traced per node. Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+unit everywhere is an **Uber H3 res-8 cell (~1 km²)**. Five LangGraph agents run the main loop —
+orchestrator → attribution → forecast → *spike gate* → enforcement → advisory — each run traced per node,
+plus a multi-city comparator for cross-city analytics. Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 **Stack:** FastAPI (Render) · React + MapLibre + Deck.gl (Vercel) · Supabase Postgres + PostGIS +
 pgvector (RLS) · LangGraph · GitHub Actions crons — all free tier for the ten cities running today; the
@@ -134,10 +135,10 @@ make dev                               # FastAPI :8000 + Vite :5173 in one termi
 
 # Going live (optional): fill .env, then
 npx supabase login && npx supabase link --project-ref <your-project-ref>
-npx supabase db push                   # schema + RLS + city seed (20 migrations)
+npx supabase db push                   # schema + RLS + city seed (21 migrations)
 make live-bootstrap                    # kb_chunks + enforcement_recs + action_traces
 
-make test                              # 284 backend tests (64% line coverage, CI gate 55%)
+make test                              # 341 backend tests (64% line coverage, CI gate 55%)
 cd web && npx playwright test          # 7 e2e smoke + 9 live journey flows (VN_LIVE=1)
 ```
 
@@ -147,8 +148,8 @@ cd web && npx playwright test          # 7 e2e smoke + 9 live journey flows (VN_
 connectors/   ingest: CPCB/OpenAQ, Open-Meteo, Earth Engine, OSM, population, traffic
 core/         H3 utils, canonical schemas, impact & intervention math, city configs
 ml/           attribution, forecast, dispersion, coverage, simulator, vision
-agents/       the 6 LangGraph agents + the notice-PDF writer      rag/  retrieval corpus
-api/          FastAPI (44 routes + WebSocket)                     web/  React console + landing
+agents/       orchestrator + 5 agents + notice-PDF writer         rag/  retrieval corpus
+api/          FastAPI (52 endpoints + WebSocket)                  web/  React console + landing
 demo/         19 offline fixtures    supabase/migrations/  schema+RLS    eval/  validation notebook
 ```
 

@@ -337,7 +337,7 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
               }`}
             >
               <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
-                <span className="min-w-0 truncate font-semibold text-slate-800" title={r.h3_cell}>
+                <span className="min-w-0 truncate font-semibold text-slate-800" title={(r.h3_cell && places[r.h3_cell]) || "About 1 km² of this city"}>
                   {CATEGORY_LABEL[recCategory(r.rationale)] ?? "Source"}
                   {r.h3_cell && places[r.h3_cell] ? <span className="font-normal text-slate-500"> · {places[r.h3_cell]}</span> : null}
                 </span>

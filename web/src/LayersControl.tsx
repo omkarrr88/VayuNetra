@@ -5,6 +5,13 @@ import { pm25Legend, SCALES } from "./aqi";
 import { useAqiScale } from "./aqiScale";
 import { SegBtn } from "./ui";
 
+const SOURCE_LABEL: Record<string, string> = {
+  construction_dust: "construction dust",
+  biomass_burning: "biomass burning",
+  industrial: "industry",
+  transported: "regional transport",
+};
+
 export type CoverageMeta = {
   n_cells?: number;
   n_stations?: number;
@@ -170,7 +177,7 @@ export default function LayersControl(p: LayersControlProps) {
           {Object.entries(SOURCE_COLORS).map(([k, [r, g, b]]) => (
             <div key={k} className="flex items-center gap-2">
               <span className="inline-block h-3 w-3 rounded" style={{ background: `rgb(${r},${g},${b})` }} />
-              <span>{k.replace("_", " ")}</span>
+              <span className="capitalize">{SOURCE_LABEL[k] ?? k.replace("_", " ")}</span>
             </div>
           ))}
         </div>

@@ -12,9 +12,21 @@ type FC = { h3_cell: string; horizon_h: number; value: number; pi_low: number; p
 
 const HORIZONS = [24, 48, 72];
 
-/** "construction_dust" -> "construction dust" (for signature-based reasoning copy). */
+/** The source category in ordinary words. The stored values are database enums; a reader should
+ *  see "construction dust" and "regional transport", never "construction_dust" or "transported". */
+const CAT_WORDS: Record<string, string> = {
+  construction_dust: "construction dust",
+  biomass_burning: "biomass burning",
+  waste_burning: "waste burning",
+  industrial: "industry",
+  traffic: "traffic",
+  transported: "regional transport",
+  other: "other sources",
+  unknown: "an unidentified source",
+};
+
 function prettyCat(cat: string): string {
-  return cat.replace(/_/g, " ");
+  return CAT_WORDS[cat] ?? cat.replace(/_/g, " ");
 }
 
 /** The full story for one clicked hexagon: blame → forecast → act. */
@@ -70,14 +82,11 @@ export default function CellStoryPanel({
       <div className="flex items-start justify-between">
         <div>
           <div className="text-[11px] font-semibold uppercase tracking-wide text-blue-600">Cell story</div>
-          {place ? (
-            <>
-              <div className="text-sm font-bold leading-tight text-slate-800">{place}</div>
-              <div className="font-mono text-[10px] text-slate-500">~1 km² cell · {cell.h3_cell}</div>
-            </>
-          ) : (
-            <div className="font-mono text-xs text-slate-500">{cell.h3_cell}</div>
-          )}
+          {/* The H3 index is a database key, not something a person can read. It stays on the
+              evidence dossier and the legal notice, where an auditor has to identify the exact
+              cell, and nowhere a citizen or an officer is simply reading the screen. */}
+          <div className="text-sm font-bold leading-tight text-slate-800">{place ?? "This area"}</div>
+          <div className="text-[10px] text-slate-500">about 1 km² around this point</div>
         </div>
         <div className="flex items-center gap-0.5">
           <button
@@ -94,7 +103,7 @@ export default function CellStoryPanel({
                 ]);
                 const canvas = renderShareCard({
                   cityName: city.charAt(0).toUpperCase() + city.slice(1),
-                  place: place ?? cell.h3_cell,
+                  place: place ?? "This area",
                   cellId: cell.h3_cell,
                   shares,
                   confidence: cell.confidence,
@@ -104,7 +113,7 @@ export default function CellStoryPanel({
                 });
                 const blob: Blob | null = await new Promise((r) => canvas.toBlob(r, "image/png"));
                 if (!blob) return;
-                const file = new File([blob], `vayunetra-${city}-${(place ?? cell.h3_cell).replace(/\W+/g, "-").toLowerCase()}.png`, { type: "image/png" });
+                const file = new File([blob], `vayunetra-${city}-${(place ?? "area").replace(/\W+/g, "-").toLowerCase()}.png`, { type: "image/png" });
                 const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
                 if (nav.share && nav.canShare?.({ files: [file] })) {
                   await nav.share({ files: [file], title: `Air in ${place ?? city}`, text: "VayuNetra — who is to blame, and how the air has been." });

@@ -27,14 +27,9 @@ type FC = {
 const HORIZONS = [24, 48, 72];
 const SPIKE = 90; // µg/m³ PM2.5 — "very poor" threshold for a spike alert
 
-/** Short human label for an H3 id — the shared prefix says nothing, the tail does. Used only until
- *  the ward lookup resolves, and as the fallback where a city has no boundary data. */
-export function cellLabel(h3: string): string {
-  return `#${h3.replace(/f+$/, "").slice(-4)}`;
-}
-
-/** Ward names for a list of cells. An officer reads "Khairatabad", not "#0b03"; the H3 id stays on
- *  hover so the row is still traceable to an exact cell. */
+/** Ward names for a list of cells. An officer reads "Khairatabad". The H3 index is no longer shown
+ *  anywhere on screen — not in the row, not on hover — because it is a database key. It survives on
+ *  the evidence dossier and the legal notice, where an auditor has to identify the exact cell. */
 function usePlaceNames(city: string, cells: string[]): Record<string, string> {
   const [names, setNames] = useState<Record<string, string>>({});
   const key = cells.join(",");
@@ -187,9 +182,11 @@ export default function ForecastPanel({ city }: { city: string }) {
               const cat = categoryForPm25(r.value, scale);
               return (
                 <div key={r.h3_cell} className="flex items-center justify-between gap-2">
-                  <span className="min-w-0 truncate text-[11px] text-slate-600" title={`1 km cell ${r.h3_cell}`}>
+                  {/* Named, never keyed: the H3 index lives on the dossier and the notice, not on a
+                      list an officer reads down. */}
+                  <span className="min-w-0 truncate text-[11px] text-slate-600" title={places[r.h3_cell] ?? "About 1 km² of this city"}>
                     {r.value >= SPIKE ? "⚠ " : ""}
-                    {places[r.h3_cell] ?? `cell ${cellLabel(r.h3_cell)}`}
+                    {places[r.h3_cell] ?? "Unnamed area"}
                   </span>
                   <span className="flex items-center gap-1.5">
                     <span className="font-mono text-[11px] text-slate-500">
