@@ -382,16 +382,21 @@ export function HealthAdvice({ d }: { d: Overview }) {
             </div>
           </div>
           <div>
-            <div className="text-[13px] font-bold text-slate-800">What to do now — air is {d.health.band_label}</div>
-            <p className="mt-1 text-[13px] text-slate-600">{d.health.headline}</p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              {d.health.actions.map((a) => (
-                <div key={a.key} className="rounded-lg border border-slate-200 px-3 py-2">
-                  <div className="text-[12px] font-bold text-slate-800">{a.label}</div>
-                  <div className="text-[12px] text-blue-700">{a.prescription}</div>
-                </div>
-              ))}
+            <div className="text-[13px] font-bold text-slate-800">
+              {d.health.actions.length ? `What to do now — air is ${d.health.band_label}` : "No advice to give"}
             </div>
+            <p className="mt-1 text-[13px] text-slate-600">{d.health.headline}</p>
+            {/* An empty grid would read as a broken card; the headline already says why it is empty. */}
+            {d.health.actions.length > 0 && (
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {d.health.actions.map((a) => (
+                  <div key={a.key} className="rounded-lg border border-slate-200 px-3 py-2">
+                    <div className="text-[12px] font-bold text-slate-800">{a.label}</div>
+                    <div className="text-[12px] text-blue-700">{a.prescription}</div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
