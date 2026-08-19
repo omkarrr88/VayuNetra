@@ -111,8 +111,12 @@ async function fixtureFor(path: string): Promise<unknown> {
     return byId[city ?? "delhi"] ?? byId["delhi"];
   }
   if (p === "/static-layers") {
-    const rows = fxStatic as Row[];
-    return rows.find((r) => r.city_id === (city ?? "delhi")) ?? rows[0];
+    // Only the seeded cities are in this fixture. Falling back to rows[0] meant that with the API
+    // unreachable, Jaipur's City Intel panel showed Delhi's "Okhla industrial cluster" and
+    // "Yamuna waste hotspot" labelled as Jaipur's — another city's places presented as this one's.
+    // A missing fixture returns undefined so the card shows its empty state, which is what
+    // /exposure and /landing/snapshot already do.
+    return (fxStatic as Row[]).find((r) => r.city_id === (city ?? "delhi"));
   }
   if (p === "/coverage") {
     const byId = fxCoverage as Record<string, unknown>;
