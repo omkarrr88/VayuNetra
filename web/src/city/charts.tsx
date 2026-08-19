@@ -7,6 +7,7 @@ import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ResponsiveContaine
 import { POLLUTANT_LABEL, SCALES, categoryForIndex, categoryForPm25, formatIndex, pm25Index, type AqiScale, bandInk } from "../aqi";
 import { BandLegend, Section, type Overview, type Pollutant } from "./parts";
 import { Monument, landmarkName } from "../site/monuments";
+import { ConditionArt } from "./conditionArt";
 
 const hourLabel = (iso: string) => new Date(iso).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
 const dayNum = (d: string) => Number(d.slice(8, 10));
@@ -377,6 +378,19 @@ function CigaretteMark({ color = "#e11d48" }: { color?: string }) {
 }
 
 /** Health section: what to do now, the cigarette equivalent, and per-condition guidance. */
+// The illustration carries today's risk in its colour, so the drawing is not merely decorative —
+// it is the same signal as the words next to it. Keyed off the CPCB-derived risk vocabulary in
+// core/health_advice.py; anything unrecognised stays slate rather than guessing a severity.
+const RISK_TINT: Record<string, string> = {
+  "not measured": "text-slate-300",
+  minimal: "text-emerald-500",
+  low: "text-emerald-600",
+  mild: "text-amber-500",
+  moderate: "text-orange-500",
+  high: "text-rose-500",
+  "very high": "text-rose-700",
+};
+
 export function HealthAdvice({ d }: { d: Overview }) {
   const [cond, setCond] = useState(d.health.conditions[0]?.key ?? "asthma");
   const active = d.health.conditions.find((c) => c.key === cond) ?? d.health.conditions[0];
@@ -436,11 +450,18 @@ export function HealthAdvice({ d }: { d: Overview }) {
         </div>
         {active && (
           <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_1fr]">
-            <div>
-              <div className="text-[14px] font-bold text-slate-900">{active.label}</div>
-              <p className="mt-1 text-[13px] text-slate-600">
-                Risk today is <b className="text-slate-900">{active.risk}</b> — the air is {d.health.band_label}. {active.symptoms}
-              </p>
+            <div className="flex items-start gap-3">
+              <ConditionArt
+                conditionKey={active.key}
+                width={76}
+                className={`mt-0.5 ${RISK_TINT[active.risk] ?? "text-slate-400"}`}
+              />
+              <div className="min-w-0">
+                <div className="text-[14px] font-bold text-slate-900">{active.label}</div>
+                <p className="mt-1 text-[13px] text-slate-600">
+                  Risk today is <b className="text-slate-900">{active.risk}</b> — the air is {d.health.band_label}. {active.symptoms}
+                </p>
+              </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>

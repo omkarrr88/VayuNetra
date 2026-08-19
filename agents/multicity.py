@@ -24,11 +24,27 @@ def dominant_source(rows: list[dict]) -> str:
     return counts.most_common(1)[0][0]
 
 
+# A fixed absolute threshold was wrong here. These ten cities differ five-fold in baseline: 15 µg/m³
+# is noise on a 200 µg/m³ Delhi winter day and a doubling on a 14 µg/m³ Mumbai monsoon day. With a
+# flat ±15 every city read "stable" through the whole monsoon, which made the badge decorative.
+#
+# So the band scales with the city's own level, with an absolute floor — below ~5 µg/m³ a move is
+# inside the spread between co-located reference monitors and should not be called a trend at all.
+TREND_RELATIVE = 0.15      # fraction of the current level that counts as a real move
+TREND_MIN_ABS = 5.0        # µg/m³ — floor, so clean cities do not flip on measurement noise
+
+
+def trend_band(current_pm25: float) -> float:
+    """How much this city has to move before the change means anything."""
+    return max(TREND_MIN_ABS, TREND_RELATIVE * max(0.0, current_pm25))
+
+
 def trend_label(forecast_pm25: float, current_pm25: float) -> str:
     delta = forecast_pm25 - current_pm25
-    if delta >= 15:
+    band = trend_band(current_pm25)
+    if delta >= band:
         return "deteriorating"
-    if delta <= -15:
+    if delta <= -band:
         return "improving"
     return "stable"
 
