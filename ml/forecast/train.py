@@ -9,6 +9,8 @@ connector lands and the target is real PM2.5.
 """
 from __future__ import annotations
 
+import math
+
 import argparse
 import statistics
 from datetime import datetime, timezone
@@ -77,24 +79,66 @@ def backtest(wide: pd.DataFrame, horizon_h: int, n_folds: int = 3) -> dict:
 NOMINAL_COVERAGE = 0.8   # we serve q0.1–q0.9 bands
 
 
-def _cqr_models_and_q(Xtr: pd.DataFrame, ytr: pd.Series):
+# Fraction of the training window held out to calibrate the conformal band.
+#
+# 0.25 survived an attempt to raise it, and the attempt is worth recording because the evidence that
+# motivated it was bad evidence.
+#
+# The live 90-day benchmark reported 80% bands covering only 0.72-0.74, which looks like a clear
+# calibration defect. It is not. That protocol is a SINGLE split at one forecast origin, and PI
+# coverage there is computed over `n_support` rows only — 282 of them for Delhi +24h. A few hundred
+# rows from one origin land in whatever regime that fortnight happened to be in, so the number
+# swings between roughly 0.6 and 0.86 on nothing but luck.
+#
+# The rolling multi-season benchmark is the measurement that carries weight: 10 origins, 53k-208k
+# support rows. On it, 0.25 already covers close to nominal (delhi 0.783/0.781/0.774, mumbai
+# 0.816/0.817/0.794) and raising the fraction to 0.40 made the one genuinely weak city worse at
+# every horizon:
+#
+#     kolkata          +24h     +48h     +72h
+#     0.25 cal        0.748    0.725    0.698
+#     0.40 cal        0.696    0.672    0.668
+#
+# Two further variants were tried and REJECTED on the same evidence:
+#   * recency-weighted conformity scores — narrows the band toward the most recent (calm) regime,
+#     which is precisely backwards; it took Delhi to 0.666.
+#   * choosing the fraction per city on a held-out half — it selects on the same short, single-regime
+#     window that produced the bogus signal, so it chases noise: Delhi +48h fell to 0.596.
+#
+# Kolkata's decline with horizon (0.748 -> 0.698) is real and unfixed. It is a coverage shortfall in
+# one city, not a defect in the conformal step, and it is recorded as such rather than papered over.
+CAL_FRACTION = 0.25
+
+
+def _conformal_level(n: int, coverage: float = NOMINAL_COVERAGE) -> float:
+    """The finite-sample level split conformal actually requires: ⌈(n+1)(1−α)⌉ / n.
+
+    Using the plain 1−α under-covers by about 1/n. Small next to the regime-shift gap above, but
+    free to get right.
+    """
+    if n <= 0:
+        return coverage
+    return min(1.0, math.ceil((n + 1) * coverage) / n)
+
+
+def _cqr_models_and_q(Xtr: pd.DataFrame, ytr: pd.Series, cal_fraction: float | None = None):
     """Conformalized Quantile Regression (Romano et al. 2019).
 
-    Fit the quantile models on the first 75% of the training window, compute
-    conformity scores E = max(lo−y, y−hi) on the last 25% (calibration split),
-    and return the models plus the coverage-restoring band adjustment Q =
-    quantile(E, nominal). Serving [lo−Q, hi+Q] gives ~nominal coverage —
-    raw q0.1/q0.9 LightGBM bands measured only 48–63% real coverage.
+    Fit the quantile models on the first (1 − cal_fraction) of the training window, compute
+    conformity scores E = max(lo−y, y−hi) on the rest, and return the models plus the
+    coverage-restoring adjustment Q. Serving [lo−Q, hi+Q] gives ~nominal coverage — raw q0.1/q0.9
+    LightGBM bands measured only 48–63% real coverage.
     """
     import numpy as np
 
-    fit_n = int(len(Xtr) * 0.75)
+    frac = CAL_FRACTION if cal_fraction is None else cal_fraction
+    fit_n = int(len(Xtr) * (1.0 - frac))
     Xfit, yfit = Xtr.iloc[:fit_n], ytr.iloc[:fit_n]
     Xcal, ycal = Xtr.iloc[fit_n:], ytr.iloc[fit_n:]
     lo_model, lo_cal = _fit_predict(Xfit, yfit, Xcal, QUANTILES["pi_low"])
     hi_model, hi_cal = _fit_predict(Xfit, yfit, Xcal, QUANTILES["pi_high"])
     scores = np.maximum(lo_cal - ycal.to_numpy(), ycal.to_numpy() - hi_cal)
-    q = float(np.quantile(scores, NOMINAL_COVERAGE)) if len(scores) else 0.0
+    q = float(np.quantile(scores, _conformal_level(len(scores)))) if len(scores) else 0.0
     return lo_model, hi_model, max(0.0, q)
 
 
