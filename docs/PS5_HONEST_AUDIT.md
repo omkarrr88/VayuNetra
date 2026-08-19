@@ -43,11 +43,21 @@ carries the current status.
 
 ---
 
-## 2 · The three things to fix before the final
+## 2 · The things to fix before the final
 
-Ranked by (damage if caught) × (probability of being caught).
+Ranked by (damage if caught) × (probability of being caught). **Status updated 19 Aug 2026** — the
+finding is left as it was written, and what happened to it is recorded underneath. A closed finding
+is more useful than a deleted one: it shows the check that caught it and the check that now keeps
+it caught.
 
 ### 2.1 "Six agents" is wrong, and the product will contradict it on stage
+
+> **CLOSED — 19 Aug.** Corrected in `README.md`, `web/src/Landing.tsx`, `docs/SUBMISSION.md`,
+> `docs/PITCH_SCRIPT.md`, `docs/USER_GUIDE.md`, `docs/DEMO_VIDEO_SCRIPT.md`, both architecture SVGs
+> and the dark PNG, and in the pitch deck itself (five places, found last and the worst place for
+> it to survive). The architecture diagram had also drawn multi-city compare inside the graph box,
+> which is what made six look true; it is served by `/comparison` and is not a node. Nothing in the
+> repo now claims six.
 
 **VERIFIED.** `agents/graph.py:344-351` registers **five** nodes:
 
@@ -76,6 +86,18 @@ demo.
 
 ### 2.2 The 1 km claim is validated on synthetic data
 
+> **RUN — 19 Aug — and it failed.** `scripts/validate_dense_field.py` now does leave-one-station-out
+> against real held-out stations in all ten cities. **One city in ten beats predicting the city
+> average**, and by 5%. The field beats classical IDW in seven of ten, so the downscaler is the
+> better interpolator, but at 1 km the between-station variance is largely not predictable from the
+> covariates available. Full table in `docs/COVERAGE_VALIDATION.md`.
+>
+> This finding is therefore no longer "unvalidated" — it is **measured, and negative**. The claim has
+> been retired from the manual and the audit: the grid is 1 km and every cell carries a value, but
+> that value is a spatial prior for visualisation and ranking, not a measurement. Running the test
+> that could embarrass us, and publishing the result, is a better position than the one we were in
+> this morning.
+
 **VERIFIED.** This is the central scientific promise — "every square kilometre gets a number" — and
 its evidence is the weakest thing in the project.
 
@@ -103,6 +125,13 @@ attackable claim into the strongest. It has been deferred twice.
 
 ### 2.3 The published attribution-validation numbers are stale
 
+> **CLOSED — 18/19 Aug.** `docs/ATTRIBUTION_VALIDATION.md` was regenerated and dated, and now
+> publishes **0.991 / 0.928 / 0.939** with mean absolute deltas of 0.042 / 0.099 / 0.097, plus a
+> per-bucket table and the two caveats (biomass ≈ 0 in monsoon; Bengaluru industrial +0.199). The
+> README was still quoting the old 0.88 / 0.90 / 0.93 four days later and now leads with the mean
+> absolute delta, which is the figure that document tells a reader to use. Both remaining
+> occurrences of the old trio in the repo are explicit "this was the stale version" notes.
+
 **VERIFIED — and my first read of this was wrong.** The comparison IS computed in code:
 `ml/attribution/inventory.py:107 _cosine()` and `:136 compare_with_inventory()`. I re-ran it live:
 
@@ -124,6 +153,16 @@ Two honesty points before anyone quotes 0.991:
 Action: regenerate the table, publish `mean_abs_diff` alongside cosine, and state the date.
 
 ### 2.4 SHAP explanations are OFF for Delhi, Mumbai and Bengaluru
+
+> **STILL TRUE for Delhi, and the city list has moved — 19 Aug.** Counted live today, the per-cell
+> model runs in **Pune (54 cells), Jaipur (36), Kolkata (30) and Hyderabad (18)**; Delhi, Mumbai and
+> Bengaluru still fall back to cited chemical-signature priors. Hyderabad has since crossed the
+> gate, so any list of "which cities have SHAP" goes stale quickly — count it on the day.
+>
+> Not an engineering defect: the gate is doing its job. It is a **demo** decision, and the pitch
+> script now handles it — `docs/PITCH_SCRIPT.md` tells the presenter to show the abstain in amber
+> and explain it as the feature, and `docs/USER_GUIDE.md` §17 says not to open a Delhi cell while
+> promising SHAP.
 
 **VERIFIED, and this is a demo landmine.** Attribution method by city, counted live:
 
@@ -407,21 +446,37 @@ than any remaining code.
 
 ## 6 · Claims that outrun their evidence
 
-1. **"Six agents"** → five nodes registered, four in the live trace. §2.1.
-2. **"Validated 1 km field"** → validated on synthetic fields; never against a held-out real
-   station. §2.2.
-3. **"SHAP explanations"** → not produced for Delhi, Mumbai, Bengaluru or Hyderabad today. §2.4.
-4. **"Response time from signal to intervention: seconds"** → that is our compute latency. No
-   organisation's response time has been measured. Say *"our pipeline turns a signal into a cited,
-   ready-to-sign recommendation in about a second"* — never imply we shortened a municipality's
-   response.
+1. ~~**"Six agents"**~~ → **FIXED 19 Aug.** Five nodes registered, four in a clean-air trace. §2.1.
+2. ~~**"Validated 1 km field"**~~ → **RESOLVED 19 Aug, against us.** Leave-one-station-out was run
+   on real held-out stations in all ten cities: the field beats predicting the city average in one
+   of ten. The claim is retired rather than defended. §2.2 and `docs/COVERAGE_VALIDATION.md`.
+3. **"SHAP explanations"** → **STILL TRUE, list moved.** Not produced for Delhi, Mumbai or
+   Bengaluru; Hyderabad has since crossed the gate. §2.4.
+4. **"Response time from signal to intervention: seconds"** → **STILL A TRAP.** That is our compute
+   latency. No organisation's response time has been measured. Say *"our pipeline turns a signal
+   into a cited, ready-to-sign recommendation in about a second"* — never imply we shortened a
+   municipality's response. The pitch script and the manual both use the safe phrasing; the danger
+   is improvising in Q&A.
 
-Plus two documentation defects found while auditing:
-- `channels/README.md` claims **"LLM (Gemini) translation"**. There is no LLM anywhere in the
-  product. The doc is wrong in the safe direction, but a judge reading it and then grepping for
-  Gemini will find nothing.
-- `PRD.md:63-64` lists MODIS/VIIRS AOD, Sentinel-2 change detection and traffic density as
-  attribution inputs. None of the three reach the model.
+Plus two documentation defects found while auditing, **both fixed 19 Aug**:
+- ~~`channels/README.md` claims "LLM (Gemini) translation"~~ — removed; the file now states
+  explicitly that there is no language model anywhere in the product, and why that is deliberate.
+- ~~`PRD.md:63-64` lists MODIS/VIIRS AOD, Sentinel-2 change detection and traffic density as
+  attribution inputs~~ — the input list is now split into "wired into the model", "adjacent, not
+  features" and "not used, honestly so". Note that MODIS fire and Sentinel-5P NO₂ **have since
+  become real inputs** (§4), on a daily cadence.
+
+Found and fixed after this audit was first written, all 19 Aug:
+- The scoreboard **ranked cities by a different number than the badge beside it** — a mean of each
+  cell's latest reading versus the canonical 24 h mean, disagreeing by up to 2.25×. Bengaluru
+  ranked dirtiest of ten when it is sixth, because one of its six cells was stuck at 256 µg/m³.
+- **8 of 303 served forecasts had a negative lower bound.** A mass concentration cannot be negative.
+- Station discovery used a **25 km circle around the map's centre point**, which sits 11.7 km east
+  of Delhi's actual extent — so western Delhi was never ingested and NCR stations were ingested as
+  Delhi. Six of ten cities were not fully covered.
+- The plume drew **tomorrow's forecast wind** on a map labelled "now", which is why Delhi appeared
+  to have no wind direction at all.
+- Two trend badges **contradicted the integers printed beside them** (rounding, not arithmetic).
 
 Everything else I checked is stated accurately, including the uncomfortable parts (negative Jaipur
 skill, the Severe-tail weakness, the abstain path, "not a compliance measurement").
@@ -466,15 +521,29 @@ skill, the Severe-tail weakness, the abstain path, "not a compliance measurement
 
 ## 9 · Where the remaining hours should go
 
-| # | Action | Effort | Why |
-|---|---|---|---|
-| 1 | Fix "six agents"; rehearse the spike-gate line AND the Pune-for-SHAP switch | 45 min | Removes the two live contradictions and turns both into good moments |
-| 2 | Get **one** officer or academic to rate the worklist | outreach | The only **F** on a named scoring criterion |
-| 3 | Leave-one-station-out validation of the 1 km field | ~half a day | Converts the most attackable claim into the strongest |
-| 4 | Rehearse the Jaipur drill-down and the LLM question | 1 hour | Both are certain to be asked |
-| 5 | Regenerate `ATTRIBUTION_VALIDATION.md` and date it | 20 min | Currently under-sells us (0.88 published vs 0.991 live) and is trivially checkable |
-| 6 | Either run the satellite ingest on a cron, or stop listing S5P/MODIS as live inputs | 1 hour | Two named brief technologies currently have zero rows |
-| 7 | `api/main.py` coverage 33% → 80% | ~half a day | Only matters if a judge opens the repo |
+**Rewritten 19 Aug against what is actually left.** Four of the original seven are done.
 
-Items 1 and 4 cost almost nothing and remove the two most likely on-stage failures. Item 2 cannot be
-done by writing code, which is exactly why it keeps slipping.
+| # | Action | Effort | Status |
+|---|---|---|---|
+| 1 | Fix "six agents"; rehearse the spike-gate line and the Pune-for-SHAP switch | 45 min | **DONE** — corrected everywhere including the deck; the script now carries both lines |
+| 2 | Get **one** officer or academic to rate the worklist | outreach | **OPEN — and now the single largest gap.** The only **F** on a named scoring criterion. Cannot be closed by writing code, which is exactly why it keeps slipping |
+| 3 | Leave-one-station-out validation of the 1 km field | ~half a day | **DONE 19 Aug — and it failed.** One city in ten beats a constant. The claim is retired, the result published in `docs/COVERAGE_VALIDATION.md`, and the honest framing is now the asset instead |
+| 4 | Rehearse the Jaipur drill-down and the LLM question | 1 hour | **DONE** — both are written out verbatim in `docs/PITCH_SCRIPT.md`, and the manual carries 220 prepared questions with an adversarial pass over the answers |
+| 5 | Regenerate `ATTRIBUTION_VALIDATION.md` and date it | 20 min | **DONE** — 0.991 / 0.928 / 0.939, dated, leading with the mean absolute delta |
+| 6 | Either run the satellite ingest on a cron, or stop listing S5P/MODIS as live inputs | 1 hour | **DONE** — the daily job runs it; 136 Sentinel-5P and 164 MODIS rows are in the database. State the cadence as *daily*, not live |
+| 7 | `api/main.py` coverage 33% → 80% | ~half a day | **OPEN.** Only matters if a judge opens the repo |
+
+**What is genuinely left, in order:**
+
+1. **One expert rating.** Everything else on this page can be done by us. This cannot, and it is the
+   only named criterion scoring zero.
+2. ~~Leave-one-station-out validation.~~ **Done, and the result was disappointing.** One city in ten
+   beats a constant. Published in full. The prediction in this line — that publishing a bad result
+   beats not running the test — is now the position we are actually in, and it holds: nothing about
+   the 1 km field can be caught overstating itself any more, because the worst number is ours.
+3. **API test coverage.** Cosmetic unless the repo is opened, and the ML and agent modules — the
+   parts a technical judge would actually probe — are the well-covered ones.
+
+Everything else on this page is closed. The project is no longer in a "build it" phase; it is in a
+"make it impossible to catch overstating itself" phase, and the remaining gap is evidence someone
+outside this team has to supply.

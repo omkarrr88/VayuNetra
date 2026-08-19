@@ -3729,20 +3729,23 @@ This is the single largest gap in the project, and it is the one that cannot be 
 code. One officer's honest rating — even a mediocre one — would be worth more than any remaining
 engineering.
 
-## 13.2 The 1 km field is validated against synthetic data, not held-out stations
+## 13.2 The 1 km field does not resolve real spatial variation
 
-The dense field interpolates sparse station readings onto every H3 cell, and the claim "1 km
-resolution" rests on it. The validation compares the learned downscaler against bilinear
-interpolation and reports a 55% skill improvement — **on synthetic fields, over 64 samples**
-(`ml/coverage/dense_field.py`).
+**Run 19 Aug: the field does not beat a constant.** Leave-one-station-out against real
+held-out stations, all ten cities — hide a station, rebuild the field from the rest, compare. **One
+city in ten** beats predicting the city average, and by 5%. The field beats classical IDW in seven
+of ten, so the downscaler is a better interpolator, but the quantity is largely not spatially
+predictable at 1 km from the covariates we have. Full table, caveats and the script in
+[`docs/COVERAGE_VALIDATION.md`](COVERAGE_VALIDATION.md).
 
-The test that would establish real skill is leave-one-station-out: hide a real monitor, predict its
-cell from the others, compare against what it actually recorded. That test has not been run, though
-the data to run it exists.
+The grid is genuinely 1 km — 3,466 H3 cells for Delhi — and every cell carries a value. That value
+is a **spatial prior for visualisation and ranking, not a measurement.** The measured quantity is
+the station reading. Where a decision turns on a number, lean on the cell's station support (the API
+reports `n_support`) and on the city aggregate.
 
-**What is honest to say:** the grid is real (3,466 cells for Delhi), the interpolation runs, and the
-architecture is genuinely hyperlocal. **What is not honest to say:** that per-cell accuracy at 1 km
-has been validated. Treat "hyperlocal" as an architectural property, not a measured one.
+The test that produced this is the one that could have embarrassed us, and it did. It is published
+with the script that ran it. The previous text in this section said the claim was *unvalidated*;
+it is now *measured, and it fails*, which is a more useful thing to know.
 
 ## 13.3 One city's forecast loses to persistence, and it is not noise
 
