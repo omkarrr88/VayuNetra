@@ -1,11 +1,12 @@
 # VayuNetra — finale pitch script (verbatim), 7 min 45 s, two speakers
 
-**Deck:** `docs/VayuNetra_Pitch.html` — open in Chrome, press **F** (full-screen). Self-contained; works
-offline. **D** on slide 6 embeds the live console; **Esc** returns. Backups: `docs/VayuNetra_Pitch.pptx`
+**Deck:** `docs/VayuNetra_Pitch.html` — open in Chrome. It goes full-screen on your first key
+press or click, so browser chrome never shows; **F** toggles it by hand. Self-contained; works
+offline. **D** on slide 6 embeds the live app, full screen and bare — no bar over it; **Esc** returns. It prefers a dev server on the presenting laptop when one is running, else the deployed link. Backups: `docs/VayuNetra_Pitch.pptx`
 / `.pdf` (same slides, static, notes included). Speaker notes = these lines; press **N** to see them
 on the laptop, or **P** for the presenter window (timer + notes).
 
-Keys: `← →` next/previous · `F` full-screen · `N` notes · `P` presenter window · `D` live console ·
+Keys: `← →` next/previous · `F` full-screen · `N` notes · `P` presenter window · `D` live app ·
 `R` replay the slide's animation · `Esc` close overlay / notes.
 
 **Rebuild the morning of the finale** (fresh live numbers on the title map, slide 3, slide 7, A8):
@@ -30,7 +31,7 @@ docs/SCALE.md, docs/ATTRIBUTION_VALIDATION.md). Say them as written; do not roun
 | 0:55 | 3 The loop | A | trace → predict → act → protect |
 | 1:35 | 4 Winter replay | A | **let it play 9 s in silence**, then the two green orders and the two red ones |
 | 2:20 | 5 Proof | A | skill · onset recall · calibration · the SAFAR/DSS bridge line · hand over |
-| 3:00 | 6 Live demo | **B** | press **D**; seven stops on the console, 4 minutes |
+| 3:00 | 6 Live demo | **B** | press **D**; the public app, then seven stops on the console, 4 minutes |
 | 7:00 | 7 Built to deploy | B | cost curve, one YAML per city, closed loop, PRANA |
 | 7:30 | 8 Close | B | the line, the QR, the ask |
 | 7:45 | — | — | stop. Appendix A1–A14 stays for Q&A |
@@ -101,15 +102,28 @@ December marker drops. Then continue. Press R if you need it again.)*
 
 ## SPEAKER B — live demo (3:00 → 7:00)
 
-**Before the session** (same laptop, same browser): open vayunetra-aqi.vercel.app/console once,
-dismiss the tour, `make prewarm`, click through Enforcement → Forecast → Advisories → Cities so
-nothing cold-starts. Leave Delhi selected. If the network dies, the deck shows the last screenshot,
-labelled — narrate the same words over it.
+**Before the session** (same laptop, same browser): if you are presenting from the local build, run
+`make dev` first — the deck detects the dev server and uses it, which is faster and survives a dead
+network. Otherwise open vayunetra-aqi.vercel.app once and `make prewarm` so Render is awake. Either
+way: open the console once, dismiss the tour, click through Enforcement → Forecast → Advisories →
+Cities so nothing cold-starts, and leave **Delhi** selected. If the network dies mid-demo, the deck
+falls back to the last screenshot, labelled — narrate the same words over it.
 
-**Press D.** The console fills the screen. It opens on **Enforcement**, Delhi, with the Morning brief
-on top and the cell story already open on the map.
+**Press D.** The app fills the screen, edge to edge, with nothing of the deck over it. It opens on
+the **front page**. Esc returns to the slides at any moment.
 
-### Stop 1 · Morning brief (3:00 → 3:35)
+### Stop 0 · What a resident sees (3:00 → 3:20)
+*(Click **Check your city's air**. Let the index count up. Point at the prominent-pollutant line,
+then scroll once to the pollutant cards.)*
+
+> Before the officer, the citizen. This is Delhi's air right now on India's own National AQI — and
+> the pollutant setting it, which today is PM10, not PM2.5. Every pollutant its CPCB stations
+> publish, each with its own sub-index. Same engine, same numbers as the console — one product.
+> Now the other half of it.
+
+*(Click **Operations →**.)*
+
+### Stop 1 · Morning brief (3:20 → 3:50)
 *(Point at the card. Click **PDF** — the file downloads. Do NOT click Send to Telegram unless the
 subscriber count is real; say it instead.)*
 
@@ -119,7 +133,7 @@ subscriber count is real; say it instead.)*
 > click sends it to every Telegram subscriber. Nothing on this page is written by a language model —
 > every line is a template over stored numbers.
 
-### Stop 2 · Cell story on the map (3:35 → 4:15)
+### Stop 2 · Cell story on the map (3:50 → 4:25)
 *(The worst cell is already open. Point at the source bars, then the "Why" box, then the forecast tiles.
 Click one other hexagon to show it changes.)*
 
@@ -128,7 +142,7 @@ Click one other hexagon to show it changes.)*
 > falls back to cited chemical-signature priors, in amber. Below: the 72-hour forecast for this cell
 > with the calibrated probability of Very Poor. Click any other cell — same story, its own numbers.
 
-### Stop 3 · Worklist → evidence → notice (4:15 → 4:55)
+### Stop 3 · Worklist → evidence → notice (4:25 → 5:05)
 *(Scroll to Enforcement Worklist. On the top card click **Evidence dossier**; point at the satellite
 patch and the citations. Click **Notice PDF** — it downloads.)*
 
@@ -137,7 +151,7 @@ patch and the citations. Click **Notice PDF** — it downloads.)*
 > retrieved verbatim — GRAP only where it legally binds, CPCB norms and NCAP elsewhere — and a draft
 > notice with the projected effect of compliance. Stamped pending officer authorisation. Never auto-sent.
 
-### Stop 4 · Approve → dispatch → close → history (4:55 → 5:35)
+### Stop 4 · Approve → dispatch → close → history (5:05 → 5:40)
 *(Type a name in **acting as**. On the same card: **Approve** → **Dispatch team** → **Close case** →
 pick a finding → **Record & close** → **History**.)*
 
@@ -146,7 +160,7 @@ pick a finding → **Record & close** → **History**.)*
 > field finding. And History: who did what, when, from what to what. That trail survives the nightly
 > run and even the deletion of the record. This is the audit trail a court asks for.
 
-### Stop 5 · Advisories in eight scripts (5:35 → 6:05)
+### Stop 5 · Advisories in eight scripts (5:40 → 6:10)
 *(Sidebar → **Advisories**. In the language dropdown pick Hindi, then Tamil. Click the **Telegram** tab.)*
 
 > The same advisory in the reader's own script — Hindi, then Tamil — templated by design, so it
@@ -154,7 +168,7 @@ pick a finding → **Record & close** → **History**.)*
 > Hindi voice, and public display boards, targeted at five and a half thousand vulnerability-scored
 > zones: hospitals, schools, elder care, outdoor work.
 
-### Stop 6 · Proof, in the product (6:05 → 6:35)
+### Stop 6 · Proof, in the product (6:10 → 6:38)
 *(Sidebar → **Forecast**. Scroll to **Forecast validation**, then **Real interventions, in hindsight**;
 click "did the air change?" once.)*
 
@@ -163,7 +177,7 @@ click "did the air change?" once.)*
 > carried a day before, and a weather-normalised check of whether the air changed. Where the honest
 > answer is "no detectable change", it says no.
 
-### Stop 7 · Ten cities (6:35 → 6:55)
+### Stop 7 · Ten cities (6:38 → 6:55)
 *(Sidebar → **Cities**. Click **Mumbai** on the scoreboard; the whole console follows.)*
 
 > Ten cities on one scoreboard, one engine, one configuration file each — click Mumbai and the whole
