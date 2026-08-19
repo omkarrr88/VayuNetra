@@ -69,6 +69,11 @@ ALLOWED_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", _DEFAULT_ORIG
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
+    # Any localhost port, because pinning 5173 and 4173 made every OTHER local port fail silently:
+    # the browser blocks the response, the client falls back to bundled fixtures, and the app looks
+    # like it is working. A `vite preview` on 4180 measured as "fast" purely because nothing real was
+    # being fetched. Localhost only — the deployed origin stays explicit in ALLOWED_ORIGINS.
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_methods=["*"],
     allow_headers=["*"],
 )
