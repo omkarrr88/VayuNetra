@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { POLLUTANT_LABEL, SCALES, categoryForIndex, categoryForPm25, formatIndex, pm25Index, type AqiScale, bandInk } from "../aqi";
 import { BandLegend, Section, type Overview, type Pollutant } from "./parts";
+import { Monument, landmarkName } from "../site/monuments";
 
 const hourLabel = (iso: string) => new Date(iso).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
 const dayNum = (d: string) => Number(d.slice(8, 10));
@@ -314,14 +315,34 @@ export function CityCards({ rows, scale, onOpen, exclude }: { rows: CityRow[]; s
         const index = cityIndex(r, scale) ?? 0;
         const cat = categoryForIndex(index, scale);
         return (
-          <button key={r.city_id} onClick={() => onOpen(r.city_id)} className="vn-card p-4 text-left transition-shadow hover:shadow-md">
+          <button
+            key={r.city_id}
+            onClick={() => onOpen(r.city_id)}
+            title={landmarkName(r.city_id) ? `${r.name} — ${landmarkName(r.city_id)}` : r.name}
+            className="vn-card group p-4 text-left transition-shadow hover:shadow-md"
+          >
             <div className="flex items-start justify-between">
               <span className="text-[14px] font-bold text-slate-800">{r.name}</span>
               <span className="text-slate-400" aria-hidden="true">↗</span>
             </div>
-            <div className="mt-1 text-3xl font-extrabold" style={{ color: bandInk(cat.color) }}>{formatIndex(index, scale)}</div>
-            <div className="text-[12px] font-semibold" style={{ color: bandInk(cat.color) }}>{cat.label}</div>
-            <div className="mt-2 flex justify-between text-[11px] text-slate-500">
+            {/* The index and the landmark share this row: the number keeps the eye, and the drawing
+                fills the space beside it that was empty. It is tinted with the city's own band
+                colour, so a card is recognisable by shape AND by hue before a word is read. */}
+            <div className="mt-1 flex items-end justify-between gap-2">
+              <div className="min-w-0">
+                <div className="text-3xl font-extrabold leading-none" style={{ color: bandInk(cat.color) }}>
+                  {formatIndex(index, scale)}
+                </div>
+                <div className="mt-1 text-[12px] font-semibold" style={{ color: bandInk(cat.color) }}>{cat.label}</div>
+              </div>
+              <Monument
+                city={r.city_id}
+                width={78}
+                className="shrink-0 opacity-40 transition-opacity group-hover:opacity-70"
+                style={{ color: bandInk(cat.color) }}
+              />
+            </div>
+            <div className="mt-3 flex justify-between border-t border-slate-100 pt-2 text-[11px] text-slate-500">
               <span>PM2.5 <b className="text-slate-700">{r.current_pm25}</b></span>
               <span>+24 h <b className="text-slate-700">{r.forecast_24h_pm25 ?? "–"}</b></span>
             </div>
