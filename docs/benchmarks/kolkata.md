@@ -1,6 +1,6 @@
 # Forecast benchmark — kolkata (hist)
 
-Window 2025-02-18 → 2026-08-15, test from **2025-11-01** (rolling-origin monthly refit, 90-day training window; train strictly before each test origin). 10 station cells, 114,182 hourly rows. Model: LightGBM quantile (median) — same class/params as production (ml.forecast.train). Generated 2026-08-17T17:34Z by `python -m ml.eval.benchmark`.
+Window 2025-02-18 → 2026-08-15, test from **2025-11-01** (rolling-origin monthly refit, 90-day training window; train strictly before each test origin). 10 station cells, 114,182 hourly rows. Model: LightGBM quantile (median) — same class/params as production (ml.forecast.train). Generated 2026-08-19T12:13Z by `python -m ml.eval.benchmark`.
 
 ## RMSE (µg/m³) on the shared support mask
 
@@ -89,14 +89,11 @@ Blend weights (w on model, chosen per training origin on its calibration tail): 
 
 ## Calibration
 
-- **+24h**: 80% PI empirical coverage 0.748 (mean width 51.3 µg/m³); P(>90) Brier 0.0678 vs climatology 0.1402 (skill +51.6%); P(>120) Brier 0.0441 vs climatology 0.0726 (skill +39.3%); P(>250) Brier 0.0034 vs climatology 0.0034 (skill +0.5%)
-- **+48h**: 80% PI empirical coverage 0.725 (mean width 58.3 µg/m³); P(>90) Brier 0.0846 vs climatology 0.1407 (skill +39.9%); P(>120) Brier 0.0532 vs climatology 0.073 (skill +27.2%); P(>250) Brier 0.0036 vs climatology 0.0035 (skill -2.8%)
-- **+72h**: 80% PI empirical coverage 0.698 (mean width 60.8 µg/m³); P(>90) Brier 0.0871 vs climatology 0.1417 (skill +38.5%); P(>120) Brier 0.0559 vs climatology 0.0733 (skill +23.8%); P(>250) Brier 0.0036 vs climatology 0.0035 (skill -3.0%)
+- **+24h**: 80% PI empirical coverage 0.749 (mean width 51.3 µg/m³); P(>90) Brier 0.0678 vs climatology 0.1402 (skill +51.6%); P(>120) Brier 0.0441 vs climatology 0.0726 (skill +39.3%); P(>250) Brier 0.0034 vs climatology 0.0034 (skill +0.5%)
+- **+48h**: 80% PI empirical coverage 0.725 (mean width 58.4 µg/m³); P(>90) Brier 0.0846 vs climatology 0.1407 (skill +39.9%); P(>120) Brier 0.0532 vs climatology 0.073 (skill +27.2%); P(>250) Brier 0.0036 vs climatology 0.0035 (skill -2.8%)
+- **+72h**: 80% PI empirical coverage 0.699 (mean width 60.8 µg/m³); P(>90) Brier 0.0871 vs climatology 0.1417 (skill +38.5%); P(>120) Brier 0.0559 vs climatology 0.0733 (skill +23.8%); P(>250) Brier 0.0036 vs climatology 0.0035 (skill -3.0%)
 
 ## Meteorology ablation
 
-- +24h: RMSE with ERA5 met 29.52 vs without 31.79 → met contributes 7.1%
-- +48h: RMSE with ERA5 met 34.9 vs without 37.72 → met contributes 7.5%
-- +72h: RMSE with ERA5 met 38.9 vs without 41.05 → met contributes 5.2%
 
 _Read honestly: persistence is the hard baseline for PM2.5; a positive skill on high-pollution hours and a non-zero onset recall are the numbers that matter for intervention. Negative numbers are kept, not hidden._

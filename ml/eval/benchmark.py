@@ -114,6 +114,26 @@ def _slice_metrics(y, preds: dict[str, np.ndarray], mask: np.ndarray) -> dict:
     return out
 
 
+def _conditional_coverage(level: np.ndarray, inside: np.ndarray, bins: int = 5) -> list[dict] | None:
+    """Coverage within each quintile of the PREDICTED level.
+
+    Returns None rather than a misleading table when there is too little to split; a quintile of
+    forty rows estimates 0.80 to about +/-0.13 and would invite conclusions it cannot support.
+    """
+    n = len(level)
+    if n < bins * 100:
+        return None
+    edges = np.quantile(level, np.linspace(0, 1, bins + 1))
+    out = []
+    for i in range(bins):
+        m = (level >= edges[i]) & ((level <= edges[i + 1]) if i == bins - 1 else (level < edges[i + 1]))
+        if not m.sum():
+            continue
+        out.append({"predicted_range": [_r(float(edges[i]), 1), _r(float(edges[i + 1]), 1)],
+                    "n": int(m.sum()), "coverage": _r(float(inside[m].mean()))})
+    return out
+
+
 def _reliability(p: np.ndarray, event: np.ndarray, bins: int = 10) -> list[dict]:
     edges = np.linspace(0, 1, bins + 1)
     rows = []
@@ -349,8 +369,20 @@ def evaluate_horizon(wide: pd.DataFrame, horizon_h: int, split_ts: pd.Timestamp,
         lo = np.asarray(lo_m.predict(Xte)) - q
         hi = np.asarray(hi_m.predict(Xte)) + q
     lo, hi = np.minimum(lo, hi), np.maximum(lo, hi)
-    calib["pi80_coverage"] = _r(float(((yv >= lo) & (yv <= hi))[support].mean()))
+    inside = (yv >= lo) & (yv <= hi)
+    calib["pi80_coverage"] = _r(float(inside[support].mean()))
     calib["pi80_mean_width"] = _r(float((hi - lo)[support].mean()), 1)
+    # Conditional coverage, because the marginal number hides the failure that matters.
+    #
+    # Split conformal only ever promises MARGINAL coverage — 80% of all rows, pooled. A band can
+    # hit that while being badly wrong in every regime separately, and Kolkata is exactly that
+    # case: 0.80 overall, but 0.62 on the fifth of rows where the model predicts the highest
+    # concentrations. That is the operationally important fifth, the one an officer acts on.
+    #
+    # Grouped by PREDICTED level, not observed. Grouping by the outcome would be a diagnosis we
+    # could never act on — at serve time the outcome is the thing we do not have.
+    calib["pi80_coverage_by_predicted_quintile"] = _conditional_coverage(
+        (lo + hi)[support] / 2.0, inside[support])
     out["calibration"] = calib
 
     # --- meteorology ablation: same model without ERA5 met + derived met features ---

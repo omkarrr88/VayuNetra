@@ -105,8 +105,29 @@ NOMINAL_COVERAGE = 0.8   # we serve q0.1–q0.9 bands
 #   * choosing the fraction per city on a held-out half — it selects on the same short, single-regime
 #     window that produced the bogus signal, so it chases noise: Delhi +48h fell to 0.596.
 #
-# Kolkata's decline with horizon (0.748 -> 0.698) is real and unfixed. It is a coverage shortfall in
-# one city, not a defect in the conformal step, and it is recorded as such rather than papered over.
+# Kolkata's decline with horizon (0.748 -> 0.698) is real, and it was chased properly before being
+# left alone. The marginal number hides where the misses are. Grouped by PREDICTED level on the
+# rolling protocol (10 origins, 53k rows/horizon), coverage reads:
+#
+#     predicted ug/m3     8-25   25-38   38-56   56-76   76-245   overall
+#     +24h               0.803   0.778   0.761   0.668    0.733     0.749
+#     +48h               0.799   0.793   0.725   0.620    0.687     0.725
+#     +72h               0.812   0.785   0.649   0.547    0.699     0.699
+#
+# The band is fine in clean air and fails in the upper-middle — the CPCB Satisfactory/Moderate/Poor
+# transition, which is the range where the number changes what anyone does.
+#
+# Seven conformity scores were compared over four forward folds to close it (see
+# scripts/tune_conformal_tails.py): asymmetric per-edge, normalized by band width, normalized by
+# predicted level, Mondrian by predicted bin, and the combinations. The worst predicted quintile
+# moved from 0.615 to 0.646 at best, paid for with coverage in the lower quintiles. Three points on
+# an eighteen-point shortfall, so the score function is not the lever.
+#
+# Split conformal promises MARGINAL coverage and delivers it. What fails is CONDITIONAL coverage,
+# and that is the quantile models under-dispersing in the mid-to-upper range — a model problem. We
+# keep the simple two-sided score and REPORT the shortfall instead: the benchmark now emits
+# pi80_coverage_by_predicted_quintile, so the 0.67 sits next to the 0.75 rather than being averaged
+# into it. Making the limit measurable was the honest fix available.
 CAL_FRACTION = 0.25
 
 

@@ -72,3 +72,37 @@ def test_conformal_band_never_inverts():
     y = pd.Series(X["a"] * 2.0 + rng.normal(scale=0.5, size=n))
     _lo, _hi, q = _cqr_models_and_q(X, y)
     assert q >= 0.0
+
+
+# ---------------------------------------------------------------- conditional coverage
+# The marginal number hides the failure that matters. Kolkata's band measures ~0.80 pooled and
+# 0.62 on the fifth of rows where the model predicts the highest concentrations — the fifth an
+# officer acts on. Seven conformal variants were compared (scripts/tune_conformal_tails.py) and the
+# best moved that 0.62 to 0.65, so the reporting is the fix, not the recalibration.
+
+def test_conditional_coverage_groups_by_predicted_level():
+    """Grouping must be by prediction, not outcome — an outcome-grouped table is unactionable."""
+    import numpy as np
+    from ml.eval.benchmark import _conditional_coverage
+
+    rng = np.random.default_rng(0)
+    n = 2000
+    level = rng.uniform(5, 200, size=n)
+    # a band that covers well at low level and badly at high — the Kolkata shape
+    inside = rng.random(n) < np.where(level > 150, 0.6, 0.85)
+    rows = _conditional_coverage(level, inside)
+    assert rows is not None and len(rows) == 5
+    assert sum(r["n"] for r in rows) == n
+    # the quintiles must be ordered and contiguous, so a reader can map a row to a concentration
+    for a, b in zip(rows, rows[1:]):
+        assert a["predicted_range"][1] == b["predicted_range"][0]
+    assert rows[-1]["coverage"] < rows[0]["coverage"], "the top-level shortfall must be visible"
+
+
+def test_conditional_coverage_refuses_to_split_thin_data():
+    """A quintile of forty rows estimates 0.80 to about ±0.13 — better to report nothing."""
+    import numpy as np
+    from ml.eval.benchmark import _conditional_coverage
+
+    rng = np.random.default_rng(1)
+    assert _conditional_coverage(rng.uniform(5, 200, 200), rng.random(200) < 0.8) is None

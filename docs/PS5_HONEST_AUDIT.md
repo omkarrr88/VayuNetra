@@ -206,7 +206,7 @@ full on 19 Aug. **The PI80 column here is unstable by construction** — see pro
 | chennai | 718 | +4% | +4% | +6% | 0.806 |
 | hyderabad | 494 | **-5%** | +5% | +24% | 0.719 |
 
-Three honest problems, all of which we ship rather than hide:
+Four honest problems, all of which we ship rather than hide:
 1. **Two cities are negative against persistence in this window.** Jaipur at +48/+72 h (−4%, −14%)
    and, as of the 19 Aug regeneration, **Hyderabad at +24 h (−5%)** — it was +11% on 17 Aug. In a
    monsoon window PM2.5 is low and strongly autocorrelated, which is the regime persistence is
@@ -224,10 +224,46 @@ Three honest problems, all of which we ship rather than hide:
    is recorded in `ml/forecast/train.py` above `CAL_FRACTION` and pinned by
    `tests/test_forecast.py`. **The measurement that counts** is the rolling multi-season benchmark
    (10 origins, 53k–208k support rows), where calibration is close to nominal: delhi
-   **0.783 / 0.781 / 0.774**, mumbai **0.816 / 0.817 / 0.794**. The one genuine shortfall is
-   **kolkata — 0.748 / 0.725 / 0.698**, degrading with horizon. That is a coverage gap in one city,
-   not a defect in the conformal step, and it is unfixed.
-3. In the monsoon window Delhi's early-warning recall is **0 of 9 onsets** at the 90 µg/m³ threshold.
+   **0.783 / 0.781 / 0.775**, mumbai **0.816 / 0.817 / 0.794**. The one genuine shortfall is
+   **kolkata — 0.748 / 0.725 / 0.698**, degrading with horizon. Chased properly on 19 Aug and
+   **deliberately not "fixed"** — see problem 3.
+3. **Kolkata's band under-covers at the decision boundary, and recalibration did not fix it.**
+   *(19 Aug)* The marginal 0.748 hides where the misses are. Reporting coverage by **predicted**
+   level — the only grouping a served band can be held to, since at serve time the outcome is
+   precisely what we lack — on the rolling protocol (10 origins, 53k rows/horizon):
+
+   | predicted PM2.5 (µg/m³) | 8–25 | 25–38 | 38–56 | **56–76** | 76–245 | overall |
+   |---|---|---|---|---|---|---|
+   | +24 h | 0.803 | 0.778 | 0.761 | **0.668** | 0.733 | 0.749 |
+   | +48 h | 0.799 | 0.793 | 0.725 | **0.620** | 0.687 | 0.725 |
+   | +72 h | 0.812 | 0.785 | 0.649 | **0.547** | 0.699 | 0.699 |
+
+   The band is fine in clean air and fails in the **upper-middle**, ~50–75 µg/m³ — which is the
+   CPCB Satisfactory→Moderate→Poor transition, the range where the number actually changes what an
+   officer does. It degrades sharply with horizon: 0.668 → 0.620 → **0.547**.
+
+   Delhi, run the same way, does **not** have this problem — its worst predicted quintile is
+   **0.704** (+24 h: 0.827 / 0.768 / 0.704 / 0.800 / 0.816). So this is one city's model, not a
+   systemic flaw in the approach, and the conditional table is what makes that distinguishable.
+
+   Seven conformity scores were compared over four forward folds to try to close it — asymmetric
+   per-edge, normalized by band width, normalized by predicted level, Mondrian by predicted bin,
+   and the combinations (`scripts/tune_conformal_tails.py`). On that protocol the worst predicted
+   quintile moved from **0.615 (current) to 0.646 at best** (level-scaled), paid for with coverage
+   in the lower quintiles:
+
+   | variant | A current | B asym | C norm | D asym+norm | E Mondrian | F level-scaled | G asym+level |
+   |---|---|---|---|---|---|---|---|
+   | worst predicted quintile | 0.615 | 0.628 | 0.640 | 0.637 | 0.640 | **0.646** | 0.638 |
+
+   Three points on an eighteen-point shortfall. Split conformal promises **marginal** coverage and
+   delivers it; what fails is **conditional** coverage, and that is the quantile models
+   under-dispersing in the mid-to-upper range — a model problem, not a calibration one. We kept the
+   simple score and made the shortfall **measurable instead**: the benchmark now emits
+   `pi80_coverage_by_predicted_quintile`. Say this plainly if asked — *"our 80% band is 75% overall
+   and 67% in the 56–76 µg/m³ range, and we publish the breakdown"* is a stronger answer than a
+   single number that hides it. **Unfixed, quantified, and disclosed.**
+4. In the monsoon window Delhi's early-warning recall is **0 of 9 onsets** at the 90 µg/m³ threshold.
    Nothing crosses Very Poor in a Delhi monsoon, so there is nothing to catch — but the artifact says
    `recall: 0.0` and a judge reading the JSON will see that before they read the context.
 

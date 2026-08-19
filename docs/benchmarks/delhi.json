@@ -1,7 +1,7 @@
 {
  "city_id": "delhi",
  "source": "hist",
- "generated_at": "2026-08-17T17:28:41.303590+00:00",
+ "generated_at": "2026-08-19T13:10:40.538539+00:00",
  "window": {
   "start": "2025-02-17T23:00:00+00:00",
   "end": "2026-08-15T23:00:00+00:00",
@@ -572,23 +572,49 @@
      ]
     },
     "pi80_coverage": 0.783,
-    "pi80_mean_width": 145.1
-   },
-   "ablation_no_meteorology": {
-    "dropped": [
-     "blh",
-     "precip",
-     "rh",
-     "temp",
-     "wind_u",
-     "wind_v",
-     "wind_speed",
-     "ventilation",
-     "advected_pm25"
-    ],
-    "rmse_with_met": 65.92,
-    "rmse_without_met": 67.33,
-    "met_gain_pct": 2.1
+    "pi80_mean_width": 145.1,
+    "pi80_coverage_by_predicted_quintile": [
+     {
+      "predicted_range": [
+       16.1,
+       50.3
+      ],
+      "n": 41445,
+      "coverage": 0.827
+     },
+     {
+      "predicted_range": [
+       50.3,
+       68.0
+      ],
+      "n": 41445,
+      "coverage": 0.768
+     },
+     {
+      "predicted_range": [
+       68.0,
+       89.7
+      ],
+      "n": 41445,
+      "coverage": 0.704
+     },
+     {
+      "predicted_range": [
+       89.7,
+       152.8
+      ],
+      "n": 41445,
+      "coverage": 0.8
+     },
+     {
+      "predicted_range": [
+       152.8,
+       361.4
+      ],
+      "n": 41445,
+      "coverage": 0.816
+     }
+    ]
    }
   },
   {
@@ -1140,23 +1166,49 @@
      ]
     },
     "pi80_coverage": 0.781,
-    "pi80_mean_width": 162.8
-   },
-   "ablation_no_meteorology": {
-    "dropped": [
-     "blh",
-     "precip",
-     "rh",
-     "temp",
-     "wind_u",
-     "wind_v",
-     "wind_speed",
-     "ventilation",
-     "advected_pm25"
-    ],
-    "rmse_with_met": 70.2,
-    "rmse_without_met": 69.68,
-    "met_gain_pct": -0.8
+    "pi80_mean_width": 162.8,
+    "pi80_coverage_by_predicted_quintile": [
+     {
+      "predicted_range": [
+       16.9,
+       51.8
+      ],
+      "n": 41623,
+      "coverage": 0.799
+     },
+     {
+      "predicted_range": [
+       51.8,
+       68.0
+      ],
+      "n": 41622,
+      "coverage": 0.736
+     },
+     {
+      "predicted_range": [
+       68.0,
+       99.6
+      ],
+      "n": 41623,
+      "coverage": 0.731
+     },
+     {
+      "predicted_range": [
+       99.6,
+       159.9
+      ],
+      "n": 41622,
+      "coverage": 0.831
+     },
+     {
+      "predicted_range": [
+       159.9,
+       338.5
+      ],
+      "n": 41623,
+      "coverage": 0.81
+     }
+    ]
    }
   },
   {
@@ -1707,24 +1759,50 @@
       }
      ]
     },
-    "pi80_coverage": 0.774,
-    "pi80_mean_width": 170.9
-   },
-   "ablation_no_meteorology": {
-    "dropped": [
-     "blh",
-     "precip",
-     "rh",
-     "temp",
-     "wind_u",
-     "wind_v",
-     "wind_speed",
-     "ventilation",
-     "advected_pm25"
-    ],
-    "rmse_with_met": 74.39,
-    "rmse_without_met": 75.09,
-    "met_gain_pct": 0.9
+    "pi80_coverage": 0.775,
+    "pi80_mean_width": 170.9,
+    "pi80_coverage_by_predicted_quintile": [
+     {
+      "predicted_range": [
+       21.7,
+       52.8
+      ],
+      "n": 41650,
+      "coverage": 0.784
+     },
+     {
+      "predicted_range": [
+       52.8,
+       70.3
+      ],
+      "n": 41649,
+      "coverage": 0.769
+     },
+     {
+      "predicted_range": [
+       70.3,
+       99.7
+      ],
+      "n": 41649,
+      "coverage": 0.705
+     },
+     {
+      "predicted_range": [
+       99.7,
+       173.1
+      ],
+      "n": 41649,
+      "coverage": 0.821
+     },
+     {
+      "predicted_range": [
+       173.1,
+       351.4
+      ],
+      "n": 41650,
+      "coverage": 0.793
+     }
+    ]
    }
   }
  ]
