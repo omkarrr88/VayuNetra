@@ -37,7 +37,7 @@ function Sparkline({ d, scale, color }: { d: Overview; scale: AqiScale; color: s
            aria-label={`City index over the last 24 hours, from ${Math.round(first)} to ${Math.round(last)}`}>
         <defs>
           <linearGradient id="vn-spark" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity="0.28" />
+            <stop offset="0%" stopColor={color} stopOpacity="0.16" />
             <stop offset="100%" stopColor={color} stopOpacity="0" />
           </linearGradient>
         </defs>

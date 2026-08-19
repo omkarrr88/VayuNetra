@@ -136,7 +136,9 @@ for (const sc of SCENARIOS) {
     await p.waitForTimeout(pageName.startsWith("ops") ? 6000 : 4000);
 
     const seen = await p.evaluate(INSPECT).catch(() => null);
-    const markerVisible = await p.getByText(marker).first().isVisible().catch(() => false);
+    // Scope to main: /Delhi/ also matches an <option> in the city select, which is never "visible",
+    // so an unscoped .first() reported every healthy page as marker-less.
+    const markerVisible = await p.locator("main").getByText(marker).first().isVisible().catch(() => false);
     await p.screenshot({ path: `${OUT}/${sc.key}-${pageName}.jpg`, type: "jpeg", quality: 60, fullPage: false }).catch(() => {});
 
     const row = { scenario: sc.key, page: pageName, errors: errs.length, marker: markerVisible, ...(seen || {}) };

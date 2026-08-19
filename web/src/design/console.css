@@ -186,3 +186,30 @@
 .vn-console :is(.bg-emerald-700, .bg-emerald-600, .bg-blue-600, .bg-blue-700, .bg-sky-700, .bg-slate-800, .bg-slate-900) :is(.text-white, .text-slate-100, .text-slate-200) {
   color: inherit;
 }
+
+/* ---- light inks inside a solid fill ---------------------------------------
+   The earlier rule only covered `text-white`. Tailwind's -50/-100 inks are just as light, and in
+   dark mode the mapped fills are light too, so `text-emerald-50` on the latency widget measured
+   1.77:1. Any near-white ink inside a mapped fill defers to whatever the fill chose. */
+.vn :is(.bg-emerald-700, .bg-emerald-600, .bg-blue-600, .bg-blue-700, .bg-sky-700, .bg-slate-800, .bg-slate-900)
+  :is([class*="text-emerald-5"], [class*="text-emerald-1"], [class*="text-blue-5"], [class*="text-blue-1"],
+      [class*="text-slate-1"], [class*="text-slate-2"], [class*="text-green-1"]),
+.vn-console :is(.bg-emerald-700, .bg-emerald-600, .bg-blue-600, .bg-blue-700, .bg-sky-700, .bg-slate-800, .bg-slate-900)
+  :is([class*="text-emerald-5"], [class*="text-emerald-1"], [class*="text-blue-5"], [class*="text-blue-1"],
+      [class*="text-slate-1"], [class*="text-slate-2"], [class*="text-green-1"]) {
+  color: inherit;
+}
+
+/* A -950/40 chip is nearly the card colour in dark mode, so its ink needs the token, not a tint. */
+.vn-console [class*="bg-emerald-950"] { background-color: var(--accent-soft); color: var(--accent); }
+.vn-console [class*="bg-emerald-950"] * { color: inherit; }
+
+/* Recharts paints its legend and axis text with its own fill, which was chosen for a white chart
+   background and drops to 3.2:1 on a dark card. */
+.vn-console .recharts-legend-item-text,
+.vn-console .recharts-cartesian-axis-tick-value,
+.vn .recharts-legend-item-text,
+.vn .recharts-cartesian-axis-tick-value { fill: var(--muted) !important; }
+
+/* text-amber-600 sits on a mid tint in the cell story, where --warn alone is not enough. */
+.vn-console .text-amber-600 { color: var(--ink); }
