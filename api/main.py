@@ -1151,8 +1151,41 @@ def update_report_status(report_id: int, payload: dict, db=Depends(get_db)) -> d
         return _server_error("report_status_failed", e, "Could not update the report.")
 
 
-def _latest_advisory(city: str, language: str = "en") -> Optional[dict]:
-    """Freshest advisory for a city in `language` (fixture rows in DEMO_MODE), English fallback."""
+# Worst first. Every advisory in a batch shares one issued_at, so ordering by it alone left the
+# tie to whatever Postgres returned — the broadcast picked an arbitrary ward, and an arbitrary
+# CHANNEL row too, so an IVR call could go out carrying the row written for a display board.
+TIER_SEVERITY = {"severe": 5, "very_poor": 4, "poor": 3, "moderate": 2, "satisfactory": 1, "good": 0}
+
+
+def _advisory_sort_key(row: dict) -> tuple:
+    """Most severe first, then a stable tie-break so the same input always picks the same row."""
+    return (-TIER_SEVERITY.get(str(row.get("risk_tier") or ""), 0), str(row.get("ward_id") or ""))
+
+
+def list_advisory_wards(city: str, language: str = "en") -> list[dict]:
+    """The wards an operator can choose between, worst air first."""
+    if DEMO_MODE:
+        rows = [r for r in fixture_rows("advisory", city)
+                if (r.get("language") or "en") == language and r.get("city_id") == city]
+    else:
+        rows = (_db().table("advisories").select("ward_id,risk_tier,h3_cell,message")
+                .eq("city_id", city).eq("language", language).limit(500).execute().data) or []
+    seen: dict[str, dict] = {}
+    for r in rows:
+        w = str(r.get("ward_id") or "")
+        if w and w not in seen:
+            seen[w] = {"ward_id": w, "risk_tier": r.get("risk_tier"), "h3_cell": r.get("h3_cell")}
+    return sorted(seen.values(), key=_advisory_sort_key)
+
+
+def _latest_advisory(city: str, language: str = "en", ward: str | None = None,
+                     channel: str | None = None) -> Optional[dict]:
+    """The advisory a broadcast should send: this city, this language, this ward, this channel.
+
+    `ward` None means "choose for me", and the choice is the worst-air ward rather than whichever
+    row the database happened to hand back first. `channel` narrows to the row written for that
+    delivery path — the same advisory is stored once per channel.
+    """
     def _pick(lang: str) -> Optional[dict]:
         if DEMO_MODE:
             # strict city match — fixture_rows falls back to ALL rows for unknown
@@ -1162,17 +1195,26 @@ def _latest_advisory(city: str, language: str = "en") -> Optional[dict]:
                 if (r.get("language") or "en") == lang and r.get("city_id") == city
             ]
         else:
-            rows = (
-                _db().table("advisories").select("*").eq("city_id", city)
-                .eq("language", lang).order("issued_at", desc=True).limit(1).execute().data
-            ) or []
-        return rows[0] if rows else None
+            q = (_db().table("advisories").select("*").eq("city_id", city).eq("language", lang))
+            if ward:
+                q = q.eq("ward_id", ward)
+            if channel:
+                q = q.eq("channel", channel)
+            rows = (q.order("issued_at", desc=True).limit(200).execute().data) or []
+        if ward:
+            rows = [r for r in rows if str(r.get("ward_id") or "") == ward]
+        if channel:
+            rows = [r for r in rows if str(r.get("channel") or "") == channel]
+        return sorted(rows, key=_advisory_sort_key)[0] if rows else None
     return _pick(language) or (_pick("en") if language != "en" else None)
 
 
 def _ivr_language(city: str) -> str:
-    """The language a call should be spoken in: the city's first showcase language if Polly
-    can voice it (Hindi), else English."""
+    """The language a call should be spoken in: the city's first configured language.
+
+    The "if we have a voice for it" guard used to exclude six of the eight, because it only
+    considered Polly. It stays as a guard — a language could be added to the advisory templates
+    before a voice exists — but today nothing is excluded by it."""
     try:
         from channels.ivr import IVR_SPOKEN_LANGS
         from core.cities import load_city
@@ -1190,6 +1232,21 @@ class BroadcastBody(BaseModel):
     # The language the operator picked on screen. It used to be absent, so the broadcast always
     # took the English advisory and every call went out in English however the dropdown was set.
     language: str | None = None
+    # Which ward to send. None means the worst-air ward; it used to mean "whichever row came back".
+    ward: str | None = None
+
+
+@app.get("/advisory/wards", tags=["advisory"])
+def advisory_wards(
+    city: str = Query(..., description="City ID"),
+    lang: str = Query("en", description="Language code"),
+) -> dict:
+    """The wards a broadcast can target, worst air first.
+
+    Exists because the console had no way to say which ward to send to, and the server had no way
+    to be asked — so it picked one and no one could tell which, or why.
+    """
+    return ok(list_advisory_wards(city, lang))
 
 
 @app.post("/advisory/broadcast", tags=["advisory"])
@@ -1207,13 +1264,18 @@ def advisory_broadcast(body: BroadcastBody, db=Depends(get_db)) -> dict:
     _last_broadcast[city] = now
 
     requested = (body.language or "en").strip() or "en"
-    adv = _latest_advisory(city, requested)
+    ward = (body.ward or "").strip() or None
+    # the IVR row, not whichever channel's row sorted first — they carry the same text today, but
+    # picking the display-board row to read down a phone line is an accident waiting to happen
+    adv = _latest_advisory(city, requested, ward=ward, channel="ivr") or _latest_advisory(city, requested, ward=ward)
     if not adv:
         return err("no_advisory", f"No advisory available for {city}")
 
     delivered = str(adv.get("language") or "en")
     results: dict[str, Any] = {
         "advisory": {"ward_id": adv.get("ward_id"), "message": adv.get("message"), "language": delivered},
+        # say which ward went out and whether the operator chose it, so "why that ward?" has an answer
+        "ward": {"sent": adv.get("ward_id"), "chosen_by": "operator" if ward else "worst air"},
         # Say what actually happened to the language, rather than letting a silent fallback look
         # like success: _latest_advisory falls back to English when the city has no row in the
         # requested language, and Polly has no voice for six of the eight we write.

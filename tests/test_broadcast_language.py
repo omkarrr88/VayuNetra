@@ -36,9 +36,14 @@ def test_the_default_is_english():
     assert (m._latest_advisory("delhi") or {}).get("language") == "en"
 
 
-def test_polly_cannot_voice_most_of_the_languages_we_write():
-    """The call is read in English for six of the eight, and the endpoint must be able to say so."""
+def test_every_language_we_write_can_now_be_spoken():
+    """This asserted the opposite until 19 Aug, when the six Polly cannot reach moved to Google.
+
+    The endpoint still reports a voice fallback, because a language could be added to the advisory
+    templates before a voice exists for it — but today none of them need one.
+    """
+    from agents.advisory import LANG_LABEL
     from channels.ivr import IVR_SPOKEN_LANGS
 
-    assert set(IVR_SPOKEN_LANGS) == {"en", "hi"}
-    assert "kn" not in IVR_SPOKEN_LANGS
+    assert set(IVR_SPOKEN_LANGS) == set(LANG_LABEL)
+    assert "mr" in IVR_SPOKEN_LANGS and "kn" in IVR_SPOKEN_LANGS

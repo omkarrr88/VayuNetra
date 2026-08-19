@@ -15,13 +15,60 @@ import os
 
 import core.env  # noqa: F401  (loads .env)
 
-# Amazon Polly voices via Twilio — clear Indian English (Raveena) and, for Hindi advisories,
-# Kajal (neural, hi-IN). Polly has no Tamil/Telugu/Bengali/Gujarati/Kannada/Marathi voice, so
-# those cities' calls read the English advisory — stated in the guide, not hidden.
-IVR_VOICE = "Polly.Raveena"
-IVR_LANG = "en-IN"
-VOICE_BY_LANG = {"en": ("Polly.Raveena", "en-IN"), "hi": ("Polly.Kajal-Neural", "hi-IN")}
+# One voice per language, and it must be a voice that actually speaks that language.
+#
+# This used to be Polly-only: {"en": Raveena, "hi": Kajal}. Everything else fell through to the
+# English voice, so a Marathi advisory was Devanagari handed to an Indian-ENGLISH speaker wrapped in
+# English framing sentences. It did not sound like poor Marathi; it was not Marathi.
+#
+# Polly speaks two of the eight languages we write. Twilio also exposes Google's voices through the
+# same `voice` attribute, and Google covers all eight
+# (https://www.twilio.com/docs/voice/twiml/say/text-speech), so the six Polly cannot reach use
+# Google instead.
+#
+# Wavenet rather than the newer Chirp3-HD deliberately: this script uses <prosody rate="90%"> to
+# slow delivery and <break> to pace it, and Chirp3-HD does not accept SSML. A faster-sounding voice
+# that ignores the pacing is the wrong trade for a public-health call an elderly listener has to
+# follow the first time.
+VOICE_BY_LANG = {
+    "en": ("Polly.Raveena", "en-IN"),
+    "hi": ("Polly.Kajal-Neural", "hi-IN"),
+    "mr": ("Google.mr-IN-Wavenet-A", "mr-IN"),
+    "kn": ("Google.kn-IN-Wavenet-A", "kn-IN"),
+    "ta": ("Google.ta-IN-Wavenet-A", "ta-IN"),
+    "te": ("Google.te-IN-Standard-A", "te-IN"),
+    "bn": ("Google.bn-IN-Wavenet-A", "bn-IN"),
+    "gu": ("Google.gu-IN-Wavenet-A", "gu-IN"),
+}
+IVR_VOICE, IVR_LANG = VOICE_BY_LANG["en"]
 IVR_SPOKEN_LANGS = tuple(VOICE_BY_LANG.keys())
+
+# The sentences wrapped around the advisory. They were English for every language except Hindi, so
+# even a correctly-voiced call opened and closed in the wrong one.
+#
+# NOT NATIVELY REVIEWED for six of the eight — same caveat as the advisory bodies in
+# agents/advisory.py, and stated in docs/ADVISORY_REVIEW.md rather than left for a listener to
+# discover. Each is script-validated in tests: the framing must be written in the language's own
+# script, so an untranslated string cannot ship silently.
+IVR_FRAMING = {
+    "en": {"intro": "Here is the latest advisory for {city}.", "alert": "This is an air quality alert from {brand}.",
+           "repeat": "I will now repeat this alert.", "outro": "Stay safe, and limit outdoor exposure. Goodbye."},
+    "hi": {"intro": "{city} के लिए नवीनतम सलाह।", "alert": "यह {brand} की ओर से वायु गुणवत्ता चेतावनी है।",
+           "repeat": "मैं यह चेतावनी दोहराती हूँ।", "outro": "सुरक्षित रहें, बाहर कम समय बिताएँ। धन्यवाद।"},
+    "mr": {"intro": "{city} साठी नवीनतम सूचना.", "alert": "ही {brand} कडून हवा गुणवत्ता सूचना आहे.",
+           "repeat": "मी ही सूचना पुन्हा सांगते.", "outro": "सुरक्षित राहा, बाहेर कमी वेळ घालवा. धन्यवाद."},
+    "kn": {"intro": "{city} ಗಾಗಿ ಇತ್ತೀಚಿನ ಸೂಚನೆ.", "alert": "ಇದು {brand} ಕಡೆಯಿಂದ ಗಾಳಿ ಗುಣಮಟ್ಟದ ಎಚ್ಚರಿಕೆ.",
+           "repeat": "ನಾನು ಈ ಎಚ್ಚರಿಕೆಯನ್ನು ಮತ್ತೆ ಹೇಳುತ್ತೇನೆ.", "outro": "ಸುರಕ್ಷಿತವಾಗಿರಿ, ಹೊರಗೆ ಕಡಿಮೆ ಸಮಯ ಕಳೆಯಿರಿ. ಧನ್ಯವಾದಗಳು."},
+    "ta": {"intro": "{city} க்கான சமீபத்திய அறிவிப்பு.", "alert": "இது {brand} சார்பாக காற்று தர எச்சரிக்கை.",
+           "repeat": "இந்த எச்சரிக்கையை மீண்டும் சொல்கிறேன்.", "outro": "பாதுகாப்பாக இருங்கள், வெளியே குறைந்த நேரம் செலவிடுங்கள். நன்றி."},
+    "te": {"intro": "{city} కోసం తాజా సూచన.", "alert": "ఇది {brand} నుండి గాలి నాణ్యత హెచ్చరిక.",
+           "repeat": "ఈ హెచ్చరికను మళ్లీ చెబుతాను.", "outro": "సురక్షితంగా ఉండండి, బయట తక్కువ సమయం గడపండి. ధన్యవాదాలు."},
+    "bn": {"intro": "{city} এর জন্য সাম্প্রতিক পরামর্শ।", "alert": "এটি {brand} থেকে বায়ু মানের সতর্কতা।",
+           "repeat": "আমি এই সতর্কতা আবার বলছি।", "outro": "নিরাপদে থাকুন, বাইরে কম সময় কাটান। ধন্যবাদ।"},
+    "gu": {"intro": "{city} માટે તાજેતરની સૂચના.", "alert": "આ {brand} તરફથી હવા ગુણવત્તા ચેતવણી છે.",
+           "repeat": "હું આ ચેતવણી ફરીથી કહું છું.", "outro": "સુરક્ષિત રહો, બહાર ઓછો સમય વિતાવો. આભાર."},
+}
+
 BRAND = "Vayu Netra"
 
 
@@ -34,29 +81,24 @@ def render_ivr_script(advisory: dict) -> str:
 
 
 def render_twiml(advisory: dict, city_name: str | None = None) -> str:
-    """TwiML for a slowed, repeated, clearly-spoken advisory call — in the advisory's language
-    when Polly can speak it (Hindi via Kajal), English otherwise."""
+    """TwiML for a slowed, repeated, clearly-spoken advisory call — wholly in the advisory's
+    language: the voice speaks it and so does the framing around it.
+
+    Falls back to English only when we have no voice for the language, and the caller is told that
+    happened rather than being left to notice a Marathi advisory being read by an English speaker.
+    """
     msg = html.escape(str(advisory.get("message", "")).strip())
     lang = str(advisory.get("language") or "en")
     voice, tts_lang = VOICE_BY_LANG.get(lang, VOICE_BY_LANG["en"])
-    if lang == "hi":
-        intro = f"{html.escape(city_name)} के लिए नवीनतम सलाह। " if city_name else ""
-        body = (
-            f"{intro}यह {BRAND} की ओर से वायु गुणवत्ता चेतावनी है। "
-            f'<break time="600ms"/> {msg} '
-            f'<break time="800ms"/> मैं यह चेतावनी दोहराती हूँ। '
-            f'<break time="400ms"/> {msg} '
-            f'<break time="700ms"/> सुरक्षित रहें, बाहर कम समय बिताएँ। धन्यवाद।'
-        )
-    else:
-        intro = f"Here is the latest advisory for {html.escape(city_name)}. " if city_name else ""
-        body = (
-            f"{intro}This is an air quality alert from {BRAND}. "
-            f'<break time="600ms"/> {msg} '
-            f'<break time="800ms"/> I will now repeat this alert. '
-            f'<break time="400ms"/> {msg} '
-            f'<break time="700ms"/> Stay safe, and limit outdoor exposure. Goodbye.'
-        )
+    f = IVR_FRAMING.get(lang, IVR_FRAMING["en"])
+    intro = f["intro"].format(city=html.escape(city_name)) + " " if city_name else ""
+    body = (
+        f'{intro}{f["alert"].format(brand=BRAND)} '
+        f'<break time="600ms"/> {msg} '
+        f'<break time="800ms"/> {f["repeat"]} '
+        f'<break time="400ms"/> {msg} '
+        f'<break time="700ms"/> {f["outro"]}'
+    )
     return (
         "<Response>"
         '<Pause length="1"/>'

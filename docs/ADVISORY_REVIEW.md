@@ -18,6 +18,32 @@ signed off — the status column below is the single source of truth quoted by t
 | Bengali (`bn`) | deterministic + script-validated; native-speaker review pending | – |
 | Gujarati (`gu`) | deterministic + script-validated; native-speaker review pending | – |
 
+
+## IVR call framing — the sentences spoken around the advisory
+
+*Added 19 Aug 2026.* A phone call is not just the advisory: it opens by naming the city, says
+who is calling, announces the repeat, and closes. Those four sentences were **English for every
+language except Hindi**, so a Marathi call opened and closed in English even once the voice was
+right. They are script-validated in `tests/test_ivr_voices.py` but **none has been reviewed by a
+native speaker yet — including Marathi and Hindi, whose advisory *bodies* above have been.**
+Spoken word order and register matter more here than in a written card, so this needs the same
+ten-minute pass.
+
+| language | intro | who is calling | repeat | close |
+|---|---|---|---|---|
+| English (`en`) | Here is the latest advisory for {city}. | This is an air quality alert from {brand}. | I will now repeat this alert. | Stay safe, and limit outdoor exposure. Goodbye. |
+| Hindi (`hi`) | {city} के लिए नवीनतम सलाह। | यह {brand} की ओर से वायु गुणवत्ता चेतावनी है। | मैं यह चेतावनी दोहराती हूँ। | सुरक्षित रहें, बाहर कम समय बिताएँ। धन्यवाद। |
+| Marathi (`mr`) | {city} साठी नवीनतम सूचना. | ही {brand} कडून हवा गुणवत्ता सूचना आहे. | मी ही सूचना पुन्हा सांगते. | सुरक्षित राहा, बाहेर कमी वेळ घालवा. धन्यवाद. |
+| Kannada (`kn`) | {city} ಗಾಗಿ ಇತ್ತೀಚಿನ ಸೂಚನೆ. | ಇದು {brand} ಕಡೆಯಿಂದ ಗಾಳಿ ಗುಣಮಟ್ಟದ ಎಚ್ಚರಿಕೆ. | ನಾನು ಈ ಎಚ್ಚರಿಕೆಯನ್ನು ಮತ್ತೆ ಹೇಳುತ್ತೇನೆ. | ಸುರಕ್ಷಿತವಾಗಿರಿ, ಹೊರಗೆ ಕಡಿಮೆ ಸಮಯ ಕಳೆಯಿರಿ. ಧನ್ಯವಾದಗಳು. |
+| Tamil (`ta`) | {city} க்கான சமீபத்திய அறிவிப்பு. | இது {brand} சார்பாக காற்று தர எச்சரிக்கை. | இந்த எச்சரிக்கையை மீண்டும் சொல்கிறேன். | பாதுகாப்பாக இருங்கள், வெளியே குறைந்த நேரம் செலவிடுங்கள். நன்றி. |
+| Telugu (`te`) | {city} కోసం తాజా సూచన. | ఇది {brand} నుండి గాలి నాణ్యత హెచ్చరిక. | ఈ హెచ్చరికను మళ్లీ చెబుతాను. | సురక్షితంగా ఉండండి, బయట తక్కువ సమయం గడపండి. ధన్యవాదాలు. |
+| Bengali (`bn`) | {city} এর জন্য সাম্প্রতিক পরামর্শ। | এটি {brand} থেকে বায়ু মানের সতর্কতা। | আমি এই সতর্কতা আবার বলছি। | নিরাপদে থাকুন, বাইরে কম সময় কাটান। ধন্যবাদ। |
+| Gujarati (`gu`) | {city} માટે તાજેતરની સૂચના. | આ {brand} તરફથી હવા ગુણવત્તા ચેતવણી છે. | હું આ ચેતવણી ફરીથી કહું છું. | સુરક્ષિત રહો, બહાર ઓછો સમય વિતાવો. આભાર. |
+
+`{city}` and `{brand}` are substituted at run time. **Both stay in Latin script**, so a
+non-Latin voice reads "Mumbai" and "Vayu Netra" as foreign words — the residual fluency gap,
+and the next thing to fix if a reviewer says it grates.
+
 Rendering used: city = *Delhi*, ward = *Ward 12*, horizon = 24 h. Change nothing in the code to review —
 only the words matter; the numbers and place names are substituted at run time.
 
