@@ -172,4 +172,9 @@ html.vn-present .vn-scroll { scrollbar-width: none; }
 /* the map basemap: dim it so the dark UI does not sit on a white sheet */
 [data-theme="dark"] .maplibregl-map { filter: invert(0.92) hue-rotate(180deg) brightness(0.95) contrast(0.92); }
 [data-theme="dark"] .maplibregl-map canvas.mapboxgl-canvas, [data-theme="dark"] .maplibregl-map .deck-canvas { filter: none; }
-[data-theme="dark"] .maplibregl-ctrl-attrib { background: rgba(11,18,32,.7) !important; }
+/* The dark background was set here but the ink was left to MapLibre's own stylesheet, which is
+   black — 1.12:1, invisible. It went unnoticed because nothing overlapped it; moving the cell story
+   to the right of the map made the attribution something a reader now looks at, and OpenStreetMap
+   and CARTO require it to be legible, not merely present. Measured 15.9:1 and 10.4:1. */
+[data-theme="dark"] .maplibregl-ctrl-attrib { background: rgba(11,18,32,.7) !important; color: #e6edf7 !important; }
+[data-theme="dark"] .maplibregl-ctrl-attrib a { color: #93c5fd !important; }
