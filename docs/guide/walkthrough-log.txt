@@ -1,30 +1,38 @@
-ok   landing loads
-ok   first-run tour
-ok   shell + status strip
+ok   front page
+ok   public overview page
+ok   public app: scale toggle
+ok   public app: live map
+ok   public app: forecast + causes
+ok   public app: rankings + how it works
+FAIL first-run tour: TimeoutError: locator.click: Timeout 30000ms exceeded.
+ok   console shell
 ok   presentation mode
 ok   keyboard sections 1–7
 ok   layers chip and modes
 ok   time scrub play
-     share card → vayunetra-delhi-ndmc-charge-3.png
+     share card → vayunetra-delhi-malviya-nagar.png
 ok   cell story
      brief PDF → brief_delhi.pdf
 ok   morning brief
 ok   worklist filters + search
-     notice PDF → notice_12901.pdf
+     notice PDF → notice_13308.pdf
 ok   dossier + notice
 ok   approve → dispatch → close → history
-     PRANA export → ncap_evidence_delhi.csv
 ok   dispatch queues + tracking + export
 ok   forecast section
 ok   advisories section
-ok   cities section
+FAIL cities section: TimeoutError: locator.click: Timeout 30000ms exceeded.
 ok   simulator section
 ok   impact section
 ok   pipeline section
-ok   mobile viewport
-     reset 1 walkthrough record(s)
+ok   dark theme
+ok   phone viewport
+     reset 0 walkthrough record(s)
 ok   reset walkthrough action
 
 ERRORS:
+console: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or o
 
 PROBLEMS:
+first-run tour: TimeoutError: locator.click: Timeout 30000ms exceeded.
+cities section: TimeoutError: locator.click: Timeout 30000ms exceeded.

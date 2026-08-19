@@ -2,7 +2,7 @@
 // computed from this city's own station readings — nothing here is city-specific in code, so all
 // ten cities (and the eleventh, whenever a YAML is added) render identically.
 import { type ReactNode } from "react";
-import { POLLUTANT_LABEL, SCALES, categoryForIndex, categoryForPm25, formatIndex, pm25Index, type AqiScale, bandInk } from "../aqi";
+import { POLLUTANT_LABEL, SCALES, categoryForIndex, formatIndex, pm25Bands, pm25Index, type AqiScale, bandInk } from "../aqi";
 
 export type Overview = {
   city_id: string; name: string; languages: string[]; generated_at: string;
@@ -214,17 +214,17 @@ export function Section({ title, city, right, children, note }: { title: string;
 
 /** Colour swatch + label, used by the calendar and graph legends. */
 export function BandLegend({ scale }: { scale: AqiScale }) {
-  const stops = [10, 45, 75, 105, 180, 300];
+  // Derived from the scale's own bands, one entry each. It used to probe six fixed PM2.5 values and
+  // key on the resulting label — but on the US scale 75 and 105 µg/m³ are both "Unhealthy", and on
+  // the WHO scale three of the six land above IT-1, so the legend both repeated itself and handed
+  // React duplicate keys.
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-      {stops.map((pm) => {
-        const cat = categoryForPm25(pm, scale);
-        return (
-          <span key={cat.label} className="flex items-center gap-1 text-[11px] text-slate-600">
-            <span className="h-2.5 w-2.5 rounded-sm" style={{ background: cat.color }} />{cat.label}
-          </span>
-        );
-      })}
+      {pm25Bands(scale).map((b) => (
+        <span key={`${b.lo}-${b.hi}`} className="flex items-center gap-1 text-[11px] text-slate-600" title={`PM2.5 ${b.lo}–${b.hi} µg/m³`}>
+          <span className="h-2.5 w-2.5 rounded-sm" style={{ background: b.color }} />{b.label}
+        </span>
+      ))}
     </div>
   );
 }

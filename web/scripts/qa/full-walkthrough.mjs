@@ -149,11 +149,19 @@ await step("first-run tour", async () => {
   await page.goto(`${base}/console?city=delhi&section=action`, { waitUntil: "networkidle" });
   await wait(4000);
   await shot("23-console-tour");
-  const next = page.getByRole("button", { name: /^Next$/ });
-  for (let i = 0; i < 6 && (await next.count()); i++) { await next.first().click(); await wait(500); }
-  const done = page.getByRole("button", { name: /Start exploring|Done|Finish|Got it|Skip/i });
-  if (await done.count()) await done.first().click();
-  await wait(500);
+  // Scope every click to the dialog. Searching the whole page can match a button BEHIND the tour's
+  // backdrop, and clicking a covered element blocks until the timeout.
+  const dialog = page.getByRole("dialog", { name: "Quick tour" });
+  await dialog.waitFor({ timeout: 15000 });
+  for (let i = 0; i < 6; i++) {
+    const next = dialog.getByRole("button", { name: /^Next$/ });
+    if (!(await next.count())) break;
+    await next.click({ timeout: 8000 });
+    await wait(500);
+  }
+  const done = dialog.getByRole("button", { name: /Start exploring|Skip/i });
+  if (await done.count()) await done.first().click({ timeout: 8000 });
+  await dialog.waitFor({ state: "hidden", timeout: 10000 });
 });
 
 // ═══════════════════════════════════════════════════════════════ console: shell
@@ -302,8 +310,9 @@ await step("advisories section", async () => {
 await step("cities section", async () => {
   await nav("Console sections").getByRole("button", { name: "Cities", exact: true }).click(); await wait(4500);
   await shot("55-cities");
-  const mum = rail().getByText("Mumbai", { exact: true }).first();
-  if (await mum.count()) { await mum.click(); await wait(4500); }
+  const mum = rail().getByRole("button").filter({ hasText: "Mumbai" }).first();
+  if (await mum.count()) { await mum.click({ timeout: 15000 }); await wait(4500); }
+  else say("     no Mumbai row on the scoreboard — skipped");
   await shot("56-mumbai");
   await page.getByLabel("Choose a city").selectOption("delhi"); await wait(3500);
 });
@@ -367,15 +376,20 @@ await step("phone viewport", async () => {
 
 // ══════════════════════════════════════════════════ reset the walkthrough action
 await step("reset walkthrough action", async () => {
+  // Without the key /enforcement 401s, the filter matches nothing, and a real record is left closed
+  // in production while the step still reports "ok". That must be an error, not a silent no-op.
   const anon = process.env.SUPABASE_ANON_KEY;
-  const r = await fetch(`${api}/enforcement?city=delhi&limit=60`, { headers: anon ? { Authorization: `Bearer ${anon}` } : {} }).then((x) => x.json());
+  if (!anon) throw new Error("SUPABASE_ANON_KEY not set — cannot reset the walkthrough record; reset it by hand");
+  const r = await fetch(`${api}/enforcement?city=delhi&limit=200`, { headers: { Authorization: `Bearer ${anon}` } }).then((x) => x.json());
+  if (!r || r.success === false || !Array.isArray(r.data)) throw new Error(`could not list enforcement to reset: ${JSON.stringify(r).slice(0, 120)}`);
   const mine = (r.data || []).filter((x) => x.closure_note === "user-guide walkthrough — no field visit");
   for (const x of mine) {
-    await fetch(`${api}/enforcement/${x.id}/status`, {
+    const res = await fetch(`${api}/enforcement/${x.id}/status`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...(anon ? { Authorization: `Bearer ${anon}` } : {}) },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${anon}` },
       body: JSON.stringify({ status: "proposed", actor: "Guide walkthrough", note: "reset after walkthrough" }),
     });
+    if (!res.ok) throw new Error(`failed to reset rec ${x.id}: HTTP ${res.status}`);
   }
   say(`     reset ${mine.length} walkthrough record(s)`);
 });

@@ -60,6 +60,7 @@ const STEPS: Step[] = [
 type Spot = { left: number; top: number; width: number; height: number };
 
 const CARD_W = 304;
+const CARD_H = 220;
 
 /** Put the card just outside the spotlight — below it when there is room, above it otherwise —
  *  and keep it fully on screen. Without a spotlight (mobile) it centres. */
@@ -68,9 +69,11 @@ function cardStyle(spot: Spot | null): React.CSSProperties {
   const gap = 14;
   const vw = window.innerWidth, vh = window.innerHeight;
   const below = spot.top + spot.height + gap;
-  const roomBelow = vh - below > 210;
-  const top = roomBelow ? below : Math.max(gap, spot.top - 210 - gap);
-  const left = Math.min(Math.max(gap, spot.left + spot.width / 2 - CARD_W / 2), vw - CARD_W - gap);
+  const roomBelow = vh - below > CARD_H;
+  const wanted = roomBelow ? below : spot.top - CARD_H - gap;
+  // the card must be fully on screen whatever the target does
+  const top = Math.min(Math.max(gap, wanted), Math.max(gap, vh - CARD_H - gap));
+  const left = Math.min(Math.max(gap, spot.left + spot.width / 2 - CARD_W / 2), Math.max(gap, vw - CARD_W - gap));
   return { left, top, transform: "none" };
 }
 
@@ -89,7 +92,13 @@ function spotlightRect(s: Step): Spot | null {
     height *= s.shrink;
   }
   const pad = 6;
-  return { left: left - pad, top: top - pad, width: width + 2 * pad, height: height + 2 * pad };
+  // Clip to the viewport: a target taller than the screen would otherwise put the spotlight — and
+  // the card anchored to it — below the fold.
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const x0 = Math.max(0, left - pad), y0 = Math.max(0, top - pad);
+  const x1 = Math.min(vw, left + width + pad), y1 = Math.min(vh, top + height + pad);
+  if (x1 - x0 < 8 || y1 - y0 < 8) return null;
+  return { left: x0, top: y0, width: x1 - x0, height: y1 - y0 };
 }
 
 /** First-run guided tour: 4 fixed cards, no library, dismiss = never again. */
