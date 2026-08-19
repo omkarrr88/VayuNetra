@@ -200,9 +200,11 @@
   color: inherit;
 }
 
-/* A -950/40 chip is nearly the card colour in dark mode, so its ink needs the token, not a tint. */
-.vn-console [class*="bg-emerald-950"] { background-color: var(--accent-soft); color: var(--accent); }
+/* A -950/40 chip sits on an accent-coloured card, so its text uses the body ink colour for high contrast and visual distinction. */
+.vn-console [class*="bg-emerald-950"] { background-color: var(--accent-soft); color: var(--ink); }
 .vn-console [class*="bg-emerald-950"] * { color: inherit; }
+/* Override the parent's inherited colour for text-white inside emerald-950, since the parent card is too similar in colour. */
+.vn-console :is(.bg-emerald-700, .bg-emerald-600) [class*="bg-emerald-950"].text-white { color: var(--ink) !important; }
 
 /* Recharts paints its legend and axis text with its own fill, which was chosen for a white chart
    background and drops to 3.2:1 on a dark card. */

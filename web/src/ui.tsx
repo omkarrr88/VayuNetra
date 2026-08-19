@@ -67,9 +67,12 @@ export function InfoTip({ children, label = "What is this?" }: { children: React
       {open && (
         <div
           role="dialog"
-          className="vn-sheet vn-scroll-thin"
+          className="vn-sheet vn-scroll-thin vn-overlay"
           style={{
-            position: "absolute", right: 0, top: 28, zIndex: 40, width: "19rem", maxHeight: "22rem", overflowY: "auto",
+            position: "absolute", right: 0, top: 28, zIndex: 40,
+            // its own cap, so it still cannot run off a narrow screen now that the card's is lifted
+            width: "19rem", maxWidth: "min(19rem, calc(100vw - 2rem))",
+            maxHeight: "22rem", overflowY: "auto",
             borderRadius: "var(--r-md)", border: "1px solid var(--line)", background: "var(--surface)",
             boxShadow: "var(--e-3)", padding: "var(--s-3)",
             fontSize: "var(--t-sm)", lineHeight: "var(--lh-body)", color: "var(--ink-2)",

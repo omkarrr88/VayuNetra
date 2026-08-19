@@ -63,7 +63,9 @@ export default function MapPage() {
         <AqiHeader city={city} />
       </div>
 
-      <div style={{ position: "absolute", right: "var(--s-3)", top: "var(--s-3)", zIndex: 10 }}>
+      {/* Above the cell story, not merely equal to it: both used zIndex 10, so paint order fell
+          to DOM order and the story — which comes later — covered the layer menu when open. */}
+      <div style={{ position: "absolute", right: "var(--s-3)", top: "var(--s-3)", zIndex: 20 }}>
         <LayersControl
           mode={mode} onMode={setMode}
           showSources={showSources} onShowSources={setShowSources}
@@ -76,8 +78,10 @@ export default function MapPage() {
         />
       </div>
 
+      {/* The panel ends above the basemap attribution: OpenStreetMap and CARTO require it to
+          stay visible, and moving this to the right put it directly on top. */}
       {cell && (
-        <div className="vn-sheet vn-scroll-thin" style={{ position: "absolute", left: "var(--s-3)", bottom: "var(--s-3)", top: "5.5rem", zIndex: 10, width: "min(20rem, calc(100% - 24px))", overflowY: "auto", borderRadius: "var(--r-lg)" }}>
+        <div className="vn-sheet vn-scroll-thin" style={{ position: "absolute", right: "var(--s-3)", bottom: "calc(var(--s-3) + 1.75rem)", top: "5.5rem", zIndex: 10, width: "min(20rem, calc(100% - 24px))", overflowY: "auto", borderRadius: "var(--r-lg)" }}>
           <CellStoryPanel
             city={city}
             cell={cell}

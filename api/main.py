@@ -1187,6 +1187,9 @@ def _ivr_language(city: str) -> str:
 class BroadcastBody(BaseModel):
     city: str = _CITY
     ivr: bool = False
+    # The language the operator picked on screen. It used to be absent, so the broadcast always
+    # took the English advisory and every call went out in English however the dropdown was set.
+    language: str | None = None
 
 
 @app.post("/advisory/broadcast", tags=["advisory"])
@@ -1203,11 +1206,21 @@ def advisory_broadcast(body: BroadcastBody, db=Depends(get_db)) -> dict:
         return err("rate_limited", f"Broadcast already sent recently — retry in {wait}s")
     _last_broadcast[city] = now
 
-    adv = _latest_advisory(city)
+    requested = (body.language or "en").strip() or "en"
+    adv = _latest_advisory(city, requested)
     if not adv:
         return err("no_advisory", f"No advisory available for {city}")
 
-    results: dict[str, Any] = {"advisory": {"ward_id": adv.get("ward_id"), "message": adv.get("message")}}
+    delivered = str(adv.get("language") or "en")
+    results: dict[str, Any] = {
+        "advisory": {"ward_id": adv.get("ward_id"), "message": adv.get("message"), "language": delivered},
+        # Say what actually happened to the language, rather than letting a silent fallback look
+        # like success: _latest_advisory falls back to English when the city has no row in the
+        # requested language, and Polly has no voice for six of the eight we write.
+        "language": {"requested": requested, "delivered": delivered},
+    }
+    if delivered != requested:
+        results["language"]["note"] = f"no {requested} advisory stored for {city}; sent {delivered}"
 
     # Telegram
     if os.getenv("TELEGRAM_BOT_TOKEN"):
@@ -1228,7 +1241,12 @@ def advisory_broadcast(body: BroadcastBody, db=Depends(get_db)) -> dict:
             os.getenv("TWILIO_TO_NUMBERS") or os.getenv("TWILIO_TO_NUMBER")
         ):
             try:
-                from channels.ivr import broadcast_ivr_calls
+                from channels.ivr import IVR_SPOKEN_LANGS, broadcast_ivr_calls
+                if delivered not in IVR_SPOKEN_LANGS:
+                    results["language"]["spoken_as"] = "en"
+                    results["language"]["voice_note"] = (
+                        f"text-to-speech has no {delivered} voice; the call is read in English"
+                    )
                 calls = broadcast_ivr_calls(adv)
                 sent = sum(1 for c in calls if c["status"] != "error")
                 results["ivr"] = {"status": f"calling {sent}/{len(calls)} numbers", "calls": calls}

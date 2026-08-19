@@ -22,6 +22,7 @@ const LABELS: Record<string, string> = { en: "English", hi: "Hindi", kn: "Kannad
 type BroadcastResult = {
   telegram?: { status: string; detail?: string; message_id?: number };
   ivr?: { status: string; detail?: string; sid?: string };
+  language?: { requested: string; delivered: string; note?: string; spoken_as?: string; voice_note?: string };
 };
 
 type CleanZone = {
@@ -74,11 +75,17 @@ export default function CitizenPanel({ city, languages, center }: { city: string
       const r = await api<BroadcastResult>("/advisory/broadcast", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ city, ivr: true }),
+        // send the language the operator picked; without it the server took the English row
+        body: JSON.stringify({ city, ivr: true, language: lang }),
       });
       const parts: string[] = [];
       if (r.telegram) parts.push(`Telegram: ${r.telegram.status}`);
       if (r.ivr) parts.push(`IVR: ${r.ivr.status}`);
+      // A silent fallback is the thing that made this look fine while it was broken, so both
+      // fallbacks — no advisory in that language, and no voice for it — are said out loud.
+      if (r.language?.note) parts.push(r.language.note);
+      if (r.language?.voice_note) parts.push(r.language.voice_note);
+      else if (r.language?.delivered) parts.push(`spoken in ${r.language.delivered}`);
       setBcastMsg(parts.join(" · ") || "sent");
       setBcast("done");
     } catch (e) {

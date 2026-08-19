@@ -249,6 +249,13 @@
 .vn-panel, .vn-panel * { max-width: 100%; }
 .vn-panel table { max-width: none; }
 
+/* ...except things that are OUT OF FLOW. An absolutely-positioned overlay resolves its 100%
+   against its containing block, not the card — and the InfoTip popover's containing block is the
+   22px button wrapper, so every "What is this?" in the app collapsed to a 26px strip of one
+   character per line. Out-of-flow elements cannot widen the card in the first place, so the rule
+   they need is none. */
+.vn-panel .vn-overlay, .vn-panel .vn-overlay * { max-width: none; }
+
 /* ---- 320px: the narrowest screen anyone will hold ------------------------- */
 @media (max-width: 360px) {
   /* the pollutant cards carry a long label, a value, a unit and a chevron — at 320px the chevron
