@@ -19,6 +19,30 @@ export const SCALES: Record<AqiScale, { short: string; name: string; note: strin
 
 export type AqiCategory = { label: string; color: string; text: string };
 
+// A band colour is a FILL. Used as text on a page background the greens and yellows collapse to
+// 1.9-3.3:1, which fails WCAG AA and is genuinely hard to read on a projector. Every band therefore
+// carries an ink: darkened for the light theme, lightened for dark, each at least 4.5:1 against
+// that theme's surfaces. Use `bandInk(cat.color)` wherever a band colour is the TEXT colour;
+// `cat.color` stays the fill and `cat.text` stays the ink that reads on top of that fill.
+const BAND_INK: Record<string, [light: string, dark: string]> = {
+  "#16a34a": ["#15803d", "#4ade80"],   // Good
+  "#84cc16": ["#4d7c0f", "#a3e635"],   // Satisfactory / <= IT-4
+  "#eab308": ["#a16207", "#fbbf24"],   // Moderate / <= IT-3
+  "#f97316": ["#c2410c", "#fb923c"],   // Poor / USG / <= IT-2
+  "#dc2626": ["#b91c1c", "#f87171"],   // Very Poor / Unhealthy / <= IT-1
+  "#7f1d1d": ["#7f1d1d", "#fca5a5"],   // Severe / Hazardous
+  "#7e22ce": ["#6b21a8", "#c084fc"],   // Very Unhealthy
+};
+
+/** The readable ink for a band colour, in whichever theme is showing. */
+export function bandInk(color?: string | null): string {
+  if (!color) return "var(--muted)";
+  const pair = BAND_INK[color.toLowerCase()];
+  if (!pair) return color;
+  const dark = typeof document !== "undefined" && document.documentElement.dataset.theme === "dark";
+  return pair[dark ? 1 : 0];
+}
+
 // [C_lo, C_hi, I_lo, I_hi] — PM2.5 µg/m³ → sub-index
 const CPCB_PM25: [number, number, number, number][] = [
   [0, 30, 0, 50], [31, 60, 51, 100], [61, 90, 101, 200], [91, 120, 201, 300], [121, 250, 301, 400], [251, 500, 401, 500],

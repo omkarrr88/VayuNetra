@@ -1,7 +1,7 @@
 // The public page's opening statement: one number, said once, at the size it deserves.
 // Everything in it is live from GET /city/overview — the same payload the console reads, so the
 // public page and the officer console can never show different air.
-import { categoryForIndex, pm25Index, POLLUTANT_LABEL, SCALES, type AqiScale } from "../aqi";
+import { categoryForIndex, pm25Index, POLLUTANT_LABEL, SCALES, type AqiScale, bandInk } from "../aqi";
 import { ScaleBar, ago, type Overview } from "../city/parts";
 import { Metric, Surface, Text } from "../design/ui";
 
@@ -67,14 +67,16 @@ function Tile({ value, label, sub }: { value: string; label: string; sub?: strin
 export function CityHeroBig({ d, scale }: { d: Overview; scale: AqiScale }) {
   const index = heroIndex(d, scale);
   const cat = index !== null ? categoryForIndex(index, scale) : null;
-  const colour = cat?.color ?? "var(--muted)";
+  // the band colour reads as a fill; as TEXT it needs the darkened/lightened ink
+  const fill = cat?.color ?? "var(--muted)";
+  const colour = bandInk(cat?.color);
   const prominent = scale === "us" ? d.now.prominent_us : d.now.prominent_in;
   const newest = Object.values(d.now.pollutants).map((p) => p.hour).sort().pop();
   const pm25 = d.now.pollutants.pm25;
   const cigs = d.health?.cigarettes?.per_day ?? null;
 
   return (
-    <section className="vn-wash" style={{ ["--wash" as string]: colour, paddingBottom: "var(--s-6)" }}>
+    <section className="vn-wash" style={{ ["--wash" as string]: fill, paddingBottom: "var(--s-6)" }}>
       <div style={{ position: "relative", display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: "var(--s-6)" }}>
         <div style={{ minWidth: 0, flex: "1 1 300px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "var(--s-2)" }}>

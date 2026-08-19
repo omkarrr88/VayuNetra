@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
-import { categoryForPm25 } from "./aqi";
+import { categoryForPm25, bandInk } from "./aqi";
 import { useAqiScale } from "./aqiScale";
 import { SOURCE_COLORS, dominantSource, type Shares } from "./sources";
 import { DRIVER_LABELS, type AttrCell } from "./BlameMap";
@@ -206,7 +206,7 @@ export default function CellStoryPanel({
               return (
                 <div key={h} className="flex-1 rounded-md border border-slate-200 p-1.5 text-center">
                   <div className="text-[11px] text-slate-500">+{h}h</div>
-                  <div className="text-sm font-bold" style={{ color: cat.color }}>
+                  <div className="text-sm font-bold" style={{ color: bandInk(cat.color) }}>
                     {Math.round(r.value)}
                   </div>
                   <div className="text-[11px] text-slate-500">

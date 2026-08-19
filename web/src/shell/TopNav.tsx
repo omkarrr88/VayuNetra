@@ -110,7 +110,7 @@ export function TopNav({
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "var(--s-2)", flex: "none" }}>
           <span className="vn-nav-wide"><CityPicker city={city} cities={cities} onCity={onCity} /></span>
           <span className="vn-nav-wide"><AqiScaleToggle dark={false} /></span>
-          {extras}
+          <span className="vn-nav-wide" style={{ display: "flex", alignItems: "center", gap: "var(--s-2)" }}>{extras}</span>
           <ThemeToggle dark={false} />
           <button
             onClick={action.onClick}
@@ -156,10 +156,23 @@ export function TopNav({
               </button>
             ))}
           </nav>
-          <div style={{ marginTop: "var(--s-4)", display: "flex", flexWrap: "wrap", gap: "var(--s-3)" }}>
+          <div style={{ marginTop: "var(--s-4)", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "var(--s-3)" }}>
             <CityPicker city={city} cities={cities} onCity={onCity} />
             <AqiScaleToggle dark={false} />
+            {extras}
           </div>
+          <button
+            onClick={() => { setOpen(false); action.onClick(); }}
+            title={action.title}
+            style={{
+              marginTop: "var(--s-4)", width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
+              padding: "10px 14px", minHeight: 40, borderRadius: "var(--r-sm)", border: 0,
+              background: "var(--nav)", color: "var(--nav-ink-strong)",
+              fontSize: "var(--t-sm)", fontWeight: 700, cursor: "pointer",
+            }}
+          >
+            {action.label} <span aria-hidden="true">→</span>
+          </button>
         </div>
       )}
     </header>

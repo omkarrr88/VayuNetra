@@ -1,7 +1,7 @@
 // Public landing page — light theme only. Console lives at /console.
 import { useEffect, useState } from "react";
 import { api } from "./api";
-import { aqiCategory, categoryForIndex, formatIndex, pm25ToAqi, POLLUTANT_LABEL, SCALES } from "./aqi";
+import { aqiCategory, categoryForIndex, formatIndex, pm25ToAqi, POLLUTANT_LABEL, SCALES, bandInk } from "./aqi";
 import { linkClick } from "./router";
 
 type AqiRow = { pm25?: number; value?: number };
@@ -316,8 +316,8 @@ export default function Landing() {
                         <span className="text-[10px] text-slate-400 group-hover:text-sky-700">open →</span>
                       </div>
                       <div className="mt-1 flex items-end gap-2">
-                        <span className="text-3xl font-extrabold leading-none tracking-tight" style={{ color: cat?.color }}>{formatIndex(idx, "in")}</span>
-                        <span className="pb-0.5 text-[11px] font-semibold" style={{ color: cat?.color }}>{cat?.label}</span>
+                        <span className="text-3xl font-extrabold leading-none tracking-tight" style={{ color: bandInk(cat?.color) }}>{formatIndex(idx, "in")}</span>
+                        <span className="pb-0.5 text-[11px] font-semibold" style={{ color: bandInk(cat?.color) }}>{cat?.label}</span>
                       </div>
                       <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
                         <div className="h-full rounded-full" style={{ width: `${Math.min(100, ((idx ?? 0) / 500) * 100)}%`, background: cat?.color }} />

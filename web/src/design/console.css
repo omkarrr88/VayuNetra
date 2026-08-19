@@ -117,7 +117,7 @@
 .vn-console .text-teal-800, .vn-console .text-teal-700 { color: var(--accent); }
 
 /* Inputs and selects inside those callouts must follow the theme too. */
-.vn-console :where(input, select, textarea) { background-color: var(--surface); color: var(--ink); border-color: var(--line); }
+.vn-console :is(input, select, textarea) { background-color: var(--surface); color: var(--ink); border-color: var(--line); }
 
 /* ---- reading measure ------------------------------------------------------
    A console page is much wider than the old rail. Prose that filled a 26rem
@@ -125,3 +125,56 @@
    without touching tables, charts or grids. */
 .vn-console .vn-panel > p,
 .vn-console .vn-panel > div > p { max-width: 82ch; }
+
+/* ---- the whole tint family, alpha variants included -----------------------
+   Panels reach for Tailwind's -50 and -100 tints (and their /50, /60, /70
+   alpha forms) for callouts, chips and selected rows. Mapping only the plain
+   -50 left `bg-blue-100` and `bg-blue-50/50` pale in dark mode, with light ink
+   on top — invisible. Substring selectors catch every alpha variant; the
+   saturated -500 shades below re-assert themselves afterwards. */
+.vn :is([class*="bg-blue-50"], [class*="bg-sky-50"], [class*="bg-indigo-50"],
+           [class*="bg-blue-100"], [class*="bg-sky-100"], [class*="bg-indigo-100"]),
+.vn-console :is([class*="bg-blue-50"], [class*="bg-sky-50"], [class*="bg-indigo-50"],
+                   [class*="bg-blue-100"], [class*="bg-sky-100"], [class*="bg-indigo-100"]) {
+  background-color: var(--primary-soft);
+}
+.vn :is([class*="bg-emerald-50"], [class*="bg-green-50"], [class*="bg-teal-50"],
+           [class*="bg-emerald-100"], [class*="bg-green-100"], [class*="bg-teal-100"]),
+.vn-console :is([class*="bg-emerald-50"], [class*="bg-green-50"], [class*="bg-teal-50"],
+                   [class*="bg-emerald-100"], [class*="bg-green-100"], [class*="bg-teal-100"]) {
+  background-color: var(--accent-soft);
+}
+.vn :is([class*="bg-amber-50"], [class*="bg-yellow-50"], [class*="bg-orange-50"],
+           [class*="bg-amber-100"], [class*="bg-yellow-100"], [class*="bg-orange-100"]),
+.vn-console :is([class*="bg-amber-50"], [class*="bg-yellow-50"], [class*="bg-orange-50"],
+                   [class*="bg-amber-100"], [class*="bg-yellow-100"], [class*="bg-orange-100"]) {
+  background-color: var(--warn-soft);
+}
+.vn :is([class*="bg-rose-50"], [class*="bg-red-50"], [class*="bg-rose-100"], [class*="bg-red-100"]),
+.vn-console :is([class*="bg-rose-50"], [class*="bg-red-50"], [class*="bg-rose-100"], [class*="bg-red-100"]) {
+  background-color: var(--danger-soft);
+}
+.vn :is([class*="bg-violet-50"], [class*="bg-purple-50"], [class*="bg-violet-100"], [class*="bg-purple-100"]),
+.vn-console :is([class*="bg-violet-50"], [class*="bg-purple-50"], [class*="bg-violet-100"], [class*="bg-purple-100"]) {
+  background-color: color-mix(in srgb, #8b5cf6 16%, var(--surface));
+}
+.vn :is([class*="bg-slate-50"], [class*="bg-gray-50"]),
+.vn-console :is([class*="bg-slate-50"], [class*="bg-gray-50"]) { background-color: var(--surface-2); }
+.vn :is([class*="bg-slate-100"], [class*="bg-gray-100"]),
+.vn-console :is([class*="bg-slate-100"], [class*="bg-gray-100"]) { background-color: var(--surface-3); }
+
+/* Saturated shades are deliberate fills, not tints — restore them. */
+.vn .bg-blue-500, .vn-console .bg-blue-500 { background-color: #3b82f6; }
+.vn .bg-blue-600, .vn-console .bg-blue-600,
+.vn .bg-blue-700, .vn-console .bg-blue-700 { background-color: var(--primary); }
+.vn .bg-slate-500, .vn-console .bg-slate-500 { background-color: #64748b; }
+
+/* Ink that was written for a light tint must follow the tint into dark. */
+.vn-console :is([class*="bg-blue-50"], [class*="bg-blue-100"]) .text-blue-900,
+.vn-console :is([class*="bg-amber-50"], [class*="bg-amber-100"]) .text-amber-900,
+.vn-console :is([class*="bg-emerald-50"], [class*="bg-emerald-100"]) .text-emerald-900,
+.vn-console :is([class*="bg-rose-50"], [class*="bg-rose-100"]) .text-rose-900 { color: var(--ink); }
+.vn-console .text-blue-800, .vn-console .text-blue-900 { color: var(--primary); }
+.vn-console .text-amber-900 { color: var(--warn); }
+.vn-console .text-emerald-800, .vn-console .text-emerald-900 { color: var(--accent); }
+.vn-console .text-rose-800, .vn-console .text-rose-900 { color: var(--danger); }

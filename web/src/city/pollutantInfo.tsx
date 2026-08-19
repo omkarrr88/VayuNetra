@@ -2,7 +2,7 @@
 // standard it is judged against. Reference text only — every number here is a published standard
 // with its source named; nothing is inferred from our own data. The live values beside them come
 // from GET /city/overview (this city's stations).
-import { POLLUTANT_LABEL, categoryForIndex, type AqiScale } from "../aqi";
+import { POLLUTANT_LABEL, categoryForIndex, type AqiScale, bandInk } from "../aqi";
 import { POLLUTANT_FULL, ago, type Overview, type Pollutant } from "./parts";
 
 export type Standard = { label: string; value: string };
@@ -92,7 +92,7 @@ export function PollutantDetail({ d, scale, pollutant, onClose }: { d: Overview;
         </div>
         {sub !== undefined && (
           <div>
-            <div className="text-2xl font-extrabold" style={{ color: cat?.color }}>{sub}</div>
+            <div className="text-2xl font-extrabold" style={{ color: bandInk(cat?.color) }}>{sub}</div>
             <div className="text-[11px] text-slate-500">sub-index · {cat?.label}{prominent ? " · sets the city index" : ""}</div>
           </div>
         )}

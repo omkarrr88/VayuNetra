@@ -58,8 +58,8 @@
   /* colour roles */
   --ink: #0b1220;
   --ink-2: #334155;
-  --muted: #64748b;
-  --faint: #94a3b8;
+  --muted: #556070;   /* 6.4:1 on white, 5.9:1 on --canvas - AA at every size */
+  --faint: #66717f;   /* 5.0:1 on white; the old #94a3b8 was 2.6:1 */
   --line: #e6ebf2;
   --line-strong: #cfd8e6;
   --surface: #ffffff;
@@ -77,6 +77,9 @@
   --warn-soft: #fdf0d5;
   --danger: #be123c;
   --danger-soft: #ffe4e9;
+  --accent-ink: #ffffff;
+  --warn-ink: #ffffff;
+  --danger-ink: #ffffff;
   --nav: #0c1526;
   --nav-ink: #cbd5e1;
   --nav-ink-strong: #ffffff;
@@ -85,8 +88,8 @@
 [data-theme="dark"] {
   --ink: #eef3fb;
   --ink-2: #cbd5e1;
-  --muted: #93a4bd;
-  --faint: #7385a1;
+  --muted: #a3b2c8;   /* 6.6:1 on --surface */
+  --faint: #8d9db6;   /* 5.0:1 on --surface */
   --line: #1e2b45;
   --line-strong: #2a3a58;
   --surface: #121c30;
@@ -104,6 +107,9 @@
   --warn-soft: #33280c;
   --danger: #fb7185;
   --danger-soft: #3a1420;
+  --accent-ink: #04211d;
+  --warn-ink: #2a1f05;
+  --danger-ink: #2c0c14;
   --nav: #080e1b;
   --nav-ink: #94a3b8;
   --nav-ink-strong: #ffffff;
@@ -200,3 +206,32 @@
 
 /* The map box is a fixed size so it never jumps when the city or the page changes. */
 @media (max-width: 640px) { .vn-mapbox { height: 380px !important; } }
+
+/* The cross-link button is the widest thing in the bar; below 560px it lives in the sheet. */
+@media (max-width: 560px) { .vn-nav-action { display: none !important; } }
+
+/* ---- touch targets and narrow phones --------------------------------------
+   A 27px chip is below every touch guideline, and a wrapped chip row was what
+   pushed a 320px phone into horizontal scroll. On a coarse pointer the chips
+   get a real hit area; on a very narrow screen the row scrolls itself instead
+   of widening the page. */
+.vn-chip { min-height: 30px; display: inline-flex; align-items: center; }
+@media (pointer: coarse) {
+  .vn-chip { min-height: 40px; padding-left: 14px; padding-right: 14px; }
+  .vn :where(button, a[href], select, [role="tab"]) { min-height: 36px; }
+  .vn-console :where(button, a[href], select, [role="tab"]) { min-height: 36px; }
+}
+@media (max-width: 380px) {
+  .vn-chiprow { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .vn-chiprow::-webkit-scrollbar { display: none; }
+}
+
+/* A panel header on a narrow screen must wrap, not shove its right-hand control off the edge. */
+@media (max-width: 560px) {
+  .vn-panel > div:first-child { flex-wrap: wrap; row-gap: var(--s-2); }
+  .vn-panel > div:first-child > div:last-child { margin-left: auto; }
+}
+
+/* Nothing inside a card may be wider than the card. */
+.vn-panel, .vn-panel * { max-width: 100%; }
+.vn-panel table { max-width: none; }

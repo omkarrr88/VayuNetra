@@ -54,10 +54,88 @@ def cities():
     return out
 
 
+# The title slide is dated, not live: December 2025, the month the winter smog season peaked.
+# Each city's figure is its WORST DAY that month — the daily mean of its stations, converted to the
+# Indian National AQI. Cities whose record starts after December 2025 are reported as having no
+# December record rather than being filled in from somewhere else.
+DEC_2025 = ("2025-12-01", "2026-01-01")
+WINTER_25_26 = ("2025-12-01", "2026-03-01")   # Dec · Jan · Feb — the GRAP season
+
+
+def _daily_means(city_id: str, start: str, end: str, min_hours: int = 12):
+    """Daily city-mean PM2.5 from the stored history, keeping only days with enough readings."""
+    f = ROOT / "data" / "hist" / f"{city_id}_pm25.csv.gz"
+    if not f.exists():
+        return None
+    df = pd.read_csv(gzip.open(f, "rt"))
+    df["ts"] = pd.to_datetime(df["ts"], utc=True)
+    if "variable" in df.columns:
+        df = df[df["variable"] == "pm25"]
+    w = df[(df["ts"] >= start) & (df["ts"] < end)]
+    if w.empty:
+        return None
+    d = w.groupby(w["ts"].dt.floor("D"))["value"].agg(["mean", "count"])
+    d = d[d["count"] >= min_hours]
+    return d if len(d) else None
+
+
+def india_december_2025(city_rows):
+    """Per-city worst day and monthly mean for December 2025, on the Indian National AQI."""
+    from core.aqi import CPCB, _sub_index, category
+
+    out = []
+    for c in city_rows:
+        d = _daily_means(c["city_id"], *DEC_2025)
+        if d is None:
+            out.append({"city_id": c["city_id"], "name": c["name"], "center": c.get("center"),
+                        "worst": None, "mean": None, "days": 0,
+                        "note": "onboarded after December 2025 — no record for that month"})
+            continue
+        worst_day = d["mean"].idxmax()
+        worst_pm = round(float(d["mean"].max()), 1)
+        mean_pm = round(float(d["mean"].mean()), 1)
+        out.append({
+            "city_id": c["city_id"], "name": c["name"], "center": c.get("center"),
+            "worst": {"date": worst_day.strftime("%Y-%m-%d"), "pm25": worst_pm,
+                      "aqi_in": _sub_index(CPCB["pm25"], worst_pm),
+                      "category": category(_sub_index(CPCB["pm25"], worst_pm) or 0, "in")},
+            "mean": {"pm25": mean_pm, "aqi_in": _sub_index(CPCB["pm25"], mean_pm)},
+            "days": int(len(d)),
+            "note": None,
+        })
+    covered = [c for c in out if c["worst"]]
+    covered.sort(key=lambda c: -(c["worst"]["aqi_in"] or 0))
+    missing = [c for c in out if not c["worst"]]
+    missing.sort(key=lambda c: c["name"])
+    return {"month": "2025-12", "label": "December 2025",
+            "basis": "worst day in the month, by daily mean of each city's own CPCB stations, on the Indian National AQI",
+            "cities": covered + missing,
+            "n_covered": len(covered), "n_total": len(out)}
+
+
+def delhi_winter_months():
+    """Delhi's Dec 2025 - Feb 2026 monthly means — the three months the deck talks through."""
+    from core.aqi import CPCB, _sub_index, category
+
+    d = _daily_means("delhi", *WINTER_25_26)
+    if d is None:
+        return []
+    months = d.index.tz_convert(None).to_period("M")   # period arithmetic is tz-naive
+    by_month = d.groupby(months)["mean"].agg(["mean", "max", "count"])
+    out = []
+    for period, r in by_month.iterrows():
+        m, mx = round(float(r["mean"]), 1), round(float(r["max"]), 1)
+        out.append({"month": str(period), "label": period.strftime("%b %Y"),
+                    "pm25_mean": m, "pm25_worst_day": mx, "days": int(r["count"]),
+                    "aqi_mean": _sub_index(CPCB["pm25"], m), "aqi_worst": _sub_index(CPCB["pm25"], mx),
+                    "category_mean": category(_sub_index(CPCB["pm25"], m) or 0, "in")})
+    return out
+
+
 def delhi_winter():
     df = pd.read_csv(gzip.open(ROOT / "data/hist/delhi_pm25.csv.gz", "rt"))
     df["ts"] = pd.to_datetime(df["ts"], utc=True)
-    w = df[(df["ts"] >= "2025-10-01") & (df["ts"] < "2026-02-20") & (df["variable"] == "pm25")]
+    w = df[(df["ts"] >= WINTER_25_26[0]) & (df["ts"] < WINTER_25_26[1]) & (df["variable"] == "pm25")]
     daily = w.groupby([w["ts"].dt.floor("D"), "h3_cell"])["value"].mean().reset_index()
     days = sorted(daily["ts"].unique())
     cells = sorted(daily["h3_cell"].unique())
@@ -100,10 +178,13 @@ def advisories():
 
 
 def main():
+    city_rows = cities()
     data = {
         "built_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
         "india": json.load(open(SCRATCH / "india_outline.json")),
-        "cities": cities(),
+        "cities": city_rows,
+        "december_2025": india_december_2025(city_rows),
+        "delhi_winter_months": delhi_winter_months(),
         "snapshot": get("/landing/snapshot"),
         "roi_delhi": get("/roi?city=delhi"),
         "exposure_delhi": get("/exposure?city=delhi"),

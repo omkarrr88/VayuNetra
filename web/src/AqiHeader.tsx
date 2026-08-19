@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { api, API_BASE, API_TOKEN } from "./api";
-import { agoLabel, categoryForIndex, headline, formatIndex, pm25Index, POLLUTANT_LABEL, SCALES, type AqiRow } from "./aqi";
+import { agoLabel, categoryForIndex, headline, formatIndex, pm25Index, POLLUTANT_LABEL, SCALES, type AqiRow, bandInk } from "./aqi";
 import { useAqiScale } from "./aqiScale";
 
 
@@ -166,7 +166,7 @@ The formula runs on the latest hourly means, so the official 24-hour bulletin ca
               <span className="text-[10px] font-semibold uppercase tracking-wide">{scale === "who" ? "× WHO" : "AQI"}</span>
             </div>
             <div className="text-xs">
-              <div className="text-sm font-bold" style={{ color: cat.color }}>
+              <div className="text-sm font-bold" style={{ color: bandInk(cat.color) }}>
                 {cat.label}
               </div>
               <div className="text-slate-500">

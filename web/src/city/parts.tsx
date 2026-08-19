@@ -2,7 +2,7 @@
 // computed from this city's own station readings — nothing here is city-specific in code, so all
 // ten cities (and the eleventh, whenever a YAML is added) render identically.
 import { type ReactNode } from "react";
-import { POLLUTANT_LABEL, SCALES, categoryForIndex, categoryForPm25, formatIndex, pm25Index, type AqiScale } from "../aqi";
+import { POLLUTANT_LABEL, SCALES, categoryForIndex, categoryForPm25, formatIndex, pm25Index, type AqiScale, bandInk } from "../aqi";
 
 export type Overview = {
   city_id: string; name: string; languages: string[]; generated_at: string;
@@ -53,7 +53,7 @@ export function ago(iso?: string): string {
 export function PollutantChips({ available, value, onChange, compact = false }: { available: string[]; value: Pollutant; onChange: (p: Pollutant) => void; compact?: boolean }) {
   const chips: Pollutant[] = ["aqi", ...POLLUTANTS.filter((p) => available.includes(p))];
   return (
-    <div className={`flex flex-wrap ${compact ? "gap-1" : "gap-2"}`} role="tablist" aria-label="Pollutant">
+    <div className={`vn-chiprow flex flex-wrap ${compact ? "gap-1" : "gap-2"}`} role="tablist" aria-label="Pollutant">
       {chips.map((p) => {
         const on = p === value;
         return (
@@ -62,7 +62,7 @@ export function PollutantChips({ available, value, onChange, compact = false }: 
             role="tab"
             aria-selected={on}
             onClick={() => onChange(p)}
-            className={`rounded-full font-semibold transition-colors ${compact ? "px-2.5 py-1 text-[11px]" : "px-4 py-1.5 text-[13px]"} ${
+            className={`vn-chip rounded-full font-semibold transition-colors ${compact ? "px-2.5 py-1 text-[11px]" : "px-4 py-1.5 text-[13px]"} ${
               on ? "bg-blue-600 text-white shadow" : "border border-slate-300 text-slate-600 hover:border-slate-400 hover:text-slate-900"
             }`}
           >
@@ -122,10 +122,10 @@ export function CityHero({ d, scale }: { d: Overview; scale: AqiScale }) {
             <span className="text-[11px] font-bold uppercase tracking-widest text-rose-600">live</span>
           </div>
           <div className="mt-1 flex items-end gap-3">
-            <span className="text-6xl font-extrabold leading-none tracking-tight" style={{ color: cat?.color }}>{formatIndex(index, scale)}</span>
+            <span className="text-6xl font-extrabold leading-none tracking-tight" style={{ color: bandInk(cat?.color) }}>{formatIndex(index, scale)}</span>
             <span className="pb-1 text-[12px] font-semibold text-slate-500">{SCALES[scale].short}</span>
           </div>
-          <div className="mt-1 text-lg font-bold" style={{ color: cat?.color }}>{cat?.label ?? "no reading"}</div>
+          <div className="mt-1 text-lg font-bold" style={{ color: bandInk(cat?.color) }}>{cat?.label ?? "no reading"}</div>
           <ScaleBar index={index} scale={scale} />
           <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-[13px]">
             {pm25 && <span className="text-slate-600">PM2.5 <b className="text-slate-900">{pm25.value}</b> µg/m³</span>}

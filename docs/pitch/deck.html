@@ -115,14 +115,17 @@ svg text{font-family:inherit}
 <!-- 1 · TITLE -->
 <section class="slide" data-init="title" data-notes="[A · 0:00] Good morning. Every Indian metro measures its air; several forecast it. Nothing acts on it. VayuNetra is the operations layer: it traces who is polluting each square kilometre, predicts the next 72 hours with honest probabilities, ranks where to send an inspector with cited evidence, and tells citizens in their own script — live in ten cities, at zero infrastructure cost. The map behind me is live.">
   <div class="haze" id="haze"></div>
-  <svg id="indiaTitle" viewBox="0 0 1000 1000" style="position:absolute;right:2%;top:2%;height:96%;opacity:1"></svg>
-  <div style="position:relative;z-index:2;max-width:56%;margin-top:auto;margin-bottom:auto">
+  <!-- the map is a square viewBox: sizing it by HEIGHT made it 54% of the stage wide, which ran
+       under the headline. Sizing by WIDTH keeps the two columns apart at every aspect ratio. -->
+  <svg id="indiaTitle" viewBox="0 0 1000 1000" style="position:absolute;right:1.5%;top:50%;transform:translateY(-50%);width:43%;height:auto;opacity:1"></svg>
+  <div style="position:relative;z-index:2;max-width:51%;margin-top:auto;margin-bottom:auto">
     <div class="a a1 kicker">ET AI Hackathon 2.0 · Finale · Problem Statement 5</div>
     <h1 class="a a2" style="margin-top:.35em">VayuNetra</h1>
     <p class="a a3" style="font-size:1.45em;color:#0f172a;margin-top:.5em">The operations layer for urban air quality.</p>
     <p class="a a4" style="margin-top:.9em;max-width:34em">We don't just measure the air. We <b>trace</b> it, <b>predict</b> it, and <b>act</b> on it — live in ten Indian cities, on ₹0 infrastructure.</p>
-    <p class="a a5 sub" style="margin-top:1.4em">Team DaGoats · Omkar Kadam · Sejal Kumbhar · Abhinav Prasad</p>
-    <p class="a a6 sub" style="font-size:.8em;margin-top:.5em">Live: vayunetra-aqi.vercel.app · dots = live PM2.5, <span id="asOfTitle"></span></p>
+    <div class="a a5" id="decBoard" style="margin-top:1.2em"></div>
+    <p class="a a6 sub" style="margin-top:1.1em">Team DaGoats · Omkar Kadam · Sejal Kumbhar · Abhinav Prasad</p>
+    <p class="a a6 sub" style="font-size:.78em;margin-top:.45em">Live: vayunetra-aqi.vercel.app · <span id="asOfTitle"></span></p>
   </div>
 </section>
 
@@ -162,13 +165,14 @@ svg text{font-family:inherit}
 <!-- 4 · DELHI'S WINTER, REPLAYED -->
 <section class="slide" data-init="winter" data-notes="[A · 1:35 — say the first sentence, then silence for the 9-second replay, then continue] This is Delhi's last winter, day by day, on 39 station cells — real CPCB data. The markers are the government's actual GRAP orders. Under each: what our forecast said 24 hours before the order was signed. Stage III on 11 November and Stage IV on 13 December — flagged a full day ahead across essentially the whole network, probability above 80 percent, when persistence said 225 and the city measured 407. The two October orders we did not foresee — and it says so on the slide.">
   <div class="kicker a a1">Early warning, in hindsight</div>
-  <h2 class="a a2">Delhi's winter 2025-26, replayed — with the government's real orders</h2>
-  <div class="row a a3" style="margin-top:.8em;flex:1;min-height:0">
-    <div class="col" style="flex:1.05"><svg id="winterMap" viewBox="0 0 600 560" style="width:100%;height:100%"></svg></div>
-    <div class="col" style="flex:1.5;display:flex;flex-direction:column;gap:.7em">
-      <div class="card" style="padding:.7em .9em"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="sub" style="font-size:.85em">city-mean PM2.5 (µg/m³) · daily</span><span id="winterDate" class="num" style="font-weight:800;font-size:1.3em">—</span></div><svg id="winterLine" viewBox="0 0 700 220" style="width:100%;height:auto"></svg></div>
-      <div id="orders" class="grid3" style="gap:.6em"></div>
-      <p class="sub" style="font-size:.8em">Served forecast replayed with the production recipe (rolling monthly refit, persistence blend, calibrated P). Green = P(&gt;120) ≥ 30 % a day before the order. ⚠ = the public feed carried a single Delhi station that week. Sources: CAQM / PIB releases, linked in docs/OUTCOMES.md.</p>
+  <h2 class="a a2">Delhi's winter, replayed — against the government's real orders</h2>
+  <div id="winterMonths" class="a a2" style="display:flex;gap:1.3em;margin-top:.45em;flex-wrap:wrap;font-size:.95em"></div>
+  <div class="row a a3" style="margin-top:.7em;flex:1;min-height:0">
+    <div class="col" style="flex:1;display:flex;align-items:center;min-height:0"><svg id="winterMap" viewBox="0 0 600 560" style="width:100%;height:100%;max-height:100%"></svg></div>
+    <div class="col" style="flex:1.55;display:flex;flex-direction:column;gap:.6em;min-height:0">
+      <div class="card fill" style="padding:.6em .85em;flex:1;min-height:0"><div style="display:flex;justify-content:space-between;align-items:baseline;flex:0 0 auto"><span class="sub" style="font-size:.85em">city-mean PM2.5 (µg/m³) · daily</span><span id="winterDate" class="num" style="font-weight:800;font-size:1.3em">—</span></div><svg id="winterLine" viewBox="0 0 700 200" preserveAspectRatio="none" style="width:100%;flex:1;min-height:0"></svg></div>
+      <div id="orders" class="grid3" style="gap:.55em;flex:0 0 auto"></div>
+      <p class="sub" style="font-size:.74em;line-height:1.35">Served forecast replayed with the production recipe (rolling monthly refit, persistence blend, calibrated P). Green = P(&gt;120) ≥ 30 % a day before the order. ⚠ = the public feed carried a single Delhi station that week. Sources: CAQM / PIB releases, linked in docs/OUTCOMES.md.</p>
     </div>
   </div>
   <div class="foot"><span class="brand"><span class="logo"></span>VayuNetra · ET AI Hackathon 2.0 Finale</span><span>4 · press R to replay</span></div>
@@ -224,8 +228,10 @@ svg text{font-family:inherit}
 
 <!-- 8 · CLOSE -->
 <section class="slide" data-init="close" data-notes="[B · 7:30] India measures. India forecasts. VayuNetra operates — traced, predicted, cited, delivered, closed. In seconds, in eight scripts, for zero rupees today and 2,700 a month for every NCAP city. It is live now — the QR takes you there. We are ready to run it for the first city that says yes. Thank you.">
-  <svg id="indiaClose" viewBox="0 0 1000 1000" style="position:absolute;right:0;top:8%;height:84%;opacity:.7"></svg>
-  <div style="position:relative;z-index:2;margin:auto 0;max-width:56%">
+  <!-- sized by WIDTH: a square viewBox at height:84% is 47% of the stage wide and ran under the
+       headline. -->
+  <svg id="indiaClose" viewBox="0 0 1000 1000" style="position:absolute;right:0;top:50%;transform:translateY(-50%);width:40%;height:auto;opacity:.7"></svg>
+  <div style="position:relative;z-index:2;margin:auto 0;max-width:54%">
     <p class="a a1 sub" style="font-size:1.4em">India measures. India forecasts.</p>
     <h1 class="a a2" style="font-size:4.2em">VayuNetra operates.</h1>
     <p class="a a3" style="font-size:1.35em;margin-top:.7em">Traced, predicted, cited, delivered, <b>closed</b>. In seconds. In eight scripts. For ₹0.</p>
@@ -411,7 +417,10 @@ function later(fn, ms){ if(STATIC){ fn(); return; } timers.push(setTimeout(fn, m
 function killTimers(){ timers.forEach(t=>clearTimeout(t)); timers=[]; if(window._winterRAF) cancelAnimationFrame(window._winterRAF); }
 
 // ---------- India map ----------
-function india(svg, {dots=true, labels=false, pulse=true, dim=false}={}){
+// `month:'2025-12'` draws the December-2025 board instead of live readings: each city's worst day
+// that month, with the four cities onboarded afterwards drawn as hollow rings — the deck says what
+// it does not have rather than filling it in.
+function india(svg, {dots=true, labels=false, pulse=true, dim=false, month=null}={}){
   clear(svg);
   const [x0,y0,x1,y1] = D.india.bounds;
   const W=1000, H=1000, pad=60;
@@ -424,13 +433,21 @@ function india(svg, {dots=true, labels=false, pulse=true, dim=false}={}){
     svgEl('path',{d, fill: dim?'rgba(13,148,136,.06)':'rgba(13,148,136,.10)', stroke:'rgba(13,148,136,.75)', 'stroke-width':1.6},g);
   }
   if(!dots) return P;
-  const cities = D.cities.filter(c=>c.center);
-  cities.forEach((c,i)=>{
+  const dated = month && D.december_2025 && D.december_2025.month === month;
+  const rows = dated
+    ? D.december_2025.cities.filter(c=>c.center).map(c=>({name:c.name, center:c.center, pm25:c.worst?c.worst.pm25:null, sub:c.worst?`${fmt(c.worst.pm25)} µg/m³ · AQI ${c.worst.aqi_in} ${c.worst.category}`:'no December 2025 record'}))
+    : D.cities.filter(c=>c.center).map(c=>({name:c.name, center:c.center, pm25:c.pm25, sub:`${fmt(c.pm25)} µg/m³ · ${(c.dominant_source||'').replace('_',' ')}`}));
+  rows.forEach((c,i)=>{
     const [lng,lat] = c.center; const [x,y]=P(lng,lat);
-    const col = band(c.pm25); const r = 7 + Math.min(18, (c.pm25||0)/4);
+    if(c.pm25 == null){   // onboarded later: an empty ring, so the gap is visible and honest
+      svgEl('circle',{cx:x,cy:y,r:8,fill:'none',stroke:'#94a3b8','stroke-width':2.5,'stroke-dasharray':'3 3'},g);
+      if(labels){ const t=svgEl('text',{x:x+14,y:y+5,fill:'#64748b','font-size':20,'font-weight':700},g); t.textContent=c.name; const t2=svgEl('text',{x:x+14,y:y+26,fill:'#94a3b8','font-size':16},g); t2.textContent=c.sub; }
+      return;
+    }
+    const col = band(c.pm25); const r = 7 + Math.min(22, (c.pm25||0)/(dated?12:4));
     if(pulse && !STATIC){ const p=svgEl('circle',{cx:x,cy:y,r:r,fill:col,opacity:.6,class:'pulse'},g); p.style.animationDelay = (i*0.3)+'s'; p.style.transformOrigin = `${x}px ${y}px`; }
     svgEl('circle',{cx:x,cy:y,r:r,fill:col,stroke:'#ffffff','stroke-width':2.5},g);
-    if(labels){ const t=svgEl('text',{x:x+r+6,y:y+5,fill:'#0f172a','font-size':22,'font-weight':700},g); t.textContent=`${c.name}`; const t2=svgEl('text',{x:x+r+6,y:y+26,fill:'#64748b','font-size':17},g); t2.textContent = `${fmt(c.pm25)} µg/m³ · ${(c.dominant_source||'').replace('_',' ')}`; }
+    if(labels){ const t=svgEl('text',{x:x+r+6,y:y+5,fill:'#0f172a','font-size':22,'font-weight':700},g); t.textContent=c.name; const t2=svgEl('text',{x:x+r+6,y:y+26,fill:'#64748b','font-size':17},g); t2.textContent=c.sub; }
   });
   return P;
 }
@@ -477,8 +494,24 @@ const inits = {
   title(){
     const hz=document.getElementById('haze'); clear(hz);
     for(let i=0;i<14;i++){ const e=document.createElement('i'); const s=140+Math.random()*260; e.style.width=e.style.height=s+'px'; e.style.left=(Math.random()*90)+'%'; e.style.top=(Math.random()*80)+'%'; e.style.animationDelay=(-Math.random()*10)+'s'; hz.appendChild(e); }
-    india(document.getElementById('indiaTitle'),{dots:true,pulse:true});
-    document.getElementById('asOfTitle').textContent = 'as of ' + new Date(D.snapshot.generated_at||D.built_at).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    india(document.getElementById('indiaTitle'),{dots:true,pulse:true,month:'2025-12'});
+    const dec = D.december_2025;
+    const board = document.getElementById('decBoard');
+    if(board && dec){
+      const top = dec.cities.filter(c=>c.worst).slice(0,4);
+      board.innerHTML =
+        `<div class="kicker" style="color:var(--rose)">December 2025 · worst day of the month</div>` +
+        `<div style="display:flex;gap:1.1em;margin-top:.55em;flex-wrap:wrap">` +
+        top.map(c=>`<div style="min-width:5.6em">
+             <div class="num" style="font-size:1.9em;font-weight:800;line-height:1;color:${band(c.worst.pm25)}">${c.worst.aqi_in}</div>
+             <div style="font-size:.82em;font-weight:700;margin-top:.15em">${c.name}</div>
+             <div class="sub" style="font-size:.7em">${c.worst.category}</div>
+           </div>`).join('') +
+        `</div>` +
+        `<div class="sub" style="font-size:.7em;margin-top:.6em;max-width:30em">Indian National AQI from each city's own CPCB stations. ` +
+        `${dec.n_covered} of ${dec.n_total} cities have a December 2025 record — the other ${dec.n_total-dec.n_covered} were onboarded later and are drawn hollow.</div>`;
+    }
+    document.getElementById('asOfTitle').textContent = 'dots = worst day in December 2025 · built ' + new Date(D.built_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
     const sl=slides[0]; sl.classList.remove('cleared'); later(()=>sl.classList.add('cleared'), 1800);
   },
   counters(){
@@ -611,6 +644,15 @@ function startWinter(){
   // orders
   const EV=D.interventions.early_warning.events; const ordersEl=document.getElementById('orders'); ordersEl.innerHTML='';
   const markers=EV.map(e=>{ const day=e.order_at.slice(0,10); const i=days.indexOf(day); const g=svgEl('g',{opacity:0},line); svgEl('line',{x1:X(i),x2:X(i),y1:pt,y2:lh-pb,stroke:'#e11d48','stroke-width':1.5},g); const t=svgEl('text',{x:X(i)+3,y:pt+10+(EV.indexOf(e)%2)*12,fill:'#be123c','font-size':10,'font-weight':700},g); t.textContent=e.label.replace('GRAP Stage ','').replace(' invoked','').replace(' re-invoked','↺').replace(' (construction / demolition ban)',''); const l24=e.lead['24']||{}; const ok=(l24.p_over_120_mean||0)>=0.3; const card=document.createElement('div'); card.className='card'; card.style.cssText='padding:.55em .7em;opacity:0;transition:opacity .5s'; card.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5em"><b style="font-size:.85em;white-space:nowrap">${e.label.replace('GRAP ','').replace(' invoked','').replace(' re-invoked',' ↺').replace(' (construction / demolition ban)','')}</b><span class="sub" style="font-size:.7em;white-space:nowrap">${day}</span></div><div style="margin-top:.2em;font-size:.86em">24 h before: <span class="${ok?'pos':'neg'}">P(&gt;120) ${Math.round((l24.p_over_120_mean||0)*100)}%</span> · ${Math.round((l24.share_cells_alarm_120||0)*100)}% of ${l24.n_cells||'–'} cells${l24.low_coverage?' ⚠':''}<br><span class="sub" style="font-size:.85em">persistence said ${fmt(l24.persistence_city_mean)} · at order ${fmt(e.observed_at_order)}</span></div>`; ordersEl.appendChild(card); return {i,g,card}; });
+  // the three months as a single readable arc: Dec worst, Feb clearing
+  const mEl = document.getElementById('winterMonths');
+  if (mEl) {
+    const ms = D.delhi_winter_months || [];
+    mEl.innerHTML = ms.map(m=>`<div style="display:flex;align-items:baseline;gap:.4em">
+        <span class="num" style="font-size:1.5em;font-weight:800;color:${band(m.pm25_mean)}">${m.pm25_mean}</span>
+        <span style="font-size:.82em"><b>${m.label}</b><span class="sub"> mean µg/m³ · AQI ${m.aqi_mean} ${m.category_mean}</span></span>
+      </div>`).join('') || '';
+  }
   const dateEl=document.getElementById('winterDate');
   let frame=0; const dur=STATIC?0:9000; const t0=performance.now(); let dpath='';
   const paint=(i)=>{ const row=Wd.daily[i]; hexes.forEach((h,k)=>h.setAttribute('fill', band(row[k]))); dateEl.textContent=new Date(days[i]).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}); const v=cityDaily[i]; if(v!=null){ dpath += (dpath?'L':'M')+X(i).toFixed(1)+','+Y(v).toFixed(1)+' '; path.setAttribute('d',dpath); } cursor.setAttribute('x1',X(i)); cursor.setAttribute('x2',X(i)); markers.forEach(m=>{ if(m.i>=0&&i>=m.i){ m.g.setAttribute('opacity',1); m.card.style.opacity=1; } }); };

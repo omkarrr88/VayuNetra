@@ -3,7 +3,7 @@
 // map can never disagree; the button hands you to the map with this city loaded.
 import { useEffect, useState } from "react";
 import { api } from "../api";
-import { categoryForIndex, formatIndex, pm25Index, POLLUTANT_LABEL, type AqiScale } from "../aqi";
+import { categoryForIndex, formatIndex, pm25Index, POLLUTANT_LABEL, type AqiScale, bandInk } from "../aqi";
 import { placeForCell } from "../placeName";
 import { navigate } from "../router";
 import { Button, Empty, Loading, Surface, Text } from "../design/ui";
@@ -77,7 +77,7 @@ export function WorstAreas({ city, scale, limit = 6 }: { city: string; scale: Aq
                   <Text as="div" size="2xs" tone="faint" style={{ fontFamily: "ui-monospace, monospace" }}>{c.h3_cell}</Text>
                 </span>
                 <span style={{ textAlign: "right", flex: "none" }}>
-                  <Text as="div" size="lg" weight={800} tight style={{ color: cat.color }}>{formatIndex(idx, scale)}</Text>
+                  <Text as="div" size="lg" weight={800} tight style={{ color: bandInk(cat.color) }}>{formatIndex(idx, scale)}</Text>
                   <Text as="div" size="2xs" tone="muted">
                     {c.pm25 !== null && c.pm25 !== undefined ? `PM2.5 ${c.pm25}` : cat.label}
                     {prominent && scale !== "who" ? ` · ${POLLUTANT_LABEL[prominent] ?? prominent}` : ""}

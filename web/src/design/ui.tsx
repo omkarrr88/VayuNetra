@@ -89,13 +89,15 @@ export function Chip({ tone = "neutral", solid = false, children, title, style }
 }) {
   const c = tone === "neutral" ? "var(--muted)" : `var(--${tone})`;
   const soft = tone === "neutral" ? "var(--surface-3)" : `var(--${tone}-soft)`;
+  // A solid chip's ink must flip with the theme — --danger is dark in light mode and light in dark.
+  const solidInk = tone === "neutral" ? "var(--surface)" : tone === "primary" ? "var(--primary-ink)" : `var(--${tone}-ink)`;
   return (
     <span
       title={title}
       style={{
         display: "inline-flex", alignItems: "center", gap: "var(--s-1)",
         padding: "2px 8px", borderRadius: "var(--r-full)",
-        background: solid ? c : soft, color: solid ? "#fff" : c,
+        background: solid ? c : soft, color: solid ? solidInk : c,
         fontSize: "var(--t-2xs)", fontWeight: 700, letterSpacing: "var(--tracking-wide)", textTransform: "uppercase",
         whiteSpace: "nowrap", ...style,
       }}
@@ -121,7 +123,7 @@ export function Button({
   };
   const look: Record<string, CSSProperties> = {
     primary: { background: "var(--primary)", color: "var(--primary-ink)", boxShadow: "var(--e-1)" },
-    danger: { background: "var(--danger)", color: "#fff", boxShadow: "var(--e-1)" },
+    danger: { background: "var(--danger)", color: "var(--danger-ink)", boxShadow: "var(--e-1)" },
     quiet: { background: "var(--surface-2)", color: "var(--ink-2)", borderColor: "var(--line)" },
     ghost: { background: "transparent", color: "var(--muted)" },
   };

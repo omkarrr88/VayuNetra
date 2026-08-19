@@ -4,7 +4,7 @@
 // stretching the axis.
 import { useMemo, useState } from "react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { POLLUTANT_LABEL, SCALES, categoryForIndex, categoryForPm25, formatIndex, pm25Index, type AqiScale } from "../aqi";
+import { POLLUTANT_LABEL, SCALES, categoryForIndex, categoryForPm25, formatIndex, pm25Index, type AqiScale, bandInk } from "../aqi";
 import { BandLegend, Section, type Overview, type Pollutant } from "./parts";
 
 const hourLabel = (iso: string) => new Date(iso).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
@@ -214,7 +214,7 @@ export function MonthlyTrend({ d, scale }: { d: Overview; scale: AqiScale }) {
             <div className="text-[11px] font-semibold uppercase tracking-wide text-rose-600">most polluted</div>
             <div className="flex items-baseline justify-between">
               <span className="text-[15px] font-bold text-slate-900">{MONTH_NAMES[Number(d.months.most_polluted.month.slice(5, 7)) - 1]} {d.months.most_polluted.month.slice(0, 4)}</span>
-              <span className="rounded-md px-2 py-0.5 text-[13px] font-extrabold" style={{ background: categoryForPm25(d.months.most_polluted.pm25, scale).color, color: "#fff" }}>
+              <span className="rounded-md px-2 py-0.5 text-[13px] font-extrabold" style={{ background: categoryForPm25(d.months.most_polluted.pm25, scale).color, color: categoryForPm25(d.months.most_polluted.pm25, scale).text }}>
                 {formatIndex(pm25Index(d.months.most_polluted.pm25, scale), scale)}
               </span>
             </div>
@@ -226,7 +226,7 @@ export function MonthlyTrend({ d, scale }: { d: Overview; scale: AqiScale }) {
             <div className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700">least polluted</div>
             <div className="flex items-baseline justify-between">
               <span className="text-[15px] font-bold text-slate-900">{MONTH_NAMES[Number(d.months.least_polluted.month.slice(5, 7)) - 1]} {d.months.least_polluted.month.slice(0, 4)}</span>
-              <span className="rounded-md px-2 py-0.5 text-[13px] font-extrabold" style={{ background: categoryForPm25(d.months.least_polluted.pm25, scale).color, color: "#fff" }}>
+              <span className="rounded-md px-2 py-0.5 text-[13px] font-extrabold" style={{ background: categoryForPm25(d.months.least_polluted.pm25, scale).color, color: categoryForPm25(d.months.least_polluted.pm25, scale).text }}>
                 {formatIndex(pm25Index(d.months.least_polluted.pm25, scale), scale)}
               </span>
             </div>
@@ -318,8 +318,8 @@ export function CityCards({ rows, scale, onOpen, exclude }: { rows: CityRow[]; s
               <span className="text-[14px] font-bold text-slate-800">{r.name}</span>
               <span className="text-slate-400" aria-hidden="true">↗</span>
             </div>
-            <div className="mt-1 text-3xl font-extrabold" style={{ color: cat.color }}>{formatIndex(index, scale)}</div>
-            <div className="text-[12px] font-semibold" style={{ color: cat.color }}>{cat.label}</div>
+            <div className="mt-1 text-3xl font-extrabold" style={{ color: bandInk(cat.color) }}>{formatIndex(index, scale)}</div>
+            <div className="text-[12px] font-semibold" style={{ color: bandInk(cat.color) }}>{cat.label}</div>
             <div className="mt-2 flex justify-between text-[11px] text-slate-500">
               <span>PM2.5 <b className="text-slate-700">{r.current_pm25}</b></span>
               <span>+24 h <b className="text-slate-700">{r.forecast_24h_pm25 ?? "–"}</b></span>

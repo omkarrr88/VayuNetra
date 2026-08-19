@@ -8,15 +8,16 @@ mkdirSync(OUT, { recursive: true });
 const SECTIONS = ["action", "forecast", "citizen", "compare", "whatif", "impact", "pipeline"];
 const b = await chromium.launch();
 const errs = [], findings = [];
-for (const theme of ["light", "dark"]) {
-  const p = await b.newPage({ viewport: { width: 1600, height: 950 } });
-  p.on("pageerror", (e) => errs.push(`${theme}: ${String(e).slice(0, 160)}`));
-  p.on("console", (m) => { if (m.type() === "error" && !/favicon|manifest/i.test(m.text())) errs.push(`${theme}: ${m.text().slice(0, 160)}`); });
+for (const [theme, viewport] of [["light", { width: 1600, height: 950 }], ["dark", { width: 1600, height: 950 }], ["light", { width: 390, height: 844 }]]) {
+  const label = viewport.width < 500 ? `${theme}-mobile` : theme;
+  const p = await b.newPage({ viewport });
+  p.on("pageerror", (e) => errs.push(`${label}: ${String(e).slice(0, 160)}`));
+  p.on("console", (m) => { if (m.type() === "error" && !/favicon|manifest/i.test(m.text())) errs.push(`${label}: ${m.text().slice(0, 160)}`); });
   await p.addInitScript(() => localStorage.setItem("vayunetra-tour-v1", "done"));
   for (const s of SECTIONS) {
     await p.goto(`${BASE}/console?city=delhi&section=${s}&theme=${theme}`, { waitUntil: "networkidle" }).catch(() => {});
     await p.waitForTimeout(s === "action" ? 5200 : 3200);
-    await p.screenshot({ path: `${OUT}/${theme}-${s}.jpg`, type: "jpeg", quality: 68, fullPage: true });
+    await p.screenshot({ path: `${OUT}/${label}-${s}.jpg`, type: "jpeg", quality: 68, fullPage: true });
     findings.push(...await p.evaluate((tag) => {
       const out = [], de = document.documentElement;
       if (de.scrollWidth > de.clientWidth + 2) out.push(`${tag}: horizontal overflow (${de.scrollWidth} > ${de.clientWidth})`);
@@ -33,7 +34,7 @@ for (const theme of ["light", "dark"]) {
         if (a !== null && c !== null && Math.abs(a - c) < 40) { low += 1; if (low <= 3) out.push(`${tag}: low contrast "${t.slice(0, 34)}"`); }
       }
       return out;
-    }, `${theme}/${s}`));
+    }, `${label}/${s}`));
   }
   await p.close();
 }
