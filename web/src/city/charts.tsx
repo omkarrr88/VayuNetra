@@ -40,7 +40,8 @@ export function SeriesGraph({ d, scale, pollutant }: { d: Overview; scale: AqiSc
 
   const label = (v: string) => (daily ? new Date(v).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : hourLabel(v));
   const unit = isIndex ? SCALES[scale].short : (d.now.pollutants[pollutant]?.unit ?? "");
-  const colour = (v: number) => (isIndex ? categoryForIndex(v, scale).color : categoryForPm25(pollutant === "pm25" ? v : (d.now.pollutants.pm25?.value ?? v), scale).color);
+  const cat = (v: number) => (isIndex ? categoryForIndex(v, scale) : categoryForPm25(pollutant === "pm25" ? v : (d.now.pollutants.pm25?.value ?? v), scale));
+  const colour = (v: number) => cat(v).color;
 
   const controls = (
     <div className="flex flex-wrap items-center gap-2">
@@ -81,11 +82,11 @@ export function SeriesGraph({ d, scale, pollutant }: { d: Overview; scale: AqiSc
     <div className="vn-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex gap-2">
-          <span className="rounded-lg px-2 py-1 text-[12px] font-bold text-white" style={{ background: colour(lo.value) }}>
-            {isIndex ? formatIndex(lo.value, scale) : lo.value} <span className="font-semibold opacity-90">↓ min · {label(lo.at)}</span>
+          <span className="rounded-lg px-2 py-1 text-[12px] font-bold" style={{ background: colour(lo.value), color: cat(lo.value).text }}>
+            {isIndex ? formatIndex(lo.value, scale) : lo.value} <span className="font-semibold">↓ min · {label(lo.at)}</span>
           </span>
-          <span className="rounded-lg px-2 py-1 text-[12px] font-bold text-white" style={{ background: colour(hi.value) }}>
-            {isIndex ? formatIndex(hi.value, scale) : hi.value} <span className="font-semibold opacity-90">↑ max · {label(hi.at)}</span>
+          <span className="rounded-lg px-2 py-1 text-[12px] font-bold" style={{ background: colour(hi.value), color: cat(hi.value).text }}>
+            {isIndex ? formatIndex(hi.value, scale) : hi.value} <span className="font-semibold">↑ max · {label(hi.at)}</span>
           </span>
         </div>
         {controls}

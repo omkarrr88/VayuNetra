@@ -178,3 +178,11 @@
 .vn .text-amber-900, .vn-console .text-amber-900 { color: var(--warn); }
 .vn .text-emerald-800, .vn .text-emerald-900, .vn-console .text-emerald-800, .vn-console .text-emerald-900 { color: var(--accent); }
 .vn .text-rose-800, .vn .text-rose-900, .vn-console .text-rose-800, .vn-console .text-rose-900 { color: var(--danger); }
+
+/* A solid fill sets its own ink, but a child carrying `text-white` overrides the inherited value —
+   and in dark mode those fills are LIGHT, so the white child becomes unreadable (the latency widget
+   measured 1.86:1). Inside a mapped fill, `text-white` defers to whatever the fill chose. */
+.vn :is(.bg-emerald-700, .bg-emerald-600, .bg-blue-600, .bg-blue-700, .bg-sky-700, .bg-slate-800, .bg-slate-900) :is(.text-white, .text-slate-100, .text-slate-200),
+.vn-console :is(.bg-emerald-700, .bg-emerald-600, .bg-blue-600, .bg-blue-700, .bg-sky-700, .bg-slate-800, .bg-slate-900) :is(.text-white, .text-slate-100, .text-slate-200) {
+  color: inherit;
+}

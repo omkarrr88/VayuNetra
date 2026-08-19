@@ -59,7 +59,7 @@
   --ink: #0b1220;
   --ink-2: #334155;
   --muted: #556070;   /* 6.4:1 on white, 5.9:1 on --canvas - AA at every size */
-  --faint: #66717f;   /* 5.0:1 on white; the old #94a3b8 was 2.6:1 */
+  --faint: #5d6875;   /* 5.7:1 on white, 4.9:1 on --canvas — AA on every ground we use */
   --line: #e6ebf2;
   --line-strong: #cfd8e6;
   --surface: #ffffff;
@@ -73,7 +73,7 @@
   --primary-soft: #e6edff;
   --accent: #0f766e;
   --accent-soft: #d7f2ee;
-  --warn: #b45309;
+  --warn: #9a4507;    /* 5.8:1 on --warn-soft, 6.5:1 on white */
   --warn-soft: #fdf0d5;
   --danger: #be123c;
   --danger-soft: #ffe4e9;
