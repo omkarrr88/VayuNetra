@@ -34,7 +34,7 @@ Six AI agents on one LangGraph do this in seconds of compute; the human steps (a
 | **Front page** | https://vayunetra-aqi.vercel.app — what VayuNetra is, with a live ten-city board. Two doors: **Check your city's air** (the public app) and **Open console** (operations). |
 | **Public app** | `/city/<id>` · `/map` · `/forecast` · `/rankings` · `/about`. Opens on Delhi. No login: reads are public under Postgres row-level security; every write goes through the server with the service role. |
 | **API** | https://vayunetra-c8i8.onrender.com — `GET /health` shows `DEMO_MODE`; every endpoint returns `{success, data, error, meta}`. Full list: `docs/API_CONTRACT.md`. |
-| **Run locally** | `make dev` — starts the API on :8000 (`DEMO_MODE` from `.env`) and the web app on :5173. `make prewarm` wakes and verifies the live stack (GO / NO-GO). `make test` runs the 204 backend tests. |
+| **Run locally** | `make dev` — starts the API on :8000 (`DEMO_MODE` from `.env`) and the web app on :5173. `make prewarm` wakes and verifies the live stack (GO / NO-GO). `make test` runs the 284 backend tests. |
 | **Demo mode** | `DEMO_MODE=true` serves 19 bundled fixtures with an identical UX (labelled in `/health`). The web app also falls back to bundled fixtures if the API is unreachable and shows an amber *"backend waking up — showing bundled demo snapshot"* notice (Render free tier sleeps; **retry** or wait — it clears on the first successful call). |
 | **Keyboard** | In the console: **1–7** switch sections · **[ ]** cycle cities · **P** presentation mode (larger type for a projector) · **⌘K / Ctrl-K** jump to any city or section · **Esc** closes the Cell Story. |
 | **Deep links** | Every console state is a URL: `/console?city=mumbai&section=forecast&cell=88608b56cbfffff&mode=pm25&layers=sources,plumes,wards,freight,fires`. |
@@ -446,7 +446,7 @@ CPCB CAAQMS (via OpenAQ / data.gov.in) · Open-Meteo + ERA5 weather and boundary
 - Where ₹0 stops is measured and published (`docs/SCALE.md`).
 
 ### 13.6 Ops
-`make dev` · `make test` (204 backend tests, 64 % line coverage, CI gate 55 %) · `cd web && npx playwright test` (7 smoke; `VN_LIVE=1` adds the 9-flow live officer journey) · `web/scripts/qa/*.mjs` (full walkthrough, axe, mobile, city sweep, deck render) · `make prewarm` (GO / NO-GO) · `make benchmark` · GitHub Actions: hourly ingest, nightly models / registry / enforcement / advisories / brief / retention.
+`make dev` · `make test` (284 backend tests, 64 % line coverage, CI gate 55 %) · `cd web && npx playwright test` (7 smoke; `VN_LIVE=1` adds the 9-flow live officer journey) · `web/scripts/qa/*.mjs` (full walkthrough, axe, mobile, city sweep, deck render) · `make prewarm` (GO / NO-GO) · `make benchmark` · GitHub Actions: hourly ingest, nightly models / registry / enforcement / advisories / brief / retention.
 
 ---
 
