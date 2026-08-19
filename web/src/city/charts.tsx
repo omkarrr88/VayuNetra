@@ -137,7 +137,9 @@ export function AqiCalendar({ d, scale }: { d: Overview; scale: AqiScale }) {
   }, [d, scale]);
   const [openMonth, setOpenMonth] = useState(0);
   if (!byMonth.length) return <div className="vn-card p-6 text-center text-[13px] text-slate-500">No daily history for {d.name} yet.</div>;
-  const shown = byMonth.slice(openMonth, openMonth + 2);
+  // Paged newest-first, but READ left-to-right in time: the earlier month sits on the left and the
+  // later one on the right, the way a calendar is read.
+  const shown = byMonth.slice(openMonth, openMonth + 2).slice().reverse();
   return (
     <div className="vn-card p-4">
       <div className="flex items-center justify-between">
@@ -337,8 +339,8 @@ export function CityCards({ rows, scale, onOpen, exclude }: { rows: CityRow[]; s
               </div>
               <Monument
                 city={r.city_id}
-                width={78}
-                className="shrink-0 opacity-40 transition-opacity group-hover:opacity-70"
+                width={92}
+                className="shrink-0 opacity-60 transition-opacity group-hover:opacity-90"
                 style={{ color: bandInk(cat.color) }}
               />
             </div>

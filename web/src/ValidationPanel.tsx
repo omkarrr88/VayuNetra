@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
-import { Panel, SegBtn } from "./ui";
+import { EmptyState, Panel, SegBtn } from "./ui";
 
 /** One row of the headline table served by GET /metrics/benchmark. */
 type Headline = {
@@ -116,10 +116,7 @@ export default function ValidationPanel({ city }: { city: string }) {
   if (data === null || (!data.history && !data.live)) {
     return (
       <Panel title="Forecast validation" tag="pending">
-        <div className="text-xs text-slate-500">
-          No benchmark artifact for this city yet — run <code className="rounded bg-slate-100 px-1">python -m ml.eval.benchmark --city {city}</code>.
-          We publish measured skill, not assumed skill.
-        </div>
+        <EmptyState message="No benchmark published for this city yet. Skill is measured on a held-out slice of that city's own record, so a city needs enough history before there is anything honest to report — we publish measured skill, never assumed skill." />
         <AttributionMethods city={city} />
       </Panel>
     );
