@@ -29,13 +29,16 @@ def _live_vulnerability(city_id: str) -> list[dict]:
 
     rows = (
         client().table("vulnerability")
-        .select("zone_id,population,hospitals,schools,eldercare,outdoor_sites,vulnerability_index")
+        .select("h3_cell,zone_id,population,hospitals,schools,eldercare,outdoor_sites,vulnerability_index")
         .eq("city_id", city_id).order("vulnerability_index", desc=True)
         .limit(TOP_ZONES).execute().data or []
     )
     return [
         {
             "ward_id": r["zone_id"],
+            # the advisory names the ward from this; without it every message falls back to
+            # the zone id, which is the hex-truncation nobody can read
+            "h3_cell": r.get("h3_cell"),
             "population": r["population"],
             "vulnerability_index": r["vulnerability_index"],
             "schools": r["schools"],
