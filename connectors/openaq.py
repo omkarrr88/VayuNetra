@@ -141,7 +141,7 @@ def fetch_sensor_hourly(
 def fetch_city(
     city_id: str, days: int = 14, max_sensors: int = 40,
     date_from: str | None = None, date_to: str | None = None,
-    only_vars: list[str] | None = None,
+    only_vars: list[str] | None = None, per_var: int | None = None,
 ) -> list[dict]:
     from datetime import datetime, timedelta, timezone
 
@@ -158,9 +158,29 @@ def fetch_city(
         print(f"  filtered to {sorted(want)}: {len(sensors)} sensors")
     # most-recently-active stations first -> active stations bring their full pollutant set
     sensors.sort(key=lambda s: s.get("last") or "", reverse=True)
-    if len(sensors) > max_sensors:
-        print(f"  found {len(sensors)} sensors; capping to {max_sensors} (raise with --max-sensors)")
-        sensors = sensors[:max_sensors]
+
+    # Allocate the budget PER POLLUTANT, not as a global top-N.
+    #
+    # Delhi has ~740 sensors within 25 km, ~95 of them active per pollutant. Taking the 15
+    # most-recent overall gave PM2.5 five stations and every gas exactly one — so a single sensor
+    # decided the city's headline index whenever PM10 or NO2 was the prominent pollutant. An even
+    # split guarantees each pollutant is a mean over several stations, which is what "city mean"
+    # is supposed to mean.
+    by_var: dict[str, list[dict]] = {}
+    for s in sensors:
+        by_var.setdefault(s["variable"], []).append(s)
+    quota = per_var or max(1, max_sensors // max(1, len(by_var)))
+    picked: list[dict] = []
+    for var in sorted(by_var):
+        take = by_var[var][:quota]
+        picked.extend(take)
+        if len(by_var[var]) > len(take):
+            print(f"  {var:5s}: {len(by_var[var])} sensors available, taking {len(take)}")
+        else:
+            print(f"  {var:5s}: {len(take)} sensors")
+    if len(sensors) > len(picked):
+        print(f"  found {len(sensors)} sensors; using {len(picked)} ({quota} per pollutant)")
+    sensors = picked
     window = f"{since[:10]}..{(date_to[:10] if date_to else 'now')}"
     print(f"  fetching {len(sensors)} sensors hourly {window} (throttled ~{MIN_INTERVAL_S}s/req)...")
 
@@ -188,12 +208,15 @@ def main() -> None:
     ap.add_argument("--max-sensors", type=int, default=40)
     ap.add_argument("--from", dest="date_from", help="ISO start, e.g. 2025-10-01")
     ap.add_argument("--vars", dest="only_vars", help="comma-separated pollutants to fetch, e.g. pm25,pm10")
+    ap.add_argument("--per-var", dest="per_var", type=int,
+                    help="sensors per pollutant (default: max-sensors split evenly across pollutants)")
     ap.add_argument("--to", dest="date_to", help="ISO end, e.g. 2026-01-31")
     ap.add_argument("--push", action="store_true")
     args = ap.parse_args()
 
     rows = fetch_city(args.city, args.days, args.max_sensors, args.date_from, args.date_to,
-                      [v.strip() for v in args.only_vars.split(",")] if args.only_vars else None)
+                      [v.strip() for v in args.only_vars.split(",")] if args.only_vars else None,
+                      args.per_var)
     cells = {r["h3_cell"] for r in rows}
     variables = sorted({r["variable"] for r in rows})
     print(f"{args.city}: {len(rows)} rows · {len(cells)} cells · vars {variables}")
