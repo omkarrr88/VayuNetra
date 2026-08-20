@@ -3747,35 +3747,37 @@ The test that produced this is the one that could have embarrassed us, and it di
 with the script that ran it. The previous text in this section said the claim was *unvalidated*;
 it is now *measured, and it fails*, which is a more useful thing to know.
 
-## 13.3 One city's forecast loses to persistence, and it is not noise
+## 13.3 One city cannot be separated from the naive baseline
 
-Per-city skill is measured on a few hundred rows, where the sampling interval is roughly ±0.10 —
-wider than several of the numbers themselves. Every skill figure therefore ships with a
-percentile-bootstrap 95% interval. At +24 h on the recent window:
+Per-city skill is measured on a few hundred to a few thousand rows, where the sampling interval is
+roughly ±0.05 or wider — comparable to several of the numbers themselves. Every skill figure
+therefore ships with a percentile-bootstrap 95% interval. At +24 h on the recent window:
 
 | city | skill vs persistence | 95% CI | beats persistence? |
 |---|---|---|---|
-| lucknow | +0.259 | [+0.083, +0.453] | yes |
-| pune | +0.173 | [+0.121, +0.223] | yes |
-| kolkata | +0.146 | [+0.117, +0.179] | yes |
-| delhi | +0.124 | [+0.077, +0.169] | yes |
-| ahmedabad | +0.121 | [+0.073, +0.174] | yes |
-| bengaluru | +0.119 | [+0.082, +0.157] | yes |
-| chennai | +0.050 | [+0.014, +0.241] | yes |
-| **hyderabad** | **−0.051** | [−0.102, −0.002] | **no** |
-| **jaipur** | **−0.160** | [−0.250, −0.058] | **no** |
+| lucknow | +0.232 | [+0.094, +0.373] | yes |
+| ahmedabad | +0.147 | [+0.110, +0.192] | yes |
+| pune | +0.146 | [+0.102, +0.196] | yes |
+| mumbai | +0.142 | [+0.105, +0.183] | yes |
+| kolkata | +0.138 | [+0.112, +0.166] | yes |
+| bengaluru | +0.124 | [+0.089, +0.160] | yes |
+| delhi | +0.123 | [+0.077, +0.172] | yes |
+| chennai | +0.105 | [+0.012, +0.366] | yes |
+| jaipur | +0.104 | [+0.065, +0.140] | yes |
+| **hyderabad** | -0.025 | [-0.069, +0.021] | **cannot separate** |
 
-Jaipur is negative at all three horizons with intervals entirely below zero — a real deficit, not a
-small sample. An earlier internal check suggested otherwise; it was evaluating unmasked rows,
-including cells with little observational support, which flattered the model. The masked number is
-the honest one.
+**Nine of ten beat persistence with the interval clear of zero.** Hyderabad's spans zero, so the
+honest statement is that we cannot distinguish it from the baseline there — not that it loses.
 
-**A likely cause, not yet a fix.** The served forecast is `w·model + (1−w)·persistence`, with `w`
-chosen to minimise error on one recent calibration window. Five of the ten cities land at or near
-`w = 1.0` — the pure-model corner, where the persistence baseline contributes nothing — and Jaipur
-does so at exactly the horizons it loses, while Delhi sits at 0.65–0.9 and wins. Capping `w` looked
-like it rescued Jaipur in a first experiment, but that experiment was confounded by live ingestion
-backfilling underneath it, so it is recorded as a lead rather than shipped as a result.
+**This changed on 20 Aug, and the reason matters more than the number.** Jaipur was genuinely
+negative (−0.160, interval entirely below zero) until we found the cause: station discovery searched
+a 25 km circle around each city's *map centre* rather than its actual extent, so roughly a third of
+each city was never sampled and the "city mean" was drawn from one side of it. With discovery
+corrected to the city bbox, Jaipur reads +0.104.
+
+Read that as a data-coverage fix, not a modelling win: the station set and the evaluation set changed
+together (Jaipur's supported rows went 299 → 812), so this is a better measurement rather than the
+same measurement improved.
 
 ## 13.4 The 80% band under-covers where decisions are made
 

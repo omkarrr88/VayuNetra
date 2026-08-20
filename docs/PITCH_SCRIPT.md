@@ -107,8 +107,9 @@ the December marker drops. Then continue. Press **R** if you need it again.)*
 > a strict temporal split: Delhi plus nine, thirteen and twelve percent at one, two and three days.
 > Our calibrated alarm catches fifty-four percent of clean-to-Very-Poor transitions days ahead;
 > persistence catches none. The eighty percent band measures seventy-eight percent real coverage.
-> Attribution agrees with the published studies to four percentage points. In two of our ten cities
-> the forecast does not beat persistence — we publish that with its confidence interval.
+> Attribution agrees with the published studies to four percentage points. Nine of our ten cities
+> beat persistence with the interval clear of zero; the tenth we cannot separate from it, and we
+> publish that rather than round it away.
 >
 > **Others forecast the air. Nothing turns a forecast into a traced, cited, delivered, closed
 > action. Here it is, live.**
@@ -246,10 +247,12 @@ front page — the same door a judge would walk through.
 audit trail that would record their actions, and the rating rubric we built for them. Do not pad. The
 worst version of this answer is a long one.
 
-**"Your forecast loses to persistence in a city — why trust it?"** — Because we can tell you *that*
-it loses, with a confidence interval, and most cannot. Then the diagnosis: the persistence blend
-lands at the pure-model corner in five of our ten cities, and that city does so at exactly the
-horizons it loses. It is a named lead with an experiment attached.
+**"Your forecast loses to persistence in a city — why trust it?"** — One city, Hyderabad, and its
+interval spans zero, so the honest answer is that we cannot separate it from the baseline there,
+not that it loses. Jaipur *was* genuinely negative until we found the cause: station discovery was
+searching a circle around the map's centre point rather than the city's extent, so a third of each
+city was never sampled. Fixing that moved Jaipur from minus sixteen percent to plus ten. We can
+tell you which cities are weak, with intervals, which most cannot.
 
 **"Is this really AI, or a dashboard?"** — Two model families with measured skill, a conformal
 calibration layer, SHAP-based apportionment with a gate that makes it abstain, and a state machine

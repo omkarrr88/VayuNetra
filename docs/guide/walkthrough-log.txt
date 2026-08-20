@@ -10,12 +10,12 @@ ok   presentation mode
 ok   keyboard sections 1–7
 ok   layers chip and modes
 ok   time scrub play
-     share card → vayunetra-delhi-ward-pusa.png
+     share card → vayunetra-delhi-sahibabad-daulat-pur.png
 ok   cell story
      brief PDF → brief_delhi.pdf
 ok   morning brief
 ok   worklist filters + search
-     notice PDF → notice_13771.pdf
+     notice PDF → notice_13803.pdf
 ok   dossier + notice
 ok   approve → dispatch → close → history
      PRANA export → ncap_evidence_delhi.csv
