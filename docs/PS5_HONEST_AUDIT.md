@@ -251,30 +251,25 @@ own `window` instead of a shared label:
 | hyderabad | 494 | **-5%** | +5% | +24% | 0.719 |
 
 Four honest problems, all of which we ship rather than hide:
-1. **Jaipur loses to persistence, and now we can prove it is not noise.** *(19 Aug)* Per-city skill
-   is measured on a few hundred rows, where the sampling interval is roughly ±0.10 — wider than
-   several of the numbers we print. So every skill figure now ships with a percentile-bootstrap 95%
-   interval and a `beats_persistence` boolean. Jaipur:
+1. **One city cannot be separated from the naive baseline — and the other one was a data bug.**
+   *(20 Aug)* Every skill figure ships with a percentile-bootstrap 95% interval. Nine of ten cities
+   now beat persistence with the interval entirely above zero; Hyderabad's spans zero
+   (−0.025, [−0.069, +0.021]), so the honest statement is that we cannot distinguish it from the
+   baseline, not that it loses.
 
-   | horizon | skill | 95% CI | beats persistence? |
-   |---|---|---|---|
-   | +24 h | −0.160 | [−0.250, −0.058] | no |
-   | +48 h | −0.100 | [−0.189, −0.002] | no |
-   | +72 h | −0.314 | [−0.442, −0.188] | no |
+   Jaipur *was* genuinely negative on 19 Aug — −0.160, interval entirely below zero, and this
+   document said so. The cause turned out not to be the model. Station discovery searched a 25 km
+   circle around each city's **map centre** rather than its actual extent; Delhi's centre sits
+   11.7 km east of its bbox centre, so roughly a third of each city was never sampled and the "city
+   mean" came from one side of it. Six of ten cities were not fully covered. With discovery
+   corrected to the bbox, and a fall-through for sensors that report a recent timestamp but return
+   no history, Jaipur reads **+0.104 [+0.065, +0.140]**.
 
-   All three intervals lie entirely below zero, so this is a real deficit rather than a small
-   sample. Hyderabad is negative at +24 h and clearly positive at +72 h (+0.213, [+0.116, +0.313]);
-   Delhi is positive at every horizon with intervals well clear of zero.
+   Read that as a data-coverage fix rather than a modelling win: the station set and the evaluation
+   set moved together (Jaipur's supported rows went 299 → 812), so it is a better measurement, not
+   the same measurement improved. The lesson worth keeping is that a "weak city" was a symptom of
+   an ingestion bug, and it took someone looking at the map and saying the cells looked shifted.
 
-   **A likely cause, not yet a fix.** The served value is `w·model + (1−w)·persistence` with `w`
-   chosen to minimise RMSE on one recent calibration tail. Five of the ten cities land at or near
-   `w = 1.0` — the pure-model corner, where the persistence baseline contributes nothing — and
-   Jaipur does so at exactly the horizons it loses, while Delhi sits at 0.65–0.9 and wins. Capping
-   `w` looked like it rescued Jaipur in a first experiment, but that experiment was confounded:
-   live ingestion backfilled underneath it (Jaipur's support rows went 299 → 597 between runs) and
-   one reported weight was inconsistent with the cap being applied at all. **The benchmark itself is
-   deterministic on fixed data — verified by running it twice — so this is worth re-running cleanly
-   against a frozen snapshot before anything ships.** Recorded here rather than quietly shipped.
 2. **PI80 in this column is not a calibration measurement — do not read it as one.** *(revised
    19 Aug after chasing it)* The live protocol is a single split at one forecast origin, and its PI
    coverage is computed over `n_support` rows only: **282** for Delhi +24 h, against an `n_test` of
