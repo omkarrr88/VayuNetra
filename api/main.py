@@ -1845,6 +1845,29 @@ def _city_or_404(city: str) -> dict:
         raise HTTPException(status_code=404, detail=f"unknown city: {city}")
 
 
+# WHO 2021 global air quality guidelines, Table 0.1 (ISBN 9789240034228) — the SHORT-TERM level for
+# each pollutant: the 24-hour AQG, except ozone where WHO's short-term metric is the 8-hour mean.
+# Mirrored in web/src/aqi.ts; both were transcribed from the publication rather than from memory.
+WHO_AQG_SHORT_TERM = {"pm25": 15.0, "pm10": 45.0, "no2": 25.0, "so2": 40.0, "co": 4.0, "o3": 100.0}
+
+
+def _who_worst(values: dict) -> tuple[str, float] | None:
+    """The pollutant furthest above its own WHO guideline, and by how many times.
+
+    The city's WHO reading is the worst of these, exactly as the CPCB and EPA indices are the worst
+    sub-index — which is what lets the interface say "set by PM10" truthfully on this scale.
+    """
+    best = None
+    for pol, val in values.items():
+        aqg = WHO_AQG_SHORT_TERM.get(pol)
+        if aqg is None or val is None:
+            continue
+        m = round(float(val) / aqg, 1)
+        if best is None or m > best[1]:
+            best = (pol, m)
+    return best
+
+
 def _city_now_from_hourly(hourly_rows: list[dict]) -> dict:
     """The city's air *right now*, from city-mean hourly rows: the newest value per pollutant, the
     composite indices over those means (CPCB + US EPA, each with its prominent pollutant) and the
@@ -1933,7 +1956,14 @@ def city_overview(city: str = Query(..., description="City ID")) -> dict:
     for hour in sorted(by_hour):
         c = composite([{"pollutant": p, "value": v["value"], "unit": v["unit"]} for p, v in by_hour[hour].items()])
         if c["aqi_in"] is not None:
-            index_series.append({"hour": hour, "aqi_in": c["aqi_in"], "aqi_us": c["aqi_us"], "prominent_in": c["prominent_in"]})
+            row = {"hour": hour, "aqi_in": c["aqi_in"], "aqi_us": c["aqi_us"], "prominent_in": c["prominent_in"]}
+            # The WHO scale is a multiple of each pollutant's own guideline, so the browser cannot
+            # derive it from aqi_in — it needs the readings. Without this the WHO sparkline plotted
+            # the CPCB index and came out identical to the CPCB one, axis labels and all.
+            who = _who_worst({p: v["value"] for p, v in by_hour[hour].items()})
+            if who:
+                row["who"], row["prominent_who"] = who[1], who[0]
+            index_series.append(row)
 
     # ---- daily series per pollutant (+ daily index from PM2.5/PM10 where both exist)
     daily: dict[str, list] = defaultdict(list)

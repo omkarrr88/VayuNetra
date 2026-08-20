@@ -2,7 +2,7 @@
 // computed from this city's own station readings — nothing here is city-specific in code, so all
 // ten cities (and the eleventh, whenever a YAML is added) render identically.
 import { type ReactNode } from "react";
-import { POLLUTANT_LABEL, SCALES, categoryForIndex, formatIndex, pm25Bands, pm25Index, type AqiScale, bandInk } from "../aqi";
+import { POLLUTANT_LABEL, SCALES, WHO_AQG, categoryForIndex, formatIndex, pm25Bands, whoCategory, whoMultiple, whoWorst, type AqiScale, bandInk } from "../aqi";
 
 export type Overview = {
   city_id: string; name: string; languages: string[]; generated_at: string;
@@ -14,7 +14,7 @@ export type Overview = {
   };
   hourly: {
     pollutants: Record<string, { hour: string; value: number }[]>;
-    index: { hour: string; aqi_in: number; aqi_us: number; prominent_in: string }[];
+    index: { hour: string; aqi_in: number; aqi_us: number; prominent_in: string; who?: number; prominent_who?: string }[];
     min: { hour: string; aqi_in: number } | null; max: { hour: string; aqi_in: number } | null;
   };
   daily: {
@@ -75,12 +75,28 @@ export function PollutantChips({ available, value, onChange, compact = false }: 
 }
 
 /** Coloured band ruler with the current value's marker — the "where am I on the scale" strip. */
-export function ScaleBar({ index, scale }: { index: number | null; scale: AqiScale }) {
+export function ScaleBar({ index, scale, pollutant }: { index: number | null; scale: AqiScale; pollutant?: string | null }) {
+  // On WHO the ticks are the interim targets OF THE POLLUTANT SETTING THE READING, expressed as
+  // multiples of its own guideline. They used to be PM2.5's ladder regardless, so a bar showing a
+  // PM10 reading marked IT-4 at 1.7× when PM10's IT-4 is 1.1× — the marker sat in the wrong band.
+  const whoStops = (): readonly (readonly [string, number])[] => {
+    const g = (pollutant && WHO_AQG[pollutant]) || WHO_AQG.pm25;
+    const names = g.ladder.length === 6
+      ? ["≤ guideline", "IT-4", "IT-3", "IT-2", "IT-1", "> IT-1"]
+      : g.ladder.length === 4
+        ? ["≤ guideline", "IT-2", "IT-1", "> IT-1"]
+        : ["≤ guideline", "IT-1", "> IT-1"];
+    return g.ladder.map((st, i) => [
+      names[i] ?? `×${Math.round((st.limit / g.aqg) * 10) / 10}`,
+      Number.isFinite(st.limit) ? Math.round((st.limit / g.aqg) * 100) / 100
+        : Math.round((g.ladder[i - 1].limit / g.aqg) * 1.6 * 10) / 10,
+    ] as const);
+  };
   const stops = scale === "in"
     ? [["Good", 50], ["Satisfactory", 100], ["Moderate", 200], ["Poor", 300], ["Very Poor", 400], ["Severe", 500]] as const
     : scale === "us"
       ? [["Good", 50], ["Moderate", 100], ["USG", 150], ["Unhealthy", 200], ["Very Unhealthy", 300], ["Hazardous", 500]] as const
-      : [["≤ guideline", 1], ["IT-4", 1.7], ["IT-3", 2.5], ["IT-2", 3.3], ["IT-1", 5], ["> IT-1", 8]] as const;
+      : whoStops();
   const max = stops[stops.length - 1][1];
   const pct = index === null ? null : Math.min(100, (index / max) * 100);
   return (
@@ -89,7 +105,9 @@ export function ScaleBar({ index, scale }: { index: number | null; scale: AqiSca
         <div className="flex h-full w-full">
           {stops.map(([label, hi], i) => {
             const lo = i === 0 ? 0 : stops[i - 1][1];
-            const cat = categoryForIndex(scale === "who" ? hi * 15 / 15 : hi, scale);
+            const cat = scale === "who"
+              ? (whoCategory(pollutant || "pm25", hi * ((WHO_AQG[pollutant || "pm25"] ?? WHO_AQG.pm25).aqg)) ?? { color: "#94a3b8", label: "", text: "#000" })
+              : categoryForIndex(hi, scale);
             return <div key={label} style={{ width: `${((hi - lo) / max) * 100}%`, background: cat.color }} title={`${label} ≤ ${hi}`} />;
           })}
         </div>
@@ -107,9 +125,13 @@ export function ScaleBar({ index, scale }: { index: number | null; scale: AqiSca
 /** The hero: this city's index right now, its category, the driving pollutant and the two anchors
  *  (PM2.5 / PM10) people recognise. No weather, no global rank — we show only what we measure. */
 export function CityHero({ d, scale }: { d: Overview; scale: AqiScale }) {
-  const index = scale === "in" ? d.now.aqi_in : scale === "us" ? d.now.aqi_us : (d.now.pollutants.pm25 ? pm25Index(d.now.pollutants.pm25.value, "who") : null);
-  const cat = index !== null ? categoryForIndex(index, scale) : null;
-  const prominent = scale === "us" ? d.now.prominent_us : d.now.prominent_in;
+  // WHO takes the pollutant furthest above ITS OWN guideline, the same way the CPCB and EPA indices
+  // take the worst sub-index. Dividing PM2.5 alone by 15 while naming the CPCB prominent pollutant
+  // meant the number and the caption described different pollutants.
+  const heroWho = scale === "who" ? whoWorst(d.now.pollutants) : null;
+  const index = scale === "in" ? d.now.aqi_in : scale === "us" ? d.now.aqi_us : heroWho?.multiple ?? null;
+  const cat = scale === "who" ? heroWho?.category ?? null : index !== null ? categoryForIndex(index, scale) : null;
+  const prominent = scale === "us" ? d.now.prominent_us : scale === "who" ? heroWho?.pollutant ?? null : d.now.prominent_in;
   const subs = scale === "us" ? d.now.sub_us : d.now.sub_in;
   const pm25 = d.now.pollutants.pm25, pm10 = d.now.pollutants.pm10;
   const newest = Object.values(d.now.pollutants).map((p) => p.hour).sort().pop();
@@ -126,7 +148,7 @@ export function CityHero({ d, scale }: { d: Overview; scale: AqiScale }) {
             <span className="pb-1 text-[12px] font-semibold text-slate-500">{SCALES[scale].short}</span>
           </div>
           <div className="mt-1 text-lg font-bold" style={{ color: bandInk(cat?.color) }}>{cat?.label ?? "no reading"}</div>
-          <ScaleBar index={index} scale={scale} />
+          <ScaleBar index={index} scale={scale} pollutant={prominent} />
           <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-[13px]">
             {pm25 && <span className="text-slate-600">PM2.5 <b className="text-slate-900">{pm25.value}</b> µg/m³</span>}
             {pm10 && <span className="text-slate-600">PM10 <b className="text-slate-900">{pm10.value}</b> µg/m³</span>}
@@ -158,16 +180,22 @@ export function CityHero({ d, scale }: { d: Overview; scale: AqiScale }) {
 
 /** One card per pollutant this city reports, with its sub-index colour as the accent. */
 export function PollutantCards({ d, scale, onPick, selected, compact = false }: { d: Overview; scale: AqiScale; onPick: (p: Pollutant) => void; selected?: Pollutant; compact?: boolean }) {
+  // Each card shows its pollutant's own sub-index on the chosen scale. On WHO that is the multiple
+  // of that pollutant's own guideline — showing the CPCB sub-index here, as this did, meant the WHO
+  // tab displayed CPCB numbers under a WHO heading.
   const subs = (scale === "us" ? d.now.sub_us : d.now.sub_in) ?? {};
   const entries = POLLUTANTS.filter((p) => d.now.pollutants[p]);
-  const prominent = scale === "us" ? d.now.prominent_us : d.now.prominent_in;
+  const worst = scale === "who" ? whoWorst(d.now.pollutants) : null;
+  const prominent = scale === "us" ? d.now.prominent_us : scale === "who" ? worst?.pollutant ?? null : d.now.prominent_in;
   if (!entries.length) return null;
   return (
     <div className={compact ? "grid gap-2" : "grid gap-3 sm:grid-cols-2 lg:grid-cols-3"}>
       {entries.map((p) => {
         const r = d.now.pollutants[p];
-        const sub = subs[p];
-        const cat = sub !== undefined ? categoryForIndex(sub, scale) : null;
+        const sub = scale === "who" ? whoMultiple(p, r.value) ?? undefined : subs[p];
+        const cat = scale === "who"
+          ? whoCategory(p, r.value)
+          : sub !== undefined ? categoryForIndex(sub, scale) : null;
         return (
           <button
             key={p}
@@ -181,7 +209,7 @@ export function PollutantCards({ d, scale, onPick, selected, compact = false }: 
                 <span className="truncate text-[13px] font-bold text-slate-800">{POLLUTANT_FULL[p]}</span>
                 {prominent === p && <span className="shrink-0 rounded bg-slate-900 px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white" title="This pollutant sets the city index right now">prominent</span>}
               </div>
-              <div className="text-[11px] text-slate-500">{ago(r.hour)}{sub !== undefined ? ` · sub-index ${sub}` : ""}</div>
+              <div className="text-[11px] text-slate-500">{ago(r.hour)}{sub !== undefined ? (scale === "who" ? ` · ${sub}× guideline` : ` · sub-index ${sub}`) : ""}</div>
             </div>
             <div className="text-right">
               <div className="text-2xl font-extrabold tabular-nums text-slate-900">{r.value}</div>

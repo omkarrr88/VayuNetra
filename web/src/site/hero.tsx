@@ -1,22 +1,36 @@
 // The public page's opening statement: one number, said once, at the size it deserves.
 // Everything in it is live from GET /city/overview — the same payload the console reads, so the
 // public page and the officer console can never show different air.
-import { categoryForIndex, pm25Index, POLLUTANT_LABEL, SCALES, type AqiScale, bandInk } from "../aqi";
+import { categoryForIndex, whoWorst, POLLUTANT_LABEL, SCALES, type AqiScale, bandInk } from "../aqi";
 import { ScaleBar, ago, type Overview } from "../city/parts";
 import { Metric, Surface, Text } from "../design/ui";
 
 /** Index on the chosen scale — WHO is defined on PM2.5 alone, the other two are composites. */
 export function heroIndex(d: Overview, scale: AqiScale): number | null {
   if (scale === "us") return d.now.aqi_us;
-  if (scale === "who") return d.now.pollutants.pm25 ? pm25Index(d.now.pollutants.pm25.value, "who") : null;
+  // WHO: the pollutant furthest above ITS OWN guideline, like CPCB and EPA take the worst
+  // sub-index. This used to divide PM2.5 alone by 15 while the caption named the CPCB prominent
+  // pollutant, so the number and the label described different things.
+  if (scale === "who") return whoWorst(d.now.pollutants)?.multiple ?? null;
   return d.now.aqi_in;
+}
+
+/** The pollutant a scale's headline is set by. */
+export function heroProminent(d: Overview, scale: AqiScale): string | null {
+  if (scale === "us") return d.now.prominent_us;
+  if (scale === "who") return whoWorst(d.now.pollutants)?.pollutant ?? null;
+  return d.now.prominent_in;
 }
 
 /** The last 24 hours of the city index, drawn as a line that draws itself in. */
 function Sparkline({ d, scale, color }: { d: Overview; scale: AqiScale; color: string }) {
   const pts = d.hourly.index ?? [];
   if (pts.length < 3) return null;
-  const vals = pts.map((p) => (scale === "us" ? p.aqi_us : p.aqi_in));
+  // On the WHO scale the hourly series is the PM2.5 multiple of the 15 µg/m³ guideline; plotting
+  // aqi_in here made the WHO sparkline identical to the CPCB one, down to its axis labels.
+  // the server supplies the WHO multiple per hour, because it needs the raw readings the browser
+  // does not receive; without it this chart plotted the CPCB index under a WHO heading
+  const vals = pts.map((p) => (scale === "us" ? p.aqi_us : scale === "who" ? (p.who ?? 0) : p.aqi_in));
   const lo = Math.min(...vals), hi = Math.max(...vals);
   const span = hi - lo || 1;
   const W = 100, H = 30;
@@ -66,11 +80,15 @@ function Tile({ value, label, sub }: { value: string; label: string; sub?: strin
 
 export function CityHeroBig({ d, scale }: { d: Overview; scale: AqiScale }) {
   const index = heroIndex(d, scale);
-  const cat = index !== null ? categoryForIndex(index, scale) : null;
+  // On WHO the band must come from the SETTING pollutant's own interim targets. Deriving it from
+  // the multiple ran it back through PM2.5's ladder, so Ahmedabad's PM10 at 174 µg/m³ — past PM10's
+  // IT-1 of 150 — was shown as "≤ IT-1", one band too kind.
+  const who = scale === "who" ? whoWorst(d.now.pollutants) : null;
+  const cat = scale === "who" ? who?.category ?? null : index !== null ? categoryForIndex(index, scale) : null;
   // the band colour reads as a fill; as TEXT it needs the darkened/lightened ink
   const fill = cat?.color ?? "var(--muted)";
   const colour = bandInk(cat?.color);
-  const prominent = scale === "us" ? d.now.prominent_us : d.now.prominent_in;
+  const prominent = heroProminent(d, scale);
   const newest = Object.values(d.now.pollutants).map((p) => p.hour).sort().pop();
   const pm25 = d.now.pollutants.pm25;
   const cigs = d.health?.cigarettes?.per_day ?? null;
@@ -96,7 +114,7 @@ export function CityHeroBig({ d, scale }: { d: Overview; scale: AqiScale }) {
           </Text>
 
           <div style={{ display: "flex", alignItems: "flex-end", gap: "var(--s-4)", marginTop: "var(--s-4)", flexWrap: "wrap" }}>
-            <Metric value={index} size="metric" tone={colour} unit={SCALES[scale].short} />
+            <Metric value={index} size="metric" tone={colour} unit={SCALES[scale].short} decimals={scale === "who" ? 1 : 0} suffix={scale === "who" ? "×" : undefined} />
             <div style={{ paddingBottom: 4 }}>
               <Text as="div" size="lg" weight={800} tight style={{ color: colour }}>{cat?.label ?? "no reading"}</Text>
               {prominent && (
@@ -107,7 +125,7 @@ export function CityHeroBig({ d, scale }: { d: Overview; scale: AqiScale }) {
             </div>
           </div>
 
-          <div style={{ maxWidth: 460 }}><ScaleBar index={index} scale={scale} /></div>
+          <div style={{ maxWidth: 460 }}><ScaleBar index={index} scale={scale} pollutant={prominent} /></div>
         </div>
 
         <Sparkline d={d} scale={scale} color={colour} />
