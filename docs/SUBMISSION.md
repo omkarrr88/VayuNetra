@@ -57,7 +57,7 @@ The time from a pollution signal to a cited, actionable recommendation is betwee
 
 All data sources are free and open: CPCB CAAQMS via data.gov.in and OpenAQ (plus community sensors from non-government providers, ingested at reduced confidence), Sentinel-5P and Sentinel-2 through Earth Engine, NASA FIRMS for thermal anomalies, Open-Meteo and ERA5 for weather, OpenStreetMap for the source registry, road network and ward boundaries, and GPW v4.11 for population. Ingestion runs on scheduled GitHub Actions with a rolling 90-day retention window.
 
-The backend is FastAPI on Render with 52 endpoints and a WebSocket, all returning one `{success, data, error, meta}` envelope. The frontend is React with MapLibre and Deck.gl on Vercel. Data sits in Supabase Postgres with PostGIS and pgvector, protected by row-level security, with all writes going through the service role on the server. Models are LightGBM with SHAP, quantile regression with conformal calibration, a Gaussian plume model and a coverage downscaler. Retrieval is multimodal RAG over the regulatory corpus.
+The backend is FastAPI on Render with 47 endpoints and a WebSocket, all returning one `{success, data, error, meta}` envelope. The frontend is React with MapLibre and Deck.gl on Vercel. Data sits in Supabase Postgres with PostGIS and pgvector, protected by row-level security, with all writes going through the service role on the server. Models are LightGBM with SHAP, quantile regression with conformal calibration, a Gaussian plume model and a coverage downscaler. Retrieval is multimodal RAG over the regulatory corpus.
 
 Adding a city means adding one YAML file with a bounding box, languages and regulatory authority, then one backfill run. There is no per-city code anywhere in the system: seven metros were onboarded that way in a single week. Infrastructure cost is zero for the ten cities running today, and we publish where that stops: measured at ~0.21 MB of readings per city per day with 180-day retention and an archive, the free tier is sized for this deployment; all 131 NCAP cities would run for about ₹2,700 a month (`docs/SCALE.md`).
 
@@ -73,9 +73,9 @@ Adding a city means adding one YAML file with a bounding box, languages and regu
 | Model selection | A Temporal Fusion Transformer was trained on GPU and rejected. LightGBM won on held-out skill in every launch city. |
 | Signal to cited recommendation | 0.8–9.7 seconds of compute, measured in production; approval → dispatch → closure timestamped per action |
 | Accessibility & mobile | axe-core: 0 violation types on the landing page and all 7 console sections; 390-px mobile check: no horizontal overflow, ≥ 24 px tap targets (`docs/qa/`, rerunnable scripts) |
-| Test coverage | 341 backend tests (64% line coverage, CI gate 55%) and 17 end-to-end browser flows (8 smoke in CI + 9 live officer-journey), run on every push |
+| Test coverage | 562 backend tests (64% line coverage, CI gate 55%) and 17 end-to-end browser flows (8 smoke in CI + 9 live officer-journey), run on every push |
 
-Current live scale (18 Aug 2026; the landing page reads these live): 10 cities, 16,529 modelled cells, 647 emission sources, 5,495 vulnerability zones and ~480 enforcement recommendations, every one of which carries a real Sentinel-2 image and retrieved citations. All of the validation above is reproducible from the notebook in the repository.
+Current live scale (22 Aug 2026; the landing page reads these live): 10 cities, 16,529 modelled cells, 647 emission sources, 5,495 vulnerability zones and ~399 enforcement recommendations, every one of which carries a real Sentinel-2 image and retrieved citations. All of the validation above is reproducible from the notebook in the repository.
 
 ## What it deliberately will not do
 
