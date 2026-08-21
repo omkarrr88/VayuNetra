@@ -4,6 +4,7 @@
 // from GET /city/overview (this city's stations).
 import { POLLUTANT_LABEL, categoryForIndex, type AqiScale, bandInk } from "../aqi";
 import { POLLUTANT_FULL, ago, type Overview, type Pollutant } from "./parts";
+import { IconX } from "../design/icons";
 
 export type Standard = { label: string; value: string };
 export type PollutantInfo = {
@@ -82,7 +83,7 @@ export function PollutantDetail({ d, scale, pollutant, onClose }: { d: Overview;
           <div className="text-[13px] font-extrabold text-slate-900">{POLLUTANT_FULL[pollutant]}</div>
           <div className="text-[11px] text-slate-500">{d.name} · {ago(r.hour)}{r.n ? ` · ${r.n} station${r.n === 1 ? "" : "s"}` : ""}</div>
         </div>
-        <button onClick={onClose} aria-label="Close pollutant detail" className="rounded px-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700">✕</button>
+        <button onClick={onClose} aria-label="Close pollutant detail" className="rounded px-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"><IconX size={14} /></button>
       </div>
 
       <div className="mt-2 flex flex-wrap items-end gap-4">

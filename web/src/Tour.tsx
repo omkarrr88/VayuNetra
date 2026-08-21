@@ -35,7 +35,7 @@ const STEPS: Step[] = [
   },
   {
     title: "Every section is a page",
-    body: "The links along the top are the console's sections. Keys 1–8 jump straight to them, ⌘K opens a search over every city and section, and P is presentation mode for the projector.",
+    body: "The links along the top are the console's sections. Keys 1–7 jump straight to them, ⌘K opens a search over every city and section, and P is presentation mode for the projector.",
     target: "[data-tour=nav]",
   },
   {

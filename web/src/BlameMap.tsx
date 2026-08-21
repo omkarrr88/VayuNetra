@@ -3,6 +3,7 @@ import maplibregl from "maplibre-gl";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { H3HexagonLayer } from "@deck.gl/geo-layers";
 import { GeoJsonLayer, LineLayer, PolygonLayer, ScatterplotLayer } from "@deck.gl/layers";
+import { MaskExtension, type MaskExtensionProps } from "@deck.gl/extensions";
 import { api } from "./api";
 import { cellToLatLng } from "h3-js";
 import { inGeometry, type Geometry } from "./placeName";
@@ -357,7 +358,9 @@ export default function BlameMap({
   }, [city, showPlumes]);
 
   useEffect(() => {
-    if (!showWards) return;
+    // The ward polygons draw the ward-heat overlay AND clip the faint PM2.5 wash under the
+    // blame view to the city's own shape — so they load in blame mode too (static, cached).
+    if (!showWards && mode !== "blame") return;
     let alive = true;
     setWards(null);
     // static asset from web/public — works offline and in DEMO_MODE
@@ -368,7 +371,7 @@ export default function BlameMap({
     return () => {
       alive = false;
     };
-  }, [city, showWards]);
+  }, [city, showWards, mode]);
 
   useEffect(() => {
     if (!showFreight) return;
@@ -447,7 +450,32 @@ export default function BlameMap({
       | LineLayer<{ from: [number, number]; to: [number, number] }>
       | GeoJsonLayer;
     // (freight corridors reuse GeoJsonLayer)
-    const layers: AnyLayer[] = [mode === "coverage" ? coverage : blame];
+    // Blame view: the dense PM2.5 field rides FAINTLY UNDER the attributed cells, clipped to
+    // the city's ward outline, so the city reads as a filled silhouette (where the air is
+    // bad) while the cells stay sharp on top (who is to blame). Not pickable — clicks still
+    // land on the attributed cells. Without a ward file for the city there is no wash.
+    const cityMask = wards
+      ? new GeoJsonLayer({ id: "city-mask", data: wards as unknown as import("geojson").FeatureCollection, operation: "mask" })
+      : null;
+    const coverageBase = new H3HexagonLayer<CoverageCell, MaskExtensionProps>({
+      id: "coverage-base",
+      data: coverageCells,
+      getHexagon: (d) => d.h3_cell,
+      getFillColor: (d) => pm25Rgba(coverageKind === "stations" ? d.pm25_stations : d.pm25, scale),
+      opacity: 0.3,
+      stroked: false,
+      extruded: false,
+      pickable: false,
+      extensions: [new MaskExtension()],
+      maskId: "city-mask",
+      updateTriggers: { getFillColor: [coverageKind] },
+    });
+    const layers: AnyLayer[] =
+      mode === "coverage"
+        ? [coverage]
+        : mode === "blame" && coverageCells.length && cityMask
+          ? [cityMask, coverageBase, blame]
+          : [blame];
     if (showWards && wards) {
       // Ward heat: mean PM2.5 of the dense-field cells inside each ward — the
       // unit NCAP officers think and report in. Computed once per (wards, field).

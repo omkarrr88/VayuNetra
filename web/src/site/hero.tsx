@@ -132,7 +132,7 @@ export function CityHeroBig({ d, scale }: { d: Overview; scale: AqiScale }) {
       </div>
 
       <div className="vn-grid-3 vn-stagger" style={{ marginTop: "var(--s-5)" }}>
-        {d.rank && <Tile value={`#${d.rank.position}`} label={`of ${d.rank.of} cities we run`} sub="most polluted right now" />}
+        {d.rank && <Tile value={`#${d.rank.position}`} label="most polluted right now" sub={`of the ${d.rank.of} cities we run`} />}
         {pm25 && <Tile value={`${pm25.value}`} label="PM2.5 µg/m³ latest" sub={`${pm25.n ?? 0} station${pm25.n === 1 ? "" : "s"}`} />}
         {d.now.pm25_24h !== null && <Tile value={`${d.now.pm25_24h}`} label="PM2.5 µg/m³ · 24 h mean" sub={`${d.coverage.hours_24h} h of readings`} />}
         {cigs !== null && <Tile value={`${cigs}`} label="cigarettes a day" sub="equivalent of today's PM2.5" />}

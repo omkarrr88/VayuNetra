@@ -75,7 +75,7 @@ const VALIDATION: Array<[string, string, string]> = [
   ["Attribution checked against published apportionment", "cosine 0.88 / 0.90 / 0.93", "vs SAFAR-Delhi 2018, CSTEP-Bengaluru 2022 (verified from the report), Urban-Emissions Mumbai — plus bucket-by-bucket tables vs TERI-ARAI and Guttikunda et al."],
   ["Attribution behaves physically", "2.30× traffic signal in rush hours", "IST rush vs off-peak SHAP, weather controlled"],
   ["Forecast beats real baselines", "Delhi +9 / +13 / +12% · Mumbai +17 / +19 / +21% at 24/48/72 h", "multi-season temporal split (2025-26 winter + summer 2026), monthly refit on the trailing 90 d; served forecast = LightGBM blended with persistence; vs persistence and weekly seasonal-naive — the raw model's weaker numbers ship too"],
-  ["It warns before the air turns", "51–54% of Very-Poor onsets flagged 1–3 days ahead", "alarm on the calibrated probability P ≥ 0.3 (precision 0.64–0.68); persistence catches 0% by construction; the Severe tail stays weak — stated, not hidden"],
+  ["It warns before the air turns", "51–54% of Very Poor onsets flagged 1–3 days ahead", "alarm on the calibrated probability P ≥ 0.3 (precision 0.64–0.68); persistence catches 0% by construction; the Severe tail stays weak — stated, not hidden"],
   ["Uncertainty is calibrated, and where it is not we say so", "80% band → 0.783 Delhi · 0.749 Kolkata, published by predicted level", "conformal calibration; we report coverage per predicted band rather than one marginal number, because Kolkata drops to 0.55 where it matters most"],
   ["Enforcement is equitable", "no socio-economic inputs, by construction", "fairness audit on every live recommendation (n=390 at the July audit)"],
   ["Model choice was earned", "TFT trained on GPU — and rejected", "LightGBM won every launch city on held-out skill"],
@@ -236,24 +236,28 @@ export default function Landing() {
             How it works
           </a>
         </div>
+        {/* Each fact is one unbreakable unit, so on a phone the strip wraps by fact, never mid-phrase. */}
         {(cat || latencyS) && (
-          <p className="mt-6 flex items-center gap-2 font-mono text-xs text-slate-500">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60" />
-              <span className="relative h-2 w-2 rounded-full bg-emerald-500" />
+          <p className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1.5 font-mono text-xs text-slate-500">
+            <span className="inline-flex items-center gap-2 whitespace-nowrap">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60" />
+                <span className="relative h-2 w-2 rounded-full bg-emerald-500" />
+              </span>
+              live
             </span>
-            live
             {cat && (
-              <>
+              <span className="inline-flex items-center gap-2 whitespace-nowrap">
                 <span className="text-slate-400">·</span>
-                Delhi AQI <span title={SCALES.in.note} style={{ background: cat.color, color: cat.text }} className="rounded px-1.5 py-0.5 font-bold">{aqi} {cat.label}</span> <span className="text-slate-400">({SCALES.in.short}; the console can switch to US · EPA or WHO)</span>
-              </>
+                Delhi AQI <span title={SCALES.in.note} style={{ background: cat.color, color: cat.text }} className="rounded px-1.5 py-0.5 font-bold">{aqi} {cat.label}</span>
+              </span>
             )}
+            {cat && <span className="hidden text-slate-400 md:inline">({SCALES.in.short}; the console can switch to US · EPA or WHO)</span>}
             {latencyS && (
-              <>
+              <span className="inline-flex items-center gap-2 whitespace-nowrap">
                 <span className="text-slate-400">·</span>
                 last pipeline run {latencyS}s end-to-end
-              </>
+              </span>
             )}
           </p>
         )}

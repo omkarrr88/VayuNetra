@@ -65,3 +65,6 @@ web/test-results/
 web/playwright-report/
 docs/sources/
 docs/pitch/render/
+
+# MCP server config — carries a live API key, never commit
+.mcp.json

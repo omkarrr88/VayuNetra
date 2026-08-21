@@ -1,5 +1,6 @@
 // Shared UI primitives — one card/button language across every panel.
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { IconAlert, IconCircle } from "./design/icons";
 
 /** Cross-panel refresh signal: an officer action (approve/dispatch) changed enforcement state,
  *  so ward queues and intervention tracking refetch without a page reload. */
@@ -162,7 +163,7 @@ export function EmptyState({
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "var(--s-2)", borderRadius: "var(--r-md)", background: "var(--surface-2)", padding: "var(--s-5) var(--s-3)", textAlign: "center" }}>
       <span aria-hidden="true" style={{ fontSize: "var(--t-lg)", color: tone === "error" ? "var(--warn)" : "var(--faint)" }}>
-        {tone === "error" ? "⚠" : "○"}
+        {tone === "error" ? <IconAlert /> : <IconCircle />}
       </span>
       <span style={{ fontSize: "var(--t-xs)", color: "var(--muted)" }}>{message}</span>
       {onRetry && (

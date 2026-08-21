@@ -267,3 +267,20 @@
 }
 /* Nothing anywhere may make the document itself scroll sideways. */
 .vn, .vn-console, .vn-landing { overflow-x: clip; }
+
+/* ---- labelled skeletons: "loading X" reads as loading, a bare grey block reads as broken ---- */
+.vn-skeleton[data-label] { position: relative; }
+.vn-skeleton[data-label]::after {
+  content: attr(data-label);
+  position: absolute; left: 12px; top: 10px;
+  font-size: 11px; font-weight: 600; letter-spacing: .02em;
+  color: var(--muted);
+}
+
+/* ---- touch: comfortable targets on coarse pointers, unchanged with a mouse ---- */
+@media (pointer: coarse) {
+  /* !important: several controls carry an inline min-height for the desktop density; on a touch
+     device the finger wins. Opt a control out with data-inline. */
+  .vn button:not([data-inline]), .vn select { min-height: 40px !important; }
+  .vn button[aria-label]:not([data-inline]) { min-width: 40px !important; }
+}

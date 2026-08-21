@@ -179,8 +179,8 @@ is for an officer. Everything below is a real screenshot of the running applicat
 The entry point states what the system does and, unusually, what its numbers are worth — the
 validation table is on the front page rather than buried.
 
-![The landing page](guide/01-landing-hero.jpg)
-<p class="cap">The landing page</p>
+![The landing page with the live console hero screenshot](guide/01-landing-hero.jpg)
+<p class="cap">The landing page — the hero screenshot was regenerated from the live console today</p>
 
 ![The data at a glance — live counts, not illustrations](guide/02-landing-glance.jpg)
 <p class="cap">The data at a glance — live counts, not illustrations</p>
@@ -233,14 +233,14 @@ concentration, and clicking one opens its story.
 ![Map coloured by PM2.5 concentration](guide/09-map-mode-pm25.jpg)
 <p class="cap">Map coloured by PM2.5 concentration</p>
 
-![Map coloured by dominant source — the blame map](guide/09-map-mode-sources.jpg)
-<p class="cap">Map coloured by dominant source — the blame map</p>
+![Map coloured by dominant source — the blame map, with the modelled PM2.5 field faintly underneath](guide/09-map-mode-sources.jpg)
+<p class="cap">Map coloured by dominant source — the blame map. The faint wash underneath is the modelled PM2.5 field (showing where air is bad); the sharp cells on top show who is to blame there. Cities without a ward file show no wash.</p>
 
 ![Satellite NO2 column, from Sentinel-5P](guide/09-map-mode-satno2.jpg)
 <p class="cap">Satellite NO2 column, from Sentinel-5P</p>
 
-![Layer control: sources, plumes, wards, freight corridors, fires](guide/08-map-layers.jpg)
-<p class="cap">Layer control: sources, plumes, wards, freight corridors, fires</p>
+![Layer control with sources, plumes, wards, freight corridors, fires; the legend notes the faint wash underneath is the modelled PM2.5 field](guide/08-map-layers.jpg)
+<p class="cap">Layer control: sources, plumes, wards, freight corridors, fires. Legend: "Faint wash underneath = the modelled PM2.5 field (the 'PM2.5' view, dimmed) — where the air is bad. The cells on top = who is to blame there."</p>
 
 ![Overlays combined](guide/10-map-overlays.jpg)
 <p class="cap">Overlays combined</p>
@@ -293,8 +293,8 @@ notice, dispatched to a ward team and closed with a finding. Every transition is
 
 ## 2.6 Advisories — the citizen loop
 
-![Ward-level advisories, tiered by risk and vulnerability](guide/28-advisories.jpg)
-<p class="cap">Ward-level advisories, tiered by risk and vulnerability</p>
+![Ward-level and locality advisories, grouped by place with risk and vulnerability tiers](guide/28-advisories.jpg)
+<p class="cap">Advisories: one card per place (ward or locality). Multiple zones in the same ward show "· N areas". Cleanest-air cards: one per named locality with "· +N cells" when more cells of it qualify.</p>
 
 ![The same advisory in Hindi](guide/29-advisory-hindi.jpg)
 <p class="cap">The same advisory in Hindi</p>
@@ -317,14 +317,14 @@ notice, dispatched to a ward team and closed with a finding. Every transition is
 ![The ten-city scoreboard, ranked by the same figure the badge derives from](guide/34-cities.jpg)
 <p class="cap">The ten-city scoreboard, ranked by the same figure the badge derives from</p>
 
-![The what-if simulator](guide/36-simulator.jpg)
-<p class="cap">The what-if simulator</p>
+![The intervention catalogue: five cards showing the city's current emission breakdown](guide/36-simulator.jpg)
+<p class="cap">Step 2: Intervention catalogue — five cards (crop-residue/waste burn, construction dust, traffic, industrial, GRAP Stage III), each showing the city's current PM2.5 share and whether the intervention would have effect today</p>
 
-![A simulated intervention, with its cited assumptions](guide/37-simulator-result.jpg)
-<p class="cap">A simulated intervention, with its cited assumptions</p>
+![After selecting and running an intervention, the catalogue collapses to chips and shows the modelled result](guide/37-simulator-result.jpg)
+<p class="cap">Step 2: After running — intervention cards compress to chips above the result with forecast deltas and people protected</p>
 
-![Allocating a fixed inspector-hour budget](guide/38-optimizer.jpg)
-<p class="cap">Allocating a fixed inspector-hour budget</p>
+![Step 3: Ranking intervention bundles under an inspector-hour budget](guide/38-optimizer.jpg)
+<p class="cap">Step 3: Ranks bundles of the levers above under the inspector-hour budget — top three options for a fixed effort window</p>
 
 ![Health and economic burden](guide/39-impact.jpg)
 <p class="cap">Health and economic burden</p>
@@ -2474,14 +2474,14 @@ A conditional edge is a function that routes based on current state — rather t
 
 The trace system — a list of timestamped node entries accumulated in state — is how the signal-to-action latency (the North Star metric, target < 5 min) is measured. Every node appends an entry with its timestamp and a metadata dict, so the total elapsed time is simply the difference between the first and last timestamps.
 
-### The Five-Agent Pipeline
+### Five Agents and a Gate
 
-The graph consists of five nodes wired in sequence until the spike gate:
+The console's Pipeline panel draws the per-city LangGraph as a horizontal graph showing five agents and a decision gate. The graph consists of five nodes: Orchestrator → Attribution → Forecast → Spike Gate (a conditional router drawn as a rotated square), which routes to either Enforcement → Advisory or straight to Advisory depending on whether air spikes are detected. Last stored run's per-node timings ("+0.4 s · took 0.4 s") print on each card; skipped Enforcement reads "skipped · air is clean" with dashed border. Below 900 px wide, the same graph renders as a vertical timeline. A trace table underneath shows node name, started time, and duration. "Run agents live" executes the full graph in real time while a ring walks node to node, then replays the final result.
 
 ```
-START → orchestrator → attribution → forecast → [spike_gate]
-                                                  ├→ enforcement → advisory → END
-                                                  └→ advisory → END
+START → Orchestrator → Attribution → Forecast → [Spike Gate]
+                                                  ├→ Enforcement → Advisory → END
+                                                  └→ Advisory → END
 ```
 
 #### A0: Orchestrator
@@ -3229,7 +3229,7 @@ The console is organized into seven sections, each a full-page view with its own
 | compare | Cities | 10 Indian cities side by side: current AQI, 24h trend, forecast | `/aqi/current`, `/history/trend` |
 | whatif | Simulator | Intervention modelling: "what if we banned waste burning?" | `/simulate` |
 | impact | Impact | Health burden, economic savings, equity audit across vulnerable areas | `/roi`, `/exposure` |
-| pipeline | Pipeline | Watch the six AI agents run live: attribution → forecast → advisory | `/trace` |
+| pipeline | Pipeline | Five agents and a gate: watch the per-city LangGraph live, with per-node timings and trace table | `/trace` |
 
 Every console state is shareable and bookmarkable via query parameters (`web/src/App.tsx:65–83`):
 
@@ -3383,7 +3383,7 @@ Fixtures are dynamically imported so they do not bloat the app shell. The city o
 | Component | Path | Renders | Feeds | Notes |
 |-----------|------|---------|-------|-------|
 | **BlameMap** | `BlameMap.tsx` | MapLibre + deck.gl canvas, layer toggles, time scrub, floating controls | `/attribution`, `/static-layers`, `/plume`, `/wards`, `/corridors`, `/fires`, `/coverage` | Core map. Handles all layer logic and cell selection. |
-| **AqiHeader** | `AqiHeader.tsx` | Live air quality for the city: headline index, trend arrow, prominent pollutant | `/aqi/current` | Sits top-left of the map. Updates every 10s if live. |
+| **AqiHeader** | `AqiHeader.tsx` | Live air quality for the city: headline index, trend arrow, prominent pollutant, LIVE/DELAYED status. The word follows the data: "LIVE" while newest reading is <4 h old (CPCB feed lags 1–3 h); "DELAYED" beyond that. Dot pulses only while WebSocket is connected; never says "OFF". | `/aqi/current` | Sits top-left of the map. Updates every 10s if live. |
 | **LatencyWidget** | `LatencyWidget.tsx` | Time since last observation, coloured by recency (green if <1h, yellow if <6h, red if stale) | `/latency` | Sits next to AqiHeader. Shows data freshness. |
 | **EnforcementPanel** | `EnforcementPanel.tsx` | Ranked dispatch queue: sources by attribution confidence, sortable by source type or cell story status | `/enforcement`, `/attribution?city=` | Action section, step 2. Where officers mark actions complete. |
 | **CellStoryPanel** | `CellStoryPanel.tsx` | Hexagon details: top sources, SHAP drivers, NO₂ satellite, PM10/PM2.5 ratio, model R² | (queried from state: `cell` prop) | Floats right of the map when a hexagon is clicked. |
@@ -5034,14 +5034,14 @@ Exactly. Our pipeline runs in 0.8 to 9.7 seconds — that is signal-to-cited-rec
 > **Evidence:** PS5_HONEST_AUDIT.md:414-415: 'our pipeline turns a signal into a cited, ready-to-sign recommendation in about a second' — 'never imply we shortened a municipality's response.' docs/USER_GUIDE.md:172-173: latest pipeline run shows ~1130ms.
 
 
-**Q. Your README says you have 'six agents.' But the honest audit and your code show only five nodes on the graph. Which is correct?**  
+**Q. Your README says you have 'six agents.' But the honest audit and your code show only five agents and a gate on the graph. Which is correct?**  
 ***Expected***
 
-Five, and the docs say five — the 'six' claim was found by our own audit and corrected across the README, landing page and every doc on 19 Aug. `agents/graph.py` registers five nodes: orchestrator, attribution, forecast, enforcement, advisory. The sixth thing people count is `spike_gate`, which is a conditional edge, not a node — it routes to enforcement only when there are focus cells, so a clean-air city legitimately runs four. We would rather show you the graph than argue the number.
+Five agents and a gate — the 'six' claim was found by our own audit and corrected across the README, landing page and every doc on 19 Aug. The Pipeline panel draws this clearly: Orchestrator → Attribution → Forecast → Spike Gate (a rotated-square decision icon) with two paths: Enforcement → Advisory (if air spikes) or straight to Advisory (if air is clean). On clean-air days like Delhi in monsoon, enforcement is skipped, leaving four agents in the live trace. The gate is not an agent; it is a conditional router. We show you the graph rendering than argue the number.
 
-> **Evidence:** agents/graph.py — five add_node calls plus one add_conditional_edges (spike_gate)
+> **Evidence:** agents/graph.py — five add_node calls plus one add_conditional_edges (spike_gate); web/src/TraceViewer shows the graph with per-node timings and trace table
 
-> **Do not say:** Do not say six agents. It is five nodes and a conditional edge.
+> **Do not say:** Do not say six agents. It is five agents and a gate.
 
 
 **Q. SHAP explanations — that's a core feature. Which cities actually get SHAP-based attribution versus falling back to 'cited priors'?**  
@@ -5211,11 +5211,11 @@ Synthetic fields. The downscaler (CNN) beats bilinear by 55.3% skill on syntheti
 **Q. Your pitch claims six agents orchestrating the multi-agent system. The live demo shows four nodes executing in a Delhi monsoon trace. Which is accurate, and what determines whether enforcement actually runs?**  
 ***Expected***
 
-Five, and the docs say five — the 'six' claim was found by our own audit and corrected across the README, landing page and every doc on 19 Aug. `agents/graph.py` registers five nodes: orchestrator, attribution, forecast, enforcement, advisory. The sixth thing people count is `spike_gate`, which is a conditional edge, not a node — it routes to enforcement only when there are focus cells, so a clean-air city legitimately runs four. We would rather show you the graph than argue the number.
+Five agents and a gate — the 'six' claim was found by our own audit and corrected across the README, landing page and every doc on 19 Aug. The console's Pipeline panel draws this: Orchestrator → Attribution → Forecast → Spike Gate (decision, drawn as a rotated square) which conditionally routes to Enforcement → Advisory (if focus_cells or forecast_spike exist) or straight to Advisory (if clean). On clean-air days, the spike gate routes directly to advisory, so enforcement is skipped and the trace shows four executing nodes. The determination: if PM2.5 > 120 µg/m³ in any cell, or 72h forecast > 300, then enforcement runs; otherwise the gate bypasses it.
 
-> **Evidence:** agents/graph.py — five add_node calls plus one add_conditional_edges (spike_gate)
+> **Evidence:** agents/graph.py:320–331 spike_gate function; agents/graph.py:344–351 shows five add_node calls plus one add_conditional_edges; web/src/TraceViewer renders the full graph with timings
 
-> **Do not say:** Do not say six agents. It is five nodes and a conditional edge.
+> **Do not say:** Do not say six agents. It is five agents and a gate.
 
 
 **Q. Your coverage endpoint returns a CNN downscaler skill of 55.3% versus bilinear interpolation, measured on held-out fields. Against what real measurement stations has this been validated?**  

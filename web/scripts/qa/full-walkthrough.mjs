@@ -249,7 +249,9 @@ await step("dossier + notice", async () => {
   const hide = recCard.getByRole("button", { name: /Hide dossier/ });
   if (await hide.count()) { await hide.click(); await wait(400); }
 });
-await step("approve → dispatch → close → history", async () => {
+// SKIP_MUTATION=1 leaves the production record untouched (keeps the previous 35–37 shots).
+if (process.env.SKIP_MUTATION) console.log("skip: approve → dispatch → close → history (SKIP_MUTATION)");
+else await step("approve → dispatch → close → history", async () => {
   await rail().getByLabel("Acting officer name").fill("Guide walkthrough");
   await recCard.getByRole("button", { name: "Approve" }).click();
   await recCard.getByRole("button", { name: /dispatch team/i }).waitFor({ timeout: 20000 });

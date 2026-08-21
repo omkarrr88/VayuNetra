@@ -33,7 +33,7 @@ export const FLOWS: Record<Section, Flow> = {
     blurb: "What the air will do in the next 72 hours, how much to trust that, who it will affect — and what happened before.",
     steps: [
       { n: 1, label: "72-hour outlook", info: <><P><b>What:</b> per-cell PM2.5 at +24/48/72 h with an 80 % band (conformal-calibrated) and the persistence baseline for comparison.</P><P><b>Model:</b> LightGBM quantile regression retrained daily per city on the trailing 90 days; features = station pollutants, ERA5 weather, calendar, lags, upwind advection.</P></> },
-      { n: 2, label: "How good is it, really", info: <><P><b>What:</b> the strict temporal-split benchmark — skill vs persistence and seasonal-naive, winter and high-pollution slices, interval coverage, and how many clean→Very-Poor onsets the model warns of (persistence = 0 by construction).</P><P><b>Where from:</b> <code>python -m ml.eval.benchmark</code> on real station data; the API serves the artifact unchanged. Negative numbers stay.</P></> },
+      { n: 2, label: "How good is it, really", info: <><P><b>What:</b> the strict temporal-split benchmark — skill vs persistence and seasonal-naive, winter and high-pollution slices, interval coverage, and how many clean→Very Poor onsets the model warns of (persistence = 0 by construction).</P><P><b>Where from:</b> <code>python -m ml.eval.benchmark</code> on real station data; the API serves the artifact unchanged. Negative numbers stay.</P></> },
       { n: 3, label: "Real orders, in hindsight", info: <><P><b>What:</b> the CAQM GRAP escalations of winter 2025-26 (and Diwali night), dated from government releases, replayed against the served forecast — what P(&gt;120) it carried 24/48/72 h before each order — and a weather-normalised check of whether the air changed during the window.</P><P><b>Where from:</b> <code>python -m ml.eval.interventions</code>; negative results and low-coverage rows are kept. Association, not causation.</P></> },
       { n: 4, label: "Who is in the forecast", info: <><P><b>What:</b> expected people in Very Poor / Severe air = Σ cell population × calibrated P(&gt; band); GPW population where sampled, cited city population otherwise. Exposure, not mortality.</P></> },
       { n: 5, label: "The past", info: <><P><b>What:</b> daily station means for 30 d / 90 d / 1 y with a plain-language verdict and spike-day markers, plus the last 48 h and the live source mix.</P></> },
@@ -85,7 +85,7 @@ export const FLOWS: Record<Section, Flow> = {
   pipeline: {
     verb: "Trust",
     title: "Pipeline",
-    blurb: "The six AI agents, run live in front of you — every step traced, every number sourced.",
+    blurb: "Five agents and a gate, run live in front of you — every step traced, every number sourced.",
     steps: [
       { n: 1, label: "Run the agents", info: <><P><b>What:</b> the LangGraph orchestrator: ingest → attribution → forecast → enforcement → advisory → comparison; each node's inputs, outputs and timing are traced.</P></> },
       { n: 2, label: "Read the trace", info: <><P><b>What:</b> per-node inputs, outputs and wall-clock; end-to-end latency from signal to issued advisory. Nothing here is a mock — the button really runs the graph against the live database.</P></> },

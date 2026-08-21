@@ -108,6 +108,7 @@ html.static .help, html.static .counter, html.static .hud{display:none}
 .tl-bar .fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px;width:0;transition:width 2.2s ease}
 .slide.active .tl-bar .fill{width:var(--w)}
 .tl-cap{font-size:.86em;color:#475569;margin-top:.25em}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
@@ -153,7 +154,7 @@ html.static .help, html.static .counter, html.static .hud{display:none}
   <h2 class="a a2">One loop: trace → predict → act → protect</h2>
   <div class="loop a a3" style="margin-top:1.4em;font-size:1.06em">
     <div class="card"><h3 style="color:var(--rose)">TRACE</h3><p style="font-size:.92em;margin-top:.3em">Who is to blame, per ~1 km² cell — GBM + SHAP blended with chemical-signature priors; abstains where it lacks skill.</p><svg id="miniDonut" viewBox="0 0 120 120" style="width:7.2em;height:7.2em;margin-top:.5em"></svg><div class="src" id="miniDonutLbl"></div></div>
-    <div class="card"><h3 style="color:var(--sky)">PREDICT</h3><p style="font-size:.92em;margin-top:.3em">PM2.5 at +24/48/72 h per cell, 80 % conformal band, calibrated P(&gt;120), P(&gt;250).</p><svg id="miniFc" viewBox="0 0 220 110" style="width:100%;height:7.2em;margin-top:.5em"></svg><div class="src">from calibrated P(&gt;120) per cell × population · GET /exposure</div></div>
+    <div class="card"><h3 style="color:var(--sky)">PREDICT</h3><p style="font-size:.92em;margin-top:.3em">PM2.5 at +24/48/72 h per cell, 80 % conformal band, calibrated P(&gt;120), P(&gt;250).</p><svg id="miniFc" viewBox="0 0 320 220" style="width:100%;height:10em;margin-top:.5em"></svg><div class="src">calibrated: forecast P(&gt;120) vs what happened · Delhi 2025-26 · GET /metrics/early-warning</div></div>
     <div class="card"><h3 style="color:var(--amber)">ACT</h3><p style="font-size:.92em;margin-top:.3em">Ranked worklist → Sentinel-2 evidence + retrieved regulation → draft notice → approve · dispatch · <b>close with finding</b>, on an audit trail.</p><div style="margin-top:.6em" id="miniAct"></div><div class="src">live worklist, this morning</div></div>
     <div class="card"><h3 style="color:var(--lime)">PROTECT</h3><p style="font-size:.92em;margin-top:.3em">Templated advisories (no LLM) in eight scripts — app, Telegram, IVR line, public displays.</p><div id="miniLang" style="margin-top:.6em;font-size:1.05em;min-height:4.4em;line-height:1.35"></div><div class="src" id="miniLangLbl"></div></div>
   </div>
@@ -261,7 +262,7 @@ html.static .help, html.static .counter, html.static .hud{display:none}
   <div class="kicker a a1">A1 · Architecture</div>
   <h2 class="a a2">Signal to cited action — two seams, one envelope</h2>
   <img class="shot a a3" src="{{IMG:arch}}" alt="architecture" style="margin-top:.6em;max-height:74%;object-fit:contain;background:#ffffff" />
-  <p class="a a4 sub" style="margin-top:.6em;font-size:.9em">FastAPI (44 routes + WebSocket) on Render · React + MapLibre / deck.gl on Vercel · Supabase Postgres + PostGIS + pgvector with RLS (writes only through the service role) · LangGraph agents · GitHub Actions crons — all free tier for the ten cities running today.</p>
+  <p class="a a4 sub" style="margin-top:.6em;font-size:.9em">FastAPI (47 routes + WebSocket) on Render · React + MapLibre / deck.gl on Vercel · Supabase Postgres + PostGIS + pgvector with RLS (writes only through the service role) · LangGraph agents · GitHub Actions crons — all free tier for the ten cities running today.</p>
   <div class="foot"><span class="brand"><span class="logo"></span>VayuNetra</span><span>A1</span></div>
 </section>
 
@@ -452,8 +453,10 @@ function india(svg, {dots=true, labels=false, pulse=true, dim=false, month=null}
   const rows = dated
     ? D.december_2025.cities.filter(c=>c.center).map(c=>({name:c.name, center:c.center, pm25:c.worst?c.worst.pm25:null, sub:c.worst?`${fmt(c.worst.pm25)} µg/m³ · AQI ${c.worst.aqi_in} ${c.worst.category}`:'no December 2025 record'}))
     : D.cities.filter(c=>c.center).map(c=>({name:c.name, center:c.center, pm25:c.pm25, sub:`${fmt(c.pm25)} µg/m³ · ${(c.dominant_source||'').replace('_',' ')}`}));
-  rows.forEach((c,i)=>{
-    const [lng,lat] = c.center; const [x,y]=P(lng,lat);
+  // Sort by PM2.5 descending for stagger ordering
+  const sorted = rows.map((r,idx)=>({...r,idx})).sort((a,b)=>(b.pm25||0)-(a.pm25||0));
+  sorted.forEach((c,staggerIdx)=>{
+    const i=c.idx; const [lng,lat] = c.center; const [x,y]=P(lng,lat);
     if(c.pm25 == null){   // onboarded later: a deliberate grey ring with a slash, never a coloured dot
       svgEl('circle',{cx:x,cy:y,r:10,fill:'#ffffff',stroke:'#94a3b8','stroke-width':2.5},g);
       svgEl('line',{x1:x-5,y1:y+5,x2:x+5,y2:y-5,stroke:'#94a3b8','stroke-width':2.5,'stroke-linecap':'round'},g);
@@ -461,8 +464,9 @@ function india(svg, {dots=true, labels=false, pulse=true, dim=false, month=null}
       return;
     }
     const col = band(c.pm25); const r = 7 + Math.min(22, (c.pm25||0)/(dated?12:4));
-    if(pulse && !STATIC){ const p=svgEl('circle',{cx:x,cy:y,r:r,fill:col,opacity:.6,class:'pulse'},g); p.style.animationDelay = (i*0.3)+'s'; p.style.transformOrigin = `${x}px ${y}px`; }
-    svgEl('circle',{cx:x,cy:y,r:r,fill:col,stroke:'#ffffff','stroke-width':2.5},g);
+    const dot=svgEl('circle',{cx:x,cy:y,r:r,fill:col,stroke:'#ffffff','stroke-width':2.5},g);
+    if(!STATIC && pulse){ dot.style.transform='scale(0)'; dot.style.transformOrigin=`${x}px ${y}px`; dot.style.transformBox='fill-box'; dot.style.transition=`transform .4s ease`; dot.style.transitionDelay=(staggerIdx*70)+'ms'; requestAnimationFrame(()=>requestAnimationFrame(()=>dot.style.transform='scale(1)')); }
+    if(pulse && !STATIC){ const p=svgEl('circle',{cx:x,cy:y,r:r,fill:col,opacity:.6,class:'pulse'},g); p.style.animationDelay = ((staggerIdx*0.07)+0.3)+'s'; p.style.transformOrigin = `${x}px ${y}px`; }
     if(labels){ const t=svgEl('text',{x:x+r+6,y:y+5,fill:'#0f172a','font-size':22,'font-weight':700},g); t.textContent=c.name; const t2=svgEl('text',{x:x+r+6,y:y+26,fill:'#64748b','font-size':17},g); t2.textContent=c.sub; }
   });
   return P;
@@ -536,11 +540,23 @@ const inits = {
     const sl=slides[0]; sl.classList.remove('cleared'); later(()=>sl.classList.add('cleared'), 1800);
   },
   counters(){
-    document.querySelectorAll('[data-count]').forEach(el=>{
-      const target=parseFloat(el.dataset.count), dec=parseInt(el.dataset.dec||'0'), suf=el.dataset.suffix||'';
-      if(STATIC){ el.textContent = target.toFixed(dec)+suf; return; }
+    const activeSlide = document.querySelector('.slide.active');
+    if (!activeSlide) return;
+    activeSlide.querySelectorAll('[data-count]').forEach(el=>{
+      const target=parseFloat(el.dataset.count), dec=parseInt(el.dataset.dec||'0'), suf=el.dataset.suffix||'', fmt_mode=el.dataset.fmt||'';
+      el.textContent = '0';
+      if(STATIC){
+        if(fmt_mode==='int') el.textContent = Number(target).toLocaleString('en-IN',{maximumFractionDigits:0})+suf;
+        else el.textContent = target.toFixed(dec)+suf;
+        return;
+      }
       const t0=performance.now(); const dur=1600;
-      const step=(t)=>{ const k=Math.min(1,(t-t0)/dur); const e=1-Math.pow(1-k,3); el.textContent=(target*e).toFixed(dec)+suf; if(k<1) requestAnimationFrame(step); };
+      const step=(t)=>{
+        const k=Math.min(1,(t-t0)/dur); const e=1-Math.pow(1-k,3); const curr=target*e;
+        if(fmt_mode==='int') el.textContent = Number(curr).toLocaleString('en-IN',{maximumFractionDigits:0})+suf;
+        else el.textContent = curr.toFixed(dec)+suf;
+        if(k<1) requestAnimationFrame(step);
+      };
       requestAnimationFrame(step);
     });
   },
@@ -548,12 +564,11 @@ const inits = {
     const mix = D.snapshot.mix.filter(m=>m.pct>0);
     donut(document.getElementById('miniDonut'), mix.map(m=>({v:m.pct,color:SRC_COL[m.source]||'#64748b'})));
     document.getElementById('miniDonutLbl').textContent = 'Delhi, latest run: ' + mix.slice(0,3).map(m=>`${m.source.replace('_',' ')} ${m.pct}%`).join(' · ');
-    // mini forecast sparkline from the Delhi hindsight/benchmark? use exposure horizons: show P(>120) by horizon instead as bars
+    // reliability diagram for miniFc: P(>120) forecast reliability at +24h
     const svg=document.getElementById('miniFc'); clear(svg);
-    const ex = D.exposure_delhi.horizons||[]; const w=220,h=110;
-    const mx=Math.max(0.05,...ex.map(hz=>hz.share_very_poor||0)); ex.forEach((hz,i)=>{ const x=20+i*66; const p=(hz.share_very_poor ?? 0); const bh=Math.max(4,p/mx*70); svgEl('rect',{x,y:85-bh,width:40,height:bh,fill:'#0284c7',rx:3},svg); const t=svgEl('text',{x:x+20,y:100,fill:'#64748b','font-size':10,'text-anchor':'middle'},svg); t.textContent=`+${hz.horizon_h} h`; const v=svgEl('text',{x:x+20,y:80-bh,fill:'#0f172a','font-size':10,'text-anchor':'middle','font-weight':700},svg); v.textContent = (p*100).toFixed(1)+'%'; });
-    const cap=svgEl('text',{x:110,y:14,fill:'#64748b','font-size':9,'text-anchor':'middle'},svg); cap.textContent='share of Delhi expected in Very Poor air (calibrated P)';
-    const act=document.getElementById('miniAct'); act.innerHTML = `<div class="big num" style="font-size:2.2em">${fmt(D.snapshot.scale.recs)}</div><div class="sub" style="font-size:.85em">ranked, cited recommendations across ten cities · draft notice PDF each</div>`;
+    const cal = (D.benchmark_full_delhi.horizons||[]).find(h=>h.horizon_h===24); const bins = cal && cal.calibration && cal.calibration.very_poor && cal.calibration.very_poor.reliability;
+    if(bins) reliability(svg, bins, {w:320,h:220});
+    const act=document.getElementById('miniAct'); act.innerHTML = `<div class="big num" style="font-size:2.2em" data-count="${D.snapshot.scale.recs}" data-fmt="int" data-suffix="">0</div><div class="sub" style="font-size:.85em">ranked, cited recommendations across ten cities · draft notice PDF each</div>`; if(inits.counters) inits.counters();
     const langs=D.advisories; let li=0; const lg=document.getElementById('miniLang'), ll=document.getElementById('miniLangLbl');
     const show=()=>{ const a=langs[li%langs.length]; lg.textContent=a.text; ll.textContent=a.name+' · Very Poor, +24 h · templated'; li++; };
     show(); if(!STATIC){ const iv=setInterval(show,2200); timers.push(iv); }
@@ -581,7 +596,7 @@ const inits = {
     if(!STATIC){ const L=p.getTotalLength(); p.style.strokeDasharray=L; p.style.strokeDashoffset=L; p.style.transition='stroke-dashoffset 1.8s ease .3s'; requestAnimationFrame(()=>requestAnimationFrame(()=>{p.style.strokeDashoffset=0;})); }
     pts.forEach(([c,v])=>{ svgEl('circle',{cx:X(c),cy:Y(v),r:5,fill:'#ffffff',stroke:'#0d9488','stroke-width':3},svg); const t=svgEl('text',{x: v===0? X(c)+10 : X(c), y: v===0? Y(v)-8 : Y(v)-12, fill:'#0f172a','font-size':11,'text-anchor': v===0?'start':'middle','font-weight':700},svg); t.textContent = v===0?'₹0 today (10 cities)':'≈ ₹'+fmt(v)+'/mo'; });
     const g=document.getElementById('scaleGrid'); const S=D.snapshot.scale;
-    g.innerHTML = [[D.cities.length,'cities live · Delhi to Lucknow'],[S.cells,'~1 km² cells modelled'],[S.sources,'registered + satellite-detected sources'],[S.zones,'vulnerability-scored zones'],[S.recs,'RAG-cited enforcement recommendations'],[8,'advisory scripts · app / Telegram / IVR / displays']].map(([n,l])=>`<div><div class="big num" style="font-size:1.6em">${fmt(n)}</div><div class="sub" style="font-size:.78em">${l}</div></div>`).join('');
+    g.innerHTML = [[D.cities.length,'cities live · Delhi to Lucknow'],[S.cells,'~1 km² cells modelled'],[S.sources,'registered + satellite-detected sources'],[S.zones,'vulnerability-scored zones'],[S.recs,'RAG-cited enforcement recommendations'],[8,'advisory scripts · app / Telegram / IVR / displays']].map(([n,l])=>`<div><div class="big num" style="font-size:1.6em" data-count="${n}" data-fmt="int">0</div><div class="sub" style="font-size:.78em">${l}</div></div>`).join(''); if(inits.counters) inits.counters();
     const r=D.roi_delhi; document.getElementById('roiLine').textContent = `₹${(r.annual_savings_inr/1e12).toFixed(2)} L cr/yr of Delhi's annual health burden avertable at the ~30 % NCAP target (${fmt(r.deaths_avertable_per_year)} deaths/yr) — every figure cited`;
   },
   close(){ india(document.getElementById('indiaClose'),{dots:true,pulse:true,dim:true}); },
@@ -592,16 +607,20 @@ const inits = {
   langs(){ document.getElementById('langGrid').innerHTML = D.advisories.map(a=>`<div class="card" style="padding:.7em .9em"><div class="kicker" style="font-size:.6em">${a.name}</div><div style="margin-top:.3em;font-size:.98em;line-height:1.4">${a.text}</div></div>`).join(''); },
   allcities(){
     const B=D.benchmarks; const names=Object.fromEntries(D.cities.map(c=>[c.city_id,c.name]));
-    const row=(city,key,label)=>{ const s=B[city]&&B[city][key]; if(!s) return ''; const h=s.headline; const v=(f)=>[24,48,72].map(x=>{const r=h.find(y=>y.horizon_h===x); const val=r?r[f]:null; return val==null?'–':`<span class="${val>=0?'pos':'neg'}">${pct(val)}</span>`;}).join(' / '); return `<tr><td>${names[city]||city} · ${label}</td><td class="r">${fmt(h[0].n_test)}</td><td class="r">${v('skill_vs_persistence')}</td><td class="r">${v('skill_vs_seasonal_naive')}</td><td class="r">${h.map(r=>r.pi80_coverage!=null?Math.round(r.pi80_coverage*100)+'%':'–').join(' / ')}</td></tr>`; };
+    const row=(city,key,label,ri)=>{ const s=B[city]&&B[city][key]; if(!s) return ''; const h=s.headline; const v=(f)=>[24,48,72].map(x=>{const r=h.find(y=>y.horizon_h===x); const val=r?r[f]:null; return val==null?'–':`<span class="${val>=0?'pos':'neg'}">${pct(val)}</span>`;}).join(' / '); const delay=ri*40+'ms'; return `<tr style="${!STATIC?'opacity:0;transform:translateY(6px);transition:opacity .4s ease,transform .4s ease;transition-delay:'+delay:''}"><td>${names[city]||city} · ${label}</td><td class="r">${fmt(h[0].n_test)}</td><td class="r">${v('skill_vs_persistence')}</td><td class="r">${v('skill_vs_seasonal_naive')}</td><td class="r">${h.map(r=>r.pi80_coverage!=null?Math.round(r.pi80_coverage*100)+'%':'–').join(' / ')}</td></tr>`; };
     let html='<tr><th>city · window</th><th class="r">test hours @24 h</th><th class="r">vs persistence 24/48/72 h</th><th class="r">vs weekly seasonal-naive</th><th class="r">80 % PI coverage</th></tr>';
-    for(const c of ['delhi','mumbai','kolkata']) html+=row(c,'history','multi-season');
-    for(const c of D.cities.map(x=>x.city_id)) html+=row(c,'live','live 90 d');
-    document.getElementById('cityTable').innerHTML=html;
+    let ri=0;
+    for(const c of ['delhi','mumbai','kolkata']) html+=row(c,'history','multi-season',ri++);
+    for(const c of D.cities.map(x=>x.city_id)) html+=row(c,'live','live 90 d',ri++);
+    const t=document.getElementById('cityTable'); t.innerHTML=html;
+    if(!STATIC) requestAnimationFrame(()=>requestAnimationFrame(()=>t.querySelectorAll('tr:not(:first-child)').forEach(r=>{r.style.opacity='1';r.style.transform='translateY(0)';})));
   },
   tencities(){
     india(document.getElementById('indiaTen'),{dots:true,labels:false,pulse:false});
     const rows=[...D.cities].sort((a,b)=>(b.pm25||0)-(a.pm25||0));
-    document.getElementById('tenTable').innerHTML='<tr><th>#</th><th>city</th><th class="r">PM2.5 now</th><th class="r">+24 h</th><th>dominant source</th><th>languages</th></tr>'+rows.map((c,i)=>`<tr><td>${i+1}</td><td><b>${c.name}</b></td><td class="r"><span class="dot" style="background:${band(c.pm25)}"></span> ${fmt(c.pm25,1)}</td><td class="r">${fmt(c.pm25_24h,1)}</td><td>${(c.dominant_source||'–').replace('_',' ')}</td><td class="sub">${(c.languages||[]).join(' ')}</td></tr>`).join('');
+    const t=document.getElementById('tenTable');
+    t.innerHTML='<tr><th>#</th><th>city</th><th class="r">PM2.5 now</th><th class="r">+24 h</th><th>dominant source</th><th>languages</th></tr>'+rows.map((c,i)=>{const delay=i*40+'ms'; return `<tr style="${!STATIC?'opacity:0;transform:translateY(6px);transition:opacity .4s ease,transform .4s ease;transition-delay:'+delay:''}"><td>${i+1}</td><td><b>${c.name}</b></td><td class="r"><span class="dot" style="background:${band(c.pm25)}"></span> ${fmt(c.pm25,1)}</td><td class="r">${fmt(c.pm25_24h,1)}</td><td>${(c.dominant_source||'–').replace('_',' ')}</td><td class="sub">${(c.languages||[]).join(' ')}</td></tr>`;}).join('');
+    if(!STATIC) requestAnimationFrame(()=>requestAnimationFrame(()=>t.querySelectorAll('tr:not(:first-child)').forEach(r=>{r.style.opacity='1';r.style.transform='translateY(0)';})));
     document.getElementById('tenAsOf').textContent='live comparison · as of '+new Date(D.built_at).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
   },
   pastair(){
@@ -620,8 +639,10 @@ const inits = {
   },
   ew(){
     const H = D.benchmark_full_delhi.horizons||[]; let html='<tr><th>horizon</th><th class="r">onsets (&gt;120)</th><th class="r">onset recall — alarm on P ≥ 0.3</th><th class="r">onset recall — persistence</th><th class="r">alarm F1 (P ≥ 0.3) / persist.</th><th class="r">P(&gt;120) Brier skill</th><th class="r">80 % PI coverage</th></tr>';
-    for(const h of H){ const ew=h.early_warning&&h.early_warning.very_poor; if(!ew) continue; const pa=(ew.probability_alarms||[]).find(x=>x.tau===0.3)||{}; const cal=h.calibration||{}; const vp=cal.very_poor||{}; html+=`<tr><td><b>+${h.horizon_h} h</b></td><td class="r">${fmt(ew.onsets)}</td><td class="r pos">${pct(pa.onset_recall,false)}</td><td class="r">0%</td><td class="r">${(pa.f1??0).toFixed(3)} / ${((ew.persistence||{}).f1??0).toFixed(3)}</td><td class="r">${vp.brier_skill!=null?pct(vp.brier_skill):'–'}</td><td class="r">${cal.pi80_coverage!=null?(cal.pi80_coverage*100).toFixed(0)+'%':'–'}</td></tr>`; }
-    document.getElementById('ewTable').innerHTML=html;
+    let ri=0;
+    for(const h of H){ const ew=h.early_warning&&h.early_warning.very_poor; if(!ew) continue; const pa=(ew.probability_alarms||[]).find(x=>x.tau===0.3)||{}; const cal=h.calibration||{}; const vp=cal.very_poor||{}; const delay=ri*40+'ms'; html+=`<tr style="${!STATIC?'opacity:0;transform:translateY(6px);transition:opacity .4s ease,transform .4s ease;transition-delay:'+delay:''}"><td><b>+${h.horizon_h} h</b></td><td class="r">${fmt(ew.onsets)}</td><td class="r pos">${pct(pa.onset_recall,false)}</td><td class="r">0%</td><td class="r">${(pa.f1??0).toFixed(3)} / ${((ew.persistence||{}).f1??0).toFixed(3)}</td><td class="r">${vp.brier_skill!=null?pct(vp.brier_skill):'–'}</td><td class="r">${cal.pi80_coverage!=null?(cal.pi80_coverage*100).toFixed(0)+'%':'–'}</td></tr>`; ri++; }
+    const t=document.getElementById('ewTable'); t.innerHTML=html;
+    if(!STATIC) requestAnimationFrame(()=>requestAnimationFrame(()=>t.querySelectorAll('tr:not(:first-child)').forEach(r=>{r.style.opacity='1';r.style.transform='translateY(0)';})));
     const cal = H.find(h=>h.horizon_h===24); const bins = cal && cal.calibration && cal.calibration.very_poor && cal.calibration.very_poor.reliability; if(bins) reliability(document.getElementById('relChart2'), bins);
   },
   attr(){

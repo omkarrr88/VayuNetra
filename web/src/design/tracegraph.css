@@ -1,0 +1,79 @@
+/* Agent pipeline graph — five agents and a gate, drawn as HTML cards on a 6-column grid with an
+   SVG overlay for the edges (measured from the cards, so the picture never drifts from the DOM).
+   Every colour is a token or the node's own accent (--c); motion is transform/opacity/dash only. */
+.tg { position: relative; margin-top: var(--s-3); }
+.tg-edges { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+.tg-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  column-gap: 42px;
+  row-gap: 18px;
+  align-items: center;
+  padding: 4px 2px;
+}
+.tg-node {
+  position: relative;
+  min-height: 96px;
+  display: flex; flex-direction: column; gap: 5px;
+  padding: 10px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  transition: border-color .2s ease, box-shadow .2s ease, opacity .2s ease;
+}
+.tg-head { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.tg-ic {
+  flex: 0 0 26px; width: 26px; height: 26px; border-radius: 999px;
+  display: grid; place-items: center;
+  background: color-mix(in srgb, var(--c) 14%, transparent);
+  color: var(--c);
+}
+.tg-ic svg { width: 14px; height: 14px; }
+.tg-label { font-size: var(--t-sm); font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tg-role { font-size: 11px; line-height: 1.35; color: var(--muted); }
+.tg-time { margin-top: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; color: var(--ink-2); }
+
+.tg-ran { border-color: color-mix(in srgb, var(--c) 45%, var(--line)); }
+.tg-pending .tg-ic { background: var(--surface-2); color: var(--faint); }
+.tg-pending .tg-time { color: var(--faint); }
+.tg-skipped { border-style: dashed; opacity: .72; }
+.tg-skipped .tg-time { font-style: italic; color: var(--muted); }
+
+/* the gate is a decision, not an agent — its icon sits in a rotated square */
+.tg-gate .tg-ic { border-radius: 7px; transform: rotate(45deg); }
+.tg-gate .tg-ic svg { transform: rotate(-45deg); }
+
+/* live run: the node being worked carries a breathing ring */
+.tg-active { border-color: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 20%, transparent); }
+.tg-active::after {
+  content: ""; position: absolute; inset: -1px; border-radius: inherit;
+  border: 2px solid var(--c); pointer-events: none;
+  animation: tg-ring .9s ease-out infinite;
+}
+@keyframes tg-ring { from { opacity: .75; transform: scale(1); } to { opacity: 0; transform: scale(1.08); } }
+
+/* edges — pathLength=1 on every path, so dash values are fractions of the edge */
+.tg-edge { fill: none; stroke: currentColor; stroke-width: 1.6; color: var(--line); }
+.tg-edge-taken { stroke-width: 2; }
+.tg-edge-skipped { stroke-dasharray: .05 .035; color: var(--faint); }
+.tg-edge-active { stroke-width: 2.2; stroke-dasharray: 1; stroke-dashoffset: 1; animation: tg-draw .38s ease-out forwards; }
+@keyframes tg-draw { to { stroke-dashoffset: 0; } }
+.tg-edge-label { font-size: 10.5px; font-weight: 700; fill: var(--muted); }
+.tg-edge-label.on { fill: currentColor; }
+
+.tg-foot { margin-top: var(--s-3); display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 11px; color: var(--muted); }
+.tg-foot b { color: var(--ink-2); font-weight: 600; }
+
+.tg-table { margin-top: var(--s-3); border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+.tg-table table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.tg-table th { text-align: left; font-weight: 600; color: var(--muted); background: var(--surface-2); padding: 6px 10px; border-bottom: 1px solid var(--line); }
+.tg-table td { padding: 5px 10px; border-bottom: 1px solid var(--line); color: var(--ink-2); }
+.tg-table tr:last-child td { border-bottom: 0; }
+.tg-table .num { text-align: right; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tg-table .meta { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tg-active::after, .tg-edge-active { animation: none; }
+  .tg-edge-active { stroke-dashoffset: 0; }
+}

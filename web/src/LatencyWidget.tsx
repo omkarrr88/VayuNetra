@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
+import { IconZap, IconCheck } from "./design/icons";
 
 type Trace = {
   city_id: string;
@@ -48,10 +49,10 @@ export default function LatencyWidget({ city }: { city: string }) {
       className="rounded-lg bg-emerald-700 px-4 py-2 text-white shadow"
       title="Wall-clock of the last full multi-agent run: spike detected → attribution → forecast → enforcement + advisory issued. Runs on the pipeline schedule, not per page-load."
     >
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-white">⚡ Last pipeline run</div>
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-white"><IconZap /> Last pipeline run</div>
       <div className="flex items-baseline gap-2">
         <span className="text-2xl font-extrabold leading-tight">{fmt(ms)}</span>
-        {under5 && <span className="rounded bg-emerald-950/40 px-1.5 py-0.5 text-[11px] font-semibold text-white">signal→action &lt; 5 min ✓</span>}
+        {under5 && <span className="rounded bg-emerald-950/40 px-1.5 py-0.5 text-[11px] font-semibold text-white">signal→action &lt; 5 min <IconCheck /></span>}
       </div>
       <div className="text-[11px] text-emerald-50">detect → decide → issue{ran ? ` · ran ${ran}` : ""}</div>
     </div>

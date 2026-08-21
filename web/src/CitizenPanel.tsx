@@ -7,6 +7,7 @@ import { useAqiScale } from "./aqiScale";
 import { Panel, SegBtn, Step } from "./ui";
 import { Cols } from "./console/Cols";
 import { placeForCell } from "./placeName";
+import { IconAlert, IconPhone, IconMegaphone } from "./design/icons";
 
 type Advisory = {
   ward_id: string;
@@ -39,6 +40,37 @@ type CleanZone = {
 };
 
 type CleanZones = { basis?: string; zones: CleanZone[] };
+
+/** Collapse advisories that land on the same named place (two zones → one ward) into one card
+ *  carrying the count. Unnamed wards (names still loading) stay separate, keyed by id, so nothing
+ *  flickers into a single "This area" card before the names arrive. */
+function groupByPlace(rows: Advisory[], nameOf: (wardId: string) => string | undefined): Array<Advisory & { areas: number }> {
+  const byKey = new Map<string, Advisory & { areas: number }>();
+  for (const r of rows) {
+    const key = nameOf(r.ward_id) ?? `ward:${r.ward_id}`;
+    const hit = byKey.get(key);
+    byKey.set(key, hit ? { ...hit, areas: hit.areas + 1 } : { ...r, areas: 1 });
+  }
+  return [...byKey.values()];
+}
+
+/** Cleanest-air cards: one per named locality (the cleanest cell of it), with how many more ~1 km
+ *  cells of that locality also qualify — four identical "Chhawla" cards taught nobody anything. */
+function dedupeZones<Z extends { h3_cell: string; pm25: number }>(zones: Z[], names: Record<string, string>): Array<{ z: Z; more: number }> {
+  const out: Array<{ z: Z; more: number }> = [];
+  const at = new Map<string, number>();
+  for (const z of [...zones].sort((a, b) => a.pm25 - b.pm25)) {
+    const name = names[z.h3_cell];
+    const i = name ? at.get(name) : undefined;
+    if (i === undefined) {
+      if (name) at.set(name, out.length);
+      out.push({ z, more: 0 });
+    } else {
+      out[i] = { ...out[i], more: out[i].more + 1 };
+    }
+  }
+  return out;
+}
 
 export default function CitizenPanel({ city, languages, center }: { city: string; languages?: string[]; center?: [number, number] }) {
   const { scale } = useAqiScale();
@@ -144,12 +176,8 @@ export default function CitizenPanel({ city, languages, center }: { city: string
   // One advisory per zone (rows repeat per delivery channel with the same
   // text) — the chips below switch the CHANNEL PREVIEW, i.e. how the same
   // advisory actually looks on the app, in Telegram, over IVR, on a display.
-  const seen = new Set<string>();
-  const items = (rows ?? []).filter((r) => {
-    if (seen.has(r.ward_id)) return false;
-    seen.add(r.ward_id);
-    return true;
-  });
+  // One card per PLACE: two zones inside the same ward would otherwise print twice, word for word.
+  const items = groupByPlace(rows ?? [], (id) => wardNames[id]);
   const CHANNELS: Array<[string, string]> = [
     ["pwa", "App"],
     ["telegram", "Telegram"],
@@ -199,7 +227,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
           {items.map((a) => (
             <div key={a.ward_id} className="rounded-md border border-slate-200 p-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-medium">{placeOf(a)}</span>
+                <span className="font-medium">{placeOf(a)}{a.areas > 1 && <span className="ml-1 text-[11px] font-normal text-slate-500">· {a.areas} areas</span>}</span>
                 <span className="rounded bg-amber-100 px-1.5 py-0.5 text-amber-800">{a.risk_tier.replace("_", " ")}</span>
               </div>
               <div className="mt-1 text-xs leading-5 text-slate-700">{a.message}</div>
@@ -216,7 +244,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
             </div>
             {items.slice(0, 3).map((a) => (
               <div key={a.ward_id} className="mb-1.5 max-w-[95%] rounded-xl rounded-tl-sm bg-white p-2 text-xs leading-5 text-slate-800 shadow-sm">
-                <b>⚠ {placeOf(a)}</b> · {a.risk_tier.replace("_", " ")}
+                <b><IconAlert className="text-amber-600" /> {placeOf(a)}</b> · {a.risk_tier.replace("_", " ")}
                 <br />
                 {a.message}
               </div>
@@ -233,7 +261,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
         <div className="mt-3 space-y-2">
           {/* What a caller actually hears (mirrors channels/ivr.py wording) */}
           <div className="rounded-md border border-slate-200 p-2.5">
-            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-700">📞 What callers hear</div>
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-700"><IconPhone /> What callers hear</div>
             <p className="mt-1 text-xs italic leading-5 text-slate-600">
               "This is an air quality alert from Vayu Netra. {items[0].message} I will now repeat this alert… Stay safe, and
               limit outdoor exposure. Goodbye."
@@ -277,7 +305,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
               onClick={() => setBcast("confirm")}
               className="w-full cursor-pointer rounded-md bg-emerald-700 px-2 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-800"
             >
-              📣 Broadcast latest alert (Telegram + IVR)
+              <IconMegaphone /> Broadcast latest alert (Telegram + IVR)
             </button>
           )}
           {bcast === "confirm" && (
@@ -328,7 +356,7 @@ export default function CitizenPanel({ city, languages, center }: { city: string
         <Step n={3} label="Clean-air routes" info={<p>Lowest ~1 km cells from the dense model field anchored on live stations, with a corridor exposure screen for commutes. A modelled guide, not a measurement.</p>}>
         <Panel title="Cleanest air right now" tag="lowest ~1 km cells">
           <div className="grid grid-cols-2 gap-1.5">
-            {cleanZones.zones.map((z) => {
+            {dedupeZones(cleanZones.zones, zoneNames).map(({ z, more }) => {
               const cat = categoryForPm25(z.pm25, scale);
               const zIndex = pm25Index(z.pm25, scale);
               return (
@@ -349,7 +377,10 @@ export default function CitizenPanel({ city, languages, center }: { city: string
                     </span>
                     <span className="text-[11px] text-slate-500">{cat.label}</span>
                   </div>
-                  <div className="mt-1 text-xs font-semibold text-slate-700">{zoneNames[z.h3_cell] ?? "Nearby"}</div>
+                  <div className="mt-1 text-xs font-semibold text-slate-700">
+                    {zoneNames[z.h3_cell] ?? "Nearby"}
+                    {more > 0 && <span className="ml-1 font-normal text-slate-500">· +{more} cell{more > 1 ? "s" : ""}</span>}
+                  </div>
                   <div className="text-[11px] text-emerald-700">Directions ↗</div>
                 </a>
               );

@@ -180,6 +180,9 @@ export default function LayersControl(p: LayersControlProps) {
               <span className="capitalize">{SOURCE_LABEL[k] ?? k.replace("_", " ")}</span>
             </div>
           ))}
+          <div className="pt-1 text-[10px] leading-4 text-slate-500">
+            Faint wash underneath = the modelled PM2.5 field (the “PM2.5” view, dimmed) — where the air is bad. The cells on top = who is to blame there.
+          </div>
         </div>
       )}
       {p.mode === "satellite" && (

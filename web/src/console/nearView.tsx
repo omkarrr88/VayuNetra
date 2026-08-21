@@ -46,18 +46,20 @@ export function useNearViewport<T extends Element>(margin = 700, armAfter = 600,
   return { ref, near };
 }
 
-export function Deferred({ minHeight = 220, margin = 700, loadBy = 3500, children }: {
+export function Deferred({ minHeight = 220, margin = 700, loadBy = 3500, label = "Loading", children }: {
   /** Reserve the card's approximate height so the scrollbar does not jump when it arrives. */
   minHeight?: number;
   margin?: number;
   /** Load regardless by this point, so nobody is ever left with a skeleton. */
   loadBy?: number;
+  /** What is coming — a labelled skeleton reads as "loading X", a bare grey block reads as broken. */
+  label?: string;
   children: ReactNode;
 }) {
   const { ref, near } = useNearViewport<HTMLDivElement>(margin, 600, loadBy);
   return (
     <div ref={ref} style={{ minWidth: 0 }}>
-      {near ? children : <div className="vn-skeleton" style={{ height: minHeight }} aria-hidden="true" />}
+      {near ? children : <div className="vn-skeleton" data-label={`${label}…`} style={{ height: minHeight }} role="status" aria-label={`${label} loading`} />}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { api, downloadFile } from "./api";
 import { cleanRationale, prettyRule } from "./format";
 import { Panel, SegBtn, notifyEnforcementChanged } from "./ui";
 import { placeForCell } from "./placeName";
+import { IconCheck, IconPin } from "./design/icons";
 
 type Rec = {
   id: number;
@@ -343,7 +344,7 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
                 </span>
                 <span className="flex items-center gap-1.5 whitespace-nowrap text-xs text-slate-500">
                   {focusCell && r.h3_cell === focusCell && (
-                    <span className="rounded bg-blue-600 px-1 py-0.5 text-[11px] font-semibold text-white">📍 this cell</span>
+                    <span className="rounded bg-blue-600 px-1 py-0.5 text-[11px] font-semibold text-white"><IconPin /> this cell</span>
                   )}
                   {focusCell && r.h3_cell !== focusCell && typeof r.km === "number" && (
                     <span className="text-[11px] text-slate-500">~{r.km < 1 ? "<1" : Math.round(r.km)} km</span>
@@ -442,7 +443,7 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
                 {r.status === "dispatched" && (
                   <>
                     <span className="rounded bg-violet-100 px-1.5 py-0.5 text-[11px] font-semibold text-violet-800" title="Baseline frozen; before/after effect is being measured (see step 5)">
-                      ✓ Dispatched · tracking armed
+                      <IconCheck /> Dispatched · tracking armed
                     </span>
                     <button
                       onClick={() => setClosing(closing === r.id ? null : r.id)}
@@ -456,7 +457,7 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
                 )}
                 {r.status === "closed" && (
                   <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-800" title={r.closure_note ?? undefined}>
-                    ✓ Closed · {FINDING_LABEL[r.closure_finding ?? ""] ?? "recorded"}{r.closed_at ? ` · ${r.closed_at.slice(0, 10)}` : ""}
+                    <IconCheck /> Closed · {FINDING_LABEL[r.closure_finding ?? ""] ?? "recorded"}{r.closed_at ? ` · ${r.closed_at.slice(0, 10)}` : ""}
                   </span>
                 )}
                 {r.status === "dismissed" && (

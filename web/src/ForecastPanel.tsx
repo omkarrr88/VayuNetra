@@ -14,6 +14,7 @@ import { useAqiScale } from "./aqiScale";
 import { FORECAST_SKILL, SKILL_ASOF, pct } from "./metrics";
 import { EmptyState, Panel, SegBtn } from "./ui";
 import { placeForCell } from "./placeName";
+import { IconAlert } from "./design/icons";
 
 type FC = {
   h3_cell: string;
@@ -174,7 +175,7 @@ export default function ForecastPanel({ city }: { city: string }) {
         <div className="mt-2 text-xs text-slate-700">
           {spikes.length > 0 && (
             <div className="rounded-md bg-red-50 px-2 py-1 font-medium text-red-700">
-              ⚠ spike alert: {spikes.length} cell{spikes.length > 1 ? "s" : ""} forecast ≥ {SPIKE} µg/m³
+              <IconAlert /> spike alert: {spikes.length} cell{spikes.length > 1 ? "s" : ""} forecast ≥ {SPIKE} µg/m³
             </div>
           )}
           <div className="mt-1.5 max-h-36 space-y-0.5 overflow-auto pr-1" tabIndex={0} role="region" aria-label="Per-cell forecasts, worst first">
@@ -185,7 +186,7 @@ export default function ForecastPanel({ city }: { city: string }) {
                   {/* Named, never keyed: the H3 index lives on the dossier and the notice, not on a
                       list an officer reads down. */}
                   <span className="min-w-0 truncate text-[11px] text-slate-600" title={places[r.h3_cell] ?? "About 1 km² of this city"}>
-                    {r.value >= SPIKE ? "⚠ " : ""}
+                    {r.value >= SPIKE && <IconAlert className="mr-0.5 text-red-600" />}
                     {places[r.h3_cell] ?? "Unnamed area"}
                   </span>
                   <span className="flex items-center gap-1.5">
