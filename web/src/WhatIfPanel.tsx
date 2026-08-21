@@ -200,6 +200,8 @@ export default function WhatIfPanel({ city }: { city: string }) {
                   from those sources today.
                 </div>
                 <div
+                  role="radiogroup"
+                  aria-label="Choose an intervention"
                   style={{
                     display: "grid",
                     gap: "var(--s-3)",
