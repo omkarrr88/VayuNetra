@@ -43,9 +43,9 @@ Every number below is in the artifacts (`docs/benchmarks/*.json`, `docs/BENCHMAR
 | 7:40 | 8 Close | C | the ask |
 | 8:00 | — | — | stop talking |
 
-**Word budgets, measured.** A speaks 439 words (≈2:56 at 150 wpm, plus the 9-second replay silence).
-B speaks 367 words over 2:27 of clicking. C speaks 344 words over 2:18, demo and close together.
-**Spoken total 7:49**, which leaves about ten seconds of headroom across the two handovers. If you
+**Word budgets, measured.** A speaks 438 words (≈2:56 at 150 wpm, plus the 9-second replay silence).
+B speaks 367 words over 2:27 of clicking. C speaks 361 words over 2:24, demo and close together.
+**Spoken total 7:55**, which leaves a few seconds across the two handovers. If you
 are running fast, do not fill it — slow down on slide 8.
 
 All three say **"we"**, never "I built".
@@ -71,10 +71,10 @@ they are where a three-person pitch usually loses ten seconds.
 *(Counters animate on entry. Pause one beat, then speak.)*
 
 > The data already exists — nine hundred monitoring stations, satellites overhead — and 1.67 million
-> Indians still die early each year. The gap is not measurement. A reading turns red, and nothing
+> Indians still die early each year. The gap is not measurement. A reading turns red and nothing
 > happens: nothing tells an officer who is polluting this square kilometre, what the air does
 > tomorrow, or where to send the first inspector. The national auditor found fewer than a third of
-> monitored cities have any response protocol at all. Cities do not need another dashboard.
+> monitored cities have any response protocol. Cities do not need another dashboard.
 
 ### Slide 3 · One loop (0:55 → 1:35)
 *(Point at each card as you name it.)*
@@ -106,10 +106,9 @@ the December marker drops. Then continue. Press **R** if you need it again.)*
 > Every number here is measured, including the ones that do not flatter us. Skill over persistence on
 > a strict temporal split: Delhi plus nine, thirteen and twelve percent at one, two and three days.
 > Our calibrated alarm catches fifty-four percent of clean-to-Very-Poor transitions days ahead;
-> persistence catches none. The eighty percent band measures seventy-eight percent real coverage.
-> Attribution agrees with the published studies to four percentage points. Nine of our ten cities
-> beat persistence with the interval clear of zero; the tenth we cannot separate from it, and we
-> publish that rather than round it away.
+> persistence catches none. The eighty percent band measures seventy-eight percent coverage.
+> Attribution agrees with the published studies to four points. Nine of ten cities beat persistence
+> with the interval clear of zero; the tenth we cannot separate from it, and we say so.
 >
 > **Others forecast the air. Nothing turns a forecast into a traced, cited, delivered, closed
 > action. Here it is, live.**
@@ -224,10 +223,11 @@ front page — the same door a judge would walk through.
 *(Stand still. Say it slower than feels natural.)*
 
 > We did not build a prettier dashboard. We built the layer that turns a reading into a traced,
-> cited, delivered, closed action — and we measured it honestly enough to tell you where it is
-> weak. It is live in ten cities right now, on infrastructure that costs nothing. What it has never
-> had is one afternoon of a real pollution control board officer's time. That is the only thing
-> standing between this and a working pilot. Thank you.
+> cited, delivered, closed action. And we ran the tests that could embarrass us — our one-kilometre
+> field beats a flat city average in one city out of ten, and we published that, with the script
+> that produced it. It is live in ten cities right now, on infrastructure that costs nothing. What
+> it has never had is one afternoon of a real officer's time. That is the only thing standing
+> between this and a working pilot. Thank you.
 
 ---
 
@@ -253,6 +253,13 @@ not that it loses. Jaipur *was* genuinely negative until we found the cause: sta
 searching a circle around the map's centre point rather than the city's extent, so a third of each
 city was never sampled. Fixing that moved Jaipur from minus sixteen percent to plus ten. We can
 tell you which cities are weak, with intervals, which most cannot.
+
+**"You just told us your 1 km field fails. So why show it?"**** — Because the grid is how everything
+else is organised: attribution, forecasts and the worklist are all per cell, and those we can
+measure. What the test says is narrower than it sounds — a cell *without* a monitor carries a
+spatial prior, not a measurement, and we label it that way rather than implying accuracy we have
+not shown. Caveat worth adding: these are monsoon readings, spatially flat, which is the regime a
+constant is hardest to beat in. We re-run it in winter.
 
 **"Is this really AI, or a dashboard?"** — Two model families with measured skill, a conformal
 calibration layer, SHAP-based apportionment with a gate that makes it abstain, and a state machine
