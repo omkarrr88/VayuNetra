@@ -180,7 +180,7 @@ The entry point states what the system does and, unusually, what its numbers are
 validation table is on the front page rather than buried.
 
 ![The landing page with the live console hero screenshot](guide/01-landing-hero.jpg)
-<p class="cap">The landing page — the hero screenshot was regenerated from the live console today</p>
+<p class="cap">The landing page — the hero screenshot (web/public/console.jpg) was regenerated from the live console on 21 Aug 2026</p>
 
 ![The data at a glance — live counts, not illustrations](guide/02-landing-glance.jpg)
 <p class="cap">The data at a glance — live counts, not illustrations</p>
@@ -230,28 +230,28 @@ What a resident sees. The design goal is that someone with no technical backgrou
 The map is the core of the console. Every ~1 km H3 cell is coloured by its dominant source or by
 concentration, and clicking one opens its story.
 
-![Map coloured by PM2.5 concentration](guide/09-map-mode-pm25.jpg)
+![Map coloured by PM2.5 concentration](guide/27-map-mode-pm25.jpg)
 <p class="cap">Map coloured by PM2.5 concentration</p>
 
-![Map coloured by dominant source — the blame map, with the modelled PM2.5 field faintly underneath](guide/09-map-mode-sources.jpg)
+![Map coloured by dominant source — the blame map, with the modelled PM2.5 field faintly underneath](guide/27-map-mode-sources.jpg)
 <p class="cap">Map coloured by dominant source — the blame map. The faint wash underneath is the modelled PM2.5 field (showing where air is bad); the sharp cells on top show who is to blame there. Cities without a ward file show no wash.</p>
 
-![Satellite NO2 column, from Sentinel-5P](guide/09-map-mode-satno2.jpg)
+![Satellite NO2 column, from Sentinel-5P](guide/27-map-mode-satno2.jpg)
 <p class="cap">Satellite NO2 column, from Sentinel-5P</p>
 
-![Layer control with sources, plumes, wards, freight corridors, fires; the legend notes the faint wash underneath is the modelled PM2.5 field](guide/08-map-layers.jpg)
+![Layer control with sources, plumes, wards, freight corridors, fires; the legend notes the faint wash underneath is the modelled PM2.5 field](guide/26-map-layers.jpg)
 <p class="cap">Layer control: sources, plumes, wards, freight corridors, fires. Legend: "Faint wash underneath = the modelled PM2.5 field (the 'PM2.5' view, dimmed) — where the air is bad. The cells on top = who is to blame there."</p>
 
-![Overlays combined](guide/10-map-overlays.jpg)
+![Overlays combined](guide/28-map-overlays.jpg)
 <p class="cap">Overlays combined</p>
 
-![Time-scrub replay of the last 24 hours](guide/11-map-timescrub.jpg)
+![Time-scrub replay of the last 24 hours](guide/29-map-timescrub.jpg)
 <p class="cap">Time-scrub replay of the last 24 hours</p>
 
-![A cell's story — who is to blame here, and how confident we are](guide/12-cell-story.jpg)
+![A cell's story — who is to blame here, and how confident we are](guide/30-cell-story.jpg)
 <p class="cap">A cell's story — who is to blame here, and how confident we are</p>
 
-![The same cell's forecast, with its calibrated band](guide/13-cell-story-forecast.jpg)
+![The same cell's forecast, with its calibrated band](guide/31-cell-story-forecast.jpg)
 <p class="cap">The same cell's forecast, with its calibrated band</p>
 
 
@@ -260,82 +260,79 @@ concentration, and clicking one opens its story.
 This is the part that closes. A recommendation is ranked, evidenced, cited, drafted into a legal
 notice, dispatched to a ward team and closed with a finding. Every transition is recorded.
 
-![The morning brief — what changed overnight and what to do about it](guide/14-morning-brief.jpg)
+![The morning brief — what changed overnight and what to do about it](guide/32-morning-brief.jpg)
 <p class="cap">The morning brief — what changed overnight and what to do about it</p>
 
-![The ranked enforcement worklist](guide/15-worklist.jpg)
+![The ranked enforcement worklist](guide/33-worklist.jpg)
 <p class="cap">The ranked enforcement worklist</p>
 
-![An evidence dossier: satellite patch, contribution, cited regulation](guide/16-evidence-dossier.jpg)
+![An evidence dossier: satellite patch, contribution, cited regulation](guide/34-evidence-dossier.jpg)
 <p class="cap">An evidence dossier: satellite patch, contribution, cited regulation</p>
 
-![Approving a recommendation](guide/17-approved.jpg)
+![Approving a recommendation](guide/35-approved.jpg)
 <p class="cap">Approving a recommendation</p>
 
-![Closing the case with a finding](guide/18-close-case.jpg)
+![Closing the case with a finding](guide/36-close-case.jpg)
 <p class="cap">Closing the case with a finding</p>
 
-![Dispatch queues by ward](guide/20-dispatch-queues.jpg)
+![Dispatch queues by ward](guide/38-dispatch-queues.jpg)
 <p class="cap">Dispatch queues by ward</p>
 
-![Outcome tracking after dispatch](guide/21-intervention-tracking.jpg)
+![Outcome tracking after dispatch](guide/39-intervention-tracking.jpg)
 <p class="cap">Outcome tracking after dispatch</p>
 
 
 ## 2.5 Forecast
 
-![The 72-hour outlook with its 80% band and the persistence baseline](guide/23-forecast.jpg)
+![The 72-hour outlook with its 80% band and the persistence baseline](guide/41-forecast.jpg)
 <p class="cap">The 72-hour outlook with its 80% band and the persistence baseline</p>
 
-![The benchmark behind the forecast, shown in the product](guide/24-forecast-validation.jpg)
+![The benchmark behind the forecast, shown in the product](guide/42-forecast-validation.jpg)
 <p class="cap">The benchmark behind the forecast, shown in the product</p>
 
 
 ## 2.6 Advisories — the citizen loop
 
-![Ward-level and locality advisories, grouped by place with risk and vulnerability tiers](guide/28-advisories.jpg)
+![Ward-level and locality advisories, grouped by place with risk and vulnerability tiers](guide/49-advisories.jpg)
 <p class="cap">Advisories: one card per place (ward or locality). Multiple zones in the same ward show "· N areas". Cleanest-air cards: one per named locality with "· +N cells" when more cells of it qualify.</p>
 
-![The same advisory in Hindi](guide/29-advisory-hindi.jpg)
+![The same advisory in Hindi](guide/50-advisory-hindi.jpg)
 <p class="cap">The same advisory in Hindi</p>
 
-![Rendered for Telegram](guide/30-advisory-telegram.jpg)
+![Rendered for Telegram](guide/51-advisory-telegram.jpg)
 <p class="cap">Rendered for Telegram</p>
 
-![Broadcasting: choose the ward and the language before sending](guide/31-send-it.jpg)
+![Broadcasting: choose the ward and the language before sending](guide/52-send-it.jpg)
 <p class="cap">Broadcasting: choose the ward and the language before sending</p>
 
-![Clean-air routes — the flip side of the blame map](guide/32-clean-air.jpg)
-<p class="cap">Clean-air routes — the flip side of the blame map</p>
-
-![Citizen reports coming back in](guide/33-citizen-reports.jpg)
-<p class="cap">Citizen reports coming back in</p>
+![Clean-air routes — the flip side of the blame map — and citizen reports coming back in](guide/53-clean-air-and-reports.jpg)
+<p class="cap">Clean-air routes — the flip side of the blame map (one card per named locality, the cleanest cell of it) — and citizen reports coming back in</p>
 
 
 ## 2.7 Cities, simulator, impact and pipeline
 
-![The ten-city scoreboard, ranked by the same figure the badge derives from](guide/34-cities.jpg)
+![The ten-city scoreboard, ranked by the same figure the badge derives from](guide/55-cities.jpg)
 <p class="cap">The ten-city scoreboard, ranked by the same figure the badge derives from</p>
 
-![The intervention catalogue: five cards showing the city's current emission breakdown](guide/36-simulator.jpg)
+![The intervention catalogue: five cards showing the city's current emission breakdown](guide/57-simulator.jpg)
 <p class="cap">Step 2: Intervention catalogue — five cards (crop-residue/waste burn, construction dust, traffic, industrial, GRAP Stage III), each showing the city's current PM2.5 share and whether the intervention would have effect today</p>
 
-![After selecting and running an intervention, the catalogue collapses to chips and shows the modelled result](guide/37-simulator-result.jpg)
+![After selecting and running an intervention, the catalogue collapses to chips and shows the modelled result](guide/58-simulator-result.jpg)
 <p class="cap">Step 2: After running — intervention cards compress to chips above the result with forecast deltas and people protected</p>
 
-![Step 3: Ranking intervention bundles under an inspector-hour budget](guide/38-optimizer.jpg)
+![Step 3: Ranking intervention bundles under an inspector-hour budget](guide/59-optimizer.jpg)
 <p class="cap">Step 3: Ranks bundles of the levers above under the inspector-hour budget — top three options for a fixed effort window</p>
 
-![Health and economic burden](guide/39-impact.jpg)
+![Health and economic burden](guide/60-impact.jpg)
 <p class="cap">Health and economic burden</p>
 
-![Fairness: who is exposed, and who is protected](guide/41-fairness.jpg)
+![Fairness: who is exposed, and who is protected](guide/62-fairness.jpg)
 <p class="cap">Fairness: who is exposed, and who is protected</p>
 
-![The pipeline view — every agent run, reconstructed from its trace](guide/42-pipeline.jpg)
+![The pipeline view — every agent run, reconstructed from its trace](guide/63-pipeline.jpg)
 <p class="cap">The pipeline view — every agent run, reconstructed from its trace</p>
 
-![A single run, node by node, with latencies](guide/43-pipeline-run.jpg)
+![A single run, node by node, with latencies](guide/64-pipeline-run.jpg)
 <p class="cap">A single run, node by node, with latencies</p>
 
 
@@ -2476,7 +2473,7 @@ The trace system — a list of timestamped node entries accumulated in state —
 
 ### Five Agents and a Gate
 
-The console's Pipeline panel draws the per-city LangGraph as a horizontal graph showing five agents and a decision gate. The graph consists of five nodes: Orchestrator → Attribution → Forecast → Spike Gate (a conditional router drawn as a rotated square), which routes to either Enforcement → Advisory or straight to Advisory depending on whether air spikes are detected. Last stored run's per-node timings ("+0.4 s · took 0.4 s") print on each card; skipped Enforcement reads "skipped · air is clean" with dashed border. Below 900 px wide, the same graph renders as a vertical timeline. A trace table underneath shows node name, started time, and duration. "Run agents live" executes the full graph in real time while a ring walks node to node, then replays the final result.
+The console's Pipeline panel draws the per-city LangGraph as a horizontal graph: five agents and a decision gate, six nodes on the picture. Orchestrator → Attribution → Forecast → Spike gate (a conditional router, drawn with a rotated-square icon), which routes either up through Enforcement → Advisory or straight along to Advisory, depending on whether a spike is coming. Last stored run's per-node timings ("+0.4 s · took 0.4 s") print on each card; skipped Enforcement reads "skipped · air is clean" with dashed border. Below 900 px wide, the same graph renders as a vertical timeline. A trace table underneath shows node name, started time, and duration. "Run agents live" executes the full graph in real time while a ring walks node to node, then replays the final result.
 
 ```
 START → Orchestrator → Attribution → Forecast → [Spike Gate]
@@ -3394,7 +3391,7 @@ Fixtures are dynamically imported so they do not bloat the app shell. The city o
 | **WhatIfPanel** | `WhatIfPanel.tsx` | Intervention simulator: select actions (ban burning, enforce GRAP, etc.), run the model, compare to baseline | `/simulate?city=` | Whatif section. Forecasts impact of hypothetical policies. |
 | **RoiPanel** | `RoiPanel.tsx` | Health-economic impact: DALYs averted, ₹ saved, by intervention type | `/roi?city=` | Impact section. Why should officers care? |
 | **FairnessPanel** | `FairnessPanel.tsx` | Equity audit: are vulnerable neighbourhoods (low income, high density) seeing enforcement action? | `/exposure?city=` | Impact section, step 3. Checks fairness of allocation. |
-| **TraceViewer** | `TraceViewer.tsx` | Agent pipeline status: attribution run (SHAP), forecast run (LightGBM), advisory generation (LLM prompt), etc. | `/trace?city=` | Pipeline section. Shows live agent execution. |
+| **TraceViewer** + **TraceGraph** | `TraceViewer.tsx`, `TraceGraph.tsx` | The per-city LangGraph drawn as a graph — five agents and a gate — with the last stored run's per-node timings (from the trace row's `signal_ts`/`attribution_ts`/`forecast_ts`/`enforcement_ts`/`advisory_ts` columns), the gate's decision on the taken edge, a trace table, and "Run agents live" (POST `/agent/query`, the real graph). No LLM anywhere in it — advisories are templated. | `/traces?city=&limit=5`, `/agent/query` | Pipeline section. Vertical timeline below 900 px. |
 | **CityStatsPanel** | `CityStatsPanel.tsx` | Statistical summary of the dense field: mean/median/p90 PM2.5, by source type | (computed from coverage cells) | Forecast section, step 6. Gives context for the numbers. |
 | **HomePage** | `site/home.tsx` | Hero, problem statement, 5-city grid, about VayuNetra | `/landing/snapshot` | Public site root. Static HTML. No console. |
 | **MapPage** | `site/mapPage.tsx` | Full-screen interactive map (same stack as console but in site shell) | `/aqi/current`, `/attribution`, `/static-layers`, etc. | Public map: city overview. Citizens explore sources. |
@@ -5651,6 +5648,30 @@ None documented. ADVISORY_REVIEW.md lists 6/8 languages as 'pending native-speak
 **Q. The 'open waste burning' enforcement recommendations come from OSM + CV detection. What false-positive rate for these detections triggers a wasted inspector visit, and have officers flagged bad detections?**
 
 No metric exists. PS5_HONEST_AUDIT.md notes 487 of 647 sources are 'cv_detected' but provides no false-positive rate or officer feedback on CV hallucinations. The enforcement loop may systematically waste officer time on model errors without measuring it.
+
+
+**Q. On the blame map, why is the PM2.5 concentration field drawn faintly underneath the source attribution cells? Why not show one or the other?**  
+***Expected***
+
+The faint wash underneath is the modelled dense PM2.5 field — the same field the "PM2.5" view draws at full strength, here at 30 % opacity — so you can see where the air is bad across the whole city. The sharp cells on top are the attribution result — which source is to blame at each place. Layered, an officer reads both at once: the geography (where to focus) and the responsibility (who to hold accountable). The wash is clipped to the city's ward outline with a GPU mask, so it reads as the city's silhouette rather than a rectangle; it is not clickable, so clicks still land on the attributed cells. A city without a ward file gets no wash. The Layers panel's legend says exactly this.
+
+> **Evidence:** web/src/BlameMap.tsx (`city-mask` GeoJsonLayer with `operation: "mask"` + `coverage-base` H3HexagonLayer, `MaskExtension` from @deck.gl/extensions, opacity 0.3); web/src/aqi.ts `pm25Rgba`; web/src/LayersControl.tsx (legend line)
+
+
+**Q. The AQI tile says "LIVE" and then switches to "DELAYED" — what does DELAYED mean, and when should an officer assume the data is stale?**  
+***Expected***
+
+"LIVE" means the newest station reading for the city is under 4 hours old; "DELAYED" means it is older than that. The CPCB feed itself lags 1–3 hours from sensor to our database, so "LIVE" deliberately covers data that is 1–4 hours old — that is the freshest anyone has. The word follows the data, so every page shows the same word for the same city; the dot only pulses while the live WebSocket is connected, and a reconnecting socket never changes the word. It never says "OFF" — if no reading arrives for a day it reads "DELAYED" with an amber dot, and the tile's "data N h ago" line says exactly how old. Read "DELAYED" as: use it for trend, and cross-check CPCB's bulletin before acting on the number alone.
+
+> **Evidence:** web/src/AqiHeader.tsx (`FRESH_MS = 4 h`, `LiveDot` — label from the newest `ts` in `/aqi/current`, pulse from the `/live` socket)
+
+
+**Q. In the Simulator, the intervention catalogue shows five cards. Some say "matches the dominant source" and others say "little effect today." What does that mean?**  
+***Expected***
+
+The catalogue (shown before any simulation runs) reads the city's live attribution — the same per-cell shares the blame map draws, averaged over the attributed cells — and, for each lever, adds up the share of today's PM2.5 that comes from the sources that lever acts on. The bar and the percentage are that share. "Matches the dominant source" is printed when the lever acts on the single largest source in today's mix — the lever with room to move the number. "Little effect today" is printed when the lever's sources add up to under 1 % of today's mix — a ban on something that is not in the air changes nothing, and the card says so before you press the button (the result panel says the same thing afterwards, as the "near-zero effect" notice). Nothing is simulated until you run: clicking a card only selects the lever, and "Run simulation" calls POST /simulate, whose result — ΔAQI per cell, people protected, the cited health cost avoided — then replaces the catalogue, which collapses to a row of chips so you can pick another lever without scrolling. Step 3 ranks bundles of these levers under the inspector-hour budget.
+
+> **Evidence:** web/src/WhatIfCatalogue.tsx (`roomToActReading`: `maxShare < 0.01` → "little effect today"; lever covers the dominant source → "matches the dominant source"); web/src/WhatIfPanel.tsx (one GET of the attribution cells per city, averaged; POST /simulate; chips after a run); api/main.py `/simulate`
 
 ---
 

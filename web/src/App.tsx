@@ -105,6 +105,12 @@ export default function App() {
   const [section, setSection] = useState<Section>(() => urlState().section ?? "action");
   const [cell, setCell] = useState<AttrCell | null>(null);
   const [attrCells, setAttrCells] = useState<AttrCell[]>([]);
+
+  // A section starts at its top. Without this, switching from the bottom of Enforcement landed the
+  // officer halfway down Forecast — scroll position is per page, not per section.
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [section]);
   const [tour, setTour] = useState(() => !tourSeen());
   const [coverageKind, setCoverageKind] = useState<"stations" | "dense">("dense");
   const [scrub, setScrub] = useState<ScrubFrame>(null);
