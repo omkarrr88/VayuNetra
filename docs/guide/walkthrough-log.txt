@@ -15,7 +15,7 @@ ok   cell story
      brief PDF → brief_delhi.pdf
 ok   morning brief
 ok   worklist filters + search
-     notice PDF → notice_14571.pdf
+     notice PDF → notice_14930.pdf
 ok   dossier + notice
      PRANA export → ncap_evidence_delhi.csv
 ok   dispatch queues + tracking + export
@@ -25,12 +25,11 @@ ok   cities section
 ok   simulator section
 ok   impact section
 ok   pipeline section
-FAIL dark theme: TimeoutError: page.goto: Timeout 30000ms exceeded.
+ok   dark theme
 ok   phone viewport
 FAIL reset walkthrough action: Error: SUPABASE_ANON_KEY not set — cannot reset the walkthrough record; reset it by hand
 
 ERRORS:
 
 PROBLEMS:
-dark theme: TimeoutError: page.goto: Timeout 30000ms exceeded.
 reset walkthrough action: Error: SUPABASE_ANON_KEY not set — cannot reset the walkthrough record; reset it by hand
