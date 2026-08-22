@@ -83,7 +83,7 @@ export default function ForecastPanel({ city }: { city: string }) {
   useEffect(() => {
     setBench(null);
     api<{ history: BenchSummary | null; live: BenchSummary | null }>(`/metrics/benchmark?city=${city}`)
-      .then((d) => setBench(d.live ?? d.history ?? null))
+      .then((d) => setBench(d.history ?? d.live ?? null)) // same default as the validation table (multi-season first)
       .catch(() => setBench(null));
   }, [city]);
   const skill = FORECAST_SKILL[city];

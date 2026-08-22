@@ -5026,7 +5026,7 @@ No. Public-display mode is a rendering inside the console, not a standalone endp
 **Q. On your landing page you mention the system makes recommendations 'visible within seconds'. But that's compute time, not actual municipal response time, right?**  
 ***Likely***
 
-Exactly. Our pipeline runs in 0.8 to 9.7 seconds — that is signal-to-cited-recommendation compute. But an officer then reviews it, approves it, dispatches it to the field. The field team goes to the site, verifies the violation, and acts. We measure our compute latency because it is deterministic and we control it. We do not measure the municipal response time because that depends on how many open cases the office has, staffing, and logistics. Be careful about framing: we can promise a notice PDF in seconds; we cannot promise a site visit in minutes.
+Exactly. Our pipeline runs in about a second when no spike is detected, a few seconds when it also regenerates the enforcement worklist — that is signal-to-cited-recommendation compute, median 1.1 s over the last 116 production runs. But an officer then reviews it, approves it, dispatches it to the field. The field team goes to the site, verifies the violation, and acts. We measure our compute latency because it is deterministic and we control it. We do not measure the municipal response time because that depends on how many open cases the office has, staffing, and logistics. Be careful about framing: we can promise a notice PDF in seconds; we cannot promise a site visit in minutes.
 
 > **Evidence:** PS5_HONEST_AUDIT.md:414-415: 'our pipeline turns a signal into a cited, ready-to-sign recommendation in about a second' — 'never imply we shortened a municipality's response.' docs/USER_GUIDE.md:172-173: latest pipeline run shows ~1130ms.
 

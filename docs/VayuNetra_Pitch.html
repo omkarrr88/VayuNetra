@@ -572,7 +572,7 @@ const inits = {
     const langs=D.advisories; let li=0; const lg=document.getElementById('miniLang'), ll=document.getElementById('miniLangLbl');
     const show=()=>{ const a=langs[li%langs.length]; lg.textContent=a.text; ll.textContent=a.name+' · Very Poor, +24 h · templated'; li++; };
     show(); if(!STATIC){ const iv=setInterval(show,2200); timers.push(iv); }
-    const lat=D.latency && (D.latency.total_latency_ms||D.latency.latency_ms); document.getElementById('latencyLine').textContent = lat? (lat/1000).toFixed(1)+' s' : '0.8–9.7 s';
+    const lat=D.latency && (D.latency.total_latency_ms||D.latency.latency_ms); document.getElementById('latencyLine').textContent = lat? (lat/1000).toFixed(1)+' s' : 'about 1 s';
   },
   winter(){ startWinter(); },
   proof(){

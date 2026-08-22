@@ -22,7 +22,7 @@ function Bar({ label, r, tone, note }: { label: string; r: number; tone: "blue" 
 export default function FairnessPanel() {
   const f = FAIRNESS_AUDIT;
   return (
-    <Panel title="Fairness audit" tag={`n=${f.n} live recs`}>
+    <Panel title="Fairness audit" tag={`n=${f.n} · ${f.asOf} audit`}>
       <div className="text-xs text-slate-600">
         What drives enforcement priority — measured on every live recommendation across all cities ({f.asOf}):
       </div>

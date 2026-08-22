@@ -79,7 +79,7 @@ const VALIDATION: Array<[string, string, string]> = [
   ["Uncertainty is calibrated, and where it is not we say so", "80% band → 0.783 Delhi · 0.749 Kolkata, published by predicted level", "conformal calibration; we report coverage per predicted band rather than one marginal number, because Kolkata drops to 0.55 where it matters most"],
   ["Enforcement is equitable", "no socio-economic inputs, by construction", "fairness audit on every live recommendation (n=390 at the July audit)"],
   ["Model choice was earned", "TFT trained on GPU — and rejected", "LightGBM won every launch city on held-out skill"],
-  ["The loop is fast", "seconds from signal to cited recommendation", "measured pipeline latency with live per-node agent traces — the time to PRODUCE the recommendation, not a municipality's response time; approval, dispatch and closure are timestamped per action"],
+  ["The loop is fast", "about 1 s from signal to cited recommendation (median of the last 116 production runs); a few seconds when a spike triggers enforcement", "measured pipeline latency with live per-node agent traces — the time to PRODUCE the recommendation, not a municipality's response time; approval, dispatch and closure are timestamped per action"],
 ];
 
 const DATA_SOURCES = ["CPCB / CAAQMS", "Sentinel-5P", "Sentinel-2", "Open-Meteo · ERA5", "NASA FIRMS", "OpenStreetMap", "GPW v4.11"];

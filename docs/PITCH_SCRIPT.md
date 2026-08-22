@@ -254,7 +254,7 @@ few seconds; otherwise point at the last run's timings.)*
 > And the part judges usually ask about: is the multi-agent claim real? This is the graph — five
 > agents and a gate, *(tech:)* LangGraph, every node stamped — and the last run's timings on it. The
 > gate decided there was no spike this morning, so enforcement was skipped — honestly drawn, not
-> hidden. Signal to cited recommendation in about a second. It runs on GitHub Actions: ingest every
+> hidden. Signal to cited recommendation in about a second when the air is calm, a few seconds when a spike triggers the worklist. It runs on GitHub Actions: ingest every
 > hour, models and enforcement every night.
 
 ### Stop 12 · The public site, ten seconds (7:10 → 7:25)
