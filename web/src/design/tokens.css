@@ -278,7 +278,7 @@
 }
 
 /* ---- touch: comfortable targets on coarse pointers, unchanged with a mouse ---- */
-@media (pointer: coarse) {
+@media (pointer: coarse), (max-width: 640px) {
   /* !important: several controls carry an inline min-height for the desktop density; on a touch
      device the finger wins. Opt a control out with data-inline. */
   .vn button:not([data-inline]), .vn select { min-height: 40px !important; }

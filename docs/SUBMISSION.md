@@ -75,7 +75,7 @@ Adding a city means adding one YAML file with a bounding box, languages and regu
 | Accessibility & mobile | axe-core: 0 violation types on the landing page and all 7 console sections; 390-px mobile check: no horizontal overflow, ≥ 24 px tap targets (`docs/qa/`, rerunnable scripts) |
 | Test coverage | 562 backend tests (64% line coverage, CI gate 55%) and 17 end-to-end browser flows (8 smoke in CI + 9 live officer-journey), run on every push |
 
-Current live scale (22 Aug 2026; the landing page reads these live): 10 cities, 16,529 modelled cells, 647 emission sources, 5,495 vulnerability zones and ~399 enforcement recommendations, every one of which carries a real Sentinel-2 image and retrieved citations. All of the validation above is reproducible from the notebook in the repository.
+Current live scale (22 Aug 2026; the landing page reads these live): 10 cities, 16,529 modelled cells, 647 emission sources, 5,495 vulnerability zones and ~400 enforcement recommendations, every one of which carries a real Sentinel-2 image and retrieved citations. All of the validation above is reproducible from the notebook in the repository.
 
 ## What it deliberately will not do
 

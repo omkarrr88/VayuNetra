@@ -124,7 +124,7 @@ const SNAPSHOT_SCALE: Array<[string, string]> = [
   ["16,529", "~1 km² cells modeled across 10 cities"],
   ["647", "registered + satellite-detected sources"],
   ["5,495", "vulnerability-scored zones (hospitals, schools, outdoor work)"],
-  ["399", "live enforcement recommendations"],
+  ["376", "live enforcement recommendations"],
 ];
 
 export default function Landing() {
