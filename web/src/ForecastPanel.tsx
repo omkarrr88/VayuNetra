@@ -155,9 +155,9 @@ export default function ForecastPanel({ city }: { city: string }) {
           className="mt-2 rounded-md bg-indigo-50 px-2 py-1 text-[11px] leading-4 text-indigo-800"
           title={`Temporal-split benchmark (${bench?.source === "hist" ? "multi-season history" : `live window ${bench?.window?.start?.slice(0, 10) ?? "?"} → ${bench?.window?.end?.slice(0, 10) ?? "?"}`}, n=${bh.n_test} test hours) recomputed ${bench?.generated_at.slice(0, 10)}. skill = 1 − RMSE_model/RMSE_baseline`}
         >
-          measured skill @{horizon}h: <b>{pct(bh.skill_vs_persistence ?? undefined)}</b> vs persistence ·{" "}
+          measured skill @{horizon}h ({bench?.source === "hist" ? "multi-season" : "live 90 d"}): <b>{pct(bh.skill_vs_persistence ?? undefined)}</b> vs persistence ·{" "}
           <b>{pct(bh.skill_vs_seasonal_naive ?? undefined)}</b> vs seasonal-naive
-          {typeof bh.pi80_coverage === "number" && <> · 80% band covers <b>{Math.round(bh.pi80_coverage * 100)}%</b></>}
+          {typeof bh.pi80_coverage === "number" && <> · 80% band covers <b>{(bh.pi80_coverage * 100).toFixed(1)}%</b></>}
         </div>
       ) : skill ? (
         <div

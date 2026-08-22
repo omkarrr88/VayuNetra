@@ -72,7 +72,7 @@ const FEATURES = [
 ];
 
 const VALIDATION: Array<[string, string, string]> = [
-  ["Attribution checked against published apportionment", "cosine 0.88 / 0.90 / 0.93", "vs SAFAR-Delhi 2018, CSTEP-Bengaluru 2022 (verified from the report), Urban-Emissions Mumbai — plus bucket-by-bucket tables vs TERI-ARAI and Guttikunda et al."],
+  ["Attribution checked against published apportionment", "mean abs. Δ 0.042 / 0.099 / 0.097 per source (cosine 0.991 / 0.928 / 0.939)", "vs SAFAR-Delhi 2018, CSTEP-Bengaluru 2022 (verified from the report), Urban-Emissions Mumbai — plus bucket-by-bucket tables vs TERI-ARAI and Guttikunda et al."],
   ["Attribution behaves physically", "2.30× traffic signal in rush hours", "IST rush vs off-peak SHAP, weather controlled"],
   ["Forecast beats real baselines", "Delhi +9 / +13 / +12% · Mumbai +17 / +19 / +21% at 24/48/72 h", "multi-season temporal split (2025-26 winter + summer 2026), monthly refit on the trailing 90 d; served forecast = LightGBM blended with persistence; vs persistence and weekly seasonal-naive — the raw model's weaker numbers ship too"],
   ["It warns before the air turns", "51–54% of Very Poor onsets flagged 1–3 days ahead", "alarm on the calibrated probability P ≥ 0.3 (precision 0.64–0.68); persistence catches 0% by construction; the Severe tail stays weak — stated, not hidden"],

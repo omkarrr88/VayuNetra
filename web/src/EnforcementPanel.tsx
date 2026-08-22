@@ -377,6 +377,17 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
                       </>
                     );
                   })()}
+                  {r.evidence?.fallback_reason ? (
+                    <>
+                      <span
+                        className="rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-800"
+                        title={`This cell's local model did not pass the skill gate, so the share comes from cited chemical-signature priors — ${String(r.evidence.fallback_reason)}`}
+                      >
+                        priors-based share
+                      </span>
+                      <span className="text-slate-400">·</span>
+                    </>
+                  ) : null}
                   <span title="Priority = contribution × exposure × actionability × confidence">priority {Math.round(r.priority_score * 100)}</span>
                   <span className="text-slate-400">·</span>
                   <span title="Evidence rubric out of 10">rubric {r.rubric_score?.total ?? "--"}/10</span>
@@ -384,7 +395,20 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
               </div>
               <div className="mt-1 text-xs leading-5 text-slate-700">{cleanRationale(r.rationale)}</div>
               <div className="mt-1 text-xs text-slate-500">
-                {Math.round(r.contribution * 100)}% contribution · {(r.pop_exposed ?? 0).toLocaleString()} exposed
+                {Math.round(r.contribution * 100)}% contribution ·{" "}
+                <span
+                  title={
+                    r.evidence?.pop_basis === "gpw"
+                      ? "Residents in this ~1 km cell — GPW v4.11 population count (2020), summed over the cell"
+                      : r.evidence?.pop_basis === "gpw_nearby"
+                        ? "Estimate: mean GPW v4.11 population of the nearest sampled cells (this cell has no sample)"
+                        : r.evidence?.pop_basis === "type_estimate"
+                          ? "Estimate: a type-level figure — this cell has no population sample yet"
+                          : "Residents exposed in this cell"
+                  }
+                >
+                  {(r.pop_exposed ?? 0).toLocaleString()} exposed{r.evidence?.pop_basis && r.evidence.pop_basis !== "gpw" ? " (est.)" : ""}
+                </span>
                 {(r.similar ?? 0) > 0 && (
                   <span
                     className="ml-1.5 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-600"

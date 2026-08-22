@@ -338,7 +338,9 @@ def _retrieve_for_enforcement_cached(
     mutate the shared result.
     """
     if include_ncr:
-        return tuple(retrieve(query, top_k=top_k))
+        # The corpus carries many byte-identical GRAP chunks (one per ingest of the full
+        # text); without this, a notice cited the same excerpt three times.
+        return tuple(_distinct(retrieve(query, top_k=max(top_k * 25, 60)))[:top_k])
     # Non-NCR: rank the WHOLE corpus (it's small and already fetched in full by
     # the live path), drop NCR-only instruments, then prefer the national doc
     # that matches this category. A shallow over-fetch left non-NCR cities with
@@ -351,7 +353,20 @@ def _retrieve_for_enforcement_cached(
     ]
     anchor = _CATEGORY_NATIONAL_DOC.get(category, "ncap")
     kept.sort(key=lambda c: (0 if anchor in c.doc_id.lower() else 1, -c.similarity))
-    return tuple(kept[:top_k])
+    return tuple(_distinct(kept)[:top_k])
+
+
+def _distinct(chunks) -> list:
+    """Keep the first chunk per distinct excerpt text (case/whitespace-insensitive)."""
+    seen: set[str] = set()
+    out = []
+    for c in chunks:
+        key = " ".join((c.chunk_text or "").split()).lower()[:400]
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(c)
+    return out
 
 
 def retrieve_for_enforcement(source_category: str, city_id: str = "delhi", top_k: int = 3) -> tuple[CitedChunk, ...]:
