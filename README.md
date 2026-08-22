@@ -43,12 +43,12 @@ Plus a Swachh-Vayu-style **10-city ranking**, a cited what-if **simulator** with
 optimizer, a health-₹ **impact** view with attribution-weighted NCAP fund guidance and a fairness
 audit, a **citizen complaint loop** (photo → verified → enforcement candidate, public SLA clock),
 PRANA-ready **NCAP evidence export**, a live **pipeline** trace of every agent that ran (typical
-signal→cited-recommendation: **0.8–9.7 s** compute, measured; the officer's review and the field dispatch are tracked separately), and map layers for wind plumes, wards, freight
+signal→cited-recommendation: **about 1 s** compute when no spike is detected, a few seconds when enforcement runs — measured per node in production; the officer's review and the field dispatch are tracked separately), and map layers for wind plumes, wards, freight
 corridors and FIRMS fire events.
 
 **Production snapshot (18 August 2026; the landing page reads these live):** **10 cities** (Delhi · Bengaluru ·
 Mumbai · Hyderabad · Chennai · Kolkata · Pune · Ahmedabad · Jaipur · Lucknow) · 16,529 modeled ~1 km² cells ·
-647 registered + satellite-detected emission sources · 5,495 vulnerability zones · ~480 RAG-cited enforcement
+647 registered + satellite-detected emission sources · 5,495 vulnerability zones · ~400 RAG-cited enforcement
 recommendations · 451K unique readings live (one row per reading, older months archived) · advisories in
 8 languages (city-specific scripts).
 
@@ -138,7 +138,7 @@ npx supabase login && npx supabase link --project-ref <your-project-ref>
 npx supabase db push                   # schema + RLS + city seed (21 migrations)
 make live-bootstrap                    # kb_chunks + enforcement_recs + action_traces
 
-make test                              # 341 backend tests (64% line coverage, CI gate 55%)
+make test                              # 562 backend tests (64% line coverage, CI gate 55%)
 cd web && npx playwright test          # 7 e2e smoke + 9 live journey flows (VN_LIVE=1)
 ```
 
@@ -149,7 +149,7 @@ connectors/   ingest: CPCB/OpenAQ, Open-Meteo, Earth Engine, OSM, population, tr
 core/         H3 utils, canonical schemas, impact & intervention math, city configs
 ml/           attribution, forecast, dispersion, coverage, simulator, vision
 agents/       orchestrator + 5 agents + notice-PDF writer         rag/  retrieval corpus
-api/          FastAPI (52 endpoints + WebSocket)                  web/  React console + landing
+api/          FastAPI (47 endpoints + WebSocket)                  web/  React console + landing
 demo/         19 offline fixtures    supabase/migrations/  schema+RLS    eval/  validation notebook
 ```
 

@@ -2,11 +2,17 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { api, API_BASE, API_TOKEN } from "./api";
 import { agoLabel, categoryForIndex, headline, formatIndex, pm25Index, POLLUTANT_LABEL, SCALES, type AqiRow, bandInk } from "./aqi";
 import { useAqiScale } from "./aqiScale";
+import { IconFlame, IconScale, IconCone } from "./design/icons";
 
 
-/** Pulsing dot showing the /live WebSocket connection state. */
-function LiveDot() {
+/** Freshness of the reading an officer is looking at, plus the /live WebSocket state.
+ *  The LABEL follows the data (LIVE while the newest reading is under 4 h old — the CPCB feed
+ *  itself lags 1–3 h; DELAYED beyond that), so every page shows the same word for the same
+ *  data. The socket only drives the pulse: connected = pulsing, reconnecting = still. */
+const FRESH_MS = 4 * 3600 * 1000;
+function LiveDot({ latest }: { latest?: string }) {
   const [on, setOn] = useState(false);
+  const fresh = !!latest && Date.now() - Date.parse(latest) < FRESH_MS;
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -48,9 +54,12 @@ function LiveDot() {
   }, []);
 
   return (
-    <span className="flex items-center gap-1 text-[11px] font-medium" title={on ? "Live feed connected" : "Live feed offline"}>
-      <span className={`inline-block h-2 w-2 rounded-full ${on ? "animate-pulse bg-emerald-500" : "bg-slate-300"}`} />
-      <span className={on ? "text-emerald-700" : "text-slate-500"}>{on ? "LIVE" : "OFF"}</span>
+    <span
+      className="flex items-center gap-1 text-[11px] font-medium"
+      title={`${fresh ? "Latest reading under 4 h old" : "Latest reading older than 4 h"} · live feed ${on ? "connected" : "reconnecting"}`}
+    >
+      <span className={`inline-block h-2 w-2 rounded-full ${fresh ? "bg-emerald-500" : "bg-amber-500"} ${on ? "animate-pulse" : ""}`} />
+      <span className={fresh ? "text-emerald-700" : "text-amber-700"}>{fresh ? "LIVE" : "DELAYED"}</span>
     </span>
   );
 }
@@ -120,7 +129,7 @@ The formula runs on the latest hourly means, so the official 24-hour bulletin ca
         }`}
         title="Compound risk: heat amplifies PM mortality and drives ozone formation (IMD heatwave criteria x CPCB bands)"
       >
-        🔥 Heat×Smog {compound.level}
+        <IconFlame /> Heat×Smog {compound.level}
         {typeof compound.tmax_next24_c === "number" && ` · ${Math.round(compound.tmax_next24_c)}°C`}
       </span>,
     );
@@ -132,7 +141,7 @@ The formula runs on the latest hourly means, so the official 24-hour bulletin ca
         className="rounded-md bg-purple-700 px-1.5 py-0.5 text-[11px] font-bold text-white"
         title={`Forecast-triggered graded response: 24h forecast AQI ${compound.grap.trigger_aqi ?? "--"} enters the CAQM GRAP Stage ${GRAP_ROMAN[compound.grap.stage]} band (statutory in Delhi-NCR; advisory playbook elsewhere) — a day before observed AQI would trigger it`}
       >
-        ⚖️ GRAP Stage {GRAP_ROMAN[compound.grap.stage]} · from forecast
+        <IconScale /> GRAP Stage {GRAP_ROMAN[compound.grap.stage]} · from forecast
       </span>,
     );
   }
@@ -143,7 +152,7 @@ The formula runs on the latest hourly means, so the official 24-hour bulletin ca
         className="rounded-md bg-amber-700 px-1.5 py-0.5 text-[11px] font-bold text-white"
         title="Cells where construction dust AND traffic are both major contributors (attribution shares ≥25% each) — traffic resuspends construction dust, so these corridors escalate fastest"
       >
-        🚧 Dust×Traffic · {compound.dust_traffic.count} cell{compound.dust_traffic.count > 1 ? "s" : ""}
+        <IconCone /> Dust×Traffic · {compound.dust_traffic.count} cell{compound.dust_traffic.count > 1 ? "s" : ""}
       </span>,
     );
   }
@@ -181,7 +190,7 @@ The formula runs on the latest hourly means, so the official 24-hour bulletin ca
               )}
               <div className="flex items-center gap-2 text-slate-500">
                 <span>data {agoLabel(latest)}</span>
-                <LiveDot />
+                <LiveDot latest={latest} />
               </div>
             </div>
           </div>

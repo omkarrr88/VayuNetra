@@ -66,16 +66,92 @@ const EPA_CATS: [number, AqiCategory][] = [
   [300, { label: "Very Unhealthy", color: "#7e22ce", text: "#ffffff" }],
   [500, { label: "Hazardous", color: "#7f1d1d", text: "#ffffff" }],
 ];
-// WHO 2021: 24-h guideline 15 µg/m³; interim targets IT-4 25, IT-3 37.5, IT-2 50, IT-1 75
-const WHO_GUIDELINE = 15;
-const WHO_BANDS: [number, AqiCategory][] = [
-  [15, { label: "Within guideline", color: "#16a34a", text: "#04220f" }],
-  [25, { label: "Above guideline (≤ IT-4)", color: "#84cc16", text: "#1a2e05" }],
-  [37.5, { label: "Above IT-4 (≤ IT-3)", color: "#eab308", text: "#422006" }],
-  [50, { label: "Above IT-3 (≤ IT-2)", color: "#f97316", text: "#3b1206" }],
-  [75, { label: "Above IT-2 (≤ IT-1)", color: "#dc2626", text: "#ffffff" }],
-  [Infinity, { label: "Above IT-1", color: "#7f1d1d", text: "#ffffff" }],
+// WHO 2021 global air quality guidelines, Table 0.1 — transcribed from the publication
+// (ISBN 9789240034228), not from memory. Each entry is the SHORT-TERM guideline, because this view
+// answers "how is the air right now": the 24-hour AQG level for every pollutant except ozone, whose
+// short-term metric is the 8-hour mean (WHO's other ozone figure is a peak-season average needing
+// six months of data, which is not a "right now" number).
+//
+// `ladder` is ascending: the AQG level first, then the interim targets from strictest (IT-4) to
+// loosest (IT-1). The ladder length differs per pollutant because WHO defines four interim targets
+// for particulate matter and fewer for the gases — NO2, SO2 and O3 have two, CO has one.
+const WHO_GUIDELINE = 15;   // PM2.5 24-h, kept for callers that predate the per-pollutant table
+
+type WhoStep = { limit: number; label: string };
+export const WHO_AQG: Record<string, { aqg: number; unit: string; averaging: string; ladder: WhoStep[] }> = {
+  pm25: { aqg: 15, unit: "µg/m³", averaging: "24-hour", ladder: [
+    { limit: 15, label: "Within guideline" }, { limit: 25, label: "Above guideline (≤ IT-4)" },
+    { limit: 37.5, label: "Above IT-4 (≤ IT-3)" }, { limit: 50, label: "Above IT-3 (≤ IT-2)" },
+    { limit: 75, label: "Above IT-2 (≤ IT-1)" }, { limit: Infinity, label: "Above IT-1" }] },
+  pm10: { aqg: 45, unit: "µg/m³", averaging: "24-hour", ladder: [
+    { limit: 45, label: "Within guideline" }, { limit: 50, label: "Above guideline (≤ IT-4)" },
+    { limit: 75, label: "Above IT-4 (≤ IT-3)" }, { limit: 100, label: "Above IT-3 (≤ IT-2)" },
+    { limit: 150, label: "Above IT-2 (≤ IT-1)" }, { limit: Infinity, label: "Above IT-1" }] },
+  no2: { aqg: 25, unit: "µg/m³", averaging: "24-hour", ladder: [
+    { limit: 25, label: "Within guideline" }, { limit: 50, label: "Above guideline (≤ IT-2)" },
+    { limit: 120, label: "Above IT-2 (≤ IT-1)" }, { limit: Infinity, label: "Above IT-1" }] },
+  so2: { aqg: 40, unit: "µg/m³", averaging: "24-hour", ladder: [
+    { limit: 40, label: "Within guideline" }, { limit: 50, label: "Above guideline (≤ IT-2)" },
+    { limit: 125, label: "Above IT-2 (≤ IT-1)" }, { limit: Infinity, label: "Above IT-1" }] },
+  co: { aqg: 4, unit: "mg/m³", averaging: "24-hour", ladder: [
+    { limit: 4, label: "Within guideline" }, { limit: 7, label: "Above guideline (≤ IT-1)" },
+    { limit: Infinity, label: "Above IT-1" }] },
+  o3: { aqg: 100, unit: "µg/m³", averaging: "8-hour", ladder: [
+    { limit: 100, label: "Within guideline" }, { limit: 120, label: "Above guideline (≤ IT-2)" },
+    { limit: 160, label: "Above IT-2 (≤ IT-1)" }, { limit: Infinity, label: "Above IT-1" }] },
+};
+
+// One colour ramp, applied to however many rungs a pollutant's ladder has, so "within guideline" is
+// always green and the top rung always the darkest red regardless of ladder length.
+const WHO_RAMP: AqiCategory[] = [
+  { label: "", color: "#16a34a", text: "#04220f" }, { label: "", color: "#84cc16", text: "#1a2e05" },
+  { label: "", color: "#eab308", text: "#422006" }, { label: "", color: "#f97316", text: "#3b1206" },
+  { label: "", color: "#dc2626", text: "#ffffff" }, { label: "", color: "#7f1d1d", text: "#ffffff" },
 ];
+
+/** How many times this pollutant's WHO short-term guideline the reading is. */
+export function whoMultiple(pollutant: string, value: number): number | null {
+  const g = WHO_AQG[pollutant];
+  return g ? Math.round((value / g.aqg) * 10) / 10 : null;
+}
+
+/** The WHO band for one pollutant, judged against ITS OWN interim targets. */
+export function whoCategory(pollutant: string, value: number): AqiCategory | null {
+  const g = WHO_AQG[pollutant];
+  if (!g) return null;
+  const n = g.ladder.length;
+  for (let i = 0; i < n; i++) {
+    if (value <= g.ladder[i].limit) {
+      // stretch the ramp across the ladder so the ends always land on green and darkest red
+      const c = WHO_RAMP[Math.round((i / (n - 1)) * (WHO_RAMP.length - 1))];
+      return { ...c, label: g.ladder[i].label };
+    }
+  }
+  return { ...WHO_RAMP[WHO_RAMP.length - 1], label: g.ladder[n - 1].label };
+}
+
+/** The pollutant furthest above its own WHO guideline — the one setting the city's WHO reading.
+ *
+ *  This mirrors how CPCB and EPA already work (a sub-index per pollutant, the city takes the worst),
+ *  which is what makes "set by PM10" a true statement on this scale rather than a label borrowed
+ *  from the CPCB index. */
+export function whoWorst(pollutants: Record<string, { value: number } | undefined>):
+    { pollutant: string; multiple: number; category: AqiCategory } | null {
+  let best: { pollutant: string; multiple: number; category: AqiCategory } | null = null;
+  for (const [p, r] of Object.entries(pollutants)) {
+    if (!r || r.value === null || r.value === undefined || !WHO_AQG[p]) continue;
+    const m = whoMultiple(p, r.value);
+    const c = whoCategory(p, r.value);
+    if (m === null || !c) continue;
+    if (!best || m > best.multiple) best = { pollutant: p, multiple: m, category: c };
+  }
+  return best;
+}
+
+const WHO_BANDS: [number, AqiCategory][] = WHO_AQG.pm25.ladder.map((st, i) => [
+  st.limit,
+  { ...WHO_RAMP[Math.round((i / (WHO_AQG.pm25.ladder.length - 1)) * (WHO_RAMP.length - 1))], label: st.label },
+]);
 
 function subIndex(table: [number, number, number, number][], c: number): number {
   for (const [clo, chi, ilo, ihi] of table) {

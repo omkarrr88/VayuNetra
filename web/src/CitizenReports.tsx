@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api, API_BASE, API_TOKEN } from "./api";
 import { placeForCell } from "./placeName";
+import { IconCamera } from "./design/icons";
 
 type Report = {
   id: number;
@@ -129,7 +130,7 @@ export default function CitizenReports({ city, center }: { city: string; center?
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <span className="text-xs font-semibold text-slate-700">📸 Report a pollution source</span>
+          <span className="text-xs font-semibold text-slate-700"><IconCamera className="text-slate-500" /> Report a pollution source</span>
           <span className="ml-1 text-[11px] text-slate-500">photo → verified → enforcement worklist</span>
         </div>
         <button

@@ -6,6 +6,7 @@ import { AqiScaleToggle } from "../aqiScale";
 import { ThemeToggle } from "../theme";
 import { linkClick } from "../router";
 import { Text } from "../design/ui";
+import { IconX } from "../design/icons";
 
 export type NavItem = { id: string; label: string; hint?: string; key?: string };
 export type City = { city_id: string; name: string };
@@ -44,7 +45,7 @@ function CityPicker({ city, cities, onCity }: { city: string; cities: City[]; on
           backgroundSize: "5px 5px, 5px 5px", backgroundRepeat: "no-repeat",
         }}
       >
-        {cities.length === 0 && <option value={city}>{city}</option>}
+        {cities.length === 0 && <option value={city}>{city.charAt(0).toUpperCase() + city.slice(1)}</option>}
         {cities.map((c) => <option key={c.city_id} value={c.city_id}>{c.name}</option>)}
       </select>
     </label>
@@ -197,7 +198,7 @@ export function FallbackNotice() {
           The backend is waking up — showing the last captured snapshot until it answers.
         </Text>
         <button onClick={() => window.location.reload()} style={{ background: "none", border: 0, padding: 0, cursor: "pointer", color: "var(--warn)", fontSize: "var(--t-xs)", fontWeight: 700, textDecoration: "underline" }}>retry</button>
-        <button onClick={() => setOn(false)} aria-label="Dismiss notice" style={{ background: "none", border: 0, padding: 0, cursor: "pointer", color: "var(--warn)", fontSize: "var(--t-xs)" }}>✕</button>
+        <button onClick={() => setOn(false)} aria-label="Dismiss notice" style={{ background: "none", border: 0, padding: 0, cursor: "pointer", color: "var(--warn)", fontSize: "var(--t-xs)" }}><IconX size={14} /></button>
       </div>
     </div>
   );

@@ -106,7 +106,7 @@
 ```jsonc
 { "city_id": "delhi", "annual_pm25": 92.0, "who_guideline_pm25": 5.0, "population": 20600000,
   "attributable_deaths_per_year": 73395, "annual_health_burden_inr": 3669770000000,
-  "ncap_target_reduction_pct": 30, "deaths_avertable_per_year": 17685, "annual_savings_inr": 884260000000,
+  "ncap_target_reduction_pct": 30, "deaths_avertable_per_year": 18219, "annual_savings_inr": 910949623762,
   "narrative": "At 92 µg/m³ annual PM2.5, ~73,395 premature deaths/yr ...",
   "citations": [ { "figure": "attributable deaths", "value": 1.08, "unit": "HR per 10 µg/m³",
                    "source": "Chen & Hoek (2020), Environ. Int." } ] }

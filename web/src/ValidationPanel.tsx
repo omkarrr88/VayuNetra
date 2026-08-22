@@ -85,12 +85,14 @@ const pct = (x: number | null | undefined, signed = true) =>
   x === null || x === undefined ? "–" : `${signed && x >= 0 ? "+" : ""}${Math.round(x * 100)}%`;
 const day = (iso?: string) => (iso ? iso.slice(0, 10) : "");
 
-function Cell({ v, good }: { v: number | null | undefined; good?: (x: number) => boolean }) {
+function Cell({ v, good, decimals = 0, signed = true }: { v: number | null | undefined; good?: (x: number) => boolean; decimals?: number; signed?: boolean }) {
   if (v === null || v === undefined) return <td className="px-1.5 py-1 text-right text-slate-400">–</td>;
   const ok = good ? good(v) : v > 0;
+  // coverage is shown to one decimal: 0.805 is "80.5%", not "81%" — the band does not over-cover.
+  const text = decimals > 0 ? `${signed && v >= 0 ? "+" : ""}${(v * 100).toFixed(decimals)}%` : pct(v, signed);
   return (
     <td className={`px-1.5 py-1 text-right font-mono tabular-nums ${ok ? "text-emerald-700" : "text-rose-600"}`}>
-      {pct(v)}
+      {text}
     </td>
   );
 }
@@ -170,7 +172,7 @@ export default function ValidationPanel({ city }: { city: string }) {
                 <Cell v={h.skill_vs_seasonal_naive} />
                 {s.headline.some((x) => x.winter_skill_vs_persistence !== null) && <Cell v={h.winter_skill_vs_persistence} />}
                 {anyEpisodes && <Cell v={h.very_poor_hours_skill} />}
-                <Cell v={h.pi80_coverage} good={(x) => x >= 0.75 && x <= 0.9} />
+                <Cell v={h.pi80_coverage} good={(x) => x >= 0.75 && x <= 0.9} decimals={1} signed={false} />
               </tr>
             ))}
           </tbody>

@@ -14,6 +14,7 @@ import { useAqiScale } from "./aqiScale";
 import { FORECAST_SKILL, SKILL_ASOF, pct } from "./metrics";
 import { EmptyState, Panel, SegBtn } from "./ui";
 import { placeForCell } from "./placeName";
+import { IconAlert } from "./design/icons";
 
 type FC = {
   h3_cell: string;
@@ -82,7 +83,7 @@ export default function ForecastPanel({ city }: { city: string }) {
   useEffect(() => {
     setBench(null);
     api<{ history: BenchSummary | null; live: BenchSummary | null }>(`/metrics/benchmark?city=${city}`)
-      .then((d) => setBench(d.live ?? d.history ?? null))
+      .then((d) => setBench(d.history ?? d.live ?? null)) // same default as the validation table (multi-season first)
       .catch(() => setBench(null));
   }, [city]);
   const skill = FORECAST_SKILL[city];
@@ -154,9 +155,9 @@ export default function ForecastPanel({ city }: { city: string }) {
           className="mt-2 rounded-md bg-indigo-50 px-2 py-1 text-[11px] leading-4 text-indigo-800"
           title={`Temporal-split benchmark (${bench?.source === "hist" ? "multi-season history" : `live window ${bench?.window?.start?.slice(0, 10) ?? "?"} → ${bench?.window?.end?.slice(0, 10) ?? "?"}`}, n=${bh.n_test} test hours) recomputed ${bench?.generated_at.slice(0, 10)}. skill = 1 − RMSE_model/RMSE_baseline`}
         >
-          measured skill @{horizon}h: <b>{pct(bh.skill_vs_persistence ?? undefined)}</b> vs persistence ·{" "}
+          measured skill @{horizon}h ({bench?.source === "hist" ? "multi-season" : "live 90 d"}): <b>{pct(bh.skill_vs_persistence ?? undefined)}</b> vs persistence ·{" "}
           <b>{pct(bh.skill_vs_seasonal_naive ?? undefined)}</b> vs seasonal-naive
-          {typeof bh.pi80_coverage === "number" && <> · 80% band covers <b>{Math.round(bh.pi80_coverage * 100)}%</b></>}
+          {typeof bh.pi80_coverage === "number" && <> · 80% band covers <b>{(bh.pi80_coverage * 100).toFixed(1)}%</b></>}
         </div>
       ) : skill ? (
         <div
@@ -174,7 +175,7 @@ export default function ForecastPanel({ city }: { city: string }) {
         <div className="mt-2 text-xs text-slate-700">
           {spikes.length > 0 && (
             <div className="rounded-md bg-red-50 px-2 py-1 font-medium text-red-700">
-              ⚠ spike alert: {spikes.length} cell{spikes.length > 1 ? "s" : ""} forecast ≥ {SPIKE} µg/m³
+              <IconAlert /> spike alert: {spikes.length} cell{spikes.length > 1 ? "s" : ""} forecast ≥ {SPIKE} µg/m³
             </div>
           )}
           <div className="mt-1.5 max-h-36 space-y-0.5 overflow-auto pr-1" tabIndex={0} role="region" aria-label="Per-cell forecasts, worst first">
@@ -185,7 +186,7 @@ export default function ForecastPanel({ city }: { city: string }) {
                   {/* Named, never keyed: the H3 index lives on the dossier and the notice, not on a
                       list an officer reads down. */}
                   <span className="min-w-0 truncate text-[11px] text-slate-600" title={places[r.h3_cell] ?? "About 1 km² of this city"}>
-                    {r.value >= SPIKE ? "⚠ " : ""}
+                    {r.value >= SPIKE && <IconAlert className="mr-0.5 text-red-600" />}
                     {places[r.h3_cell] ?? "Unnamed area"}
                   </span>
                   <span className="flex items-center gap-1.5">

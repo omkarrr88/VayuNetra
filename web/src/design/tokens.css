@@ -247,6 +247,9 @@
 
 /* Nothing inside a card may be wider than the card. */
 .vn-panel, .vn-panel * { max-width: 100%; }
+/* recharts 3 measures with a zero-width inner box and gives the chart an explicit width; clamping
+   that wrapper to 100 % of its zero-width parent collapsed every ResponsiveContainer chart to 0 px. */
+.vn-panel .recharts-wrapper, .vn-panel .recharts-surface { max-width: none; }
 .vn-panel table { max-width: none; }
 
 /* ...except things that are OUT OF FLOW. An absolutely-positioned overlay resolves its 100%
@@ -267,3 +270,20 @@
 }
 /* Nothing anywhere may make the document itself scroll sideways. */
 .vn, .vn-console, .vn-landing { overflow-x: clip; }
+
+/* ---- labelled skeletons: "loading X" reads as loading, a bare grey block reads as broken ---- */
+.vn-skeleton[data-label] { position: relative; }
+.vn-skeleton[data-label]::after {
+  content: attr(data-label);
+  position: absolute; left: 12px; top: 10px;
+  font-size: 11px; font-weight: 600; letter-spacing: .02em;
+  color: var(--muted);
+}
+
+/* ---- touch: comfortable targets on coarse pointers, unchanged with a mouse ---- */
+@media (pointer: coarse), (max-width: 640px) {
+  /* !important: several controls carry an inline min-height for the desktop density; on a touch
+     device the finger wins. Opt a control out with data-inline. */
+  .vn button:not([data-inline]), .vn select { min-height: 40px !important; }
+  .vn button[aria-label]:not([data-inline]) { min-width: 40px !important; }
+}

@@ -4,6 +4,7 @@ import { api, downloadFile } from "./api";
 import { cleanRationale, prettyRule } from "./format";
 import { Panel, SegBtn, notifyEnforcementChanged } from "./ui";
 import { placeForCell } from "./placeName";
+import { IconCheck, IconPin } from "./design/icons";
 
 type Rec = {
   id: number;
@@ -66,7 +67,9 @@ type SatellitePatch = {
   };
 };
 
+type AttributionBasis = { fallback_reason?: string | null; pop_basis?: string | null; source_origin?: string | null; detection_confidence?: number | null };
 type Dossier = {
+  attribution_basis?: AttributionBasis | null;
   rec_id: number;
   rationale?: string;
   contribution_pct?: number;
@@ -343,7 +346,7 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
                 </span>
                 <span className="flex items-center gap-1.5 whitespace-nowrap text-xs text-slate-500">
                   {focusCell && r.h3_cell === focusCell && (
-                    <span className="rounded bg-blue-600 px-1 py-0.5 text-[11px] font-semibold text-white">📍 this cell</span>
+                    <span className="rounded bg-blue-600 px-1 py-0.5 text-[11px] font-semibold text-white"><IconPin /> this cell</span>
                   )}
                   {focusCell && r.h3_cell !== focusCell && typeof r.km === "number" && (
                     <span className="text-[11px] text-slate-500">~{r.km < 1 ? "<1" : Math.round(r.km)} km</span>
@@ -376,6 +379,17 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
                       </>
                     );
                   })()}
+                  {r.evidence?.fallback_reason ? (
+                    <>
+                      <span
+                        className="rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-800"
+                        title={`This cell's local model did not pass the skill gate, so the share comes from cited chemical-signature priors — ${String(r.evidence.fallback_reason)}`}
+                      >
+                        priors-based share
+                      </span>
+                      <span className="text-slate-400">·</span>
+                    </>
+                  ) : null}
                   <span title="Priority = contribution × exposure × actionability × confidence">priority {Math.round(r.priority_score * 100)}</span>
                   <span className="text-slate-400">·</span>
                   <span title="Evidence rubric out of 10">rubric {r.rubric_score?.total ?? "--"}/10</span>
@@ -383,7 +397,20 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
               </div>
               <div className="mt-1 text-xs leading-5 text-slate-700">{cleanRationale(r.rationale)}</div>
               <div className="mt-1 text-xs text-slate-500">
-                {Math.round(r.contribution * 100)}% contribution · {(r.pop_exposed ?? 0).toLocaleString()} exposed
+                {Math.round(r.contribution * 100)}% contribution ·{" "}
+                <span
+                  title={
+                    r.evidence?.pop_basis === "gpw"
+                      ? "Residents in this ~1 km cell — GPW v4.11 population count (2020), summed over the cell"
+                      : r.evidence?.pop_basis === "gpw_nearby"
+                        ? "Estimate: mean GPW v4.11 population of the nearest sampled cells (this cell has no sample)"
+                        : r.evidence?.pop_basis === "type_estimate"
+                          ? "Estimate: a type-level figure — this cell has no population sample yet"
+                          : "Residents exposed in this cell"
+                  }
+                >
+                  {(r.pop_exposed ?? 0).toLocaleString()} exposed{r.evidence?.pop_basis && r.evidence.pop_basis !== "gpw" ? " (est.)" : ""}
+                </span>
                 {(r.similar ?? 0) > 0 && (
                   <span
                     className="ml-1.5 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-600"
@@ -442,7 +469,7 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
                 {r.status === "dispatched" && (
                   <>
                     <span className="rounded bg-violet-100 px-1.5 py-0.5 text-[11px] font-semibold text-violet-800" title="Baseline frozen; before/after effect is being measured (see step 5)">
-                      ✓ Dispatched · tracking armed
+                      <IconCheck /> Dispatched · tracking armed
                     </span>
                     <button
                       onClick={() => setClosing(closing === r.id ? null : r.id)}
@@ -456,7 +483,7 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
                 )}
                 {r.status === "closed" && (
                   <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-800" title={r.closure_note ?? undefined}>
-                    ✓ Closed · {FINDING_LABEL[r.closure_finding ?? ""] ?? "recorded"}{r.closed_at ? ` · ${r.closed_at.slice(0, 10)}` : ""}
+                    <IconCheck /> Closed · {FINDING_LABEL[r.closure_finding ?? ""] ?? "recorded"}{r.closed_at ? ` · ${r.closed_at.slice(0, 10)}` : ""}
                   </span>
                 )}
                 {r.status === "dismissed" && (
@@ -553,6 +580,18 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
                           </div>
                         ) : null;
                       })()}
+                      {(dossier.attribution_basis?.fallback_reason || (dossier.attribution_basis?.pop_basis && dossier.attribution_basis.pop_basis !== "gpw")) && (
+                        <div className="mb-2 rounded border border-amber-200 bg-amber-50 p-1.5 text-[11px] leading-4 text-amber-900">
+                          <div className="font-semibold uppercase tracking-wide text-amber-700">How these numbers were obtained</div>
+                          {dossier.attribution_basis?.fallback_reason && (
+                            <div>
+                              The share comes from <b>cited chemical-signature priors</b> — this cell's local model did not pass the skill gate ({dossier.attribution_basis.fallback_reason}).
+                            </div>
+                          )}
+                          {dossier.attribution_basis?.pop_basis === "gpw_nearby" && <div>Exposure: GPW 2020 population of the nearest sampled cells (this cell has no sample).</div>}
+                          {dossier.attribution_basis?.pop_basis === "type_estimate" && <div>Exposure: a type-level estimate — no population sample for this cell yet.</div>}
+                        </div>
+                      )}
                       <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                         Regulatory citations (RAG)
                       </div>

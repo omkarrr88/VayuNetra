@@ -7,6 +7,7 @@ import { DRIVER_LABELS, type AttrCell } from "./BlameMap";
 import { placeForCell } from "./placeName";
 import TrendPanel from "./TrendPanel";
 import { loadLogo, renderShareCard } from "./shareCard";
+import { IconX } from "./design/icons";
 
 type FC = { h3_cell: string; horizon_h: number; value: number; pi_low: number; pi_high: number; p_over_120?: number | null; p_over_250?: number | null; calibration_n?: number | null };
 
@@ -135,7 +136,7 @@ export default function CellStoryPanel({
             </svg>
           </button>
           <button aria-label="Close cell story" onClick={onClose} className="flex h-7 min-w-7 items-center justify-center rounded px-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700">
-            ✕
+            <IconX size={16} />
           </button>
         </div>
       </div>

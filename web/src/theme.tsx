@@ -39,7 +39,7 @@ export function ThemeToggle({ dark = true }: { dark?: boolean }) {
       title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
       aria-label="Toggle dark theme"
       aria-pressed={theme === "dark"}
-      className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${dark ? "text-slate-300 hover:bg-white/10 hover:text-white" : "text-slate-600 hover:bg-slate-100"}`}
+      className={`flex h-9 w-9 items-center justify-center rounded-md transition-colors ${dark ? "text-slate-300 hover:bg-white/10 hover:text-white" : "text-slate-600 hover:bg-slate-100"}`}
     >
       {theme === "dark" ? (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-4 w-4" aria-hidden="true">

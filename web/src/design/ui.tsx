@@ -179,9 +179,12 @@ export function Tabs({ items, value, onChange, size = "md", label }: {
 /* ---------------------------------------------------------------- metric ----- */
 /** A number that counts up when it changes — the app's one piece of showmanship,
  *  disabled under prefers-reduced-motion by the CSS class it rides on. */
-export function Metric({ value, unit, tone, size = "metric", decimals = 0, label }: {
+export function Metric({ value, unit, tone, size = "metric", decimals = 0, label, suffix }: {
   value: number | null | undefined; unit?: ReactNode; tone?: string; size?: "metric" | "display" | "xl";
   decimals?: number; label?: ReactNode;
+  /** Trails the number itself, inside the same colour — "×" for a multiple, where a bare figure
+   *  would read as an index. Distinct from `unit`, which sits underneath as a caption. */
+  suffix?: string;
 }) {
   const [shown, setShown] = useState(value ?? 0);
   const raf = useRef(0);
@@ -204,7 +207,7 @@ export function Metric({ value, unit, tone, size = "metric", decimals = 0, label
     <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
       <div style={{ display: "flex", alignItems: "flex-end", gap: "var(--s-2)", minWidth: 0 }}>
         <span style={{ fontSize: fs, fontWeight: 800, lineHeight: "var(--lh-tight)", letterSpacing: "var(--tracking-tight)", color: tone ?? "var(--ink)" }}>
-          {value === null || value === undefined ? "–" : shown.toFixed(decimals)}
+          {value === null || value === undefined ? "–" : `${shown.toFixed(decimals)}${suffix ?? ""}`}
         </span>
         {unit && <Text size="xs" tone="muted" weight={700} style={{ paddingBottom: 6 }}>{unit}</Text>}
       </div>

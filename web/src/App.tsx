@@ -51,7 +51,8 @@ const CITY_STORE_KEY = "vayunetra-city";
 
 // Sections whose content is a single light card read better in a reading column than stretched
 // across 1360px of empty page.
-const NARROW_SECTIONS = new Set<Section>(["pipeline"]);
+// (no section is capped any more — the pipeline graph wants the full width)
+const NARROW_SECTIONS = new Set<Section>();
 
 /** The console's nav items — the same sections, same order, as the keyboard shortcuts. */
 const NAV_ITEMS: NavItem[] = SECTIONS.map((s, i) => ({ id: s.id, label: s.label, hint: s.hint, key: String(i + 1) }));
@@ -104,6 +105,12 @@ export default function App() {
   const [section, setSection] = useState<Section>(() => urlState().section ?? "action");
   const [cell, setCell] = useState<AttrCell | null>(null);
   const [attrCells, setAttrCells] = useState<AttrCell[]>([]);
+
+  // A section starts at its top. Without this, switching from the bottom of Enforcement landed the
+  // officer halfway down Forecast — scroll position is per page, not per section.
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [section]);
   const [tour, setTour] = useState(() => !tourSeen());
   const [coverageKind, setCoverageKind] = useState<"stations" | "dense">("dense");
   const [scrub, setScrub] = useState<ScrubFrame>(null);
@@ -324,10 +331,10 @@ export default function App() {
               <Step {...S("action", 1)}><BriefCard city={active} /></Step>
               <Step {...S("action", 2)}><EnforcementPanel city={active} focusCell={cell?.h3_cell ?? null} /></Step>
               <Cols>
-                <Step {...S("action", 4)}><Deferred minHeight={200}><DispatchQueues city={active} /></Deferred></Step>
-                <Step {...S("action", 5)}><Deferred minHeight={260}><InterventionsPanel city={active} /></Deferred></Step>
+                <Step {...S("action", 4)}><Deferred minHeight={200} label="Dispatch queues"><DispatchQueues city={active} /></Deferred></Step>
+                <Step {...S("action", 5)}><Deferred minHeight={260} label="Tracked outcomes"><InterventionsPanel city={active} /></Deferred></Step>
               </Cols>
-              <Deferred minHeight={200}><CityIntelPanel city={active} /></Deferred>
+              <Deferred minHeight={200} label="City intelligence"><CityIntelPanel city={active} /></Deferred>
             </>
           )}
           {section === "forecast" && (
@@ -337,16 +344,16 @@ export default function App() {
                 <Step {...S("forecast", 2)}><ValidationPanel city={active} /></Step>
                 <Step {...S("forecast", 3)}><InterventionsHindsight city={active} /></Step>
               </Cols>
-              <Deferred minHeight={420}><CityStatsPanel city={active} cells={attrCells} coverageCells={coverage?.cells ?? []} /></Deferred>
-              <Step {...S("forecast", 6)}><Deferred minHeight={220}><PollutantsNowPanel city={active} /></Deferred></Step>
-              <Step {...S("forecast", 7)}><Deferred minHeight={320}><AirGraphPanel city={active} /></Deferred></Step>
-              <Deferred minHeight={320}><AirRecordCols city={active} /></Deferred>
+              <Deferred minHeight={420} label="City statistics"><CityStatsPanel city={active} cells={attrCells} coverageCells={coverage?.cells ?? []} /></Deferred>
+              <Step {...S("forecast", 6)}><Deferred minHeight={220} label="Pollutants now"><PollutantsNowPanel city={active} /></Deferred></Step>
+              <Step {...S("forecast", 7)}><Deferred minHeight={320} label="Air graph"><AirGraphPanel city={active} /></Deferred></Step>
+              <Deferred minHeight={320} label="Air record"><AirRecordCols city={active} /></Deferred>
             </>
           )}
           {section === "citizen" && (
             <>
               <CitizenPanel city={active} languages={city?.languages} center={center} />
-              <Step {...S("citizen", 5)}><Deferred minHeight={340}><HealthPanel city={active} /></Deferred></Step>
+              <Step {...S("citizen", 5)}><Deferred minHeight={340} label="Health"><HealthPanel city={active} /></Deferred></Step>
             </>
           )}
           {section === "compare" && (

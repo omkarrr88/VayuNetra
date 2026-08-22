@@ -336,12 +336,31 @@ def _compute_rubric(
 # Dossier generation
 # ---------------------------------------------------------------------------
 
+def _nearest_population(cell: str, pop_by_cell: dict[str, float], max_k: int = 2) -> float | None:
+    """Mean GPW population over the nearest sampled cells (ring 1, then ring 2), or None."""
+    if not cell or not pop_by_cell:
+        return None
+    try:
+        import h3
+    except Exception:  # noqa: BLE001 — optional at import time
+        return None
+    for k in range(1, max_k + 1):
+        try:
+            ring = [c for c in h3.grid_ring(cell, k) if c in pop_by_cell]
+        except Exception:  # noqa: BLE001 — malformed cell id
+            return None
+        if ring:
+            return sum(pop_by_cell[c] for c in ring) / len(ring)
+    return None
+
+
 def _generate_rationale(
     source: dict,
     share: float,
     pop_exposed: int,
     source_category: str,
     citations: list[dict],
+    pop_basis: str = "gpw",
 ) -> str:
     """Generate a human-readable enforcement rationale string.
 
@@ -360,10 +379,24 @@ def _generate_rationale(
         "traffic": "Traffic",
     }.get(source_category, source_category.replace("_", " ").capitalize())
 
+    exposure_note = {
+        "gpw": f"~{pop_exposed:,} residents in this cell, GPW 2020",
+        "gpw_nearby": f"~{pop_exposed:,} residents, GPW 2020 from the nearest sampled cells",
+        "type_estimate": f"~{pop_exposed:,} residents, a type-level estimate — no population sample for this cell",
+    }.get(pop_basis, f"~{pop_exposed:,} residents exposed")
+    type_words = source_type.replace("_", " ")
+    if source.get("source_origin") == "cv_detected":
+        conf = source.get("detection_confidence")
+        conf_txt = f", {round(float(conf) * 100)}% detection confidence" if conf is not None else ""
+        where_from = (
+            f"{source_name} is a satellite-detected {type_words} site here "
+            f"(Sentinel-2 heuristic{conf_txt}); it is not in any registry."
+        )
+    else:
+        where_from = f"{source_name} is the registered {type_words} source at this location."
     rationale_parts = [
-        f"{cat_label} contributes approximately {pct}% of PM2.5 in this cell "
-        f"(~{pop_exposed:,} residents exposed);",
-        f"{source_name} is the registered {source_type.replace('_', ' ')} source at this location.",
+        f"{cat_label} contributes approximately {pct}% of PM2.5 in this cell ({exposure_note});",
+        where_from,
     ]
 
     if source_type == "construction":
@@ -549,10 +582,21 @@ def run_enforcement(
     for source in emission_sources:
         source_type = source.get("type", "other")
         attrs = source.get("attributes") or {}
-        gpw = pop_by_cell.get(attrs.get("h3_cell") or "")
-        pop_exposed = round(gpw) if gpw else (
-            source.get("pop_exposed_estimate") or attrs.get("pop_exposed_estimate") or 5000
-        )
+        # Exposure: the cell's own GPW population; else the nearest sampled cells (GPW is
+        # spatially smooth, so two rings away is a far better guess than a type constant);
+        # else the type-level estimate — and the basis travels with the number, so the
+        # rationale and the UI never print an estimate as if it were a measurement.
+        cell = attrs.get("h3_cell") or ""
+        gpw = pop_by_cell.get(cell)
+        if gpw:
+            pop_exposed, pop_basis = round(gpw), "gpw"
+        else:
+            near = _nearest_population(cell, pop_by_cell)
+            if near is not None:
+                pop_exposed, pop_basis = round(near), "gpw_nearby"
+            else:
+                pop_exposed = int(source.get("pop_exposed_estimate") or attrs.get("pop_exposed_estimate") or 5000)
+                pop_basis = "type_estimate"
 
         # Map source type to attribution category
         cat_map = {
@@ -596,7 +640,7 @@ def run_enforcement(
         value = _compute_value(best_share, confidence, pop_exposed, source_category,
                                fc.get("pm25_low"), fc.get("p_exceed"))
 
-        rationale = _generate_rationale(source, best_share, pop_exposed, source_category, citations)
+        rationale = _generate_rationale(source, best_share, pop_exposed, source_category, citations, pop_basis)
 
         rec = EnforcementRec(
             city_id=city_id,
@@ -606,7 +650,9 @@ def run_enforcement(
             contribution=best_share,
             pop_exposed=pop_exposed,
             rationale=rationale,
-            evidence={**evidence, "source_name": source.get("name", ""), "source_type": source_type, "value": value},
+            evidence={**evidence, "source_name": source.get("name", ""), "source_type": source_type, "value": value,
+                      "pop_basis": pop_basis, "source_origin": source.get("source_origin"),
+                      "detection_confidence": source.get("detection_confidence")},
             rag_citations=citations,
             rubric_score=rubric,
             ts=datetime.now(timezone.utc).isoformat(),
@@ -755,6 +801,13 @@ def build_dossier(rec_id: int, city_id: str = "delhi") -> dict:
         "rationale": rec["rationale"],
         "contribution_pct": round((rec.get("contribution") or 0) * 100, 1),
         "pop_exposed": rec.get("pop_exposed", 0),
+        # How the headline numbers were obtained — the dossier says it, not just the DB row.
+        "attribution_basis": {
+            "fallback_reason": (rec.get("evidence") or {}).get("fallback_reason"),
+            "pop_basis": (rec.get("evidence") or {}).get("pop_basis"),
+            "source_origin": (rec.get("evidence") or {}).get("source_origin"),
+            "detection_confidence": (rec.get("evidence") or {}).get("detection_confidence"),
+        },
         "rubric_score": rec.get("rubric_score", {}),
         "status": rec.get("status", "proposed"),
         "citations": full_citations,
@@ -856,6 +909,25 @@ def _projection_section(projection: dict | None) -> str:
     )
 
 
+def _basis_note(rec: dict) -> str:
+    """One plain sentence on where the share and the exposure figure come from, for the notice."""
+    ev = rec.get("evidence") or {}
+    parts = []
+    if ev.get("fallback_reason"):
+        parts.append(
+            "Attribution basis: the cell's local model did not pass the skill gate "
+            f"({ev['fallback_reason']}), so the share above comes from cited chemical-signature priors, not a cell-level fit."
+        )
+    pb = ev.get("pop_basis")
+    if pb == "gpw_nearby":
+        parts.append("Exposure basis: GPW v4.11 (2020) population of the nearest sampled cells — this cell has no sample of its own.")
+    elif pb == "type_estimate":
+        parts.append("Exposure basis: a type-level estimate — this cell has no population sample yet.")
+    elif pb == "gpw":
+        parts.append("Exposure basis: GPW v4.11 (2020) population count summed over this cell.")
+    return (" ".join(parts) + "\n") if parts else ""
+
+
 def _build_notice_text(
     rec: dict,
     citations: list[dict],
@@ -940,6 +1012,7 @@ def _build_notice_text(
         f"An estimated {pop:,} residents live within the affected ~1 sq. km grid cell "
         f"({cell}). VayuNetra source attribution assigns approximately {pct}% of the "
         "local PM2.5 concentration to this source (GPW v4 population x model attribution).\n"
+        f"{_basis_note(rec)}"
         "\n"
         "APPLICABLE REGULATIONS:\n"
         f"{reg}\n"
