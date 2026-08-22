@@ -801,6 +801,13 @@ def build_dossier(rec_id: int, city_id: str = "delhi") -> dict:
         "rationale": rec["rationale"],
         "contribution_pct": round((rec.get("contribution") or 0) * 100, 1),
         "pop_exposed": rec.get("pop_exposed", 0),
+        # How the headline numbers were obtained — the dossier says it, not just the DB row.
+        "attribution_basis": {
+            "fallback_reason": (rec.get("evidence") or {}).get("fallback_reason"),
+            "pop_basis": (rec.get("evidence") or {}).get("pop_basis"),
+            "source_origin": (rec.get("evidence") or {}).get("source_origin"),
+            "detection_confidence": (rec.get("evidence") or {}).get("detection_confidence"),
+        },
         "rubric_score": rec.get("rubric_score", {}),
         "status": rec.get("status", "proposed"),
         "citations": full_citations,
@@ -902,6 +909,25 @@ def _projection_section(projection: dict | None) -> str:
     )
 
 
+def _basis_note(rec: dict) -> str:
+    """One plain sentence on where the share and the exposure figure come from, for the notice."""
+    ev = rec.get("evidence") or {}
+    parts = []
+    if ev.get("fallback_reason"):
+        parts.append(
+            "Attribution basis: the cell's local model did not pass the skill gate "
+            f"({ev['fallback_reason']}), so the share above comes from cited chemical-signature priors, not a cell-level fit."
+        )
+    pb = ev.get("pop_basis")
+    if pb == "gpw_nearby":
+        parts.append("Exposure basis: GPW v4.11 (2020) population of the nearest sampled cells — this cell has no sample of its own.")
+    elif pb == "type_estimate":
+        parts.append("Exposure basis: a type-level estimate — this cell has no population sample yet.")
+    elif pb == "gpw":
+        parts.append("Exposure basis: GPW v4.11 (2020) population count summed over this cell.")
+    return (" ".join(parts) + "\n") if parts else ""
+
+
 def _build_notice_text(
     rec: dict,
     citations: list[dict],
@@ -986,6 +1012,7 @@ def _build_notice_text(
         f"An estimated {pop:,} residents live within the affected ~1 sq. km grid cell "
         f"({cell}). VayuNetra source attribution assigns approximately {pct}% of the "
         "local PM2.5 concentration to this source (GPW v4 population x model attribution).\n"
+        f"{_basis_note(rec)}"
         "\n"
         "APPLICABLE REGULATIONS:\n"
         f"{reg}\n"

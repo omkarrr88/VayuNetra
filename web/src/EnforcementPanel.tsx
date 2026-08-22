@@ -67,7 +67,9 @@ type SatellitePatch = {
   };
 };
 
+type AttributionBasis = { fallback_reason?: string | null; pop_basis?: string | null; source_origin?: string | null; detection_confidence?: number | null };
 type Dossier = {
+  attribution_basis?: AttributionBasis | null;
   rec_id: number;
   rationale?: string;
   contribution_pct?: number;
@@ -578,6 +580,18 @@ export default function EnforcementPanel({ city, focusCell }: { city: string; fo
                           </div>
                         ) : null;
                       })()}
+                      {(dossier.attribution_basis?.fallback_reason || (dossier.attribution_basis?.pop_basis && dossier.attribution_basis.pop_basis !== "gpw")) && (
+                        <div className="mb-2 rounded border border-amber-200 bg-amber-50 p-1.5 text-[11px] leading-4 text-amber-900">
+                          <div className="font-semibold uppercase tracking-wide text-amber-700">How these numbers were obtained</div>
+                          {dossier.attribution_basis?.fallback_reason && (
+                            <div>
+                              The share comes from <b>cited chemical-signature priors</b> — this cell's local model did not pass the skill gate ({dossier.attribution_basis.fallback_reason}).
+                            </div>
+                          )}
+                          {dossier.attribution_basis?.pop_basis === "gpw_nearby" && <div>Exposure: GPW 2020 population of the nearest sampled cells (this cell has no sample).</div>}
+                          {dossier.attribution_basis?.pop_basis === "type_estimate" && <div>Exposure: a type-level estimate — no population sample for this cell yet.</div>}
+                        </div>
+                      )}
                       <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                         Regulatory citations (RAG)
                       </div>
