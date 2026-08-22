@@ -247,6 +247,9 @@
 
 /* Nothing inside a card may be wider than the card. */
 .vn-panel, .vn-panel * { max-width: 100%; }
+/* recharts 3 measures with a zero-width inner box and gives the chart an explicit width; clamping
+   that wrapper to 100 % of its zero-width parent collapsed every ResponsiveContainer chart to 0 px. */
+.vn-panel .recharts-wrapper, .vn-panel .recharts-surface { max-width: none; }
 .vn-panel table { max-width: none; }
 
 /* ...except things that are OUT OF FLOW. An absolutely-positioned overlay resolves its 100%

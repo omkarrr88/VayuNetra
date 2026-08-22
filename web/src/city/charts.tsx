@@ -97,7 +97,7 @@ export function SeriesGraph({ d, scale, pollutant }: { d: Overview; scale: AqiSc
       <div className="mt-3 h-64">
         <ResponsiveContainer width="100%" height="100%">
           {kind === "bar" ? (
-            <BarChart data={rows} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+            <BarChart data={rows} margin={{ top: 8, right: 8, left: -4, bottom: 0 }}>
               <CartesianGrid vertical={false} stroke="rgba(100,116,139,.18)" />
               <XAxis dataKey="at" tickFormatter={label} tick={{ fontSize: 10 }} interval="preserveStartEnd" minTickGap={26} />
               <YAxis tick={{ fontSize: 10 }} width={38} />
@@ -107,7 +107,7 @@ export function SeriesGraph({ d, scale, pollutant }: { d: Overview; scale: AqiSc
               </Bar>
             </BarChart>
           ) : (
-            <AreaChart data={rows} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+            <AreaChart data={rows} margin={{ top: 8, right: 8, left: -4, bottom: 0 }}>
               <CartesianGrid vertical={false} stroke="rgba(100,116,139,.18)" />
               <XAxis dataKey="at" tickFormatter={label} tick={{ fontSize: 10 }} interval="preserveStartEnd" minTickGap={26} />
               <YAxis tick={{ fontSize: 10 }} width={38} />
@@ -194,7 +194,7 @@ export function MonthlyTrend({ d, scale }: { d: Overview; scale: AqiScale }) {
       <div className="vn-card p-4">
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={rows} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+            <BarChart data={rows} margin={{ top: 8, right: 8, left: -4, bottom: 0 }}>
               <CartesianGrid vertical={false} stroke="rgba(100,116,139,.18)" />
               <XAxis dataKey="month" tickFormatter={(m: string) => `${MONTH_NAMES[Number(m.slice(5, 7)) - 1]} ${m.slice(2, 4)}`} tick={{ fontSize: 10 }} />
               <YAxis tick={{ fontSize: 10 }} width={38} />
